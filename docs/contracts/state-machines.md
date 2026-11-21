@@ -95,6 +95,7 @@ IN_PROGRESS|SELLER_WEIGHED -> FORCE_MAJEURE_PENDING_REVIEW -> normal/settled pat
 - `NONE_UNLESS_DISPUTED` clean confirmation creates no inspection result or actual metrics.
 - `MANDATORY_BEFORE_SETTLEMENT` adds an auxiliary inspection guard, not a milestone state. A confirmed report may attach while the milestone is `BUYER_RECEIVED` or `CONTESTED`; settlement remains blocked until the guard is satisfied.
 - `SELLER_WEIGHED` timeout never auto-settles from seller-only evidence.
+- The seller may correct the declaration at `SELLER_WEIGHED` for 1 hour after the first declaration, never after the buyer has recorded receipt (D75); a correction keeps the state and republishes `milestone.seller_weighed` with the next `declarationNumber`.
 - Delta 1 above threshold opens Rổ B; pro-rata delivered value may settle, but penalty waits for attribution.
 - Level 2 provisional/reconcile/terminal events carry explicit positive release/refund legs and preserve batch conservation.
 

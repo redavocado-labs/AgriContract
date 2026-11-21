@@ -60,6 +60,11 @@ Current explicit `409` codes occupy these slots:
 | `VERIFICATION_EXPIRED` | `*_STATE_CONFLICT` |
 | `VERIFICATION_ATTEMPTS_EXHAUSTED` | `*_STATE_CONFLICT` |
 | `VERIFICATION_RESEND_TOO_SOON` | `*_STATE_CONFLICT` |
+| `MILESTONE_ACTION_NOT_ALLOWED` | `*_STATE_CONFLICT` |
+| `WEIGH_CORRECTION_CLOSED` | `*_STATE_CONFLICT` |
+| `EVIDENCE_NOT_READY` | `*_STATE_CONFLICT` (the file is still being scanned; the client may submit again once it is READY) |
+| `EVIDENCE_REJECTED` | `*_STATE_CONFLICT` |
+| `CONSENT_CONTENT_MISMATCH` | `*_VERSION_MISMATCH` |
 
 All current catalog scenarios that can return `409` without naming a canonical code are `*_STATE_CONFLICT`: immutable terms after the first signature; stale or no-longer-acceptable price proposals; funding already requested; an adjustment already accepted; a milestone already `SETTLED` or `WITHDRAWN`; a case already resolved; OTP/challenge binding or superseded-challenge conflicts; reservation replay with different payload; pending supersede/refund transitions; maker-checker conflicts; and mandatory-inspection state conflicts. The same classification applies to any other state-transition or duplicate-with-different-state conflict in this catalog. If a `409` code is ambiguous, classify it as `*_STATE_CONFLICT`; refreshing instead of blindly retrying is the safer default.
 
