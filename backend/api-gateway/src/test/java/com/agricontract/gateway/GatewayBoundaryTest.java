@@ -755,6 +755,101 @@ class GatewayBoundaryTest {
         assertNotForwarded();
     }
 
+    // #531: one X-Correlation-Id per request, forwarded downstream and returned on every response
+
+    private static final String CORRELATION = "X-Correlation-Id";
+    private static final String UUID_REGEX =
+            "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$";
+
+    @Test
+    void requestWithoutCorrelationId_getsGeneratedOne_downstreamAndOnResponse() throws InterruptedException {
+        downstream.enqueue(new MockResponse().setResponseCode(200));
+
+        String returned = client.get().uri("/api/v1/listings")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().valueMatches(CORRELATION, UUID_REGEX)
+                .returnResult(Void.class).getResponseHeaders().getFirst(CORRELATION);
+
+        RecordedRequest received = downstream.takeRequest(2, TimeUnit.SECONDS);
+        assertThat(received).isNotNull();
+        assertThat(received.getHeaders().values(CORRELATION)).containsExactly(returned);
+    }
+
+    @Test
+    void requestWithValidCorrelationId_keepsIt_evenIfDownstreamEchoesAnother() throws InterruptedException {
+        String correlationId = "0b9d6f3e-5c2a-4e8b-9f1d-7a6c5b4e3d2f";
+        downstream.enqueue(new MockResponse().setResponseCode(200).setHeader(CORRELATION, "downstream-value"));
+
+        client.get().uri("/api/v1/users/me")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_TOKEN)
+                .header(CORRELATION, correlationId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().values(CORRELATION, values -> assertThat(values).containsExactly(correlationId));
+
+        RecordedRequest received = downstream.takeRequest(2, TimeUnit.SECONDS);
+        assertThat(received).isNotNull();
+        assertThat(received.getHeaders().values(CORRELATION)).containsExactly(correlationId);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"not-a-uuid", "1-1-1-1-1", "0b9d6f3e-5c2a-4e8b-9f1d-7a6c5b4e3d2f;drop"})
+    void requestWithInvalidCorrelationId_isReplaced(String invalid) throws InterruptedException {
+        downstream.enqueue(new MockResponse().setResponseCode(200));
+
+        String returned = client.get().uri("/api/v1/listings")
+                .header(CORRELATION, invalid)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().valueMatches(CORRELATION, UUID_REGEX)
+                .returnResult(Void.class).getResponseHeaders().getFirst(CORRELATION);
+
+        RecordedRequest received = downstream.takeRequest(2, TimeUnit.SECONDS);
+        assertThat(received).isNotNull();
+        assertThat(received.getHeaders().values(CORRELATION)).containsExactly(returned);
+    }
+
+    @Test
+    void unauthenticatedRejection_carriesCorrelationId() throws InterruptedException {
+        String correlationId = "0b9d6f3e-5c2a-4e8b-9f1d-7a6c5b4e3d2f";
+
+        client.get().uri("/api/v1/users/me")
+                .header(CORRELATION, correlationId)
+                .exchange()
+                .expectStatus().isUnauthorized()
+                .expectHeader().valueEquals(CORRELATION, correlationId);
+
+        assertNotForwarded();
+    }
+
+    @Test
+    void forbiddenAndNotFoundRejections_carryCorrelationId() throws InterruptedException {
+        client.get().uri("/api/v1/admin/users")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_TOKEN)
+                .exchange()
+                .expectStatus().isForbidden()
+                .expectHeader().valueMatches(CORRELATION, UUID_REGEX);
+
+        client.get().uri("/internal/v1/users/user-123")
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectHeader().valueMatches(CORRELATION, UUID_REGEX);
+
+        assertNotForwarded();
+    }
+
+    @Test
+    void downstreamTimeout_carriesCorrelationId() {
+        downstream.enqueue(new MockResponse().setResponseCode(200).setHeadersDelay(3, TimeUnit.SECONDS));
+
+        client.get().uri("/api/v1/users/me")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_TOKEN)
+                .exchange()
+                .expectStatus().isEqualTo(504)
+                .expectHeader().valueMatches(CORRELATION, UUID_REGEX);
+    }
+
     private static final int VERIFIER_CAP = 64 * 1024;
     private static final int VERIFIER_LIMIT = 10;
 
