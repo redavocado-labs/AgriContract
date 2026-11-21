@@ -1014,12 +1014,13 @@ $defs:
           producer: {const: contract-service}
           payload:
             type: object
-            required: [contractId, milestoneId, sellerDeclaredWeight, sellerEvidenceFileId]
+            required: [contractId, milestoneId, declarationNumber, sellerDeclaredWeight, sellerEvidenceFileId]
             additionalProperties: false
             properties:
               contractId: {$ref: "#/$defs/uuid"}
               milestoneId: {$ref: "#/$defs/uuid"}
-              sellerDeclaredWeight: {type: number, exclusiveMinimum: 0, description: Seller-declared loaded weight in canonical kilograms (kg).}
+              declarationNumber: {type: integer, minimum: 1, description: "1 for the first declaration; each correction inside the 1-hour window (D75) publishes again with the next number. The highest number is the declaration in force."}
+              sellerDeclaredWeight: {type: number, exclusiveMinimum: 0, maximum: 1000000, multipleOf: 0.001, description: Seller-declared loaded weight in canonical kilograms (kg).}
               sellerEvidenceFileId: {$ref: "#/$defs/uuid"}
               deliveryCertificateFileId: {$ref: "#/$defs/uuid"}
         x-publisher: contract-service
