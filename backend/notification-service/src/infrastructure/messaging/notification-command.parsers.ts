@@ -8,6 +8,9 @@ import {
   ACTIVATION_NEXT_ACTIONS,
   BREACH_REASON_CODES,
   CANCEL_REQUESTER_ROLES,
+  ESCROW_LEG_ALERT_STAGES,
+  ESCROW_LEG_KINDS,
+  ESCROW_LEG_STATUSES,
   FAILED_LEGS,
   FUND_TYPES,
   KYC_RESULTS,
@@ -25,6 +28,7 @@ import {
   type ContractTerminatedRequestedCommand,
   type RemedyLeg,
   type ContractAnchorRequestedCommand,
+  type EscrowLegAlertRequestedCommand,
   type Level15AssignmentWaitingRequestedCommand,
   type Level15InspectorAssignmentRequestedCommand,
   type NotificationRecipient,
@@ -66,6 +70,12 @@ const SHA256_HEX = /^[a-f0-9]{64}$/;
 /** The contract's `money`: non-negative VND with two decimals, at most 19 characters. */
 const MONEY = /^[0-9]+\.[0-9]{2}$/;
 const MONEY_MAX_LENGTH = 19;
+const MONEY_RULE = `must be a decimal string with two decimals, at most ${MONEY_MAX_LENGTH} characters`;
+
+const isMoney = (value: unknown): value is string =>
+  typeof value === 'string' &&
+  value.length <= MONEY_MAX_LENGTH &&
+  MONEY.test(value);
 
 const REMEDY_LEG_FIELDS = [
   'remedyLegId',
@@ -135,6 +145,13 @@ class CommandReader {
     if (!DATE_TIME.test(value)) {
       throw this.error(`field "${field}" must be an RFC 3339 date-time`);
     }
+    return value;
+  }
+
+  /** The contract's `money`; the bad value is not quoted. */
+  money(field: string): string {
+    const value = this.payload[field];
+    if (!isMoney(value)) throw this.error(`field "${field}" ${MONEY_RULE}`);
     return value;
   }
 
@@ -277,14 +294,8 @@ class CommandReader {
       throw this.error(`${at}.remedyLegId must be a UUID`);
     }
     const amount = value.amount;
-    if (
-      typeof amount !== 'string' ||
-      amount.length > MONEY_MAX_LENGTH ||
-      !MONEY.test(amount)
-    ) {
-      throw this.error(
-        `${at}.amount must be a decimal string with two decimals, at most ${MONEY_MAX_LENGTH} characters`,
-      );
+    if (!isMoney(amount)) {
+      throw this.error(`${at}.amount ${MONEY_RULE}`);
     }
     return {
       remedyLegId: id,
@@ -787,6 +798,52 @@ export function parseLevel15InspectorAssignmentRequested(
     reportDueAt: payload.dateTime('reportDueAt'),
     freeCancelUntil: payload.dateTime('freeCancelUntil'),
     stage: payload.enumValue('stage', LEVEL15_INSPECTOR_STAGES),
+  };
+}
+
+export const ESCROW_LEG_ALERT_REQUESTED =
+  'notification.escrow_leg_alert_requested';
+
+/** Payload properties of `escrowLegAlertRequested`, all required. */
+export const ESCROW_LEG_ALERT_FIELDS = [
+  'contractId',
+  'legId',
+  'legKind',
+  'party',
+  'legStatus',
+  'amount',
+  'bankCommandEventId',
+  'since',
+  'stage',
+] as const;
+
+/**
+ * escrow-service's staff alert (D68): no recipient in the payload, the
+ * address is this service's own `notification.operatorEmail`. Any legStatus
+ * of the contract parses with any stage: which status a stage is sent in is
+ * escrow's rule, and the email shows the status as it came.
+ */
+export function parseEscrowLegAlertRequested(
+  body: Buffer,
+): EscrowLegAlertRequestedCommand {
+  const { envelope, payload } = readCommand(
+    body,
+    ESCROW_LEG_ALERT_REQUESTED,
+    'escrow-service',
+  );
+  payload.only(ESCROW_LEG_ALERT_FIELDS);
+
+  return {
+    eventId: envelope.eventId,
+    contractId: payload.uuid('contractId'),
+    legId: payload.uuid('legId'),
+    legKind: payload.enumValue('legKind', ESCROW_LEG_KINDS),
+    party: payload.enumValue('party', PARTY_ROLES),
+    legStatus: payload.enumValue('legStatus', ESCROW_LEG_STATUSES),
+    amount: payload.money('amount'),
+    bankCommandEventId: payload.uuid('bankCommandEventId'),
+    since: payload.dateTime('since'),
+    stage: payload.enumValue('stage', ESCROW_LEG_ALERT_STAGES),
   };
 }
 

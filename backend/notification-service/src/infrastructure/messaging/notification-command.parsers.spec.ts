@@ -32,6 +32,9 @@ import {
   inspectorBody,
   inspectorCommand,
   inspectorPayload,
+  legAlertBody,
+  legAlertCommand,
+  legAlertPayload,
 } from '../../../test/support/commands';
 import {
   parseActivationCancelRequested,
@@ -48,6 +51,8 @@ import {
   parseLevel15AssignmentWaitingRequested,
   LEVEL15_INSPECTOR_ASSIGNMENT_FIELDS,
   parseLevel15InspectorAssignmentRequested,
+  ESCROW_LEG_ALERT_FIELDS,
+  parseEscrowLegAlertRequested,
 } from './notification-command.parsers';
 
 /** Delivers a message built from `overrides` on the envelope. */
@@ -838,6 +843,92 @@ describe('parseLevel15InspectorAssignmentRequested', () => {
   it('rejects the waiting alert, whose eventType is not this queue’s', () => {
     expect(
       message(() => parseLevel15InspectorAssignmentRequested(waitingBody())),
+    ).toContain("is not this queue's command");
+  });
+});
+
+describe('parseEscrowLegAlertRequested', () => {
+  const parseLegAlert = (
+    payload: Record<string, unknown> = legAlertPayload(),
+  ) => parseEscrowLegAlertRequested(legAlertBody({ payload }));
+
+  it('reads the envelope eventId and every payload field', () => {
+    expect(parseLegAlert()).toEqual(legAlertCommand());
+  });
+
+  it.each([
+    ['a stuck leg that resolved', { stage: 'RESOLVED', legStatus: 'LOCKED' }],
+    [
+      'a return out of resends',
+      { stage: 'RETURN_EXHAUSTED', legStatus: 'RETURN_FAILED' },
+    ],
+    ['a stuck cancel', { legStatus: 'CANCEL_PENDING' }],
+    ['a stuck return', { legStatus: 'RETURN_REQUESTED' }],
+    ['the seller’s leg', { party: 'SELLER' }],
+    ['a zero amount', { amount: '0.00' }],
+    ['the largest amount', { amount: '9999999999999999.99' }],
+    ['an instant with an offset', { since: '2026-11-21T10:00:00+07:00' }],
+  ])('accepts %s, as the contract does', (_case, patch) => {
+    expect(parseLegAlert(legAlertPayload(patch))).toMatchObject(patch);
+  });
+
+  it.each([
+    [
+      'stage',
+      'STALLED',
+      'field "stage" must be one of STUCK, RESOLVED, RETURN_EXHAUSTED',
+    ],
+    ['stage', 'stuck', 'field "stage" must be one of'],
+    ['legKind', 'FUNDING', 'field "legKind" must be one of DEPOSIT'],
+    ['party', 'INSPECTOR', 'field "party" must be one of BUYER, SELLER'],
+    ['legStatus', 'PENDING', 'field "legStatus" must be one of REQUESTED,'],
+    ['amount', '150000000', 'field "amount" must be a decimal string'],
+    ['amount', 150000000, 'field "amount" must be a decimal string'],
+    ['amount', '-1.00', 'field "amount" must be a decimal string'],
+    ['amount', '10000000000000000.00', 'at most 19 characters'],
+    ['since', '2026-11-21', 'RFC 3339'],
+    ['contractId', 'contract-1', 'field "contractId" must be a UUID'],
+    ['legId', 42, 'field "legId" must be a non-empty string'],
+    [
+      'bankCommandEventId',
+      'bank-cmd-1',
+      'field "bankCommandEventId" must be a UUID',
+    ],
+    ['recipients', [], 'unknown payload property "recipients"'],
+  ])(
+    'rejects %s = %p as an invalid payload, without retrying',
+    (field, value, reason) => {
+      const text = message(() =>
+        parseLegAlert(legAlertPayload({ [field]: value })),
+      );
+
+      expect(text).toContain(
+        'Malformed notification.escrow_leg_alert_requested',
+      );
+      expect(text).toContain(reason);
+    },
+  );
+
+  it.each(ESCROW_LEG_ALERT_FIELDS)('rejects a missing %s', (field) => {
+    const payload = legAlertPayload();
+    delete payload[field];
+
+    expect(message(() => parseLegAlert(payload))).toContain(`"${field}"`);
+  });
+
+  it('rejects a command from another producer', () => {
+    expect(
+      message(() =>
+        parseEscrowLegAlertRequested(
+          legAlertBody({ producer: 'bank-service' }),
+        ),
+      ),
+    ).toContain('producer must be "escrow-service"');
+  });
+
+  it('rejects the Level 1.5 waiting alert, whose eventType is not this queue’s', () => {
+    expect(
+      message(() => parseEscrowLegAlertRequested(waitingBody())),
     ).toContain("is not this queue's command");
   });
 });

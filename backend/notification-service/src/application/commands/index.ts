@@ -51,6 +51,15 @@ export {
   type Level15InspectorAssignmentRequestedCommand,
   type Level15InspectorStage,
 } from './level15-inspector-assignment-requested.command';
+export {
+  ESCROW_LEG_ALERT_STAGES,
+  ESCROW_LEG_KINDS,
+  ESCROW_LEG_STATUSES,
+  type EscrowLegAlertRequestedCommand,
+  type EscrowLegAlertStage,
+  type EscrowLegKind,
+  type EscrowLegStatus,
+} from './escrow-leg-alert-requested.command';
 export { RECIPIENT_ROLES } from './notification-recipient';
 export type {
   NotificationRecipient,
