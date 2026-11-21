@@ -67,7 +67,7 @@ class LockEventLifecycleMySqlTest {
         lifecycle = new LockEventLifecycle(transactions, store, publisher);
     }
     @AfterEach void clear() {
-        for (String table : List.of("lock_event_receipt", "event_outbox", "user_lock_state", "lock_override_event", "lock_entry"))
+        for (String table : List.of("lock_event_receipt", "event_outbox", "user_lock_state", "lock_override_event", "remedy_event_identity", "remedy_lock_evidence", "lock_entry"))
             jdbc.update("DELETE FROM " + table);
     }
     Lock lock(UUID user, long seconds) {
@@ -77,12 +77,59 @@ class LockEventLifecycleMySqlTest {
         jdbc.update("""
                 INSERT INTO lock_entry (entry_id,source_event_id,remedy_decision_id,contract_id,user_id,penalized_role,
                 base_days,repeat_offense_multiplier,track_record_multiplier,zero_progress_multiplier,
-                lock_duration_days,locked_until,created_at) VALUES (?,?,?,?,?,'BUYER',30,1,1,1,30,?,?)
+                lock_duration_days,locked_until,created_at,decided_at) VALUES (?,?,?,?,?,'BUYER',30,1,1,1,30,?,?,?)
                 """, lock.entry.toString(), lock.source.toString(), lock.decision.toString(), UUID.randomUUID().toString(),
-                lock.user.toString(), time(lock.until), time(NOW));
+                lock.user.toString(), time(lock.until), time(NOW), time(NOW));
     }
     boolean create(Lock lock) {
         return lifecycle.lockCreated(lock.user, lock.decision, "NON_DELIVERY", "test-workflow", () -> insert(lock));
+    }
+    @Test void expiredRemedyPreservesLedgerWithoutCreatingProjection() {
+        UUID user = UUID.randomUUID();
+        Lock expired = lock(user, -1);
+        assertThat(lifecycle.recordRemedy(user, expired.decision, "NON_DELIVERY", "test-workflow", () -> {
+            insert(expired);
+            return expired.until;
+        })).isTrue();
+        assertThat(count("lock_entry")).isEqualTo(1);
+        assertThat(count("user_lock_state")).isZero();
+        assertThat(count("event_outbox")).isZero();
+        assertThat(count("lock_event_receipt")).isZero();
+    }
+
+    @Test void expiredRemedyDoesNotChangeExistingProjection() {
+        UUID user = UUID.randomUUID();
+        create(lock(user, 100));
+        var before = jdbc.queryForMap("SELECT * FROM user_lock_state WHERE user_id=?", user.toString());
+        int eventsBefore = count("event_outbox");
+        int receiptsBefore = count("lock_event_receipt");
+        Lock expired = lock(user, -1);
+        lifecycle.recordRemedy(user, expired.decision, "NON_DELIVERY", "test-workflow", () -> {
+            insert(expired);
+            return expired.until;
+        });
+        assertThat(jdbc.queryForMap("SELECT * FROM user_lock_state WHERE user_id=?", user.toString())).isEqualTo(before);
+        assertThat(count("event_outbox")).isEqualTo(eventsBefore);
+        assertThat(count("lock_event_receipt")).isEqualTo(receiptsBefore);
+    }
+
+    @Test void expiredAndActiveRemediesSerializeOnSameUser() throws Exception {
+        UUID user = UUID.randomUUID();
+        Lock active = lock(user, 120);
+        Lock expired = lock(user, -1);
+        assertThat(ReputationMySqlTest.race(
+                () -> lifecycle.recordRemedy(user, active.decision, "NON_DELIVERY", "race", () -> {
+                    insert(active);
+                    return active.until;
+                }),
+                () -> lifecycle.recordRemedy(user, expired.decision, "NON_DELIVERY", "race", () -> {
+                    insert(expired);
+                    return expired.until;
+                }))).containsExactly(true, true);
+        assertThat(count("lock_entry")).isEqualTo(2);
+        assertThat(revision(user)).isEqualTo(1);
+        assertThat(count("event_outbox")).isEqualTo(1);
+        assertThat(count("lock_event_receipt")).isEqualTo(1);
     }
     void override(Lock lock, UUID override) {
         jdbc.update("INSERT INTO lock_override_event VALUES (?,?,'UNLOCK_EARLY','approved test fixture',?,?,?)",

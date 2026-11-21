@@ -52,7 +52,7 @@ class DlqMonitorTest {
         assertThat(logs.list).isEmpty();
         for (String queue : RabbitConfiguration.DLQS) verify(channel).queueDeclarePassive(queue);
         verifyNoMoreInteractions(channel);
-        verify(connection, times(2)).abort(1000);
+        verify(connection, times(3)).abort(1000);
     }
     @Test void failedProbeIsSafeAndDoesNotStopOtherQueuesOrFutureChecks() throws Exception {
         when(channel.queueDeclarePassive(RabbitConfiguration.DLQS.getFirst()))
@@ -65,13 +65,13 @@ class DlqMonitorTest {
         assertThat(logs.list.getFirst().getFormattedMessage()).isEqualTo(
                 "event=reputation_dlq_probe_failed queue=reputation-svc.contract.settled.dlq");
         assertThat(logs.list.getFirst().getThrowableProxy()).isNull();
-        verify(connection, times(4)).abort(1000);
+        verify(connection, times(6)).abort(1000);
     }
     @Test void connectionTimeoutAndRuntimeFailuresAreContained() throws Exception {
         when(probe.newConnection("reputation-dlq-monitor"))
                 .thenThrow(new TimeoutException("private")).thenThrow(new IllegalStateException("private"));
         assertThatCode(monitor::checkDlqDepth).doesNotThrowAnyException();
-        assertThat(logs.list).hasSize(2).allSatisfy(event -> {
+        assertThat(logs.list).hasSize(3).allSatisfy(event -> {
             assertThat(event.getFormattedMessage()).doesNotContain("private");
             assertThat(event.getThrowableProxy()).isNull();
         });
@@ -115,7 +115,7 @@ class DlqMonitorTest {
             try {
                 Assertions.assertTimeoutPreemptively(Duration.ofSeconds(8),
                         () -> new DlqMonitor(real, 1000, 300000).checkDlqDepth());
-                assertThat(logs.list).hasSize(2);
+                assertThat(logs.list).hasSize(3);
             } finally { finish.countDown(); server.close(); acceptor.join(2000); }
         }
     }

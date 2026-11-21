@@ -71,6 +71,8 @@ class BatchSummaryMySqlTest {
     void clearFixtures() {
         var admin = ReputationDatabaseFixture.ADMIN;
         admin.update("DELETE FROM lock_override_event");
+        admin.update("DELETE FROM remedy_event_identity");
+        admin.update("DELETE FROM remedy_lock_evidence");
         admin.update("DELETE FROM lock_entry");
         admin.update("DELETE FROM dispute_outcome_fact");
         admin.update("DELETE FROM completed_contract_fact");

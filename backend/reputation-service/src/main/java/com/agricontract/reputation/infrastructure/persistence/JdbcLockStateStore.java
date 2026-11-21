@@ -17,7 +17,13 @@ public class JdbcLockStateStore implements LockStateStore {
     public JdbcLockStateStore(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
     @Override @Transactional(propagation = Propagation.MANDATORY)
+    public void acquireMutex(UUID userId) {
+        jdbc.update("INSERT INTO user_lock_mutex (user_id) VALUES (?) ON DUPLICATE KEY UPDATE user_id = user_id", userId.toString());
+    }
+
+    @Override @Transactional(propagation = Propagation.MANDATORY)
     public State acquire(UUID userId) {
+        acquireMutex(userId);
         jdbc.update("""
                 INSERT INTO user_lock_state (user_id,lock_revision,effective_locked_until,updated_at)
                 VALUES (?,0,NULL,UTC_TIMESTAMP()) ON DUPLICATE KEY UPDATE user_id = user_id
@@ -26,7 +32,7 @@ public class JdbcLockStateStore implements LockStateStore {
                 (rs, n) -> new State(rs.getLong(1), instant(rs.getObject(2, LocalDateTime.class))), userId.toString());
     }
     @Override public Instant now() {
-        return instant(jdbc.queryForObject("SELECT UTC_TIMESTAMP()", LocalDateTime.class));
+        return instant(jdbc.queryForObject("SELECT UTC_TIMESTAMP(6)", LocalDateTime.class));
     }
     @Override public Instant effectiveUntil(UUID userId, Instant now) {
         return instant(jdbc.queryForObject("""
@@ -71,6 +77,10 @@ public class JdbcLockStateStore implements LockStateStore {
             throw new IllegalArgumentException("Persisted lock does not match transition");
         }
         return rows.getFirst();
+    }
+    @Override public Instant lockExpiry(UUID userId, UUID remedyDecisionId) {
+        return instant(jdbc.queryForObject("SELECT locked_until FROM lock_entry WHERE user_id=? AND remedy_decision_id=?",
+                LocalDateTime.class, userId.toString(), remedyDecisionId.toString()));
     }
     @Override public void requireOverride(UUID userId, UUID overrideId) {
         Integer count = jdbc.queryForObject("""
