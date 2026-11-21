@@ -120,8 +120,10 @@ class LockStateMigrationMySqlTest {
     @Test void v7AddsDeliveryReceiptsAfterV6() {
         flyway("6").migrate();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='processed_event'", Integer.class)).isZero();
-        flyway(null).migrate();
+        flyway("7").migrate();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name IN ('processed_event','remedy_delivery_fingerprint')", Integer.class)).isEqualTo(2);
+        flyway(null).migrate();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='remedy_lock_evidence' AND column_name='decision_fingerprint'", Integer.class)).isEqualTo(1);
     }
 
     @Test void v7PreservesExistingEvidenceAndAcceptsLargeCounts() {
@@ -136,7 +138,7 @@ class LockStateMigrationMySqlTest {
                 UUID.randomUUID().toString(), UUID.randomUUID().toString(), now.plusDays(1), now);
         jdbc.update("INSERT INTO remedy_lock_evidence VALUES (?,?,?,?,?)", decision.toString(), UUID.randomUUID().toString(),
                 UUID.randomUUID().toString(), "SHORTFALL", 2147483647);
-        flyway(null).migrate();
+        flyway("7").migrate();
         assertThat(jdbc.queryForObject("SELECT settled_milestone_count FROM remedy_lock_evidence WHERE remedy_decision_id=?",
                 String.class, decision.toString())).isEqualTo("2147483647");
         assertThat(jdbc.queryForObject("SELECT locked_until FROM lock_entry WHERE remedy_decision_id=?",
@@ -145,5 +147,8 @@ class LockStateMigrationMySqlTest {
         assertThatThrownBy(() -> jdbc.update("UPDATE remedy_lock_evidence SET settled_milestone_count='-1' WHERE remedy_decision_id=?",
                 decision.toString())).hasRootCauseInstanceOf(java.sql.SQLException.class)
                 .rootCause().extracting("errorCode").isEqualTo(3819);
+        assertThatThrownBy(() -> flyway(null).migrate()).isInstanceOf(org.flywaydb.core.api.FlywayException.class);
+        assertThat(jdbc.queryForObject("SELECT settled_milestone_count FROM remedy_lock_evidence WHERE remedy_decision_id=?",
+                String.class, decision.toString())).isEqualTo("2147483648");
     }
 }

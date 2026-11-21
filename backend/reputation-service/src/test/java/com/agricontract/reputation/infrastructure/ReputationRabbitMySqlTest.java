@@ -151,7 +151,16 @@ class ReputationRabbitMySqlTest {
         awaitAcknowledgments(REMEDY, before + 2);
         publish(noFault);
         awaitAcknowledgments(REMEDY, before + 3);
-        assertThat(count("processed_event")).isEqualTo(2);
+        var matching = noFault.deepCopy();
+        matching.put("eventId", java.util.UUID.randomUUID().toString());
+        matching.put("correlationId", java.util.UUID.randomUUID().toString());
+        var matchingPayload = (ObjectNode) matching.get("payload");
+        matchingPayload.set("contractId", matchingPayload.remove("contractId"));
+        publish(matching);
+        awaitAcknowledgments(REMEDY, before + 4);
+        assertThat(count("processed_event")).isEqualTo(3);
+        assertThat(count("remedy_event_identity")).isEqualTo(3);
+        assertThat(count("remedy_lock_evidence")).isEqualTo(2);
         assertThat(count("lock_entry")).isZero();
         assertThat(count("event_outbox")).isZero();
     }
@@ -214,6 +223,181 @@ class ReputationRabbitMySqlTest {
         awaitAcknowledgments(REMEDY, before + 1);
         assertThat(count("processed_event")).isEqualTo(1);
         assertThat(count("lock_entry")).isEqualTo(1);
+    }
+
+    @Test void ineligibleDecisionCannotBeReplayedAsEligible() throws Exception {
+        var first = remedy("SELLER", false, "SHORTFALL", java.time.Instant.now());
+        FrozenSchemas.assertEvent("remedyFinalized", first);
+        long before = acknowledgments(REMEDY);
+        publish(first);
+        awaitAcknowledgments(REMEDY, before + 1);
+        var conflict = first.deepCopy();
+        conflict.put("eventId", java.util.UUID.randomUUID().toString());
+        ((ObjectNode) conflict.get("payload")).put("reputationEligible", true);
+        FrozenSchemas.assertEvent("remedyFinalized", conflict);
+        publish(conflict);
+        assertDeadLetter(REMEDY, conflict);
+        assertThat(count("lock_entry")).isZero();
+        assertThat(count("event_outbox")).isZero();
+        assertThat(count("remedy_lock_evidence")).isEqualTo(1);
+        assertThat(count("remedy_event_identity")).isEqualTo(1);
+        assertThat(count("user_lock_state")).isZero();
+    }
+
+    @Test void decisionConflictsAreRejectedAndFollowingDeliveriesSucceed() throws Exception {
+        List<java.util.function.Consumer<ObjectNode>> mutations = List.of(
+                p -> p.put("reputationEligible", false),
+                p -> p.put("attributionDecisionId", java.util.UUID.randomUUID().toString()),
+                p -> p.put("finalBreachingRole", "BUYER"),
+                p -> p.put("buyerId", java.util.UUID.randomUUID().toString()),
+                p -> p.put("sellerId", java.util.UUID.randomUUID().toString()),
+                p -> p.put("breachReasonCode", "NON_DELIVERY"),
+                p -> p.put("settledMilestoneCount", 1),
+                p -> p.put("contractId", java.util.UUID.randomUUID().toString()),
+                p -> p.put("decisionSource", "ARBITRATOR"),
+                p -> p.put("breachCaseId", java.util.UUID.randomUUID().toString()),
+                p -> p.put("penaltyEligible", true),
+                p -> p.putArray("affectedMilestoneIds").add(java.util.UUID.randomUUID().toString()),
+                p -> {
+                    var leg = p.putArray("remedyLegs").addObject();
+                    leg.put("remedyLegId", java.util.UUID.randomUUID().toString());
+                    leg.put("remedyType", "NONE");
+                    leg.put("fundType", "BUYER_DEPOSIT");
+                    leg.put("role", "BUYER");
+                    leg.put("amount", "1.00");
+                });
+        int expected = 0;
+        for (var mutate : mutations) {
+            var first = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
+            var conflict = first.deepCopy();
+            conflict.put("eventId", java.util.UUID.randomUUID().toString());
+            mutate.accept((ObjectNode) conflict.get("payload"));
+            FrozenSchemas.assertEvent("remedyFinalized", first);
+            FrozenSchemas.assertEvent("remedyFinalized", conflict);
+            long before = acknowledgments(REMEDY);
+            publish(first);
+            awaitAcknowledgments(REMEDY, before + 1);
+            publish(conflict);
+            assertDeadLetter(REMEDY, conflict);
+            expected++;
+            assertThat(count("lock_entry")).isEqualTo(expected);
+            assertThat(count("processed_event")).isEqualTo(expected);
+            assertThat(count("remedy_lock_evidence")).isEqualTo(expected);
+        }
+        var after = remedy(null, false, null, java.time.Instant.now());
+        long before = acknowledgments(REMEDY);
+        publish(after);
+        awaitAcknowledgments(REMEDY, before + 1);
+        assertThat(count("remedy_lock_evidence")).isEqualTo(expected + 1);
+        assertThat(count("lock_entry")).isEqualTo(expected);
+    }
+
+    @Test void sameDecisionWithDifferentDecisionTimeConflicts() throws Exception {
+        var first = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
+        long before = acknowledgments(REMEDY);
+        publish(first);
+        awaitAcknowledgments(REMEDY, before + 1);
+        var conflict = first.deepCopy();
+        conflict.put("eventId", java.util.UUID.randomUUID().toString());
+        conflict.put("occurredAt", java.time.Instant.parse(first.get("occurredAt").asText()).plusSeconds(1).toString());
+        FrozenSchemas.assertEvent("remedyFinalized", conflict);
+        publish(conflict);
+        assertDeadLetter(REMEDY, conflict);
+        assertThat(count("lock_entry")).isEqualTo(1);
+        assertThat(count("processed_event")).isEqualTo(1);
+        assertThat(count("remedy_lock_evidence")).isEqualTo(1);
+    }
+
+    @Test void changedQualityDispositionConflictsForValidPayloads() throws Exception {
+        var first = remedy("SELLER", true, "QUALITY_BELOW_COMMITTED", java.time.Instant.now());
+        ((ObjectNode) first.get("payload")).put("penaltyEligible", true);
+        var conflict = first.deepCopy();
+        conflict.put("eventId", java.util.UUID.randomUUID().toString());
+        ((ObjectNode) conflict.get("payload")).put("qualityDisposition", "NON_CONFORMING");
+        FrozenSchemas.assertEvent("remedyFinalized", first);
+        FrozenSchemas.assertEvent("remedyFinalized", conflict);
+        long before = acknowledgments(REMEDY);
+        publish(first);
+        awaitAcknowledgments(REMEDY, before + 1);
+        publish(conflict);
+        assertDeadLetter(REMEDY, conflict);
+        assertThat(count("lock_entry")).isEqualTo(1);
+    }
+
+    @Test void expiredDecisionStillRejectsConflictingReplay() throws Exception {
+        var first = remedy("SELLER", true, "SHORTFALL", java.time.Instant.parse("2020-01-01T00:00:00Z"));
+        long before = acknowledgments(REMEDY);
+        publish(first);
+        awaitAcknowledgments(REMEDY, before + 1);
+        var conflict = first.deepCopy();
+        conflict.put("eventId", java.util.UUID.randomUUID().toString());
+        ((ObjectNode) conflict.get("payload")).put("reputationEligible", false);
+        FrozenSchemas.assertEvent("remedyFinalized", conflict);
+        publish(conflict);
+        assertDeadLetter(REMEDY, conflict);
+        assertThat(count("remedy_lock_evidence")).isEqualTo(1);
+        assertThat(count("lock_entry")).isEqualTo(1);
+        assertThat(count("user_lock_state")).isZero();
+        assertThat(count("event_outbox")).isZero();
+    }
+
+    @Test void concurrentEligibleAndIneligibleDecisionsHaveOneWinner() throws Exception {
+        var entered = new CountDownLatch(2);
+        var release = new CountDownLatch(1);
+        doAnswer(call -> {
+            entered.countDown();
+            requireSignal(release);
+            return call.callRealMethod();
+        }).when(AopTestUtils.<RemedyDeliveryReceipt>getUltimateTargetObject(remedyReceipts)).claimDecision(any(), any());
+        var first = remedy("SELLER", false, "SHORTFALL", java.time.Instant.now());
+        var second = first.deepCopy();
+        second.put("eventId", java.util.UUID.randomUUID().toString());
+        ((ObjectNode) second.get("payload")).put("reputationEligible", true);
+        FrozenSchemas.assertEvent("remedyFinalized", first);
+        FrozenSchemas.assertEvent("remedyFinalized", second);
+        long before = acknowledgments(REMEDY);
+        try {
+            publish(first);
+            publish(second);
+            assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+        } finally {
+            release.countDown();
+        }
+        Message dead = rabbit.receive(REMEDY + ".dlq", 15000);
+        assertThat(dead).isNotNull();
+        awaitAcknowledgments(REMEDY, before + 1);
+        assertThat(count("remedy_lock_evidence")).isEqualTo(1);
+        assertThat(count("processed_event")).isEqualTo(1);
+        assertThat(count("remedy_event_identity")).isEqualTo(1);
+        String winner = runtime.queryForObject("SELECT event_id FROM processed_event", String.class);
+        int expectedLocks = winner.equals(second.get("eventId").asText()) ? 1 : 0;
+        assertThat(count("lock_entry")).isEqualTo(expectedLocks);
+        assertThat(count("user_lock_state")).isEqualTo(expectedLocks);
+        assertThat(count("event_outbox")).isEqualTo(expectedLocks);
+    }
+
+    @Test void failureAfterDecisionEvidenceRollsBackAndCanRetry() throws Exception {
+        var calls = new AtomicInteger();
+        doAnswer(call -> {
+            if (calls.get() == 1) {
+                assertThat(ReputationDatabaseFixture.ADMIN.queryForObject("SELECT COUNT(*) FROM remedy_lock_evidence", Integer.class)).isZero();
+                assertThat(ReputationDatabaseFixture.ADMIN.queryForObject("SELECT COUNT(*) FROM processed_event", Integer.class)).isZero();
+            }
+            Object result = call.callRealMethod();
+            if (calls.incrementAndGet() == 1) throw new DataAccessResourceFailureException("injected after decision evidence");
+            return result;
+        }).when(AopTestUtils.<RemedyDeliveryReceipt>getUltimateTargetObject(remedyReceipts)).claimDecision(any(), any());
+        var event = remedy(null, false, null, java.time.Instant.now());
+        long before = acknowledgments(REMEDY);
+        publish(event);
+        awaitAcknowledgments(REMEDY, before + 1);
+        assertThat(calls).hasValue(2);
+        assertThat(count("remedy_lock_evidence")).isEqualTo(1);
+        assertThat(count("processed_event")).isEqualTo(1);
+        assertThat(count("remedy_event_identity")).isEqualTo(1);
+        assertThat(count("lock_entry")).isZero();
+        assertThat(count("user_lock_state")).isZero();
+        assertThat(count("event_outbox")).isZero();
     }
 
     @Test void invalidAndConflictingRemediesReachDlqWithoutExtraEffects() throws Exception {

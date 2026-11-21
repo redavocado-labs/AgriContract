@@ -22,28 +22,34 @@ Java 21 / Spring Boot 3.3.5 service, port 8088. This foundation persists two imm
 
 The fields match the frozen schemas; `settled_at` / `resolved_at` are `DATETIME(6)`, and dispute resolution is constrained to BUYER/SELLER.
 
-`V2__create_reputation_lock_read_storage.sql` creates the frozen `lock_entry` and `lock_override_event` fields. It retains unique event and remedy-decision identities and all four multiplier inputs. The only foreign key is local: override to lock entry. Checks enforce lock role, positive duration, the `UNLOCK_EARLY` type and distinct proposer/approver identities. Indexes support user history and override lookup. Lock timestamps retain the frozen `TIMESTAMP` precision. No status column is mutated.
+`V2__create_reputation_lock_read_storage.sql` creates the frozen `lock_entry` and `lock_override_event` fields. It retains unique event and remedy-decision identities and all four multiplier inputs. The override foreign key is local to the ledger. Checks enforce lock role, positive duration, the `UNLOCK_EARLY` type and distinct proposer/approver identities. Indexes support user history and override lookup. Later migrations retain microsecond decision and expiry precision in UTC. No status column is mutated.
 
 The database boundary is enforced by privileges, not an ORM annotation. Provision in this order:
 
 1. As a deployment DBA, create `reputation_db` and a **dedicated migration account** scoped to this database. Supply passwords through secret tooling. The migration account needs schema DDL and schema-history DML; never grant it access to another service database.
 2. Run the versioned scripts with Flyway using that account (locations: this service's `src/main/resources/db/migration`). This bootstrap step precedes runtime grants because MySQL table grants require the tables to exist.
-3. Create a **fresh** `reputation_runtime` account with no global/schema privileges or inherited roles. Apply [ops/grants.sql](ops/grants.sql) as the provisioning administrator. It grants only SELECT/INSERT on facts and SELECT on lock/override storage. Adapt the account host to deployment policy; the checked-in script uses `%` and requires network isolation.
+3. Create a **fresh** `reputation_runtime` account with no global/schema privileges or inherited roles. Apply [ops/grants.sql](ops/grants.sql) as the provisioning administrator. It grants SELECT/INSERT on facts, lock entries and receipts, SELECT on overrides, and the specific projection/outbox permissions listed in the script. Adapt the account host to deployment policy; the checked-in script uses `%` and requires network isolation.
 4. Verify `SHOW GRANTS FOR 'reputation_runtime'@'%'`; do not reuse a broadly privileged existing account. Start the application with separate runtime and migration credentials. Spring Flyway validates/migrates with its own account; JDBC uses the runtime account. Do not expose the database directly to clients.
 
-No real credentials are included. The integration suite provisions these accounts against disposable MySQL, executes the actual grants script, checks MySQL permission-denied error codes for UPDATE/DELETE/TRUNCATE/ALTER/DROP and lock INSERT, and verifies the runtime account cannot read Flyway history. A privileged administrator can still alter data; that is outside the runtime-account protection boundary.
+No real credentials are included. The integration suite provisions these accounts against disposable MySQL, executes the actual grants script, checks MySQL permission-denied error codes for UPDATE/DELETE/TRUNCATE/ALTER/DROP on protected facts and override INSERT, and verifies the runtime account cannot read Flyway history. A privileged administrator can still alter data; that is outside the runtime-account protection boundary.
 
 ### Replay behavior
 
-Each append first attempts a plain INSERT in its own transaction. A primary-key or event-key collision is compared in a **fresh transaction** after rollback, so a concurrent winner is visible under MySQL repeatable read. Identical immutable content returns DUPLICATE, including an identical business fact with a different event ID. Conflicting fields, an event ID reused for a different business fact, or an event/business key pointing at two rows are rejected without mutation. The original event ID stays stored; ignored alternate IDs are not persisted as an additional alias ledger. MySQL constraints are the concurrency authority.
+For completed-contract and dispute facts, each append first attempts a plain INSERT in its own transaction. A primary-key or event-key collision is compared in a **fresh transaction** after rollback, so a concurrent winner is visible under MySQL repeatable read. Identical immutable content returns DUPLICATE, including an identical business fact with a different event ID. Conflicting fields, an event ID reused for a different business fact, or an event/business key pointing at two rows are rejected without mutation. The original event ID stays stored; ignored alternate IDs are not persisted as an additional alias ledger. MySQL constraints are the concurrency authority.
 
 Consumers map IDs directly from the frozen payload and envelope `occurredAt` into application Commands; domain construction retains microsecond normalization. They reject unsupported versions, malformed/ambiguous JSON, unexpected fields, wrong producer/type and conflicting facts. The listener commits before returning for acknowledgment. Transient failures receive three bounded attempts; permanent failures and exhausted retries reject to the service's restricted DLQ. Replay must preserve the original event ID, timestamp and payload. A service-owned DLX isolates failed deliveries from other consumers while preserving canonical routing keys. No raw payload is included by the service's rejection handler.
 
-Queues: `reputation-svc.contract.settled` and `reputation-svc.milestone.dispute_resolved`, with matching `.dlq` queues; topic exchange `agricontract.contracts`, service-owned direct DLX `agricontract.reputation.dlx`. Each DLQ binds its original event key (`contract.settled` / `milestone.dispute_resolved`); there is no `x-dead-letter-routing-key` override. This follows the [final 14/10/2026 reviewer convention](https://github.com/RedAvocado22/AgriContract/pull/166#issuecomment-6165707457). The reviewer confirmed these queues have not been deployed, so no deployed-queue migration is required. The consumer validates the canonical envelope and does not accept legacy flat producer payloads. Broker permissions must restrict publishing to trusted producers.
+Queues: `reputation-svc.contract.settled`, `reputation-svc.milestone.dispute_resolved` and `reputation-svc.remedy.finalized`, with matching `.dlq` queues; topic exchange `agricontract.contracts`, service-owned direct DLX `agricontract.reputation.dlx`. Each DLQ binds its original event key; there is no `x-dead-letter-routing-key` override. The consumers validate the canonical envelope and do not accept legacy flat payloads. Broker permissions must restrict publishing to trusted producers.
 
-The DLQ monitor passively checks only those two owned DLQs every five minutes, starting after the first interval. It never reads message bodies or acknowledges/replays messages. Nonempty queues emit `event=reputation_dlq_nonempty queue=<owned-name> messageCount=<count>`; probe failures emit only `event=reputation_dlq_probe_failed queue=<owned-name>`. Empty queues produce no warning. Each probe uses a separate short-lived connection cloned from the configured broker/TLS settings, with bounded connect, handshake, RPC and shutdown timeouts, and no automatic recovery. Failures are contained per queue; consumer connections are never closed or reconfigured. Raw driver exception logging is suppressed only on these monitor connections.
+The DLQ monitor passively checks the three owned DLQs every five minutes, starting after the first interval. It never reads message bodies or acknowledges/replays messages. Nonempty queues emit `event=reputation_dlq_nonempty queue=<owned-name> messageCount=<count>`; probe failures emit only `event=reputation_dlq_probe_failed queue=<owned-name>`. Empty queues produce no warning. Each probe uses a separate short-lived connection cloned from the configured broker/TLS settings, with bounded connect, handshake, RPC and shutdown timeouts, and no automatic recovery. Failures are contained per queue; consumer connections are never closed or reconfigured. Raw driver exception logging is suppressed only on these monitor connections.
 
-Optional settings: `REPUTATION_DLQ_MONITOR_ENABLED` (default true), `REPUTATION_DLQ_MONITOR_INTERVAL_MS` (default 300000; accepted 30000–3600000), `REPUTATION_DLQ_MONITOR_TIMEOUT_MS` (default 3000; accepted 1000–10000 per network phase). Invalid timing values fail startup rather than enabling unbounded timeouts or tight polling. The bounded two-queue pass runs with fixed delay, so slow probes cannot pile up overlapping scheduled checks.
+Optional settings: `REPUTATION_DLQ_MONITOR_ENABLED` (default true), `REPUTATION_DLQ_MONITOR_INTERVAL_MS` (default 300000; accepted 30000–3600000), `REPUTATION_DLQ_MONITOR_TIMEOUT_MS` (default 3000; accepted 1000–10000 per network phase). Invalid timing values fail startup rather than enabling unbounded timeouts or tight polling. The bounded pass runs with fixed delay, so slow probes cannot pile up overlapping scheduled checks.
+
+`remedy.finalized` records both a delivery receipt and immutable decision evidence, including for ineligible and null-role outcomes. Decision equivalence includes every frozen payload field and envelope `occurredAt`, but excludes delivery metadata such as event and correlation IDs. Object field order is immaterial; contract lists retain their order, UUIDs and milestone counts are normalized, and money is compared as a two-decimal value. Matching decisions are no-ops; conflicts go to the DLQ. The decision claim precedes the per-user mutex, and receipt, evidence, ledger, projection and outbox share one transaction.
+
+D52 uses a 3-day base for quality/shortfall and 30 days for strategic or fallback reasons; zero progress adds 1.5x only for the latter. D55 counts earlier locks within 24 calendar months for repeat offense and all earlier completions/locks for track record, anchored to `occurredAt`; the final duration is rounded up. D66 records an already expired decision in the ledger without changing lock state or emitting an event. Historical inputs are the facts available when processing occurs; late facts do not recompute immutable snapshots.
+
+V8 refuses to migrate if V6/V7 decision evidence already exists: those rows lack the full original payload needed to reconstruct a truthful fingerprint. Stop and resolve such data with the database owner; do not fabricate a backfill or delete evidence.
 
 ## Public summary and security
 
@@ -102,7 +108,7 @@ Coverage includes immutable construction, replay and content conflicts, concurre
 - #87 remains a separate repository workflow gate; implementation approval does not waive PR publication/review/merge gates.
 - #89 owns the eventual shared event infrastructure; these two local adapters can adopt it when merged.
 - #105 gateway routing/JWT propagation and canonical contract-service event production require their owners' integration. No unmerged implementation is imported or modified.
-- #144 owns negative-consequence ingestion and production lock creation. This service does not bind `remedy.finalized`, `breach.reported` or `contract.terminated`. Unresolved allegations have no reputation consequences here.
+- #144 owns negative-consequence ingestion and production lock creation from `remedy.finalized`. This service does not derive negative consequences from `breach.reported` or `contract.terminated`; unresolved allegations have no reputation consequences here.
 - #145 owns dispute-derived scoring. Dispute facts are stored only.
 - No inspection-service (#112), maker-checker, early-unlock write API, AML, credit export or two-business-day contest timer is implemented. The contest policy belongs upstream to attribution finalization.
 
@@ -114,12 +120,12 @@ V3 backfills `user_lock_state` from active, non-overridden ledger entries, takin
 user and setting revision to 0. An empty ledger creates no state rows. It does not alter ledger rows or emit
 historical lock/unlock events. No revision reconciliation is needed: the leader confirmed no such events
 were previously published. The first subsequent lock event uses revision 1. Apply updated `ops/grants.sql` after migration:
-runtime can mutate the projection/outbox and insert receipts; lock/override storage remains read-only until
-the owning #144/#269 writers and their grants are delivered. Run migrations only against disposable test
+runtime can mutate the projection/outbox, insert receipts and lock entries, and read override storage.
+Run migrations only against disposable test
 databases during development; deployment requires the normal database-owner rollout.
 
-`LockEventLifecycle` is the integration boundary for future #144/#269 use cases, not an HTTP API or a remedy
-consumer. Its callback contains the owning use case's ledger INSERT, after eligibility/approval has been
+`LockEventLifecycle` is the integration boundary used by #144 and available to the future #269 use case; it is not an HTTP API.
+Its callback contains the owning use case's ledger INSERT, after eligibility/approval has been
 established. The callback must use the same transactional datasource, must run only inside this boundary,
 and must not perform external effects. Never insert a lock first and then call this boundary in a separate
 transaction: that would bypass the per-user mutex and permit a race with expiry.
@@ -160,15 +166,13 @@ Configuration: `REPUTATION_LOCK_EXPIRY_ENABLED` (true), `REPUTATION_LOCK_EXPIRY_
 milliseconds), `REPUTATION_LOCK_EXPIRY_BATCH_SIZE` (100, range 1..1000), `REPUTATION_OUTBOX_ENABLED` (true).
 No user-service queues are declared here; consumer bindings remain owned by their consumer.
 
-Integration limitations: #144 must call this boundary for production lock creation and supply the remedy
-reason; #269 must call it only after a valid approval. There are no fabricated production callers. V3 does not
-invent historical creation reasons/events. A delayed creation with no effective active lock is rejected transactionally because
-the canonical locked event requires a non-null effective expiry. The owning #144 workflow must resolve such
-a case before integration. No public-summary scoring/response change is made.
+Integration limitations: #144 calls `recordRemedy` with the finalized reason; #269 must call its boundary only
+after a valid approval. V3 does not invent historical creation reasons/events. Under D66 an already-expired
+remedy is recorded without creating an active-state transition. No public-summary response change is made.
 
 Tests: `LockEventLifecycleTest` covers application ordering/guards without Spring; `ExpireLocksJobTest`
 covers per-user failure isolation; `LockEventLifecycleMySqlTest` uses MySQL 8.0.42 with production migrations
 for revision races, durable replay, rollback, both creation/timeout lock orders, overlapping/early-unlock
 semantics, actual runtime grants and DB UTC time. A real RabbitMQ 3.13.7 test exercises unroutable retry and
-resend identity. Controlled privileged fixture writers stand in for #144/#269 and share the same transaction;
-they are test-only and do not relax the production ledger grants.
+resend identity. Some lifecycle tests use controlled privileged fixture writers for transitions; production
+remedy tests additionally exercise the actual #144 writer and do not relax the ledger grants.
