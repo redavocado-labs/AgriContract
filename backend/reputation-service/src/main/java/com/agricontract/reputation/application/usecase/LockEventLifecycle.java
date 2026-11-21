@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 import org.springframework.stereotype.Service;
 
 /**
@@ -37,6 +38,35 @@ public class LockEventLifecycle {
             throw new IllegalArgumentException("Unknown breach reason");
         }
         return transition(userId, remedyDecisionId, breachReasonCode, correlationId, appendLock, true);
+    }
+
+    /** Append returns the new entry's expiry, or null for an already processed decision. */
+    public boolean recordRemedy(UUID userId, UUID decisionId, String reason, String correlationId,
+                                Supplier<Instant> append) {
+        Objects.requireNonNull(userId);
+        Objects.requireNonNull(decisionId);
+        Objects.requireNonNull(reason);
+        Objects.requireNonNull(append);
+        return transactions.inTransaction(() -> {
+            states.acquireMutex(userId);
+            if (append.get() == null) {
+                return false;
+            }
+            UUID cause = states.requireLock(userId, decisionId);
+            Instant expiry = states.lockExpiry(userId, decisionId);
+            Instant now = states.now();
+            if (!expiry.isAfter(now)) {
+                return true;
+            }
+            var state = states.acquire(userId);
+            Instant effective = states.effectiveUntil(userId, now);
+            if (effective == null) {
+                throw new IllegalStateException("Active lock missing from ledger");
+            }
+            persist(userId, state, effective, reason, now, correlationId, cause, true);
+            states.remember("LOCK", decisionId, userId, reason);
+            return true;
+        });
     }
 
     public boolean unlockedEarly(UUID userId, UUID overrideId, String correlationId, Runnable appendApprovedOverride) {

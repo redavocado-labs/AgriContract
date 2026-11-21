@@ -6,6 +6,8 @@ import com.agricontract.reputation.infrastructure.contract.FrozenSchemas;
 import com.agricontract.reputation.infrastructure.messaging.ReputationFactConsumerTest;
 import com.agricontract.reputation.infrastructure.persistence.JdbcFactRepository;
 import com.agricontract.reputation.infrastructure.messaging.DlqMonitor;
+import com.agricontract.reputation.infrastructure.messaging.RemedyDeliveryReceipt;
+import com.agricontract.reputation.infrastructure.messaging.OutboxLockEventPublisher;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -31,6 +33,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.util.AopTestUtils;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
@@ -45,6 +48,7 @@ import static org.mockito.Mockito.*;
 class ReputationRabbitMySqlTest {
     static final String COMPLETED = "reputation-svc.contract.settled";
     static final String DISPUTE = "reputation-svc.milestone.dispute_resolved";
+    static final String REMEDY = "reputation-svc.remedy.finalized";
     static final String BROKER_USER = "reputation_test";
     static final String BROKER_PASSWORD = "test-only-broker-password";
     static final GenericContainer<?> RABBIT = new GenericContainer<>("rabbitmq:3.13.7-management")
@@ -61,6 +65,7 @@ class ReputationRabbitMySqlTest {
         r.add("spring.rabbitmq.port", () -> RABBIT.getMappedPort(5672));
         r.add("spring.rabbitmq.username", () -> BROKER_USER);
         r.add("spring.rabbitmq.password", () -> BROKER_PASSWORD);
+        r.add("spring.rabbitmq.listener.simple.concurrency", () -> 2);
         r.add("gateway.internal-secret", () -> "test-only-broker-gateway-secret");
     }
     @Autowired RabbitTemplate rabbit;
@@ -69,16 +74,252 @@ class ReputationRabbitMySqlTest {
     @Autowired ObjectMapper json;
     @Autowired DlqMonitor monitor;
     @SpyBean(proxyTargetAware = true) JdbcFactRepository facts;
+    @SpyBean(proxyTargetAware = true) RemedyDeliveryReceipt remedyReceipts;
+    @SpyBean(proxyTargetAware = true) OutboxLockEventPublisher lockPublisher;
     final HttpClient management = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
 
     @BeforeEach void resetFixtures() {
-        reset(facts);
-        for (String queue : List.of(COMPLETED, DISPUTE)) {
+        reset(facts, remedyReceipts, lockPublisher);
+        for (String queue : List.of(COMPLETED, DISPUTE, REMEDY)) {
             brokerAdmin.purgeQueue(queue, false);
             brokerAdmin.purgeQueue(queue + ".dlq", false);
         }
         ReputationDatabaseFixture.ADMIN.update("DELETE FROM completed_contract_fact");
         ReputationDatabaseFixture.ADMIN.update("DELETE FROM dispute_outcome_fact");
+        for (String table : List.of("remedy_delivery_fingerprint", "processed_event", "lock_event_receipt", "event_outbox",
+                "user_lock_state", "lock_override_event", "remedy_event_identity", "remedy_lock_evidence", "lock_entry")) {
+            ReputationDatabaseFixture.ADMIN.update("DELETE FROM " + table);
+        }
+    }
+
+    ObjectNode remedy(String role, boolean eligible, String reason, java.time.Instant decided) {
+        ObjectNode event = ReputationFactConsumerTest.event("contract.settled");
+        event.put("eventType", "remedy.finalized");
+        event.put("occurredAt", decided.toString());
+        ObjectNode p = (ObjectNode) event.get("payload");
+        p.removeAll();
+        p.put("remedyDecisionId", java.util.UUID.randomUUID().toString());
+        p.put("attributionDecisionId", java.util.UUID.randomUUID().toString());
+        p.putNull("breachCaseId");
+        p.put("contractId", event.get("aggregateId").asText());
+        p.put("buyerId", java.util.UUID.randomUUID().toString());
+        p.put("sellerId", java.util.UUID.randomUUID().toString());
+        p.putArray("affectedMilestoneIds");
+        p.put("settledMilestoneCount", 0);
+        if (role == null) p.putNull("finalBreachingRole"); else p.put("finalBreachingRole", role);
+        if (reason == null) p.putNull("breachReasonCode"); else p.put("breachReasonCode", reason);
+        p.putNull("qualityDisposition");
+        p.put("decisionSource", "SYSTEM");
+        p.put("penaltyEligible", false);
+        p.put("reputationEligible", eligible);
+        p.putArray("remedyLegs");
+        return event;
+    }
+
+    @Test void remedyDeliveriesMapRolesAndDeduplicate() throws Exception {
+        ObjectNode seller = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
+        ObjectNode buyer = remedy("BUYER", true, "FUNDING_FAILURE", java.time.Instant.now());
+        FrozenSchemas.assertEvent("remedyFinalized", seller);
+        FrozenSchemas.assertEvent("remedyFinalized", buyer);
+        long before = acknowledgments(REMEDY);
+        publish(seller); publish(buyer);
+        awaitAcknowledgments(REMEDY, before + 2);
+        publish(seller);
+        var otherEvent = seller.deepCopy();
+        otherEvent.put("eventId", java.util.UUID.randomUUID().toString());
+        publish(otherEvent);
+        awaitAcknowledgments(REMEDY, before + 4);
+        assertThat(count("lock_entry")).isEqualTo(2);
+        assertThat(count("processed_event")).isEqualTo(3);
+        assertThat(count("event_outbox")).isEqualTo(2);
+        assertThat(runtime.queryForObject("SELECT user_id FROM lock_entry WHERE remedy_decision_id=?", String.class,
+                seller.path("payload").path("remedyDecisionId").asText())).isEqualTo(seller.path("payload").path("sellerId").asText());
+        assertThat(runtime.queryForObject("SELECT user_id FROM lock_entry WHERE remedy_decision_id=?", String.class,
+                buyer.path("payload").path("remedyDecisionId").asText())).isEqualTo(buyer.path("payload").path("buyerId").asText());
+        for (String envelope : runtime.queryForList("SELECT envelope FROM event_outbox", String.class)) {
+            FrozenSchemas.assertEvent("reputationLocked", json.readTree(envelope));
+        }
+    }
+
+    @Test void noFaultAndIneligibleDeliveriesAreRecordedWithoutLocks() throws Exception {
+        var noFault = remedy(null, false, null, java.time.Instant.now());
+        var ineligible = remedy("SELLER", false, "PRODUCTION_SHOCK_NON_FM", java.time.Instant.now());
+        FrozenSchemas.assertEvent("remedyFinalized", noFault);
+        FrozenSchemas.assertEvent("remedyFinalized", ineligible);
+        long before = acknowledgments(REMEDY);
+        publish(noFault); publish(ineligible);
+        awaitAcknowledgments(REMEDY, before + 2);
+        publish(noFault);
+        awaitAcknowledgments(REMEDY, before + 3);
+        assertThat(count("processed_event")).isEqualTo(2);
+        assertThat(count("lock_entry")).isZero();
+        assertThat(count("event_outbox")).isZero();
+    }
+
+    @Test void concurrentDuplicateDeliveriesProduceOneLockAndOneOutboxEvent() throws Exception {
+        var event = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
+        long before = acknowledgments(REMEDY);
+        publish(event);
+        publish(event);
+        awaitAcknowledgments(REMEDY, before + 2);
+        assertThat(count("processed_event")).isEqualTo(1);
+        assertThat(count("lock_entry")).isEqualTo(1);
+        assertThat(count("user_lock_state")).isEqualTo(1);
+        assertThat(count("event_outbox")).isEqualTo(1);
+    }
+
+    @Test void largeSchemaValidMilestoneCountIsPreservedAndComparedOnReplay() throws Exception {
+        var event = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
+        ((ObjectNode) event.get("payload")).put("settledMilestoneCount", new java.math.BigInteger("18446744073709551616"));
+        FrozenSchemas.assertEvent("remedyFinalized", event);
+        long before = acknowledgments(REMEDY);
+        publish(event);
+        awaitAcknowledgments(REMEDY, before + 1);
+        assertThat(runtime.queryForObject("SELECT settled_milestone_count FROM remedy_lock_evidence", String.class))
+                .isEqualTo("18446744073709551616");
+        var replay = event.deepCopy();
+        replay.put("eventId", java.util.UUID.randomUUID().toString());
+        publish(replay);
+        awaitAcknowledgments(REMEDY, before + 2);
+        assertThat(count("lock_entry")).isEqualTo(1);
+        assertThat(count("processed_event")).isEqualTo(2);
+        var conflict = replay.deepCopy();
+        conflict.put("eventId", java.util.UUID.randomUUID().toString());
+        ((ObjectNode) conflict.get("payload")).put("settledMilestoneCount", new java.math.BigInteger("18446744073709551617"));
+        publish(conflict);
+        assertDeadLetter(REMEDY, conflict);
+        assertThat(count("processed_event")).isEqualTo(2);
+    }
+
+    @Test void remedyDeliveryIsUnacknowledgedUntilTransactionCommits() throws Exception {
+        var entered = new CountDownLatch(1);
+        var release = new CountDownLatch(1);
+        doAnswer(call -> {
+            Object result = call.callRealMethod();
+            entered.countDown();
+            requireSignal(release);
+            return result;
+        }).when(AopTestUtils.<RemedyDeliveryReceipt>getUltimateTargetObject(remedyReceipts)).claim(any(), any());
+        var event = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
+        long before = acknowledgments(REMEDY);
+        try {
+            publish(event);
+            requireSignal(entered);
+            awaitUnacknowledged(REMEDY);
+            assertThat(count("processed_event")).isZero();
+            assertThat(count("lock_entry")).isZero();
+        } finally {
+            release.countDown();
+        }
+        awaitAcknowledgments(REMEDY, before + 1);
+        assertThat(count("processed_event")).isEqualTo(1);
+        assertThat(count("lock_entry")).isEqualTo(1);
+    }
+
+    @Test void invalidAndConflictingRemediesReachDlqWithoutExtraEffects() throws Exception {
+        var invalid = remedy("SELLER", true, null, java.time.Instant.now());
+        publish(invalid);
+        assertDeadLetter(REMEDY, invalid);
+        assertThat(count("processed_event")).isZero();
+        var missing = remedy("BUYER", true, "FUNDING_FAILURE", java.time.Instant.now());
+        ((ObjectNode) missing.get("payload")).remove("settledMilestoneCount");
+        publish(missing);
+        assertDeadLetter(REMEDY, missing);
+        var original = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
+        long before = acknowledgments(REMEDY);
+        publish(original);
+        awaitAcknowledgments(REMEDY, before + 1);
+        var conflict = original.deepCopy();
+        ((ObjectNode) conflict.get("payload")).put("sellerId", java.util.UUID.randomUUID().toString());
+        publish(conflict);
+        assertDeadLetter(REMEDY, conflict);
+        var decisionConflict = conflict.deepCopy();
+        decisionConflict.put("eventId", java.util.UUID.randomUUID().toString());
+        publish(decisionConflict);
+        assertDeadLetter(REMEDY, decisionConflict);
+        assertThat(count("lock_entry")).isEqualTo(1);
+        assertThat(count("processed_event")).isEqualTo(1);
+    }
+
+    @Test void invalidRemedyFieldsReachDlq() throws Exception {
+        var badId = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
+        ((ObjectNode) badId.get("payload")).put("buyerId", "not-a-uuid");
+        var negative = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
+        ((ObjectNode) negative.get("payload")).put("settledMilestoneCount", -1);
+        var fractional = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
+        ((ObjectNode) fractional.get("payload")).put("settledMilestoneCount", new java.math.BigDecimal("1.00000000000000000001"));
+        var invalidQuality = remedy("BUYER", true, "FUNDING_FAILURE", java.time.Instant.now());
+        ((ObjectNode) invalidQuality.get("payload")).put("qualityDisposition", "NON_CONFORMING");
+        var wrongProducer = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
+        wrongProducer.put("producer", "user-service");
+        for (var event : List.of(badId, negative, fractional, invalidQuality, wrongProducer)) {
+            publish(event);
+            assertDeadLetter(REMEDY, event);
+        }
+        assertThat(count("processed_event")).isZero();
+        assertThat(count("lock_entry")).isZero();
+    }
+
+    @Test void expiredRemedyOnlyRecordsHistoryAndReceipt() throws Exception {
+        var expired = remedy("SELLER", true, "SHORTFALL", java.time.Instant.parse("1960-01-01T00:00:00Z"));
+        long before = acknowledgments(REMEDY);
+        publish(expired);
+        awaitAcknowledgments(REMEDY, before + 1);
+        assertThat(count("lock_entry")).isEqualTo(1);
+        assertThat(count("processed_event")).isEqualTo(1);
+        assertThat(count("user_lock_state")).isZero();
+        assertThat(count("event_outbox")).isZero();
+        assertThat(count("lock_event_receipt")).isZero();
+    }
+
+    @Test void lockExpiryAfter2038IsPersistedAndPublished() throws Exception {
+        var event = remedy("SELLER", true, "SHORTFALL", java.time.Instant.parse("2040-01-01T00:00:00Z"));
+        long before = acknowledgments(REMEDY);
+        publish(event);
+        awaitAcknowledgments(REMEDY, before + 1);
+        assertThat(runtime.queryForObject("SELECT locked_until FROM lock_entry", java.time.LocalDateTime.class))
+                .isEqualTo(java.time.LocalDateTime.parse("2040-01-04T00:00:00"));
+        assertThat(runtime.queryForObject("SELECT effective_locked_until FROM user_lock_state", java.time.LocalDateTime.class))
+                .isEqualTo(java.time.LocalDateTime.parse("2040-01-04T00:00:00"));
+        assertThat(count("event_outbox")).isEqualTo(1);
+    }
+
+    @Test void receiptAndBusinessDataRollbackTogetherOnTransientFailure() throws Exception {
+        var attempts = new AtomicInteger();
+        doAnswer(call -> {
+            Object result = call.callRealMethod();
+            if (attempts.incrementAndGet() == 1) throw new DataAccessResourceFailureException("injected after receipt");
+            return result;
+        }).when(AopTestUtils.<RemedyDeliveryReceipt>getUltimateTargetObject(remedyReceipts)).claim(any(), any());
+        var event = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
+        long before = acknowledgments(REMEDY);
+        publish(event);
+        awaitAcknowledgments(REMEDY, before + 1);
+        assertThat(attempts).hasValue(2);
+        assertThat(count("processed_event")).isEqualTo(1);
+        assertThat(count("remedy_delivery_fingerprint")).isEqualTo(1);
+        assertThat(count("lock_entry")).isEqualTo(1);
+        assertThat(count("event_outbox")).isEqualTo(1);
+    }
+
+    @Test void outboxFailureRollsBackReceiptAndLedgerBeforeDlqReplay() throws Exception {
+        doAnswer(call -> {
+            call.callRealMethod();
+            throw new DataAccessResourceFailureException("injected after outbox write");
+        }).when(lockPublisher).publish(any(), anyBoolean(), any(), any(), anyLong(), any(), any(), any());
+        var event = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
+        publish(event);
+        Message dead = assertDeadLetter(REMEDY, event);
+        for (String table : List.of("processed_event", "remedy_delivery_fingerprint", "lock_entry", "remedy_lock_evidence",
+                "remedy_event_identity", "user_lock_state", "lock_event_receipt", "event_outbox")) {
+            assertThat(count(table)).as(table).isZero();
+        }
+        reset(lockPublisher);
+        long before = acknowledgments(REMEDY);
+        rabbit.send("agricontract.contracts", "remedy.finalized", dead);
+        awaitAcknowledgments(REMEDY, before + 1);
+        assertThat(count("lock_entry")).isEqualTo(1);
+        assertThat(count("event_outbox")).isEqualTo(1);
     }
     @Test void canonicalCompletionAndDisputeDeliveryAndReplayAreAcknowledgedOncePerDelivery() throws Exception {
         var completed = ReputationFactConsumerTest.event("contract.settled");
@@ -181,8 +422,8 @@ class ReputationRabbitMySqlTest {
         assertThat(exchange.path("type").asText()).isEqualTo("direct");
         assertThat(exchange.path("durable").asBoolean()).isTrue();
         var bindings = managementGet("/api/exchanges/%2F/agricontract.reputation.dlx/bindings/source");
-        assertThat(bindings.size()).isEqualTo(2);
-        for (String queue : List.of(COMPLETED, DISPUTE)) {
+        assertThat(bindings.size()).isEqualTo(3);
+        for (String queue : List.of(COMPLETED, DISPUTE, REMEDY)) {
             var arguments = queueStats(queue).path("arguments");
             assertThat(arguments.path("x-dead-letter-exchange").asText()).isEqualTo("agricontract.reputation.dlx");
             assertThat(arguments.has("x-dead-letter-routing-key")).isFalse();

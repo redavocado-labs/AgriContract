@@ -7,6 +7,7 @@ import java.util.UUID;
 public interface LockStateStore {
     record State(long revision, Instant effectiveUntil) {}
     record DueLock(Instant effectiveUntil, UUID userId) {}
+    void acquireMutex(UUID userId);
     State acquire(UUID userId);
     Instant now();
     Instant effectiveUntil(UUID userId, Instant now);
@@ -14,6 +15,7 @@ public interface LockStateStore {
     boolean alreadyPublished(String kind, UUID businessId, UUID userId, String reason);
     void remember(String kind, UUID businessId, UUID userId, String reason);
     UUID requireLock(UUID userId, UUID remedyDecisionId);
+    Instant lockExpiry(UUID userId, UUID remedyDecisionId);
     void requireOverride(UUID userId, UUID overrideId);
     void save(UUID userId, long revision, Instant effectiveUntil, Instant now);
 }

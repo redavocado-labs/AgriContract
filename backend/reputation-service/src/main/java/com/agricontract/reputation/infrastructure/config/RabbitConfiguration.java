@@ -20,7 +20,7 @@ import com.agricontract.reputation.infrastructure.messaging.DlqMonitor;
 @EnableScheduling
 public class RabbitConfiguration {
     public static final String DLX = "agricontract.reputation.dlx";
-    public static final List<String> EVENT_KEYS = List.of("contract.settled", "milestone.dispute_resolved");
+    public static final List<String> EVENT_KEYS = List.of("contract.settled", "milestone.dispute_resolved", "remedy.finalized");
     public static final List<String> DLQS = EVENT_KEYS.stream().map(key -> "reputation-svc." + key + ".dlq").toList();
     @Bean
     Declarables reputationBindings() {

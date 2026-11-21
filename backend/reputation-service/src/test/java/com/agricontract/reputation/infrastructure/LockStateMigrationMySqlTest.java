@@ -19,6 +19,7 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.testcontainers.containers.MySQLContainer;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /** Exercises the real V2-to-V3 upgrade on a disposable MySQL database. */
 class LockStateMigrationMySqlTest {
@@ -60,7 +61,7 @@ class LockStateMigrationMySqlTest {
     int count(String table) { return jdbc.queryForObject("SELECT COUNT(*) FROM " + table, Integer.class); }
 
     @Test void emptyLedgerIsNoOp() {
-        flyway(null).migrate();
+        flyway("3").migrate();
         assertThat(count("user_lock_state")).isZero();
         assertThat(count("event_outbox")).isZero();
     }
@@ -75,7 +76,7 @@ class LockStateMigrationMySqlTest {
         insert(b, now.minusDays(10));
         override(insert(c, now.plusDays(40)));
 
-        flyway(null).migrate();
+        flyway("3").migrate();
         assertThat(count("user_lock_state")).isEqualTo(1);
         var row = jdbc.queryForMap("SELECT user_id, lock_revision, effective_locked_until FROM user_lock_state");
         assertThat(row.get("user_id")).isEqualTo(a.toString());
@@ -84,6 +85,8 @@ class LockStateMigrationMySqlTest {
                 LocalDateTime.class, a.toString())).isEqualTo(expected);
         assertThat(count("event_outbox")).isZero();
 
+        // Exercise the current lifecycle against the V3 projection populated above.
+        jdbc.execute("CREATE TABLE user_lock_mutex (user_id CHAR(36) PRIMARY KEY)");
         var lifecycle = new LockEventLifecycle(new SpringTransactionRunner(new DataSourceTransactionManager(jdbc.getDataSource())),
                 new JdbcLockStateStore(jdbc), new OutboxLockEventPublisher(new OutboxWriter(jdbc, new EventEnvelopeCodec())));
         UUID decision = UUID.randomUUID(), source = UUID.randomUUID();
@@ -98,5 +101,49 @@ class LockStateMigrationMySqlTest {
         var event = new ObjectMapper().readTree(jdbc.queryForObject("SELECT envelope FROM event_outbox", String.class));
         assertThat(event.path("payload").path("lockRevision").asLong()).isEqualTo(1L);
         assertThat(event.path("payload").path("lockedUntil").asText()).isEqualTo(now.plusDays(50).toInstant(java.time.ZoneOffset.UTC).toString());
+    }
+
+    @Test void v4AcceptsEmptyLedger() {
+        flyway("3").migrate();
+        flyway(null).migrate();
+        assertThat(jdbc.queryForObject("SELECT IS_NULLABLE FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='lock_entry' AND column_name='decided_at'", String.class)).isEqualTo("NO");
+    }
+
+    @Test void v4RejectsLegacyLocksWithoutGuessingDecisionTime() {
+        insert(UUID.randomUUID(), LocalDateTime.now().plusDays(1));
+        flyway("3").migrate();
+        assertThatThrownBy(() -> flyway(null).migrate()).isInstanceOf(org.flywaydb.core.api.FlywayException.class);
+        assertThat(count("lock_entry")).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='lock_entry' AND column_name='decided_at'", Integer.class)).isZero();
+    }
+
+    @Test void v7AddsDeliveryReceiptsAfterV6() {
+        flyway("6").migrate();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='processed_event'", Integer.class)).isZero();
+        flyway(null).migrate();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name IN ('processed_event','remedy_delivery_fingerprint')", Integer.class)).isEqualTo(2);
+    }
+
+    @Test void v7PreservesExistingEvidenceAndAcceptsLargeCounts() {
+        flyway("6").migrate();
+        var decision = UUID.randomUUID();
+        LocalDateTime now = jdbc.queryForObject("SELECT UTC_TIMESTAMP()", LocalDateTime.class);
+        jdbc.update("""
+                INSERT INTO lock_entry (entry_id,source_event_id,remedy_decision_id,contract_id,user_id,penalized_role,
+                repeat_offense_multiplier,track_record_multiplier,zero_progress_multiplier,lock_duration_days,locked_until,decided_at)
+                VALUES (?,?,?,?,?,'BUYER',1,1,1,30,?,?)
+                """, UUID.randomUUID().toString(), UUID.randomUUID().toString(), decision.toString(),
+                UUID.randomUUID().toString(), UUID.randomUUID().toString(), now.plusDays(1), now);
+        jdbc.update("INSERT INTO remedy_lock_evidence VALUES (?,?,?,?,?)", decision.toString(), UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(), "SHORTFALL", 2147483647);
+        flyway(null).migrate();
+        assertThat(jdbc.queryForObject("SELECT settled_milestone_count FROM remedy_lock_evidence WHERE remedy_decision_id=?",
+                String.class, decision.toString())).isEqualTo("2147483647");
+        assertThat(jdbc.queryForObject("SELECT locked_until FROM lock_entry WHERE remedy_decision_id=?",
+                LocalDateTime.class, decision.toString())).isEqualTo(now.plusDays(1));
+        jdbc.update("UPDATE remedy_lock_evidence SET settled_milestone_count='2147483648' WHERE remedy_decision_id=?", decision.toString());
+        assertThatThrownBy(() -> jdbc.update("UPDATE remedy_lock_evidence SET settled_milestone_count='-1' WHERE remedy_decision_id=?",
+                decision.toString())).hasRootCauseInstanceOf(java.sql.SQLException.class)
+                .rootCause().extracting("errorCode").isEqualTo(3819);
     }
 }
