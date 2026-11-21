@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -578,7 +579,8 @@ class DepositLockResultFlowIntegrationTest {
         return new LockResultCommand(UUID.randomUUID().toString(), command.get("correlationId").asText(),
                 command.at("/payload/contractId").asText(), command.at("/payload/sourceEventId").asText(),
                 command.at("/payload/userId").asText(), command.at("/payload/entryType").asText(),
-                new BigDecimal(command.at("/payload/amount").asText()), true, UUID.randomUUID().toString(), null);
+                new BigDecimal(command.at("/payload/amount").asText()), true, UUID.randomUUID().toString(), null,
+                null, Instant.now());
     }
 
     private JsonNode receiveOne(String queue) throws Exception {

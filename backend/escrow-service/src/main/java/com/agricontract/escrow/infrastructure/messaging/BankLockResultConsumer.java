@@ -3,6 +3,7 @@ package com.agricontract.escrow.infrastructure.messaging;
 import com.agricontract.escrow.application.dto.LockResultCommand;
 import com.agricontract.escrow.application.exception.InvalidEventPayloadException;
 import com.agricontract.escrow.application.usecase.RecordLockResultUseCase;
+import com.agricontract.escrow.application.usecase.RecordMilestoneFundingResultUseCase;
 import com.agricontract.escrow.infrastructure.config.RabbitMQConfig;
 import com.agricontract.eventing.EventEnvelope;
 import com.agricontract.eventing.EventEnvelopeCodec;
@@ -22,8 +23,9 @@ import java.util.regex.Pattern;
 
 /**
  * bank.lock_completed and bank.lock_failed (golden-flow-events.yaml bankLockCompleted / bankLockFailed) for deposit
- * legs (#102). A payload outside the schema is an InvalidEventPayloadException: DLQ, no retry. The eventId is
- * claimed and the leg updated (plus escrow.deposit_locked when it completes the set) in one transaction.
+ * legs (#102) and milestone funding (#120, entryType LOCK_MILESTONE, which must name its milestoneId). A payload
+ * outside the schema is an InvalidEventPayloadException: DLQ, no retry. The eventId is claimed and the leg or
+ * milestone updated (plus the outcome event it completes) in one transaction.
  */
 @Slf4j
 @Component
@@ -48,6 +50,7 @@ public class BankLockResultConsumer {
     private final EventEnvelopeCodec codec;
     private final ProcessedEventStore processedEvents;
     private final RecordLockResultUseCase recordLockResult;
+    private final RecordMilestoneFundingResultUseCase recordMilestoneFundingResult;
     private final TransactionTemplate transactionTemplate;
 
     @RabbitListener(queues = RabbitMQConfig.LOCK_COMPLETED_QUEUE)
@@ -68,7 +71,11 @@ public class BankLockResultConsumer {
                         envelope.eventId(), command.contractId());
                 return;
             }
-            recordLockResult.execute(command);
+            if (command.isMilestoneFunding()) {
+                recordMilestoneFundingResult.execute(command);
+            } else {
+                recordLockResult.execute(command);
+            }
         });
     }
 
@@ -97,6 +104,8 @@ public class BankLockResultConsumer {
         if (!(payload.get("entryType") instanceof String entryType) || !ENTRY_TYPES.contains(entryType)) {
             throw new InvalidEventPayloadException("entryType is not a lock entry type");
         }
+        boolean milestone = LockResultCommand.LOCK_MILESTONE.equals(entryType);
+        String milestoneId = milestone ? uuid(payload, "milestoneId") : null;
         String eventId = envelope.eventId().toString();
         return new LockResultCommand(
                 eventId,
@@ -108,7 +117,9 @@ public class BankLockResultConsumer {
                 money(payload),
                 locked,
                 locked ? uuid(payload, "ledgerEntryId") : null,
-                locked ? null : reason(payload));
+                locked ? null : reason(payload),
+                milestoneId,
+                envelope.occurredAt());
     }
 
     private static String uuid(Map<String, Object> payload, String field) {
