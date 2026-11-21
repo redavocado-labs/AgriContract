@@ -33,6 +33,7 @@ public class RabbitMQConfig {
     public static final String REFUND_FAILED_QUEUE = "escrow-svc.bank.refund_failed";
     public static final String RELEASE_COMPLETED_QUEUE = "escrow-svc.bank.release_completed";
     public static final String RELEASE_FAILED_QUEUE = "escrow-svc.bank.release_failed";
+    public static final String MILESTONE_FUNDING_REQUESTED_QUEUE = "escrow-svc.milestone.funding_requested";
 
     // One Declarables bean on purpose: DlqMonitor reads the .dlq queues from it.
     // The bank.lock_* queues are read by BankLockResultConsumer (#102). They must always exist: bank's outbox poller
@@ -57,6 +58,8 @@ public class RabbitMQConfig {
         bindWithDlq(declarables, RELEASE_FAILED_QUEUE, bank, "bank.release_failed", dlx);
         bindWithDlq(declarables, LOCK_COMPLETED_QUEUE, bank, "bank.lock_completed", dlx);
         bindWithDlq(declarables, LOCK_FAILED_QUEUE, bank, "bank.lock_failed", dlx);
+        // Milestone funding (#120, D63). contract-service declares this queue ahead with the same DLX.
+        bindWithDlq(declarables, MILESTONE_FUNDING_REQUESTED_QUEUE, contracts, "milestone.funding_requested", dlx);
         return new Declarables(declarables);
     }
 

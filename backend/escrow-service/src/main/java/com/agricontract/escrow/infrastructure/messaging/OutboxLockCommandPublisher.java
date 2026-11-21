@@ -1,7 +1,9 @@
 package com.agricontract.escrow.infrastructure.messaging;
 
 import com.agricontract.escrow.application.port.LockCommandPublisher;
+import com.agricontract.escrow.application.port.MilestoneLockCommandPublisher;
 import com.agricontract.escrow.domain.model.DepositLeg;
+import com.agricontract.escrow.domain.model.EscrowMilestone;
 import com.agricontract.eventing.EventEnvelope;
 import com.agricontract.eventing.outbox.OutboxWriter;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +24,12 @@ import java.util.UUID;
  */
 @Component
 @RequiredArgsConstructor
-public class OutboxLockCommandPublisher implements LockCommandPublisher {
+public class OutboxLockCommandPublisher implements LockCommandPublisher, MilestoneLockCommandPublisher {
 
     static final String PRODUCER = "escrow-service";
     static final String LOCK_REQUESTED = "bank.lock_requested";
+    static final String LOCK_MILESTONE = "LOCK_MILESTONE";
+    static final String MILESTONE_PAYMENT = "MILESTONE_PAYMENT";
 
     private final OutboxWriter outbox;
     private final Clock clock;
@@ -99,6 +103,40 @@ public class OutboxLockCommandPublisher implements LockCommandPublisher {
         if (reset != 1) {
             throw new IllegalStateException("No " + leg.getParty().returnCommand() + " in event_outbox for leg "
                     + leg.getLegId() + " (" + leg.getReturnRequestEventId() + ")");
+        }
+    }
+
+    /**
+     * The batch lock of one milestone (#120): the buyer's MILESTONE_PAYMENT for exactly the batch amount
+     * contract-service fixed, with its milestoneId (bank records it on the ledger entry).
+     */
+    @Override
+    public void milestoneLockRequested(EscrowMilestone milestone, String correlationId, String causationId) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("contractId", milestone.getContractId());
+        payload.put("milestoneId", milestone.getMilestoneId());
+        payload.put("userId", milestone.getBuyerId());
+        payload.put("entryType", LOCK_MILESTONE);
+        payload.put("fundType", MILESTONE_PAYMENT);
+        payload.put("remedyDecisionId", null);
+        payload.put("remedyLegId", null);
+        payload.put("amount", milestone.getBatchAmount().amount().toPlainString());
+        payload.put("sourceEventId", milestone.getRequestEventId());
+
+        outbox.append(new EventEnvelope(UUID.fromString(milestone.getRequestEventId()), LOCK_REQUESTED, 1,
+                clock.instant(), PRODUCER, milestone.getContractId(), correlationId, causationId, null, payload));
+    }
+
+    /** As resend: the original milestone lock envelope goes back to PENDING, same eventId. */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void resendMilestoneLock(EscrowMilestone milestone) {
+        int reset = jdbc.update("UPDATE event_outbox SET status = 'PENDING', published_at = NULL, attempts = 0,"
+                + " last_error = NULL, created_at = NOW(3) WHERE event_id = ? AND event_type = ?",
+                milestone.getRequestEventId(), LOCK_REQUESTED);
+        if (reset != 1) {
+            throw new IllegalStateException("No bank.lock_requested in event_outbox for milestone "
+                    + milestone.getMilestoneId() + " (" + milestone.getRequestEventId() + ")");
         }
     }
 }
