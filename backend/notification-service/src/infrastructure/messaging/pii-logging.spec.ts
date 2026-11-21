@@ -18,6 +18,7 @@ import {
   NotifyUserLockChangedUseCase,
   NotifyLevel15AssignmentWaitingUseCase,
   NotifyLevel15InspectorAssignmentUseCase,
+  NotifyEscrowLegAlertUseCase,
   NotifyContractAnchorUseCase,
   NotifyCategoryApprovedUseCase,
   NotifyCategoryRejectedUseCase,
@@ -39,6 +40,7 @@ import {
   lockEnvelope,
   lockPayload,
   waitingEnvelope,
+  legAlertEnvelope,
   inspectorEnvelope,
   inspectorPayload,
 } from '../../../test/support/commands';
@@ -116,6 +118,7 @@ async function harness(
     level15InspectorAssignment: new NotifyLevel15InspectorAssignmentUseCase(
       sender,
     ),
+    escrowLegAlert: new NotifyEscrowLegAlertUseCase(sender, operatorEmail),
   });
   const consumer = new NotificationEventConsumer(amqp, routes, commands);
   await consumer.onModuleInit();
@@ -412,6 +415,24 @@ describe('no personal data in the logs', () => {
     deliver(
       'notification-svc.notification.level1_5_assignment_waiting_requested',
       JSON.stringify(waitingEnvelope()),
+    );
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(nacks).toEqual([false]); // no retry: none could find an address
+    expect(sendMail).not.toHaveBeenCalled();
+    expect(lines.join('\n')).toContain(
+      'OPERATOR_EMAIL is not set, so this operator alert has no recipient',
+    );
+  });
+
+  it('an escrow leg alert with OPERATOR_EMAIL unset: dead-lettered at once, the log names the variable', async () => {
+    const lines = captureLogs();
+    const sendMail = jest.fn().mockResolvedValue({});
+    const { deliver, nacks } = await harness(sendMail, null);
+
+    deliver(
+      'notification-svc.notification.escrow_leg_alert_requested',
+      JSON.stringify(legAlertEnvelope()),
     );
     await jest.advanceTimersByTimeAsync(0);
 

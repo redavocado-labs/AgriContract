@@ -14,6 +14,7 @@ import {
   NotifyContractActivationFailedUseCase,
   NotifyContractAnchorUseCase,
   NotifyContractTerminatedUseCase,
+  NotifyEscrowLegAlertUseCase,
   NotifyLevel15AssignmentWaitingUseCase,
   NotifyLevel15InspectorAssignmentUseCase,
   NotifyUserKycResultUseCase,
@@ -112,6 +113,22 @@ const USE_CASES = {
       },
     },
     {
+      provide: NotifyEscrowLegAlertUseCase,
+      inject: [NotificationSender, ConfigService],
+      useFactory: (
+        sender: NotificationSender,
+        config: ConfigService<AppConfig, true>,
+      ) => {
+        const operatorEmail = config.get('operatorEmail', { infer: true });
+        if (operatorEmail === null) {
+          new Logger(NotifyEscrowLegAlertUseCase.name).warn(
+            'OPERATOR_EMAIL is not set: operator alerts (escrow deposit leg stuck or out of return retries) will be dead-lettered',
+          );
+        }
+        return new NotifyEscrowLegAlertUseCase(sender, operatorEmail);
+      },
+    },
+    {
       provide: COMMAND_ROUTES,
       inject: [
         NotifyContractAnchorUseCase,
@@ -122,6 +139,7 @@ const USE_CASES = {
         NotifyUserLockChangedUseCase,
         NotifyLevel15AssignmentWaitingUseCase,
         NotifyLevel15InspectorAssignmentUseCase,
+        NotifyEscrowLegAlertUseCase,
       ],
       useFactory: (
         contractAnchor: NotifyContractAnchorUseCase,
@@ -132,6 +150,7 @@ const USE_CASES = {
         userLockChanged: NotifyUserLockChangedUseCase,
         level15AssignmentWaiting: NotifyLevel15AssignmentWaitingUseCase,
         level15InspectorAssignment: NotifyLevel15InspectorAssignmentUseCase,
+        escrowLegAlert: NotifyEscrowLegAlertUseCase,
       ) =>
         commandRoutes({
           contractAnchor,
@@ -142,6 +161,7 @@ const USE_CASES = {
           userLockChanged,
           level15AssignmentWaiting,
           level15InspectorAssignment,
+          escrowLegAlert,
         }),
     },
     {

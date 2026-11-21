@@ -91,4 +91,21 @@ export const COMMAND_KINDS = {
     notificationType: 'LEVEL1_5_INSPECTOR_CANCELLED',
     templateVersion: 'level1-5-inspector-cancelled/v1',
   },
+  // notification.escrow_leg_alert_requested (D68): one kind per stage, each
+  // its own template, all to the configured operator address.
+  escrowLegStuck: {
+    eventType: 'notification.escrow_leg_alert_requested',
+    notificationType: 'ESCROW_LEG_STUCK',
+    templateVersion: 'escrow-leg-stuck/v1',
+  },
+  escrowLegResolved: {
+    eventType: 'notification.escrow_leg_alert_requested',
+    notificationType: 'ESCROW_LEG_RESOLVED',
+    templateVersion: 'escrow-leg-resolved/v1',
+  },
+  escrowLegReturnExhausted: {
+    eventType: 'notification.escrow_leg_alert_requested',
+    notificationType: 'ESCROW_LEG_RETURN_EXHAUSTED',
+    templateVersion: 'escrow-leg-return-exhausted/v1',
+  },
 } as const satisfies Record<string, NotificationKind>;

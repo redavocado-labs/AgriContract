@@ -25,6 +25,8 @@ import {
   waitingEnvelope,
   inspectorCommand,
   inspectorEnvelope,
+  legAlertCommand,
+  legAlertEnvelope,
 } from '../../../test/support/commands';
 import { commandRoutes, type CommandUseCases } from './command-routes';
 import { legacyRoutes, type NotificationUseCases } from './legacy-routes';
@@ -77,6 +79,7 @@ const HANDLERS = [
   'userLockChanged',
   'level15AssignmentWaiting',
   'level15InspectorAssignment',
+  'escrowLegAlert',
   'categoryApproved',
   'categoryRejected',
 ] as const;
@@ -471,6 +474,44 @@ describe('NotificationEventConsumer', () => {
     }
     expect(channel.acked).toEqual([msg]);
     expect(channel.nacked).toEqual([]);
+  });
+
+  it('runs the escrow leg alert use case on its own queue, and acks', async () => {
+    const { consumer, service, open } = setup();
+    await consumer.onModuleInit();
+    const channel = new FakeChannel();
+    await open(channel);
+
+    const msg = channel.deliver(
+      'notification-svc.notification.escrow_leg_alert_requested',
+      legAlertEnvelope(),
+    );
+    await flush();
+
+    expect(service.escrowLegAlert).toHaveBeenCalledTimes(1);
+    expect(service.escrowLegAlert.mock.calls[0][0]).toEqual(legAlertCommand());
+    for (const other of HANDLERS.filter((h) => h !== 'escrowLegAlert')) {
+      expect(service[other]).not.toHaveBeenCalled();
+    }
+    expect(channel.acked).toEqual([msg]);
+    expect(channel.nacked).toEqual([]);
+  });
+
+  it('dead-letters a Level 1.5 waiting alert delivered to the escrow leg alert queue', async () => {
+    const { consumer, service, open } = setup();
+    await consumer.onModuleInit();
+    const channel = new FakeChannel();
+    await open(channel);
+
+    const msg = channel.deliver(
+      'notification-svc.notification.escrow_leg_alert_requested',
+      waitingEnvelope(),
+    );
+    await flush();
+
+    expect(service.escrowLegAlert).not.toHaveBeenCalled();
+    expect(service.level15AssignmentWaiting).not.toHaveBeenCalled();
+    expect(channel.nacked).toEqual([{ msg, requeue: false }]);
   });
 
   it('dead-letters a waiting alert delivered to the Level 1.5 inspector queue', async () => {

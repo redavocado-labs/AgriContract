@@ -6,6 +6,7 @@ import {
   type NotifyContractActivationFailedUseCase,
   type NotifyContractAnchorUseCase,
   type NotifyContractTerminatedUseCase,
+  type NotifyEscrowLegAlertUseCase,
   type NotifyLevel15AssignmentWaitingUseCase,
   type NotifyLevel15InspectorAssignmentUseCase,
   type NotifyUserKycResultUseCase,
@@ -17,6 +18,7 @@ import {
   parseContractActivationFailedRequested,
   parseContractAnchorRequested,
   parseContractTerminatedRequested,
+  parseEscrowLegAlertRequested,
   parseLevel15AssignmentWaitingRequested,
   parseLevel15InspectorAssignmentRequested,
   parseUserKycResultRequested,
@@ -42,6 +44,7 @@ export interface CommandUseCases {
   userLockChanged: NotifyUserLockChangedUseCase;
   level15AssignmentWaiting: NotifyLevel15AssignmentWaitingUseCase;
   level15InspectorAssignment: NotifyLevel15InspectorAssignmentUseCase;
+  escrowLegAlert: NotifyEscrowLegAlertUseCase;
 }
 
 /**
@@ -76,22 +79,35 @@ export function commandRoutes(u: CommandUseCases): CommandRoutes {
       u.userKycResult.execute(parseUserKycResultRequested(b)),
     'notification.user_lock_changed_requested': (b) =>
       u.userLockChanged.execute(parseUserLockChangedRequested(b)),
-    'notification.level1_5_assignment_waiting_requested': async (b) => {
-      const command = parseLevel15AssignmentWaitingRequested(b);
-      try {
-        await u.level15AssignmentWaiting.execute(command);
-      } catch (err) {
-        // No retry can find an address before OPERATOR_EMAIL is set and the
-        // service restarted: straight to the DLQ, with the message that says so.
-        if (err instanceof OperatorEmailNotConfiguredError) {
-          throw new NonRetryableError(err.message);
-        }
-        throw err;
-      }
-    },
+    'notification.level1_5_assignment_waiting_requested': (b) =>
+      operatorAlert(() =>
+        u.level15AssignmentWaiting.execute(
+          parseLevel15AssignmentWaitingRequested(b),
+        ),
+      ),
     'notification.level1_5_inspector_assignment_requested': (b) =>
       u.level15InspectorAssignment.execute(
         parseLevel15InspectorAssignmentRequested(b),
       ),
+    'notification.escrow_leg_alert_requested': (b) =>
+      operatorAlert(() =>
+        u.escrowLegAlert.execute(parseEscrowLegAlertRequested(b)),
+      ),
   };
+}
+
+/**
+ * Sends a staff alert to OPERATOR_EMAIL. No retry can find an address before
+ * OPERATOR_EMAIL is set and the service restarted: straight to the DLQ, with
+ * the message that says so.
+ */
+async function operatorAlert(send: () => Promise<void>): Promise<void> {
+  try {
+    await send();
+  } catch (err) {
+    if (err instanceof OperatorEmailNotConfiguredError) {
+      throw new NonRetryableError(err.message);
+    }
+    throw err;
+  }
 }

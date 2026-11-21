@@ -44,6 +44,12 @@ export const TOPOLOGY = [
       'notification.level1_5_inspector_assignment_requested',
     ],
   },
+  {
+    // escrow-service's outbox exchange (agricontract.eventing.outbox.exchange).
+    exchange: 'agricontract.escrow',
+    dlx: 'notification-svc.escrow.dlx',
+    routingKeys: ['notification.escrow_leg_alert_requested'],
+  },
 ] as const;
 
 export type RoutingKey = (typeof TOPOLOGY)[number]['routingKeys'][number];
@@ -95,6 +101,13 @@ export type RoutingKey = (typeof TOPOLOGY)[number]['routingKeys'][number];
  * assigned inspector about a Level 1.5 case and, if the dispute ends first,
  * that it was cancelled. Same exchange, same row, same DLX; inspection-service
  * declares this queue ahead too, with these exact names and options.
+ *
+ * `notification.escrow_leg_alert_requested` (D68) tells the Operator a
+ * deposit leg has waited on the bank too long, got its result after all, or
+ * ran out of return resends (milestone-escrow design §3.1b). It rides
+ * escrow-service's exchange, agricontract.escrow, in a row of its own with
+ * the DLX notification-svc.escrow.dlx. Should escrow-service declare this
+ * queue ahead (#528), it must copy these names and options byte for byte.
  */
 export const COMMAND_ROUTING_KEYS = [
   'notification.contract_anchor_requested',
@@ -105,6 +118,7 @@ export const COMMAND_ROUTING_KEYS = [
   'notification.user_lock_changed_requested',
   'notification.level1_5_assignment_waiting_requested',
   'notification.level1_5_inspector_assignment_requested',
+  'notification.escrow_leg_alert_requested',
 ] as const;
 
 export type CommandRoutingKey = (typeof COMMAND_ROUTING_KEYS)[number];
@@ -156,9 +170,9 @@ export const dlqNames = (): string[] => routingKeys().map(dlqName);
  * events and publishes no escrow.locked, escrow.released or escrow.penalized at
  * all, so those three queues, their DLQs and the agricontract.escrow row only
  * kept dead parsers, use cases and templates alive. Deleting a queue unbinds
- * it; agricontract.escrow is escrow-service's own exchange and is left alone,
- * and the orphaned notification-svc.escrow.dlx is harmless with nothing bound
- * to it (deleteQueue is the only removal this topology does).
+ * it; agricontract.escrow is escrow-service's own exchange and is left alone.
+ * agricontract.escrow and notification-svc.escrow.dlx came back with the
+ * escrow leg alert (D68), whose queue is a new one, not one of these.
  */
 export const RETIRED_QUEUES = [
   'notification-svc.contract.signed',
