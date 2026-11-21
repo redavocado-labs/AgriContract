@@ -3,6 +3,7 @@ import type {
   ContractActivationFailedRequestedCommand,
   ContractAnchorRequestedCommand,
   ContractTerminatedRequestedCommand,
+  EscrowLegAlertRequestedCommand,
   Level15AssignmentWaitingRequestedCommand,
   Level15InspectorAssignmentRequestedCommand,
   NotificationRecipient,
@@ -566,5 +567,69 @@ export function inspectorCommand(): Level15InspectorAssignmentRequestedCommand {
     reportDueAt: '2026-11-25T10:00:00Z',
     freeCancelUntil: '2026-11-21T02:00:00Z',
     stage: 'ASSIGNED',
+  };
+}
+
+/*
+ * `notification.escrow_leg_alert_requested`, as escrow-service's leg monitor
+ * is to write it (#528, D68): the buyer's deposit leg has waited on the bank
+ * for its lock past the threshold, stage STUCK. No recipient: it goes to the
+ * configured operator address.
+ */
+export const LEG_ALERT_CONTRACT_ID = '9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d';
+export const LEG_ALERT_LEG_ID = '0b1c2d3e-4f5a-4b6c-9d7e-8f9a0b1c2d3e';
+export const LEG_ALERT_BANK_COMMAND_ID = '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f';
+const LEG_ALERT_EVENT_ID = '2d3e4f5a-6b7c-4d8e-9f0a-1b2c3d4e5f6a';
+
+export function legAlertEnvelope(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    eventId: LEG_ALERT_EVENT_ID,
+    eventType: 'notification.escrow_leg_alert_requested',
+    eventVersion: 1,
+    occurredAt: '2026-11-21T03:05:00.500Z',
+    producer: 'escrow-service',
+    aggregateId: LEG_ALERT_LEG_ID,
+    correlationId: '3e4f5a6b-7c8d-4e9f-8a0b-2c3d4e5f6a7b',
+    causationId: '4f5a6b7c-8d9e-4f0a-9b1c-3d4e5f6a7b8c',
+    payload: legAlertPayload(),
+    ...overrides,
+  };
+}
+
+export function legAlertPayload(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    contractId: LEG_ALERT_CONTRACT_ID,
+    legId: LEG_ALERT_LEG_ID,
+    legKind: 'DEPOSIT',
+    party: 'BUYER',
+    legStatus: 'REQUESTED',
+    amount: '150000000.00',
+    bankCommandEventId: LEG_ALERT_BANK_COMMAND_ID,
+    since: '2026-11-21T03:00:00Z',
+    stage: 'STUCK',
+    ...overrides,
+  };
+}
+
+export const legAlertBody = (overrides: Record<string, unknown> = {}): Buffer =>
+  Buffer.from(JSON.stringify(legAlertEnvelope(overrides)));
+
+/** The command the parser is expected to produce from `legAlertEnvelope()`. */
+export function legAlertCommand(): EscrowLegAlertRequestedCommand {
+  return {
+    eventId: LEG_ALERT_EVENT_ID,
+    contractId: LEG_ALERT_CONTRACT_ID,
+    legId: LEG_ALERT_LEG_ID,
+    legKind: 'DEPOSIT',
+    party: 'BUYER',
+    legStatus: 'REQUESTED',
+    amount: '150000000.00',
+    bankCommandEventId: LEG_ALERT_BANK_COMMAND_ID,
+    since: '2026-11-21T03:00:00Z',
+    stage: 'STUCK',
   };
 }
