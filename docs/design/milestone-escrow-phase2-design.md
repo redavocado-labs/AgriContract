@@ -274,6 +274,7 @@ Leg cọc đã gửi lệnh mà chưa có kết quả thì không tự biết m�
 
 The following paths are part of the authoritative contract surface:
 
+- `POST /api/v1/contracts/{contractId}/milestones/{milestoneId}/evidence` (upload ảnh cân/certificate, D71 — §3.2.1)
 - `POST /api/v1/contracts/{contractId}/milestones/{milestoneId}/weigh`
 - `POST /api/v1/contracts/{contractId}/milestones/{milestoneId}/confirm`
 - `POST /api/v1/contracts/{contractId}/milestones/{milestoneId}/flag`
@@ -288,6 +289,19 @@ Kết thúc tranh chấp trước khi có report (thêm 19/11/2026, D57, §3.4).
 - `DELETE /api/v1/contracts/{contractId}/milestones/{milestoneId}/dispute/settlement` (bên đề xuất rút, hoặc bên kia từ chối, đề xuất đang mở)
 
 Các action do Buyer/Seller xác nhận (`weigh`, `confirm`, `flag`, `respond`, price accept và acknowledgement tương đương) phải nhận consent input theo `contract-document-consent-phase2-design.md` §4. Nhóm vận hành dùng checkbox + authenticated session; receipt/confirm statement phải ghi rõ xác nhận nhận hàng không tự động waive quyền inspection/khiếu nại còn tồn tại. Mutual termination/replacement là high-risk và dùng checkbox + step-up + OTP, không dùng mức xác thực vận hành này.
+
+#### 3.2.1 Seller cân hàng và bằng chứng (chốt 22/11/2026, D71–D75, #121)
+
+**Lỗ cũ:** `weigh` chỉ nhận `sellerEvidenceFileId`, không có đường nào cho seller upload ảnh (gateway không mở file-service). Nhận `fileId` bất kỳ thì seller gắn được file của người khác hoặc file chưa quét. Cách vá giống D62 của inspection.
+
+- **Upload (D71):** một endpoint chung cho mọi đợt, `uploadMilestoneEvidence`. Kiểm theo thứ tự: là bên của hợp đồng (403) → đợt thuộc hợp đồng (404) → đúng lượt (409 `MILESTONE_ACTION_NOT_ALLOWED`). Kiểm người trước để người ngoài không dò được trạng thái đợt qua mã lỗi (BOLA). Lượt: SELLER khi đợt `IN_PROGRESS`, hoặc `SELLER_WEIGHED` còn trong cửa sổ sửa; BUYER khi đợt `SELLER_WEIGHED` (phần buyer làm cùng issue nhận hàng). Body là bytes thô, đúng luật `storeOnBehalfOf` (D60); contract-service chuyển stream sang file-service với `X-Acting-User-Id` = người gọi, cùng `Idempotency-Key`, rồi ghi `milestone_evidence_file (file_id, milestone_id, uploaded_by, scan_status)`.
+- **Biết file sạch (D71):** contract-service nghe `file.ready`/`file.failed` (đã có trong `x-consumers`), cập nhật `scan_status` theo `fileId`; file không có trong bảng thì bỏ qua. Lúc `weigh` chỉ đọc DB của mình, không gọi file-service.
+- **Weigh:** `sellerEvidenceFileId` (và `deliveryCertificateFileId` nếu có) phải là file chính seller đó upload cho đúng đợt đó (sai → 400 `EVIDENCE_NOT_UPLOADED`), hai file khác nhau (400 `EVIDENCE_FILE_REUSED`), và `READY` (đang quét → 409 `EVIDENCE_NOT_READY`; bị loại → 409 `EVIDENCE_REJECTED`). Hợp đồng phải `ACTIVE`.
+- **Số kg (D72):** `> 0`, `≤ 1.000.000`, tối đa 3 chữ số thập phân. Ghi đúng số cân thật kể cả vượt `committedQuantity`; tiền không tăng vì entitlement bị chặn ở số đã khoá (§3.3 `min()`). Giao dư có được trả tiền hay không (điều khoản dung sai giao hàng) là quyết định riêng, chưa làm.
+- **Cân trễ (D73):** không chặn theo `effectiveDeliveryDeadline`. Đợt còn `IN_PROGRESS` là cho cân (hai bên có thể tự thoả thuận lùi ngày); buyer đã mở nhánh seller-quá-hạn thì đợt đã rời `IN_PROGRESS`, check trạng thái tự chặn. Hạn cũ và thời điểm cân thật vẫn lưu.
+- **Consent (D74):** mức xác nhận vận hành (consent design §4), action `DECLARE_SELLER_WEIGHT`. Câu: *"Tôi xác nhận lô hàng của đợt giao này đã được cân với khối lượng [X] kg như tôi nhập, ảnh đính kèm là ảnh chụp thật của lần cân đó, và tôi chịu trách nhiệm về số liệu đã khai."* `presentedContentHash` do server tính lại từ (milestoneId, sellerDeclaredWeight, sellerEvidenceFileId, deliveryCertificateFileId); lệch → 409 `CONSENT_CONTENT_MISMATCH`, không side effect.
+- **Sửa trong 1 tiếng (D75):** FE có bước duyệt lại trước khi gửi. Sau khi gửi, seller gọi lại `weigh` để sửa khi **còn trong 1 tiếng tính từ lần khai đầu** (cấu hình, sửa không gia hạn) **và** đợt còn `SELLER_WEIGHED`. Buyer đã ghi nhận cân thì khoá ngay dù còn giờ — seller đã thấy số buyer, không được chỉnh cho khớp để né Delta 2. Hết điều kiện → 409 `WEIGH_CORRECTION_CLOSED`. Mỗi lần khai là một dòng `seller_weigh_declaration` (append-only, kèm consent), lần mới nhất là số hiệu lực trên milestone; mỗi lần publish lại `milestone.seller_weighed` với `declarationNumber` tăng dần.
+- **Giữ file:** khai xong → gọi `confirm-attached` (file-service #274) sau commit cho các file được khai, ghi `attached_confirmed_at`; lỗi → job thử lại các dòng còn NULL, trước hạn 1 tuần dọn orphan của file-service. File upload mà không được khai thì không confirm, file-service tự dọn. File của lần khai cũ đã được confirm nên vẫn được giữ làm lịch sử.
 
 Activation recovery (sửa 08/11/2026, D42): OPERATOR chỉ gọi retry; 2 bên gửi/rút yêu cầu huỷ. Cùng SDS error envelope và idempotent write policy:
 
@@ -862,7 +876,7 @@ OTP lại cho từng milestone làm flow nặng nhưng không tăng bảo vệ c
 | Loại | Tên | Publisher | Consumer(s) |
 |---|---|---|---|
 | Local Outbox (nội bộ, không RabbitMQ — cơ chế ở §2.2) | `milestone_sync_outbox` row | `Milestone.settle()` | `@Scheduled` poller → `Contract.completeAllMilestones()` |
-| RabbitMQ | `milestone.seller_weighed` | contract-service | file-service (evidence), audit-service |
+| RabbitMQ | `milestone.seller_weighed` | contract-service | file-service (evidence), audit-service. Publish lại mỗi lần seller sửa trong 1 tiếng, `declarationNumber` tăng dần (D75) |
 | RabbitMQ | `milestone.buyer_confirmed` | contract-service | audit (**sửa 08/07/2026 — bỏ escrow-service**, xem ghi chú dưới) |
 | RabbitMQ | `milestone.flagged` | contract-service | Không có domain consumer bắt buộc; mail đi qua `notification.milestone_status_requested` |
 | RabbitMQ | `milestone.force_majeure_claimed` | contract-service | audit-service |
