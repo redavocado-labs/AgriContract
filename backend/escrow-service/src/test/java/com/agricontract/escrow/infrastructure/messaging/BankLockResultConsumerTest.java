@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import com.agricontract.escrow.application.dto.LockResultCommand;
 import com.agricontract.escrow.application.exception.InvalidEventPayloadException;
 import com.agricontract.escrow.application.usecase.RecordLockResultUseCase;
+import com.agricontract.escrow.application.usecase.RecordMilestoneFundingResultUseCase;
 import com.agricontract.eventing.EventEnvelope;
 import com.agricontract.eventing.EventEnvelopeCodec;
 import com.agricontract.eventing.inbox.ProcessedEventStore;
@@ -21,7 +22,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 /** Reading bank.lock_completed / bank.lock_failed against the frozen schema rules (#102). */
 class BankLockResultConsumerTest {
     private final BankLockResultConsumer consumer = new BankLockResultConsumer(new EventEnvelopeCodec(),
-            mock(ProcessedEventStore.class), mock(RecordLockResultUseCase.class), mock(TransactionTemplate.class));
+            mock(ProcessedEventStore.class), mock(RecordLockResultUseCase.class),
+            mock(RecordMilestoneFundingResultUseCase.class), mock(TransactionTemplate.class));
 
     @Test
     void completedResult_becomesALockedCommand() {
@@ -55,6 +57,40 @@ class BankLockResultConsumerTest {
         payload.remove("milestoneId");
 
         assertThat(consumer.toCommand(envelope("bank.lock_completed", payload), true).locked()).isTrue();
+    }
+
+    @Test
+    void milestoneResult_carriesItsMilestoneAndTheBankTime() {
+        Map<String, Object> payload = completedPayload();
+        String milestoneId = UUID.randomUUID().toString();
+        payload.put("milestoneId", milestoneId);
+        payload.put("entryType", "LOCK_MILESTONE");
+        payload.put("fundType", "MILESTONE_PAYMENT");
+        EventEnvelope envelope = envelope("bank.lock_completed", payload);
+
+        LockResultCommand command = consumer.toCommand(envelope, true);
+
+        assertThat(command.isMilestoneFunding()).isTrue();
+        assertThat(command.milestoneId()).isEqualTo(milestoneId);
+        assertThat(command.occurredAt()).isEqualTo(envelope.occurredAt());
+    }
+
+    @Test
+    void milestoneResultWithoutItsMilestone_isRefused() {
+        Map<String, Object> payload = completedPayload();
+        payload.put("entryType", "LOCK_MILESTONE");
+        payload.put("fundType", "MILESTONE_PAYMENT");
+
+        assertThatThrownBy(() -> consumer.toCommand(envelope("bank.lock_completed", payload), true))
+                .isInstanceOf(InvalidEventPayloadException.class);
+    }
+
+    @Test
+    void depositResult_isNotAMilestoneFunding() {
+        LockResultCommand command = consumer.toCommand(envelope("bank.lock_completed", completedPayload()), true);
+
+        assertThat(command.isMilestoneFunding()).isFalse();
+        assertThat(command.milestoneId()).isNull();
     }
 
     @Test
