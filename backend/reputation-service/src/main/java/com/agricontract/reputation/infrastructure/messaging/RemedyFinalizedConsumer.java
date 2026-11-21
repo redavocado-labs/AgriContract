@@ -11,7 +11,10 @@ import com.agricontract.reputation.domain.RemedyAttribution.Role;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.math.BigInteger;
+import java.math.BigDecimal;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
@@ -67,9 +70,13 @@ public class RemedyFinalizedConsumer {
             EventEnvelope envelope = parse(message.getBody());
             ProcessLockoutCommand command = command(envelope, milestoneCount(message.getBody()));
             String fingerprint = fingerprint(message.getBody());
+            String decisionFingerprint = decisionFingerprint(message.getBody(), envelope, command.settledMilestoneCount());
             transactions.inTransaction(() -> {
                 if (receipts.claim(envelope.eventId(), fingerprint)) {
-                    process.execute(command);
+                    if (receipts.claimDecision(command, decisionFingerprint)) {
+                        process.execute(command);
+                    }
+                    receipts.rememberEvent(envelope.eventId(), command.remedyDecisionId());
                 }
             });
         } catch (InvalidEventPayloadException | ImmutableFactConflictException e) {
@@ -169,6 +176,35 @@ public class RemedyFinalizedConsumer {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(CANONICAL.writeValueAsBytes(value)));
         } catch (java.io.IOException e) {
             throw new InvalidEventPayloadException("Invalid event fingerprint input");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 is unavailable", e);
+        }
+    }
+
+    /** All frozen payload fields and occurredAt define the decision; envelope delivery metadata does not.
+     * Arrays retain their contract List order, nulls remain explicit, and UUIDs and numbers are normalized.
+     */
+    private static String decisionFingerprint(byte[] body, EventEnvelope envelope, BigInteger count) {
+        try {
+            var payload = (ObjectNode) CANONICAL.readTree(body).get("payload");
+            for (String field : List.of("remedyDecisionId", "attributionDecisionId", "breachCaseId", "contractId", "buyerId", "sellerId")) {
+                if (!payload.get(field).isNull()) payload.put(field, id(payload.get(field).textValue()).toString());
+            }
+            var milestones = (ArrayNode) payload.get("affectedMilestoneIds");
+            for (int i = 0; i < milestones.size(); i++) {
+                milestones.set(i, CANONICAL.getNodeFactory().textNode(id(milestones.get(i).textValue()).toString()));
+            }
+            for (var node : payload.withArray("remedyLegs")) {
+                var leg = (ObjectNode) node;
+                leg.put("remedyLegId", id(leg.get("remedyLegId").textValue()).toString());
+                leg.put("amount", new BigDecimal(leg.get("amount").textValue()).setScale(2).toPlainString());
+            }
+            payload.put("settledMilestoneCount", count);
+            Object value = Map.of("decidedAt", envelope.occurredAt().toString(),
+                    "payload", CANONICAL.convertValue(payload, Map.class));
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(CANONICAL.writeValueAsBytes(value)));
+        } catch (java.io.IOException e) {
+            throw new InvalidEventPayloadException("Invalid decision fingerprint input");
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 is unavailable", e);
         }

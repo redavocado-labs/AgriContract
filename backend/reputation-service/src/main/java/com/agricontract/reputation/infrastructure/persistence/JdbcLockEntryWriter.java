@@ -1,6 +1,7 @@
 package com.agricontract.reputation.infrastructure.persistence;
 
 import com.agricontract.reputation.application.port.LockEntryWriter;
+import com.agricontract.reputation.application.exception.ImmutableFactConflictException;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -55,8 +56,14 @@ public class JdbcLockEntryWriter implements LockEntryWriter {
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public void recordEvidence(UUID decisionId, UUID buyerId, UUID sellerId, String reason, BigInteger settledMilestones) {
-        jdbc.update("INSERT INTO remedy_lock_evidence VALUES (?, ?, ?, ?, ?)", decisionId.toString(),
-                buyerId.toString(), sellerId.toString(), reason, settledMilestones.toString());
+        var existing = jdbc.query("SELECT buyer_id,seller_id,breach_reason_code,settled_milestone_count FROM remedy_lock_evidence WHERE remedy_decision_id=?",
+                (rs, row) -> List.of(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4)), decisionId.toString());
+        if (existing.isEmpty()) {
+            jdbc.update("INSERT INTO remedy_lock_evidence (remedy_decision_id,buyer_id,seller_id,breach_reason_code,settled_milestone_count) VALUES (?, ?, ?, ?, ?)", decisionId.toString(),
+                    buyerId.toString(), sellerId.toString(), reason, settledMilestones.toString());
+        } else if (existing.size() != 1 || !existing.getFirst().equals(List.of(buyerId.toString(), sellerId.toString(), reason, settledMilestones.toString()))) {
+            throw new ImmutableFactConflictException();
+        }
     }
 
     @Override
