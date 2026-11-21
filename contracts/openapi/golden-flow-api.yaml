@@ -369,18 +369,74 @@ paths:
         '401': {$ref: '#/components/responses/Unauthorized'}
         '403': {$ref: '#/components/responses/Forbidden'}
         '409': {$ref: '#/components/responses/Conflict'}
+  /api/v1/contracts/{contractId}/milestones/{milestoneId}/evidence:
+    x-service-owner: contract-service
+    post:
+      operationId: uploadMilestoneEvidence
+      x-roles: [SELLER, BUYER]
+      x-domain-ownership-check: true
+      description: >-
+        milestone-escrow design §3.2.1 (D71, 22/11/2026). A party uploads a weighing photo or a delivery
+        certificate for this milestone; the file is recorded against the milestone and the uploader. Checks run in
+        this order: party of this contract (403), milestone of this contract (404), the uploader's turn (409):
+        SELLER while the milestone is IN_PROGRESS, or SELLER_WEIGHED inside the correction window (D75); BUYER while
+        it is SELLER_WEIGHED. The body is the raw file, streamed, with the rules of file-service storeOnBehalfOf
+        (D60): Content-Type image/jpeg, image/png or application/pdf, Content-Length required (no chunked body), at
+        most 10 MiB. contract-service streams it to storeOnBehalfOf with X-Acting-User-Id = the caller and the same
+        Idempotency-Key. The file is PROCESSING until file.ready or file.failed arrives; only a file recorded here
+        for this milestone and this uploader can be named by weigh/confirm/flag. Uploading again with a new key
+        gives a new file; files that are never named are cleaned by file-service.
+      parameters:
+        - {name: contractId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: milestoneId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {$ref: '#/components/parameters/IdempotencyKey'}
+        - {name: Content-Length, in: header, required: true, schema: {type: integer, minimum: 1, maximum: 10485760}}
+      requestBody:
+        required: true
+        content:
+          image/jpeg: {schema: {type: string, format: binary}}
+          image/png: {schema: {type: string, format: binary}}
+          application/pdf: {schema: {type: string, format: binary}}
+      responses:
+        '202': {description: "Stored and recorded for this milestone and uploader, or a repeat of the same Idempotency-Key with the file's current status.", content: {application/json: {schema: {$ref: '#/components/schemas/MilestoneEvidenceAccepted'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: "MILESTONE_ACTION_NOT_ALLOWED: not the uploader's turn on this milestone, or the contract is not ACTIVE.", content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}}
+        '413': {description: "FILE_TOO_LARGE: Content-Length over 10 MiB (10485760 bytes).", content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}}
+        '503': {description: "file-service unavailable; nothing recorded, safe to retry with the same Idempotency-Key.", content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}}
   /api/v1/contracts/{contractId}/milestones/{milestoneId}/weigh:
     x-service-owner: contract-service
     post:
       operationId: recordSellerWeighed
       x-roles: [SELLER]
       x-domain-ownership-check: true
+      description: >-
+        milestone-escrow design §3.2.1 (D71-D75). The SELLER of an ACTIVE contract declares the loaded weight of an
+        IN_PROGRESS milestone: the milestone enters SELLER_WEIGHED and milestone.seller_weighed is published
+        (declarationNumber 1). The same call on a SELLER_WEIGHED milestone corrects the declaration while the
+        correction window is open (1 hour from the first declaration, configurable, never extended by a correction)
+        and the buyer has not recorded receipt; each correction is kept as a new declaration and publishes
+        milestone.seller_weighed again with the next declarationNumber. sellerEvidenceFileId and
+        deliveryCertificateFileId must be files this seller uploaded through uploadMilestoneEvidence for this
+        milestone, must differ, and must be READY. consent is the DECLARE_SELLER_WEIGHT statement (consent design §4,
+        authenticated session, no OTP); presentedContentHash is recomputed by the server from the milestone and the
+        declared weight and files. Checks run in this order: party (403), milestone of this contract (404), request
+        (400), state and files (409). A late declaration (past effectiveDeliveryDeadline) is accepted while the
+        milestone is still IN_PROGRESS (D73).
       parameters:
-        - {name: contractId, in: path, required: true, schema: {type: string}}
-        - {name: milestoneId, in: path, required: true, schema: {type: string}}
+        - {name: contractId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: milestoneId, in: path, required: true, schema: {type: string, format: uuid}}
         - {$ref: '#/components/parameters/IdempotencyKey'}
       requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/SellerWeighedRequest'}}}}
-      responses: {'204': {description: Milestone enters SELLER_WEIGHED and publishes milestone.seller_weighed.}, '409': {$ref: '#/components/responses/Conflict'}}
+      responses:
+        '204': {description: "Milestone is SELLER_WEIGHED with this declaration and milestone.seller_weighed is published; a repeat of the same Idempotency-Key returns 204 without a new declaration."}
+        '400': {description: "VALIDATION_ERROR; EVIDENCE_NOT_UPLOADED: a file was not uploaded by this seller for this milestone; EVIDENCE_FILE_REUSED: sellerEvidenceFileId equals deliveryCertificateFileId.", content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: "MILESTONE_ACTION_NOT_ALLOWED: the contract is not ACTIVE or the milestone is neither IN_PROGRESS nor correctable; WEIGH_CORRECTION_CLOSED: the correction window has passed or the buyer has recorded receipt; EVIDENCE_NOT_READY: a file is still being scanned (retry shortly); EVIDENCE_REJECTED: a file failed the scan (upload another); CONSENT_STATEMENT_OUTDATED; CONSENT_CONTENT_MISMATCH: presentedContentHash does not match the declaration.", content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}}
   /api/v1/contracts/{contractId}/milestones/{milestoneId}/confirm:
     x-service-owner: contract-service
     post:
@@ -1585,11 +1641,18 @@ components:
       type: object
       required: [sellerDeclaredWeight, sellerEvidenceFileId, consent]
       properties:
-        sellerDeclaredWeight: {type: number, exclusiveMinimum: 0, description: Seller-declared loaded weight in canonical kilograms (kg).}
-        sellerEvidenceFileId: {type: string, format: uuid}
-        deliveryCertificateFileId: {type: string, format: uuid, description: Optional batch certificate used only as delivery/dispute evidence; never parsed as actual quality metrics.}
+        sellerDeclaredWeight: {type: number, exclusiveMinimum: 0, maximum: 1000000, multipleOf: 0.001, description: "Seller-declared loaded weight in canonical kilograms (kg), the real weighed figure even above committedQuantity (D72): entitlement stays capped at the locked batch amount."}
+        sellerEvidenceFileId: {type: string, format: uuid, description: Weighing photo uploaded by this seller for this milestone through uploadMilestoneEvidence (D71).}
+        deliveryCertificateFileId: {type: string, format: uuid, description: Optional batch certificate used only as delivery/dispute evidence; never parsed as actual quality metrics. Uploaded the same way as sellerEvidenceFileId and different from it.}
         consent: {$ref: '#/components/schemas/ConsentInput'}
       additionalProperties: false
+    MilestoneEvidenceAccepted:
+      type: object
+      required: [fileId, status]
+      additionalProperties: false
+      properties:
+        fileId: {type: string, format: uuid}
+        status: {enum: [PROCESSING, READY, FAILED], description: Scan status known to contract-service from file.ready/file.failed; PROCESSING until one arrives.}
     BuyerReceivedRequest:
       type: object
       required: [buyerReceivedWeight, buyerEvidenceFileId, consent]
