@@ -21,9 +21,9 @@ removed; tag `notification-java-final` is the rollback point (plan §7).
 - The three escrow queues (`escrow.locked`, `.released`, `.penalized`) are retired the same way (#421):
   escrow-service moved to the Phase 2 events and publishes none of them, so their parsers, use cases and the
   `/p1` templates behind them were dead code. They are in `RETIRED_QUEUES` too, so every start deletes them and
-  their DLQs. `agricontract.escrow` is escrow-service's own exchange and is left declared; the now unused
-  `notification-svc.escrow.dlx` has nothing bound to it. `ESCROW_LOCKED`, `ESCROW_RELEASED` and
-  `ESCROW_PENALIZED` rows already in `notification_logs` keep those values.
+  their DLQs. `agricontract.escrow` is escrow-service's own exchange and is left declared;
+  `notification-svc.escrow.dlx` is in use again for the escrow leg alert (D68, below). `ESCROW_LOCKED`,
+  `ESCROW_RELEASED` and `ESCROW_PENALIZED` rows already in `notification_logs` keep those values.
 - A payload that is not JSON, or misses a required field, goes to the DLQ at once (see
   `src/infrastructure/messaging/legacy-payload.parsers.ts` for the required fields).
 - Each email (event + recipient + notification type) is claimed atomically in `notification_logs` before sending,
@@ -240,6 +240,34 @@ and its addresses sit in `payload.recipients`, so the publisher — contract-ser
   names and options. Same claim, dedup, redelivery and dead-letter rules as the other commands; lines stay within
   76 characters. `test/contract/level15-inspector-assignment-requested.contract.spec.ts` checks the parser
   against the contract in both directions.
+
+### Escrow leg alert (Phase 2, `notification.escrow_leg_alert_requested`, D68)
+
+| | |
+| --- | --- |
+| Queue | `notification-svc.notification.escrow_leg_alert_requested` (DLX `notification-svc.escrow.dlx`) |
+| Exchange, routing key | `agricontract.escrow`, `notification.escrow_leg_alert_requested` |
+| Recipients | `OPERATOR_EMAIL` (design §7 `notification.operatorEmail`) alone: the command names nobody |
+| Row per email | one kind per `stage`, `recipient_user_id` null (an address, not an account): |
+| | `STUCK` → `ESCROW_LEG_STUCK`, `escrow-leg-stuck/v1` |
+| | `RESOLVED` → `ESCROW_LEG_RESOLVED`, `escrow-leg-resolved/v1` |
+| | `RETURN_EXHAUSTED` → `ESCROW_LEG_RETURN_EXHAUSTED`, `escrow-leg-return-exhausted/v1` |
+
+- escrow-service's leg monitor publishes it (#528, milestone-escrow design §3.1b): `STUCK` once per waiting
+  episode when a deposit leg waits on the bank (`REQUESTED`, `CANCEL_PENDING`, `RETURN_REQUESTED`) past
+  `escrow.leg-monitor.stuck-after`; `RESOLVED` once when that leg gets its bank result; `RETURN_EXHAUSTED` once
+  when a return failed with no resend left. Each is its own command, so each is its own email; a replayed
+  `eventId` sends once.
+- Every mail gives `contractId`, `legId`, `legKind`, `party`, `legStatus` (with what it means), `amount` (digits
+  grouped as text, never through a float, + `VND`), `bankCommandEventId` and `since` in Vietnam time and UTC
+  ("Waiting since", or "Last failed return" for `RETURN_EXHAUSTED`). `STUCK` adds how to read the bank log for
+  the bank command id: a `bank_command_replay_mismatch` line, a ledger line (result lost on the way back), or
+  nothing (the command never reached the bank: check the escrow outbox and the DLQs).
+- Any `legStatus` parses with any `stage`: which status a stage is sent in is escrow's rule.
+- **`OPERATOR_EMAIL` unset or blank**: dead-lettered at once, as the Level 1.5 waiting alert above.
+- Same claim, dedup, redelivery and dead-letter rules as the other commands; lines stay within 76 characters.
+  `test/contract/escrow-leg-alert-requested.contract.spec.ts` checks the parser against the contract in both
+  directions; `notify-escrow-leg-alert.int-spec.ts` sends every stage through MySQL and MailHog.
 
 ### OTP email endpoint (Phase 2, #114)
 
