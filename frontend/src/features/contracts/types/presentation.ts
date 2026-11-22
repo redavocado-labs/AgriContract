@@ -1,4 +1,6 @@
 import { parseApiError } from "@/shared/api/errors"
+export { vietnamTime } from "@/shared/lib/vietnam-time"
+import { capabilities } from "../api/capabilities"
 import type { Contract, ParticipantRole } from "./contract"
 
 export const statusLabels: Record<string, string> = {
@@ -15,14 +17,17 @@ export const statusLabels: Record<string, string> = {
   REPLACEMENT_PENDING: "Đang thay thế",
   SUPERSEDE_REFUND_PENDING: "Đang hoàn tiền để thay thế",
 }
-// The current Java ContractStatus enum accepts only these query values.
+// Values the contract-service ContractStatus enum accepts as a list filter today.
 export const filterStatuses = [
   "OFFERED",
   "NEGOTIATING",
   "SIGNED",
   "ACTIVE",
   "SETTLED",
+  "ACTIVATION_REFUND_PENDING",
+  "ACTIVATION_FAILED",
 ]
+export const PRE_SIGNATURE = ["OFFERED", "NEGOTIATING"]
 export function participantRole(
   contract: Contract,
   userId: string,
@@ -32,13 +37,24 @@ export function participantRole(
   if (contract.sellerId === userId && roles.includes("SELLER")) return "SELLER"
   return null
 }
+/**
+ * Terms can be revised until the first signature. ContractResponse does not
+ * expose signatures, so the server answers CONTRACT_TERMS_FROZEN after it.
+ */
 export function canNegotiate(contract: Contract, verified: boolean) {
-  // TODO(BE): expose first-signature freeze/capability and a stale-write precondition.
   return (
+    capabilities.negotiate.enabled &&
     verified &&
     contract.generation === "coffee" &&
-    contract.editability !== "unknown" &&
-    ["OFFERED", "NEGOTIATING"].includes(contract.status)
+    PRE_SIGNATURE.includes(contract.status)
+  )
+}
+/** Withdraw before the second signature; legacy rows included (#233). */
+export function canWithdraw(contract: Contract, verified: boolean) {
+  return (
+    capabilities.withdraw.enabled &&
+    verified &&
+    PRE_SIGNATURE.includes(contract.status)
   )
 }
 export function activationMessage(status: string) {
@@ -53,7 +69,9 @@ export function activationMessage(status: string) {
       return "Đang hoàn tiền cọc theo trạng thái máy chủ."
     case "OFFERED":
     case "NEGOTIATING":
-      return "Chưa thể xác định bên nào đã ký: phản hồi hiện chưa cung cấp thông tin chữ ký."
+      return "Hợp đồng chưa có hiệu lực. Điều khoản sửa được tới khi có chữ ký đầu tiên; cần đủ hai chữ ký để chuyển sang Đã ký."
+    case "WITHDRAWN":
+      return "Đề nghị đã được rút trước khi đủ hai chữ ký. Không bên nào bị phạt."
     default:
       return (
         "Trạng thái hợp đồng: " + (statusLabels[status] ?? "Chưa nhận biết")
@@ -84,26 +102,20 @@ export function decimalMoney(value: unknown): string | null {
     return String(value)
   return null
 }
-export function vietnamTime(value?: string) {
-  if (!value) return "Chưa có thông tin"
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value))
-    return value.split("-").reverse().join("/")
-  if (
-    !/(Z|[+-]\d{2}:\d{2})$/.test(value) ||
-    !Number.isFinite(Date.parse(value))
-  )
-    return "Thời gian chưa xác định"
-  return (
-    new Intl.DateTimeFormat("vi-VN", {
-      dateStyle: "short",
-      timeStyle: "short",
-      timeZone: "Asia/Ho_Chi_Minh",
-    }).format(new Date(value)) + " (giờ Việt Nam)"
-  )
-}
 const errorMessages: Record<string, string> = {
   CONTRACT_TERMS_FROZEN:
     "Điều khoản đã khóa sau chữ ký đầu tiên. Vui lòng tải lại hợp đồng.",
+  CONTRACT_NOT_NEGOTIABLE: "Trạng thái hợp đồng không cho phép sửa điều khoản.",
+  CONTRACT_NOT_WITHDRAWABLE:
+    "Không thể rút đề nghị: hợp đồng đã đủ hai chữ ký hoặc đã kết thúc.",
+  PRESENTED_CONTENT_STALE:
+    "Nội dung bạn đang xem đã cũ. Tải lại hợp đồng rồi thao tác lại.",
+  RESERVED_QUANTITY_MISMATCH:
+    "Tổng khối lượng các đợt khác số lượng đã giữ hàng. Hai bên cần sửa lịch giao trước khi ký.",
+  DELIVERY_SCHEDULE_TOO_SOON:
+    "Có đợt giao quá sát ngày để kịp khoá tiền. Hai bên sửa lịch giao rồi ký lại.",
+  VALIDATION_ERROR: "Dữ liệu chưa hợp lệ. Vui lòng kiểm tra lại các trường.",
+  VALIDATION_FAILED: "Dữ liệu chưa hợp lệ. Vui lòng kiểm tra lại các trường.",
   PRESENTED_CONTENT_HASH_MISMATCH:
     "Điều khoản vừa thay đổi. Tải lại và đọc lại trước khi ký.",
   OTP_TERMS_CHANGED:
@@ -140,8 +152,7 @@ const errorMessages: Record<string, string> = {
     "Số lượng hiện không đáp ứng đơn hàng. Vui lòng tải lại nguồn hàng.",
 }
 export function contractError(error: unknown) {
-  const { status, code, message } = parseApiError(error)
-  if (code === "OTP_INVALID") return `${errorMessages.OTP_INVALID} ${message}`
+  const { status, code } = parseApiError(error)
   if (code && errorMessages[code]) return errorMessages[code]
   if (status === 401) return "Phiên đăng nhập cần được xác thực lại."
   if (status === 403)

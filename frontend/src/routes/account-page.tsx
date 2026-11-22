@@ -5,6 +5,7 @@ import { useFreshLogin } from "@/features/auth/hooks/use-fresh-login"
 import { useOrganizationProfile } from "@/features/organization/hooks/use-organization-profile"
 import { OrganizationLayout } from "@/features/organization/components/organization-layout"
 import { OrganizationProfile } from "@/features/organization/components/organization-profile"
+import { EmailVerification } from "@/features/organization/components/email-verification"
 import { OrganizationDocuments } from "@/features/organization/components/organization-documents"
 import {
   ProfileError,
@@ -34,6 +35,7 @@ export function AccountPage() {
         />
       )}
       {profile.data && <OrganizationProfile profile={profile.data} />}
+      {profile.data && <EmailVerification profile={profile.data} />}
       {pathname === "/workspace" && (
         <p className="text-sm text-text-secondary">
           Các chức năng nghiệp vụ sẽ được bổ sung ở giai đoạn tiếp theo.

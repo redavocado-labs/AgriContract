@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useAuthStore } from "@/shared/auth/auth-store"
 import { useContracts } from "@/features/contracts/hooks/use-contracts"
 import { ContractsLayout } from "@/features/contracts/components/contracts-layout"
@@ -23,9 +23,11 @@ import { Pagination } from "@/shared/ui/pagination"
 import { DataTable } from "@/shared/ui/data-table"
 import { RecordCard } from "@/shared/ui/record-card"
 import { MoneyDisplay } from "@/shared/ui/money-display"
+import { Button } from "@/shared/ui/button"
 
 export function ContractsPage() {
   const { roles } = useAuthStore()
+  const navigate = useNavigate()
   const [role, setRole] = useState<ParticipantRole>(
     roles.includes("BUYER") ? "BUYER" : "SELLER"
   )
@@ -53,10 +55,17 @@ export function ContractsPage() {
   )
   return (
     <ContractsLayout title="Hợp đồng của tôi">
-      <p className="text-sm text-text-secondary">
-        Theo dõi đề nghị, điều khoản và trạng thái kích hoạt của các hợp đồng
-        bạn tham gia.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-text-secondary">
+          Theo dõi đề nghị, điều khoản và trạng thái kích hoạt của các hợp đồng
+          bạn tham gia.
+        </p>
+        {roles.includes("BUYER") && (
+          <Button onClick={() => navigate("/contracts/new")}>
+            Tạo đề nghị hợp đồng
+          </Button>
+        )}
+      </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <SelectDropdown
           id="contract-role"
@@ -87,7 +96,7 @@ export function ContractsPage() {
             })),
           ]}
           onChange={(v) => {
-            setStatus(v === "ALL" ? "" : v ?? "")
+            setStatus(v === "ALL" ? "" : (v ?? ""))
             setPage(0)
           }}
         />
@@ -147,10 +156,6 @@ export function ContractsPage() {
           onPageChange={(p) => setPage(p - 1)}
         />
       )}
-      <p className="text-xs text-text-muted">
-        Mã và thông tin hiển thị từ máy chủ. Thời gian tạo và tổng giá trị của
-        bản ghi cũ chưa được cung cấp.
-      </p>
     </ContractsLayout>
   )
 }
