@@ -4,10 +4,12 @@ import {
   IdempotencyKeyTakenError,
   type FileRepository,
   type ScanOutcome,
+  type TombstoneGuard,
 } from '../../src/application/ports/file.repository';
 import {
   ObjectNotFoundError,
   type ObjectStoragePort,
+  type StoredObjectInfo,
 } from '../../src/application/ports/object-storage.port';
 import type {
   ScanVerdict,
@@ -90,6 +92,18 @@ export class FakeObjectStorage implements ObjectStoragePort {
     if (this.deleteError) return Promise.reject(this.deleteError);
     this.objects.delete(key);
     return Promise.resolve();
+  }
+
+  /** lastModified of each object for list(); an object not in here is very old. */
+  readonly modified = new Map<string, Date>();
+
+  list(): AsyncIterable<StoredObjectInfo> {
+    const objects: StoredObjectInfo[] = [...this.objects.keys()].map((key) => ({
+      key,
+      lastModified: this.modified.get(key) ?? new Date(0),
+    }));
+    // A snapshot, as one listing page would be.
+    return Readable.from(objects) as AsyncIterable<StoredObjectInfo>;
   }
 }
 
@@ -180,11 +194,18 @@ export class InMemoryFileRepository implements FileRepository {
     return Promise.resolve(true);
   }
 
-  tombstone(fileId: string, reason: string): Promise<boolean> {
+  tombstone(
+    fileId: string,
+    reason: string,
+    guard?: TombstoneGuard,
+  ): Promise<boolean> {
     this.beforeTombstone(fileId);
     if (this.updateError) return Promise.reject(this.updateError);
     const row = this.rows.get(fileId);
     if (!row || row.deletedAt !== null || row.legalHold) {
+      return Promise.resolve(false);
+    }
+    if (guard && !this.qualifies(fileId, guard.kind, guard.before)) {
       return Promise.resolve(false);
     }
     row.deletedAt = new Date();
@@ -192,10 +213,77 @@ export class InMemoryFileRepository implements FileRepository {
     return Promise.resolve(true);
   }
 
+  /** Columns the domain does not carry: created_at, retention_until, blob_deleted_at. */
+  readonly meta = new Map<
+    string,
+    { createdAt: Date; retentionUntil: Date | null; blobDeletedAt: Date | null }
+  >();
+  markBlobDeletedError: Error | null = null;
+
+  markBlobDeleted(fileId: string): Promise<void> {
+    if (this.markBlobDeletedError) {
+      return Promise.reject(this.markBlobDeletedError);
+    }
+    const meta = this.metaOf(fileId);
+    if (this.rows.get(fileId)?.deletedAt && meta.blobDeletedAt === null) {
+      meta.blobDeletedAt = new Date();
+    }
+    return Promise.resolve();
+  }
+
+  findLifecycleCandidates(
+    kind: TombstoneGuard['kind'],
+    before: Date,
+    limit: number,
+  ): Promise<string[]> {
+    const ids = [...this.rows.values()]
+      .filter((r) => r.deletedAt === null && !r.legalHold)
+      .filter((r) => this.qualifies(r.fileId, kind, before))
+      .map((r) => r.fileId);
+    return Promise.resolve(ids.slice(0, limit));
+  }
+
+  findBlobPending(limit: number): Promise<string[]> {
+    const ids = [...this.rows.values()]
+      .filter((r) => r.deletedAt !== null)
+      .filter((r) => this.metaOf(r.fileId).blobDeletedAt === null)
+      .map((r) => r.fileId);
+    return Promise.resolve(ids.slice(0, limit));
+  }
+
+  existingIds(fileIds: readonly string[]): Promise<Set<string>> {
+    return Promise.resolve(new Set(fileIds.filter((id) => this.rows.has(id))));
+  }
+
   /** A stored row as the scan would leave it, for the read and delete paths. */
   put(file: StoredFile): StoredFile {
     this.rows.set(file.fileId, { ...file });
     return this.rows.get(file.fileId)!;
+  }
+
+  metaOf(fileId: string) {
+    let meta = this.meta.get(fileId);
+    if (!meta) {
+      meta = {
+        createdAt: new Date(),
+        retentionUntil: null,
+        blobDeletedAt: null,
+      };
+      this.meta.set(fileId, meta);
+    }
+    return meta;
+  }
+
+  private qualifies(
+    fileId: string,
+    kind: TombstoneGuard['kind'],
+    before: Date,
+  ): boolean {
+    const row = this.rows.get(fileId)!;
+    const meta = this.metaOf(fileId);
+    return kind === 'ORPHAN'
+      ? !row.attached && meta.createdAt < before
+      : meta.retentionUntil !== null && meta.retentionUntil < before;
   }
 
   private byKey(uploadedBy: string, key: string): StoredFile | undefined {

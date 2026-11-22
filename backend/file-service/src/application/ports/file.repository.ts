@@ -59,6 +59,37 @@ export interface FileRepository {
    * a row that is neither deleted nor under legal hold, in one statement so a
    * hold set meanwhile still wins. Returns false when no row was changed: the
    * caller reads the row again to learn why.
+   *
+   * `guard` adds the lifecycle job's own condition to the same statement, so
+   * a row that stopped qualifying since it was selected is left alone:
+   * `ORPHAN` (still not attached, created before `before`), `EXPIRED`
+   * (retention_until still before `before`).
    */
-  tombstone(fileId: string, reason: string): Promise<boolean>;
+  tombstone(
+    fileId: string,
+    reason: string,
+    guard?: TombstoneGuard,
+  ): Promise<boolean>;
+  /** Step 2 is done (§7): the blob of a tombstoned row is gone. Idempotent. */
+  markBlobDeleted(fileId: string): Promise<void>;
+  /**
+   * Lifecycle candidates (§7, #276), at most `limit`, oldest first; never a
+   * row under legal hold or already deleted:
+   * - ORPHAN: not attached and created before `before` (a week ago);
+   * - EXPIRED: retention_until before `before` (now).
+   */
+  findLifecycleCandidates(
+    kind: TombstoneGuard['kind'],
+    before: Date,
+    limit: number,
+  ): Promise<string[]>;
+  /** Tombstoned rows whose blob is not known to be gone (step 2 pending), at most `limit`. */
+  findBlobPending(limit: number): Promise<string[]>;
+  /** Which of `fileIds` have a row, deleted or not. */
+  existingIds(fileIds: readonly string[]): Promise<Set<string>>;
+}
+
+export interface TombstoneGuard {
+  kind: 'ORPHAN' | 'EXPIRED';
+  before: Date;
 }

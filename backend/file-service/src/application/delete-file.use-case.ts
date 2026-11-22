@@ -48,10 +48,26 @@ export class DeleteFileUseCase {
         }
       }
     }
+    await this.removeBlob(fileId);
+  }
+
+  /**
+   * Step 2 alone, for a row already tombstoned (DELETE above, the lifecycle
+   * job): removes the blob, then marks it gone (blob_deleted_at), so a later
+   * run never redoes it. A failure leaves the mark unset, and the next run of
+   * the lifecycle job tries again (matrix 21e).
+   */
+  async removeBlob(fileId: string): Promise<void> {
     try {
       await this.storage.delete(fileId);
     } catch (err) {
       throw new ObjectStorageUnavailableError(failureCode(err));
+    }
+    try {
+      await this.files.markBlobDeleted(fileId);
+    } catch (err) {
+      // The blob is gone; the next run deletes the missing key again (a no-op).
+      throw new FileMetadataUnavailableError(failureCode(err));
     }
   }
 

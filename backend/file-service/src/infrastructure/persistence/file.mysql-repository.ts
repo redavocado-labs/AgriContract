@@ -13,6 +13,7 @@ import {
   IdempotencyKeyTakenError,
   type FileRepository,
   type ScanOutcome,
+  type TombstoneGuard,
 } from '../../application/ports/file.repository';
 import {
   FILE_STATUSES,
@@ -153,15 +154,68 @@ export class FileMysqlRepository implements FileRepository {
     return result.affectedRows === 1;
   }
 
-  async tombstone(fileId: string, reason: string): Promise<boolean> {
+  async tombstone(
+    fileId: string,
+    reason: string,
+    guard?: TombstoneGuard,
+  ): Promise<boolean> {
     const [result] = await this.pool.execute<ResultSetHeader>(
       `UPDATE file SET deleted_at = CURRENT_TIMESTAMP, deletion_reason = ?
-        WHERE file_id = ? AND deleted_at IS NULL AND legal_hold = FALSE`,
-      [reason, fileId],
+        WHERE file_id = ? AND deleted_at IS NULL AND legal_hold = FALSE
+        ${guard ? GUARDS[guard.kind] : ''}`,
+      guard ? [reason, fileId, guard.before] : [reason, fileId],
     );
     return result.affectedRows === 1;
   }
+
+  async markBlobDeleted(fileId: string): Promise<void> {
+    await this.pool.execute(
+      `UPDATE file SET blob_deleted_at = CURRENT_TIMESTAMP
+        WHERE file_id = ? AND deleted_at IS NOT NULL AND blob_deleted_at IS NULL`,
+      [fileId],
+    );
+  }
+
+  async findLifecycleCandidates(
+    kind: TombstoneGuard['kind'],
+    before: Date,
+    limit: number,
+  ): Promise<string[]> {
+    const order = kind === 'ORPHAN' ? 'created_at' : 'retention_until';
+    const [rows] = await this.pool.query<RowDataPacket[]>(
+      `SELECT file_id FROM file
+        WHERE deleted_at IS NULL AND legal_hold = FALSE ${GUARDS[kind]}
+        ORDER BY ${order}, file_id LIMIT ?`,
+      [before, limit],
+    );
+    return rows.map((r) => r.file_id as string);
+  }
+
+  async findBlobPending(limit: number): Promise<string[]> {
+    const [rows] = await this.pool.query<RowDataPacket[]>(
+      `SELECT file_id FROM file
+        WHERE deleted_at IS NOT NULL AND blob_deleted_at IS NULL
+        ORDER BY deleted_at, file_id LIMIT ?`,
+      [limit],
+    );
+    return rows.map((r) => r.file_id as string);
+  }
+
+  async existingIds(fileIds: readonly string[]): Promise<Set<string>> {
+    if (fileIds.length === 0) return new Set();
+    const [rows] = await this.pool.query<RowDataPacket[]>(
+      'SELECT file_id FROM file WHERE file_id IN (?)',
+      [fileIds],
+    );
+    return new Set(rows.map((r) => r.file_id as string));
+  }
 }
+
+/** The lifecycle conditions, each with one `?` for TombstoneGuard.before. */
+const GUARDS: Record<TombstoneGuard['kind'], string> = {
+  ORPHAN: 'AND attached = FALSE AND created_at < ?',
+  EXPIRED: 'AND retention_until IS NOT NULL AND retention_until < ?',
+};
 
 /**
  * MySQL names the violated key only in the message: "Duplicate entry '…' for

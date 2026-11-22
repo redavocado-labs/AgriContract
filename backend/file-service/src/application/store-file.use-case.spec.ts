@@ -340,7 +340,7 @@ describe('StoreFileUseCase', () => {
         `File ${key}: could not confirm that object ${key} was not stored (ECONNREFUSED)`,
       );
       expect(logger.warn).not.toHaveBeenCalledWith(
-        expect.stringContaining('must be deleted by hand'),
+        expect.stringContaining('the lifecycle sweep removes it after a day'),
       );
     });
 
