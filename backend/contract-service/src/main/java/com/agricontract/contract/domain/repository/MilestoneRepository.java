@@ -17,6 +17,9 @@ public interface MilestoneRepository {
 
     Optional<Milestone> findByIdForUpdate(String milestoneId);
 
+    /** Plain read, no lock. */
+    Optional<Milestone> findById(String milestoneId);
+
     List<Milestone> findByContractId(String contractId);
 
     Optional<String> findContractIdOf(String milestoneId);

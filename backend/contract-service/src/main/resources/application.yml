@@ -62,6 +62,13 @@ user-service:
 notification-service:
   url: ${NOTIFICATION_SERVICE_URL:http://localhost:8085}
 
+# Service to service only (D71): evidence uploads are streamed to storeOnBehalfOf, named files confirmed attached.
+file-service:
+  url: ${FILE_SERVICE_URL:http://localhost:8089}
+  connect-timeout: PT5S
+  # One upload is at most 10 MiB; the read timeout covers file-service storing it.
+  read-timeout: PT60S
+
 contract:
   calendar:
     # Comma-separated YYYY-MM-DD Vietnam public holidays (shared/java-business-calendar). Required: startup fails
@@ -79,6 +86,15 @@ contract:
   consent:
     sign-contract-version: "1.0"
     cancel-activation-version: "1.0"
+    # Operational tier (consent design §4): checkbox + authenticated session, no OTP.
+    milestone-action-versions:
+      DECLARE_SELLER_WEIGHT: "1.0"
+  milestone:
+    # D75: the seller may correct the declared weight for this long after the first declaration (never extended),
+    # while the buyer has not recorded receipt. Lower it on the demo (e.g. PT5M).
+    weigh-correction-window: ${WEIGH_CORRECTION_WINDOW:PT1H}
+    # Named evidence whose confirm-attached failed is sent again this often (file-service cleans orphans after 1 week).
+    evidence-attach-retry-interval: PT5M
   signature:
     # signatureAuthMaxAgeSeconds (signature design §4): the password must have been entered this recently.
     auth-max-age-seconds: 300

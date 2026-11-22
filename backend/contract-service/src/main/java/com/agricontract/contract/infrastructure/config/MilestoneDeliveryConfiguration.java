@@ -1,0 +1,19 @@
+package com.agricontract.contract.infrastructure.config;
+
+import com.agricontract.contract.application.port.MilestoneDeliverySettings;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.time.Duration;
+
+/** contract.milestone.* from application.yml, handed to the application layer as plain values. */
+@Configuration
+public class MilestoneDeliveryConfiguration {
+
+    @Bean
+    MilestoneDeliverySettings milestoneDeliverySettings(
+            @Value("${contract.milestone.weigh-correction-window:PT1H}") Duration weighCorrectionWindow) {
+        return new MilestoneDeliverySettings(weighCorrectionWindow);
+    }
+}

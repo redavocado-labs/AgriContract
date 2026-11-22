@@ -3,7 +3,11 @@ package com.agricontract.contract.domain.model.milestone;
 import com.agricontract.contract.domain.model.terms.MilestoneTerm;
 import com.agricontract.contract.domain.model.terms.VndAmount;
 
+import com.agricontract.contract.domain.exception.ContractConflictException;
+import com.agricontract.contract.domain.model.consent.SignerRole;
+
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Objects;
@@ -35,12 +39,14 @@ public final class Milestone {
     private Instant fundingLockedAt;
     private int fundingDelayBusinessDays;
     private String lastFundingFailureReason;
+    private SellerWeighing sellerWeighing;
 
     private Milestone(String milestoneId, String contractId, int milestoneIndex, BigDecimal committedQuantity,
                       LocalDate expectedDeliveryDate, int graceDays, LocalDate fundingScheduledDate,
                       MilestoneStatus status, FundingStatus fundingStatus, VndAmount effectiveUnitPrice,
                       VndAmount batchAmount, Instant fundingRequestedAt, Instant fundingLockedAt,
-                      int fundingDelayBusinessDays, String lastFundingFailureReason) {
+                      int fundingDelayBusinessDays, String lastFundingFailureReason,
+                      SellerWeighing sellerWeighing) {
         this.milestoneId = milestoneId;
         this.contractId = contractId;
         this.milestoneIndex = milestoneIndex;
@@ -56,6 +62,7 @@ public final class Milestone {
         this.fundingLockedAt = fundingLockedAt;
         this.fundingDelayBusinessDays = fundingDelayBusinessDays;
         this.lastFundingFailureReason = lastFundingFailureReason;
+        this.sellerWeighing = sellerWeighing;
     }
 
     /**
@@ -73,7 +80,7 @@ public final class Milestone {
         }
         return new Milestone(milestoneId, contractId, term.milestoneIndex(), term.committedQuantity(),
                 term.expectedDeliveryDate(), term.graceDays(), fundingScheduledDate, MilestoneStatus.CREATED,
-                FundingStatus.NOT_REQUESTED, null, null, null, null, 0, null);
+                FundingStatus.NOT_REQUESTED, null, null, null, null, 0, null, null);
     }
 
     public static Milestone reconstitute(String milestoneId, String contractId, int milestoneIndex,
@@ -81,10 +88,12 @@ public final class Milestone {
                                          LocalDate fundingScheduledDate, MilestoneStatus status,
                                          FundingStatus fundingStatus, VndAmount effectiveUnitPrice,
                                          VndAmount batchAmount, Instant fundingRequestedAt, Instant fundingLockedAt,
-                                         int fundingDelayBusinessDays, String lastFundingFailureReason) {
+                                         int fundingDelayBusinessDays, String lastFundingFailureReason,
+                                         SellerWeighing sellerWeighing) {
         return new Milestone(milestoneId, contractId, milestoneIndex, committedQuantity, expectedDeliveryDate,
                 graceDays, fundingScheduledDate, status, fundingStatus, effectiveUnitPrice, batchAmount,
-                fundingRequestedAt, fundingLockedAt, fundingDelayBusinessDays, lastFundingFailureReason);
+                fundingRequestedAt, fundingLockedAt, fundingDelayBusinessDays, lastFundingFailureReason,
+                sellerWeighing);
     }
 
     /** True from fundingScheduledDate on (ICT date), while funding has not been requested. */
@@ -159,6 +168,68 @@ public final class Milestone {
         this.lastFundingFailureReason = reason == null || reason.length() <= MAX_FAILURE_REASON ? reason
                 : reason.substring(0, MAX_FAILURE_REASON);
         return true;
+    }
+
+    /**
+     * Whose turn it is to upload weighing evidence (D71, design §3.2.1): the SELLER while IN_PROGRESS, or while
+     * SELLER_WEIGHED inside the correction window (D75); the BUYER while SELLER_WEIGHED. Anything else is
+     * MILESTONE_ACTION_NOT_ALLOWED.
+     */
+    public void requireEvidenceUploadTurn(SignerRole role, Instant now, Duration correctionWindow) {
+        boolean allowed = role == SignerRole.SELLER
+                ? status == MilestoneStatus.IN_PROGRESS || isCorrectable(now, correctionWindow)
+                : status == MilestoneStatus.SELLER_WEIGHED;
+        if (!allowed) {
+            throw new ContractConflictException(ContractConflictException.MILESTONE_ACTION_NOT_ALLOWED,
+                    "It is not your turn to upload evidence for this milestone (" + status + ").");
+        }
+    }
+
+    /**
+     * The seller declares the loaded weight (D72-D75). From IN_PROGRESS: SELLER_WEIGHED with declaration 1, whatever
+     * the delivery deadline (D73). On SELLER_WEIGHED: a correction, only within {@code correctionWindow} of the first
+     * declaration (a correction never extends it). Once the buyer has recorded receipt (or the milestone moved on in
+     * any other way) the declaration is closed: WEIGH_CORRECTION_CLOSED. Returns the new declaration number.
+     */
+    public int declareSellerWeight(BigDecimal weight, String evidenceFileId, String deliveryCertificateFileId,
+                                   Instant declaredAt, Duration correctionWindow) {
+        Objects.requireNonNull(declaredAt, "declaredAt");
+        SellerWeight.requireValid(weight);
+        Objects.requireNonNull(evidenceFileId, "evidenceFileId");
+        if (status == MilestoneStatus.IN_PROGRESS) {
+            this.sellerWeighing = new SellerWeighing(weight, evidenceFileId, deliveryCertificateFileId, declaredAt, 1);
+            this.status = MilestoneStatus.SELLER_WEIGHED;
+            return 1;
+        }
+        if (sellerWeighing == null) {
+            throw new ContractConflictException(ContractConflictException.MILESTONE_ACTION_NOT_ALLOWED,
+                    "This milestone cannot be weighed now (" + status + ").");
+        }
+        if (!isCorrectable(declaredAt, correctionWindow)) {
+            throw new ContractConflictException(ContractConflictException.WEIGH_CORRECTION_CLOSED,
+                    status == MilestoneStatus.SELLER_WEIGHED
+                            ? "The correction window closed at " + correctionDeadline(correctionWindow) + "."
+                            : "The buyer has already recorded receipt; the weight can no longer be corrected.");
+        }
+        int number = sellerWeighing.declarationCount() + 1;
+        this.sellerWeighing = new SellerWeighing(weight, evidenceFileId, deliveryCertificateFileId,
+                sellerWeighing.firstDeclaredAt(), number);
+        return number;
+    }
+
+    /** SELLER_WEIGHED and still before firstDeclaredAt + window (D75). */
+    public boolean isCorrectable(Instant now, Duration correctionWindow) {
+        return status == MilestoneStatus.SELLER_WEIGHED && sellerWeighing != null
+                && now.isBefore(correctionDeadline(correctionWindow));
+    }
+
+    private Instant correctionDeadline(Duration correctionWindow) {
+        return sellerWeighing.firstDeclaredAt().plus(correctionWindow);
+    }
+
+    /** The declaration in force, null before the seller weighed. */
+    public SellerWeighing sellerWeighing() {
+        return sellerWeighing;
     }
 
     public String milestoneId() {

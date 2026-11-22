@@ -27,6 +27,17 @@ public class ContractConflictException extends RuntimeException {
     /** D67: the second signature when a milestone's funding date (delivery date minus the lead) is already past. */
     public static final String DELIVERY_SCHEDULE_TOO_SOON = "DELIVERY_SCHEDULE_TOO_SOON";
 
+    /** D71-D75: the contract is not ACTIVE, or the milestone is not at the step this action needs. */
+    public static final String MILESTONE_ACTION_NOT_ALLOWED = "MILESTONE_ACTION_NOT_ALLOWED";
+    /** D75: the seller's correction window has passed, or the buyer has recorded receipt. */
+    public static final String WEIGH_CORRECTION_CLOSED = "WEIGH_CORRECTION_CLOSED";
+    /** D71: a named file is still being scanned. */
+    public static final String EVIDENCE_NOT_READY = "EVIDENCE_NOT_READY";
+    /** D71: a named file failed the scan. */
+    public static final String EVIDENCE_REJECTED = "EVIDENCE_REJECTED";
+    /** D74: the presentedContentHash of an operational consent is not the server's hash of the action content. */
+    public static final String CONSENT_CONTENT_MISMATCH = "CONSENT_CONTENT_MISMATCH";
+
     private final String code;
 
     public ContractConflictException(String code, String message) {

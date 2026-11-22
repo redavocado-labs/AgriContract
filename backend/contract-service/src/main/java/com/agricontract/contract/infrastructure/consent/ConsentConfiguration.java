@@ -1,6 +1,8 @@
 package com.agricontract.contract.infrastructure.consent;
 
+import com.agricontract.contract.domain.model.consent.ConsentActionType;
 import com.agricontract.contract.domain.model.consent.ConsentStatement;
+import com.agricontract.contract.domain.model.consent.OperationalConsentStatements;
 import com.agricontract.contract.domain.model.consent.ConsentStatements;
 import com.agricontract.contract.domain.model.consent.SignerRole;
 import com.agricontract.contract.domain.model.terms.CanonicalTerms;
@@ -38,6 +40,29 @@ public class ConsentConfiguration {
                     CanonicalTerms.sha256(text)));
         }
         return new ConsentStatements(signContract, cancelActivation);
+    }
+
+    /**
+     * The milestone statements (consent design §4, operational tier), one role each: the seller declares the weight
+     * (D74). Startup fails if one is not configured or its file is missing.
+     */
+    @Bean
+    OperationalConsentStatements operationalConsentStatements(ConsentStatementProperties properties)
+            throws IOException {
+        Map<ConsentActionType, SignerRole> actions = Map.of(ConsentActionType.DECLARE_SELLER_WEIGHT, SignerRole.SELLER);
+        Map<ConsentActionType, ConsentStatement> templates = new EnumMap<>(ConsentActionType.class);
+        for (Map.Entry<ConsentActionType, SignerRole> action : actions.entrySet()) {
+            String version = properties.milestoneActionVersions().get(action.getKey());
+            if (version == null || version.isBlank()) {
+                throw new IllegalStateException("contract.consent.milestone-action-versions." + action.getKey()
+                        + " is required");
+            }
+            String code = OperationalConsentStatements.code(action.getKey(), action.getValue());
+            // D84: the hash is over the template itself, placeholders ([X]) left as written.
+            String text = load("consent-statement/" + code + "-" + version + ".txt");
+            templates.put(action.getKey(), new ConsentStatement(code, version, text, CanonicalTerms.sha256(text)));
+        }
+        return new OperationalConsentStatements(templates);
     }
 
     @Bean
