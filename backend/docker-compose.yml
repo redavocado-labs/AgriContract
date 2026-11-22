@@ -74,6 +74,25 @@ services:
       timeout: 5s
       retries: 5
 
+  # The intake@ mailbox of file-service's email intake (#275, file-service-phase2-design §4.1: IMAP polling).
+  # GreenMail: IMAP on 3143, SMTP on 3025 to drop a test mail in (user intake / intake-dev-secret).
+  greenmail:
+    image: greenmail/standalone:2.1.5
+    container_name: greenmail
+    environment:
+      GREENMAIL_OPTS: "-Dgreenmail.setup.test.imap -Dgreenmail.setup.test.smtp -Dgreenmail.hostname=0.0.0.0 -Dgreenmail.users=intake:intake-dev-secret@agricontract.local -Dgreenmail.users.login=local_part"
+    ports:
+      - "3143:3143"
+      - "3025:3025"
+    networks:
+      - agricontract-net
+    healthcheck:
+      # No wget/curl in the image: wait for the IMAP greeting.
+      test: [ "CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/3143 && head -c 4 <&3 | grep -q OK" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   mailhog:
     image: mailhog/mailhog:latest
     container_name: mailhog
@@ -714,6 +733,9 @@ services:
       # file-service.virus-scan.dlq after 3 attempts (the DLQ check warns; replay them once clamav runs).
       CLAMAV_HOST: clamav
       CLAMAV_PORT: 3310
+      # Email intake (#275): poll the GreenMail intake@ mailbox every 5 minutes.
+      INTAKE_IMAP_HOST: greenmail
+      INTAKE_IMAP_PORT: 3143
     # Local only, for manual tests; the gateway never routes file-service.
     ports:
       - "8089:8089"
@@ -728,6 +750,8 @@ services:
       # work meanwhile (a scan job retries, then waits in the DLQ).
       clamav:
         condition: service_started
+      greenmail:
+        condition: service_healthy
       file-migrate:
         condition: service_completed_successfully
     networks:

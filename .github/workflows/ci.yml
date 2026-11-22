@@ -369,6 +369,19 @@ jobs:
           --health-timeout 10s
           --health-retries 20
           --health-start-period 60s
+      # The intake@ IMAP mailbox for the email intake's test:int (#275), as the compose greenmail.
+      greenmail:
+        image: greenmail/standalone:2.1.5
+        env:
+          GREENMAIL_OPTS: "-Dgreenmail.setup.test.imap -Dgreenmail.setup.test.smtp -Dgreenmail.hostname=0.0.0.0 -Dgreenmail.users=intake:intake-dev-secret@agricontract.local -Dgreenmail.users.login=local_part"
+        ports:
+          - 3143:3143
+          - 3025:3025
+        options: >-
+          --health-cmd "bash -c 'exec 3<>/dev/tcp/127.0.0.1/3143 && head -c 4 <&3 | grep -q OK'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
 
     steps:
       - uses: actions/checkout@v4
@@ -424,7 +437,8 @@ jobs:
           docker logs object-storage
           exit 1
 
-      # The store core, the routes and the scan pipeline on real object storage, MySQL, RabbitMQ and clamd.
+      # The store core, the routes, the scan pipeline, the lifecycle job and the email intake on real object
+      # storage, MySQL, RabbitMQ, clamd and GreenMail.
       - name: Integration tests (test:int)
         working-directory: backend/file-service
         env:
