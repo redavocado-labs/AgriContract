@@ -87,15 +87,26 @@ public class JdbcMilestoneEvidenceRepository implements MilestoneEvidenceReposit
         if (fileIds.isEmpty()) {
             return;
         }
-        new NamedParameterJdbcTemplate(jdbc).update("UPDATE milestone_evidence_file SET named_at = :at"
-                        + " WHERE file_id IN (:ids) AND named_at IS NULL",
+        new NamedParameterJdbcTemplate(jdbc).update("UPDATE milestone_evidence_file SET named_at = :at,"
+                        + " next_attach_attempt_at = :at WHERE file_id IN (:ids) AND named_at IS NULL",
                 new MapSqlParameterSource("ids", fileIds).addValue("at", Timestamp.from(namedAt)));
     }
 
     @Override
-    public List<String> findNamedNotAttached(int limit) {
-        return jdbc.queryForList("SELECT file_id FROM milestone_evidence_file WHERE attached_confirmed_at IS NULL"
-                + " AND named_at IS NOT NULL ORDER BY named_at, file_id LIMIT ?", String.class, limit);
+    public List<PendingAttach> findAttachDue(Instant now, int limit) {
+        return jdbc.query("SELECT file_id, attach_attempts FROM milestone_evidence_file"
+                        + " WHERE attached_confirmed_at IS NULL AND named_at IS NOT NULL"
+                        + " AND next_attach_attempt_at <= ? ORDER BY next_attach_attempt_at, file_id LIMIT ?",
+                (rs, n) -> new PendingAttach(rs.getString("file_id"), rs.getInt("attach_attempts")),
+                Timestamp.from(now), limit);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void recordAttachFailure(String fileId, Instant nextAttemptAt) {
+        jdbc.update("UPDATE milestone_evidence_file SET attach_attempts = attach_attempts + 1,"
+                + " next_attach_attempt_at = ? WHERE file_id = ? AND attached_confirmed_at IS NULL",
+                Timestamp.from(nextAttemptAt), fileId);
     }
 
     @Override

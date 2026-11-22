@@ -29,11 +29,21 @@ public interface MilestoneEvidenceRepository {
 
     void insert(MilestoneEvidenceFile file, String idempotencyKey);
 
-    /** Named by a declaration: from now on the file must be kept (confirm-attached, design §3.2.1). */
+    /**
+     * Named by a declaration: from now on the file must be kept (confirm-attached, design §3.2.1). Its first
+     * confirm-attached is due at {@code namedAt}.
+     */
     void markNamed(Collection<String> fileIds, Instant namedAt);
 
-    /** Named files whose confirm-attached has not succeeded yet, oldest first. */
-    List<String> findNamedNotAttached(int limit);
+    /** A named file whose confirm-attached has not succeeded yet, with the attempts already failed. */
+    record PendingAttach(String fileId, int attempts) {
+    }
+
+    /** Named, not attached, next attempt due at or before {@code now}; the most overdue first. */
+    List<PendingAttach> findAttachDue(Instant now, int limit);
+
+    /** One more failed confirm-attached; the next one is not tried before {@code nextAttemptAt}. */
+    void recordAttachFailure(String fileId, Instant nextAttemptAt);
 
     void markAttached(String fileId, Instant confirmedAt);
 

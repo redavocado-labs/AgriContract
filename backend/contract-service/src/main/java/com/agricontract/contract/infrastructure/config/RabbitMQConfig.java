@@ -57,19 +57,18 @@ public class RabbitMQConfig {
         Queue fundingFailed = QueueBuilder.durable(MILESTONE_FUNDING_FAILED_QUEUE)
                 .deadLetterExchange(dlx.getName()).build();
         Queue fundingFailedDlq = QueueBuilder.durable(MILESTONE_FUNDING_FAILED_QUEUE + ".dlq").build();
-        // D71: file-service's scan outcomes, for the milestone evidence uploaded through contract-service.
-        TopicExchange files = new TopicExchange(FILES_EXCHANGE, true, false);
+        // D71: file-service's scan outcomes, for the milestone evidence uploaded through contract-service. D70: the
+        // exchange is file-service's, so it is not declared here; only our queues are, and FilesExchangeBinder binds
+        // them once file-service has declared agricontract.files.
         Queue fileReady = QueueBuilder.durable(FILE_READY_QUEUE).deadLetterExchange(dlx.getName()).build();
         Queue fileReadyDlq = QueueBuilder.durable(FILE_READY_QUEUE + ".dlq").build();
         Queue fileFailed = QueueBuilder.durable(FILE_FAILED_QUEUE).deadLetterExchange(dlx.getName()).build();
         Queue fileFailedDlq = QueueBuilder.durable(FILE_FAILED_QUEUE + ".dlq").build();
         return new Declarables(List.of(
-                new TopicExchange("agricontract.contracts", true, false), escrow, dlx, files,
+                new TopicExchange("agricontract.contracts", true, false), escrow, dlx,
                 fileReady, fileReadyDlq,
-                BindingBuilder.bind(fileReady).to(files).with("file.ready"),
                 BindingBuilder.bind(fileReadyDlq).to(dlx).with("file.ready"),
                 fileFailed, fileFailedDlq,
-                BindingBuilder.bind(fileFailed).to(files).with("file.failed"),
                 BindingBuilder.bind(fileFailedDlq).to(dlx).with("file.failed"),
                 depositLocked, depositLockedDlq,
                 BindingBuilder.bind(depositLocked).to(escrow).with("escrow.deposit_locked"),

@@ -421,9 +421,34 @@ class SellerWeighIntegrationTest {
         assertThat(fileStore.confirmed).isEmpty();
 
         fileStore.confirmFails = false;
+        assertThat(attachment.retryPending()).as("backed off: not due yet").isZero();
+        assertThat(jdbc.queryForObject("SELECT attach_attempts FROM milestone_evidence_file WHERE file_id = ?",
+                Integer.class, photo)).isEqualTo(1);
+
+        jdbc.update("UPDATE milestone_evidence_file SET next_attach_attempt_at = ? WHERE file_id = ?",
+                java.sql.Timestamp.from(java.time.Instant.now().minusSeconds(1)), photo);
         assertThat(attachment.retryPending()).isEqualTo(1);
         assertThat(attachment.retryPending()).isZero();
         assertThat(fileStore.confirmed).containsExactly(photo);
+    }
+
+    @Test
+    void aFileThatKeepsFailing_doesNotStarveANewerOne() {
+        fileStore.confirmFails = true;
+        String stuck = uploadReady(SELLER, first);
+        weigh.execute(weighCommand(first, "9500", stuck, null, UUID.randomUUID()));
+        // The stuck file failed many times and is backed off for hours; a newer named file is due now.
+        jdbc.update("UPDATE milestone_evidence_file SET attach_attempts = 20,"
+                + " next_attach_attempt_at = ? WHERE file_id = ?",
+                java.sql.Timestamp.from(java.time.Instant.now().plus(java.time.Duration.ofHours(6))), stuck);
+        String fresh = uploadReady(SELLER, first);
+        weigh.execute(weighCommand(first, "9501", fresh, null, UUID.randomUUID()));
+        jdbc.update("UPDATE milestone_evidence_file SET next_attach_attempt_at = ? WHERE file_id = ?",
+                java.sql.Timestamp.from(java.time.Instant.now().minusSeconds(1)), fresh);
+
+        fileStore.confirmFails = false;
+        assertThat(attachment.retryPending()).isEqualTo(1);
+        assertThat(fileStore.confirmed).containsExactly(fresh);
     }
 
     @Test
