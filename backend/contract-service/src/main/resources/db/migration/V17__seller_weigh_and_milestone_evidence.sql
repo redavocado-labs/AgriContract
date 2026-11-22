@@ -53,7 +53,8 @@ CREATE TRIGGER trg_seller_weigh_declaration_no_delete BEFORE DELETE ON seller_we
 -- D71: a file a party uploaded for a milestone through contract-service. Only such a file can be named by weigh (and
 -- later receive/confirm/flag). (uploaded_by, idempotency_key) is the upload, as in file-service: a repeat finds the
 -- same row. named_at: a declaration uses the file, so it must be kept; attached_confirmed_at: file-service confirmed
--- it (confirm-attached), retried while NULL.
+-- it (confirm-attached), retried while NULL. attach_attempts / next_attach_attempt_at: the retry backoff, so a file
+-- that keeps failing waits longer and never holds back newer ones.
 CREATE TABLE milestone_evidence_file (
     file_id                VARCHAR(36)  NOT NULL,
     milestone_id           VARCHAR(36)  NOT NULL,
@@ -64,14 +65,18 @@ CREATE TABLE milestone_evidence_file (
     uploaded_at            TIMESTAMP(6) NOT NULL,
     named_at               TIMESTAMP(6) NULL,
     attached_confirmed_at  TIMESTAMP(6) NULL,
+    attach_attempts        INT          NOT NULL DEFAULT 0,
+    next_attach_attempt_at TIMESTAMP(6) NULL,
     PRIMARY KEY (file_id),
     CONSTRAINT uk_milestone_evidence_upload UNIQUE (uploaded_by, idempotency_key),
     CONSTRAINT fk_milestone_evidence_milestone FOREIGN KEY (milestone_id) REFERENCES milestone (milestone_id),
     CONSTRAINT chk_milestone_evidence_role CHECK (uploader_role IN ('BUYER', 'SELLER')),
-    CONSTRAINT chk_milestone_evidence_attached CHECK (attached_confirmed_at IS NULL OR named_at IS NOT NULL)
+    CONSTRAINT chk_milestone_evidence_attached CHECK (attached_confirmed_at IS NULL OR named_at IS NOT NULL),
+    CONSTRAINT chk_milestone_evidence_attempts CHECK (attach_attempts >= 0)
 );
 
-CREATE INDEX idx_milestone_evidence_pending_attach ON milestone_evidence_file (attached_confirmed_at, named_at);
+CREATE INDEX idx_milestone_evidence_pending_attach
+    ON milestone_evidence_file (attached_confirmed_at, next_attach_attempt_at);
 
 -- file.ready / file.failed as file-service reported them, by fileId. Kept even for a file no milestone names yet: a
 -- fast scan can be reported before the upload that produced the file is recorded. The first outcome stays.
