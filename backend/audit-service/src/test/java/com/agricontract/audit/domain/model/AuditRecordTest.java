@@ -15,7 +15,7 @@ class AuditRecordTest {
     static final String HASH = "0123456789abcdef".repeat(4);
 
     static AuditRecord build(String recordId, SubjectType type, String subjectId, String sourceType, String eventType,
-                             String eventId, String hash, Instant occurredAt, Map<String, String> content,
+                             String eventId, String hash, Instant occurredAt, Map<String, Object> content,
                              Instant createdAt) {
         return new AuditRecord(recordId, type, subjectId, sourceType, eventType, eventId, "cause", "corr", hash,
                 occurredAt, content, createdAt);
@@ -38,7 +38,7 @@ class AuditRecordTest {
     void rejectsEachMissingRequiredField() {
         String id = UUID.randomUUID().toString();
         Instant now = Instant.now();
-        Map<String, String> c = Map.of("k", "v");
+        Map<String, Object> c = Map.of("k", "v");
         assertInvalid(() -> build(null, SubjectType.CONTRACT, "s", "T", "e.t", id, HASH, now, c, now));
         assertInvalid(() -> build(id, null, "s", "T", "e.t", id, HASH, now, c, now));
         assertInvalid(() -> build(id, SubjectType.CONTRACT, null, "T", "e.t", id, HASH, now, c, now));
