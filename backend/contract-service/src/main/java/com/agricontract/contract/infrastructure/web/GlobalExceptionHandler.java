@@ -5,6 +5,7 @@ import com.agricontract.contract.application.exception.EvidenceFileNotFoundExcep
 import com.agricontract.contract.application.exception.FileRejectedException;
 import com.agricontract.contract.application.exception.FileServiceFailedException;
 import com.agricontract.contract.application.exception.FileServiceUnavailableException;
+import com.agricontract.contract.application.exception.BreachCaseNotFoundException;
 import com.agricontract.contract.application.exception.MilestoneNotFoundException;
 import com.agricontract.contract.domain.exception.MilestoneRequestInvalidException;
 import com.agricontract.contract.application.exception.IdempotencyKeyReusedException;
@@ -49,6 +50,13 @@ public class GlobalExceptionHandler extends ErrorEnvelopeExceptionHandler {
                                                                  HttpServletRequest request) {
         log.warn("404 MILESTONE_NOT_FOUND {}", ex.getMessage());
         return envelope(HttpStatus.NOT_FOUND, "MILESTONE_NOT_FOUND", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(BreachCaseNotFoundException.class)
+    public ResponseEntity<ErrorEnvelope> handleBreachCaseNotFound(BreachCaseNotFoundException ex,
+                                                                  HttpServletRequest request) {
+        log.warn("404 BREACH_CASE_NOT_FOUND {}", ex.getMessage());
+        return envelope(HttpStatus.NOT_FOUND, "BREACH_CASE_NOT_FOUND", ex.getMessage(), request);
     }
 
     @ExceptionHandler(EvidenceFileNotFoundException.class)

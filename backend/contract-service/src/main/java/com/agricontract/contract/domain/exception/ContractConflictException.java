@@ -40,6 +40,11 @@ public class ContractConflictException extends RuntimeException {
     /** D77: the contract requires an inspection report before settlement and none is confirmed yet. */
     public static final String INSPECTION_REPORT_PENDING = "INSPECTION_REPORT_PENDING";
 
+    /** D80: the breach case is not at the step this action needs (review from REPORTED, resolve from UNDER_REVIEW). */
+    public static final String BREACH_CASE_ACTION_NOT_ALLOWED = "BREACH_CASE_ACTION_NOT_ALLOWED";
+    /** D81: the decision differs from the case's computedResolution, or INSPECTOR_L1_5 has none to approve. */
+    public static final String RESOLUTION_MISMATCH = "RESOLUTION_MISMATCH";
+
     private final String code;
 
     public ContractConflictException(String code, String message) {
