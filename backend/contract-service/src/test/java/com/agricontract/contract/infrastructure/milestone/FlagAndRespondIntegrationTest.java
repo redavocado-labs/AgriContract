@@ -7,16 +7,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.agricontract.contract.application.dto.MilestoneEvidenceCommands;
-import com.agricontract.contract.application.exception.IdempotencyKeyReusedException;
-import com.agricontract.contract.application.exception.InvalidEventPayloadException;
 import com.agricontract.contract.application.exception.MilestoneNotFoundException;
 import com.agricontract.contract.application.port.EvidenceFileStore;
 import com.agricontract.contract.application.port.TransactionRunner;
 import com.agricontract.contract.application.service.EvidenceAttachment;
 import com.agricontract.contract.application.service.MilestoneFunding;
 import com.agricontract.contract.application.service.MilestoneReadAccess;
-import com.agricontract.contract.application.dto.MilestoneDetailView;
-import com.agricontract.contract.application.exception.EvidenceFileNotFoundException;
 import com.agricontract.contract.application.service.MilestoneCleanSettlement;
 import com.agricontract.contract.application.usecase.AutoConfirmMilestonesUseCase;
 import com.agricontract.contract.application.usecase.ConfirmMilestoneCleanUseCase;
@@ -43,9 +39,7 @@ import com.agricontract.contract.domain.model.milestone.Milestone;
 import com.agricontract.contract.domain.model.milestone.MilestoneStatus;
 import com.agricontract.contract.domain.model.milestone.SettlementPath;
 import com.agricontract.contract.domain.model.milestone.BuyerReceiptConsent;
-import com.agricontract.contract.domain.model.milestone.CleanReceiptConsent;
 import com.agricontract.contract.domain.model.milestone.SellerWeighConsent;
-import com.agricontract.contract.domain.model.milestone.SellerWeighDeclaration;
 import com.agricontract.contract.domain.model.terms.CanonicalTerms;
 import com.agricontract.contract.domain.model.terms.ContractTemplateProfile;
 import com.agricontract.contract.domain.model.terms.ContractTermsRules;
@@ -100,7 +94,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -670,22 +663,6 @@ class FlagAndRespondIntegrationTest {
         receive.execute(receiveCommand(milestone, buyerKg, photo, null, UUID.randomUUID()));
     }
 
-    private MilestoneEvidenceCommands.Confirm confirmCommand(Milestone milestone, String actor, UUID key) {
-        return confirmCommandWithHash(milestone, actor, key, hashOf(milestone));
-    }
-
-    private MilestoneEvidenceCommands.Confirm confirmCommandWithHash(Milestone milestone, String actor, UUID key,
-                                                                    String hash) {
-        return new MilestoneEvidenceCommands.Confirm(milestone.contractId(), milestone.milestoneId(), actor, key,
-                "1.0", hash);
-    }
-
-    private String hashOf(Milestone milestone) {
-        Milestone current = reload(milestone);
-        return CleanReceiptConsent.contentHash(current.milestoneId(), current.sellerWeighing().declarationCount(),
-                current.sellerWeighing().declaredWeight(), current.buyerReceipt().receivedWeight());
-    }
-
     /** The events of a type written for this test's contract (the database is shared between tests). */
     private List<JsonNode> events(String type) {
         return jdbc.queryForList("SELECT envelope FROM event_outbox WHERE event_type = ?", String.class, type)
@@ -717,17 +694,6 @@ class FlagAndRespondIntegrationTest {
         BigDecimal kg = new BigDecimal(weight);
         return new MilestoneEvidenceCommands.Receive(id(), milestone.milestoneId(), actor, key, kg, photo,
                 certificate, "1.0", BuyerReceiptConsent.contentHash(milestone.milestoneId(), kg, photo, certificate));
-    }
-
-    private List<JsonNode> receivedEvents() {
-        return jdbc.queryForList("SELECT envelope FROM event_outbox WHERE event_type = 'milestone.buyer_received'"
-                + " AND aggregate_id = ?", String.class, first.milestoneId()).stream().map(json -> {
-                    try {
-                        return new ObjectMapper().readTree(json);
-                    } catch (Exception e) {
-                        throw new IllegalStateException(e);
-                    }
-                }).toList();
     }
 
     private String uploadReady(String actor, Milestone milestone) {
@@ -767,15 +733,6 @@ class FlagAndRespondIntegrationTest {
         return envelope("file.ready", readyPayload(fileId));
     }
 
-    private EventEnvelope failed(String fileId) {
-        Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("fileId", fileId);
-        payload.put("uploadedBy", SELLER);
-        payload.put("ingestChannel", "DIRECT_UPLOAD");
-        payload.put("failureReason", "EICAR test signature");
-        return envelope("file.failed", payload);
-    }
-
     private static Map<String, Object> readyPayload(String fileId) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("fileId", fileId);
@@ -795,17 +752,6 @@ class FlagAndRespondIntegrationTest {
         MessageProperties properties = new MessageProperties();
         properties.setContentType(MessageProperties.CONTENT_TYPE_JSON);
         return new Message(new EventEnvelopeCodec().toJson(envelope).getBytes(), properties);
-    }
-
-    private List<JsonNode> weighedEvents() {
-        return jdbc.queryForList("SELECT envelope FROM event_outbox WHERE event_type = 'milestone.seller_weighed'"
-                + " AND aggregate_id = ?", String.class, first.milestoneId()).stream().map(json -> {
-                    try {
-                        return new ObjectMapper().readTree(json);
-                    } catch (Exception e) {
-                        throw new IllegalStateException(e);
-                    }
-                }).toList();
     }
 
     private String id() {
