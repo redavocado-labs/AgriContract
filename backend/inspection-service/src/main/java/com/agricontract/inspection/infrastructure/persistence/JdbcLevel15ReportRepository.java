@@ -68,6 +68,21 @@ public class JdbcLevel15ReportRepository implements Level15ReportRepository {
     }
 
     @Override
+    public boolean hasClosedConfirmedReportForInspector(String contractId, String milestoneId, String inspectorId) {
+        return !jdbc.queryForList("""
+                SELECT r.report_id FROM inspection_report r
+                JOIN level1_5_inspection_assignment a ON a.commission_id=r.l15_commission_id
+                WHERE r.contract_id=? AND r.milestone_id=? AND r.inspector_id=?
+                  AND r.tier='LEVEL_1_5' AND r.status='CONFIRMED' AND a.ended_at=r.confirmed_at
+                  AND NOT EXISTS (SELECT 1 FROM level1_5_inspection_assignment active
+                      WHERE active.contract_id=r.contract_id AND active.milestone_id=r.milestone_id AND active.ended_at IS NULL)
+                  AND NOT EXISTS (SELECT 1 FROM level1_5_inspection_assignment later
+                      WHERE later.contract_id=a.contract_id AND later.milestone_id=a.milestone_id
+                        AND (later.assigned_at>a.assigned_at OR (later.assigned_at=a.assigned_at AND later.commission_id>a.commission_id)))
+                """, String.class, contractId, milestoneId, inspectorId).isEmpty();
+    }
+
+    @Override
     public List<InspectionAssignment> pending(String inspectorId) {
         return jdbc.query("""
                 SELECT a.* FROM level1_5_inspection_assignment a

@@ -15,5 +15,6 @@ public interface Level15ReportRepository {
     void insert(ReportIdentity identity, ReportEvidence evidence, Instant createdAt);
     Optional<Level15Report> find(String reportId);
     boolean hasConfirmedReport(String commissionId);
+    boolean hasClosedConfirmedReportForInspector(String contractId, String milestoneId, String inspectorId);
     List<InspectionAssignment> pending(String inspectorId);
 }

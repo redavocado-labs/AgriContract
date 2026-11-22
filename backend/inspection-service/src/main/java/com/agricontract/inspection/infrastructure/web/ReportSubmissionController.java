@@ -58,6 +58,8 @@ public class ReportSubmissionController {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "REPORT_FILE_NOT_READY");
         } catch (ConfirmLevel15Report.IdempotencyConflict conflict) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "REPORT_STATE_CONFLICT");
+        } catch (ConfirmLevel15Report.AlreadySigned signed) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "REPORT_ALREADY_SIGNED");
         } catch (EligibilityUnavailableException | FileServiceClient.Unavailable unavailable) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "DEPENDENCY_UNAVAILABLE");
         } catch (IllegalArgumentException invalid) {

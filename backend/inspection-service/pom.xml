@@ -12,6 +12,11 @@
     <dependencies>
         <dependency>
             <groupId>com.agricontract</groupId>
+            <artifactId>java-web-error</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.agricontract</groupId>
             <artifactId>java-business-calendar</artifactId>
             <version>${project.version}</version>
         </dependency>

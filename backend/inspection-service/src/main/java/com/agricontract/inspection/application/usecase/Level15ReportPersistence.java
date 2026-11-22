@@ -41,6 +41,10 @@ public class Level15ReportPersistence {
         return transactions.inReadOnlyTransaction(() -> ReportIdentity.allocate(authorization.requireMilestone(contractId, milestoneId)));
     }
 
+    public boolean alreadyConfirmedForInspector(String contractId, String milestoneId, String inspectorId) {
+        return transactions.inReadOnlyTransaction(() -> reports.hasClosedConfirmedReportForInspector(contractId, milestoneId, inspectorId));
+    }
+
     public void persist(ReportIdentity identity, ReportEvidence evidence) {
         transactions.inExistingTransaction(() -> {
             String actor = eligibility.requireEligibleInspector();

@@ -131,7 +131,7 @@ class Level15ReportPersistenceTest {
 
     @Test void confirmationPersistsSignatureClosesAssignmentAndWritesOneEvent() throws Exception {
         var core = confirmation(NOW.minusSeconds(60), confirmationWrites);
-        String report = core.confirm(contract, milestone, id(), "{}", result());
+        String report = core.confirmIdempotent(contract, milestone, id(), "{}", result(), id(), eligibilityGate, submissionReceipts);
         assertThat(jdbc.queryForObject("SELECT report_hash FROM inspector_signature WHERE report_id=?", String.class, report))
                 .isEqualTo(jdbc.queryForObject("SELECT report_hash FROM inspection_report WHERE report_id=?", String.class, report));
         assertThat(jdbc.queryForObject("SELECT ended_at FROM level1_5_inspection_assignment WHERE commission_id=?", Timestamp.class, commission).toInstant()).isEqualTo(NOW);
@@ -157,7 +157,7 @@ class Level15ReportPersistenceTest {
         assertThat(payload.path("reportHash").asText()).isEqualTo(hashes.calculateReportHash(new ReportCommitment(
                 report, contract, milestone, InspectionTier.LEVEL_1_5, payload.path("reportFileHash").asText(),
                 payload.path("resultHash").asText(), payload.path("confirmedAt").asText(), actor)));
-        assertThatThrownBy(() -> core.confirm(contract, milestone, id(), "{}", result())).isInstanceOf(RuntimeException.class);
+        assertThatThrownBy(() -> core.confirmIdempotent(contract, milestone, id(), "{}", result(), id(), eligibilityGate, submissionReceipts)).isInstanceOf(RuntimeException.class);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE l15_commission_id=?", Integer.class, commission)).isEqualTo(1);
     }
 
@@ -169,32 +169,32 @@ class Level15ReportPersistenceTest {
                 throw new IllegalStateException("simulated outbox failure");
             }
         };
-        assertThatThrownBy(() -> confirmation(NOW.minusSeconds(60), failing).confirm(contract, milestone, id(), "{}", result())).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> confirmation(NOW.minusSeconds(60), failing).confirmIdempotent(contract, milestone, id(), "{}", result(), id(), eligibilityGate, submissionReceipts)).isInstanceOf(IllegalStateException.class);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE l15_commission_id=?", Integer.class, commission)).isZero();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspector_signature WHERE contract_id=?", Integer.class, contract)).isZero();
         assertThat(jdbc.queryForObject("SELECT ended_at IS NULL FROM level1_5_inspection_assignment WHERE commission_id=?", Boolean.class, commission)).isTrue();
     }
 
     @Test void confirmationRejectsStaleAuthenticationAndForeignInspector() {
-        assertThatThrownBy(() -> confirmation(NOW.minusSeconds(1801), confirmationWrites).confirm(contract, milestone, id(), "{}", result())).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> confirmation(NOW.minusSeconds(1801), confirmationWrites).confirmIdempotent(contract, milestone, id(), "{}", result(), id(), eligibilityGate, submissionReceipts)).isInstanceOf(IllegalStateException.class);
         String other = id(); authenticate(other, "INSPECTOR");
         when(users.load(other)).thenReturn(new InspectorEligibility(other, "INSPECTOR", "VERIFIED", null));
-        assertThatThrownBy(() -> confirmation(NOW.minusSeconds(60), confirmationWrites).confirm(contract, milestone, id(), "{}", result())).isInstanceOf(InspectionAssignmentAccessDeniedException.class);
+        assertThatThrownBy(() -> confirmation(NOW.minusSeconds(60), confirmationWrites).confirmIdempotent(contract, milestone, id(), "{}", result(), id(), eligibilityGate, submissionReceipts)).isInstanceOf(InspectionAssignmentAccessDeniedException.class);
     }
 
     @Test void confirmationRejectsEndedAssignment() {
         jdbc.update("UPDATE level1_5_inspection_assignment SET ended_at=? WHERE commission_id=?", Timestamp.from(NOW.minusSeconds(1)), commission);
-        assertThatThrownBy(() -> confirmation(NOW.minusSeconds(60), confirmationWrites).confirm(contract, milestone, id(), "{}", result()))
+        assertThatThrownBy(() -> confirmation(NOW.minusSeconds(60), confirmationWrites).confirmIdempotent(contract, milestone, id(), "{}", result(), id(), eligibilityGate, submissionReceipts))
                 .isInstanceOf(InspectionAssignmentAccessDeniedException.class);
     }
 
     @Test void missingSessionOrUnavailableVerifiedFileCannotPersist() {
-        assertThatThrownBy(() -> confirmation(null, confirmationWrites).confirm(contract, milestone, id(), "{}", result()))
+        assertThatThrownBy(() -> confirmation(null, confirmationWrites).confirmIdempotent(contract, milestone, id(), "{}", result(), id(), eligibilityGate, submissionReceipts))
                 .isInstanceOf(IllegalStateException.class);
         var unavailable = new ConfirmLevel15Report(service, lifecycleRepository, lifecycle, runner, canonicalizer,
                 () -> NOW.minusSeconds(10), (assignment, file) -> { throw new IllegalStateException("file unavailable"); },
                 confirmationWrites, clock, Duration.ofMinutes(30));
-        assertThatThrownBy(() -> unavailable.confirm(contract, milestone, id(), "{}", result()))
+        assertThatThrownBy(() -> unavailable.confirmIdempotent(contract, milestone, id(), "{}", result(), id(), eligibilityGate, submissionReceipts))
                 .hasMessage("file unavailable");
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE l15_commission_id=?", Integer.class, commission)).isZero();
         assertThat(jdbc.queryForObject("SELECT ended_at IS NULL FROM level1_5_inspection_assignment WHERE commission_id=?", Boolean.class, commission)).isTrue();
@@ -292,7 +292,7 @@ class Level15ReportPersistenceTest {
         try {
             Callable<Boolean> submit = () -> {
                 authenticate(actor, "INSPECTOR");
-                try { core.confirm(contract, milestone, id(), "{}", result()); return true; }
+                try { core.confirmIdempotent(contract, milestone, id(), "{}", result(), id(), eligibilityGate, submissionReceipts); return true; }
                 catch (RuntimeException rejected) { return false; }
                 finally { SecurityContextHolder.clearContext(); }
             };
