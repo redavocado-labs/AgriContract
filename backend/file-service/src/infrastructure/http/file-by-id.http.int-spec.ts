@@ -27,6 +27,7 @@ import { APP_OPTIONS } from '../../app.options';
 import { OWNER_DELETION_REASON } from '../../application/delete-file.use-case';
 import { validate } from '../../config/env.validation';
 import { createS3Client } from '../storage/s3-object-storage';
+import { withoutBroker } from '../../../test/support/without-broker';
 
 const SECRET = `int-secret-${randomUUID()}`;
 const bucket = `file-byid-int-${randomUUID().slice(0, 8)}`;
@@ -109,9 +110,9 @@ describe('/internal/v1/files/{fileId} on SeaweedFS and MySQL', () => {
     client = createS3Client(config.storage);
 
     const { AppModule } = await import('../../app.module.js');
-    const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    const moduleRef = await withoutBroker(
+      Test.createTestingModule({ imports: [AppModule] }),
+    ).compile();
     app = moduleRef.createNestApplication({ ...APP_OPTIONS, logger: false });
     await app.listen(0, '127.0.0.1');
     port = (app.getHttpServer() as { address(): AddressInfo }).address().port;
