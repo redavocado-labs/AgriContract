@@ -2,6 +2,7 @@ package com.agricontract.escrow.infrastructure.messaging;
 
 import com.agricontract.escrow.application.dto.ReturnResultCommand;
 import com.agricontract.escrow.application.exception.InvalidEventPayloadException;
+import com.agricontract.escrow.application.usecase.RecordRemedyLegResultUseCase;
 import com.agricontract.escrow.application.usecase.RecordReturnResultUseCase;
 import com.agricontract.escrow.application.usecase.RecordSettlementLegResultUseCase;
 import com.agricontract.escrow.infrastructure.config.RabbitMQConfig;
@@ -24,7 +25,8 @@ import java.util.regex.Pattern;
 /**
  * bank.refund_completed / _failed and bank.release_completed / _failed (golden-flow-events.yaml) for activation deposit
  * returns (#247) and milestone settlement legs (#248). Same parse as the lock results: every required field,
- * milestoneId the only optional one, nothing else; the entryType must be the operation's. The fundType routes it:
+ * milestoneId the only optional one, nothing else; the entryType must be the operation's.
+ * A remedyLegId (#249, also on bank.seize_*) routes the result to the remedy leg whatever its fund. The fundType routes it:
  * MILESTONE_PAYMENT is a settlement leg, a deposit fund a deposit return. Bad payload → DLQ without retry.
  */
 @Slf4j
@@ -36,6 +38,8 @@ public class BankReturnResultConsumer {
 
     private static final Set<String> COMMON = Set.of("contractId", "userId", "entryType", "fundType",
             "remedyDecisionId", "remedyLegId", "amount", "sourceEventId");
+    private static final Set<String> SEIZE_ENTRY_TYPES = Set.of("DEPOSIT_FORFEITURE", "CONTRACTUAL_PENALTY",
+            "DAMAGES_COMPENSATION");
     private static final Set<String> FUND_TYPES = Set.of("BUYER_DEPOSIT", "SELLER_DEPOSIT", "MILESTONE_PAYMENT");
     private static final Pattern UUID =
             Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -46,38 +50,53 @@ public class BankReturnResultConsumer {
     private final ProcessedEventStore processedEvents;
     private final RecordReturnResultUseCase recordReturnResult;
     private final RecordSettlementLegResultUseCase recordSettlementLegResult;
+    private final RecordRemedyLegResultUseCase recordRemedyLegResult;
     private final TransactionTemplate transactionTemplate;
 
     @RabbitListener(queues = RabbitMQConfig.REFUND_COMPLETED_QUEUE)
     public void onRefundCompleted(Message message) {
-        handle("escrow-service.bank-refund-completed", message, "bank.refund_completed", "REFUND_TO_BUYER", true);
+        handle("escrow-service.bank-refund-completed", message, "bank.refund_completed", Set.of("REFUND_TO_BUYER"), true);
     }
 
     @RabbitListener(queues = RabbitMQConfig.REFUND_FAILED_QUEUE)
     public void onRefundFailed(Message message) {
-        handle("escrow-service.bank-refund-failed", message, "bank.refund_failed", "REFUND_TO_BUYER", false);
+        handle("escrow-service.bank-refund-failed", message, "bank.refund_failed", Set.of("REFUND_TO_BUYER"), false);
     }
 
     @RabbitListener(queues = RabbitMQConfig.RELEASE_COMPLETED_QUEUE)
     public void onReleaseCompleted(Message message) {
-        handle("escrow-service.bank-release-completed", message, "bank.release_completed", "RELEASE_TO_SELLER", true);
+        handle("escrow-service.bank-release-completed", message, "bank.release_completed", Set.of("RELEASE_TO_SELLER"), true);
     }
 
     @RabbitListener(queues = RabbitMQConfig.RELEASE_FAILED_QUEUE)
     public void onReleaseFailed(Message message) {
-        handle("escrow-service.bank-release-failed", message, "bank.release_failed", "RELEASE_TO_SELLER", false);
+        handle("escrow-service.bank-release-failed", message, "bank.release_failed", Set.of("RELEASE_TO_SELLER"), false);
     }
 
-    private void handle(String consumer, Message message, String eventType, String entryType, boolean returned) {
+    // bank.seize_completed / _failed (#249): always a remedy leg.
+    @RabbitListener(queues = RabbitMQConfig.SEIZE_COMPLETED_QUEUE)
+    public void onSeizeCompleted(Message message) {
+        handle("escrow-service.bank-seize-completed", message, "bank.seize_completed", SEIZE_ENTRY_TYPES, true);
+    }
+
+    @RabbitListener(queues = RabbitMQConfig.SEIZE_FAILED_QUEUE)
+    public void onSeizeFailed(Message message) {
+        handle("escrow-service.bank-seize-failed", message, "bank.seize_failed", SEIZE_ENTRY_TYPES, false);
+    }
+
+    private void handle(String consumer, Message message, String eventType, Set<String> entryTypes,
+                        boolean returned) {
         EventEnvelope envelope = parse(message.getBody());
-        ReturnResultCommand command = toCommand(envelope, eventType, entryType, returned);
+        ReturnResultCommand command = toCommand(envelope, eventType, entryTypes, returned);
         transactionTemplate.executeWithoutResult(status -> {
             if (!processedEvents.markProcessed(consumer, envelope)) {
                 log.info("event=bank_return_result_duplicate eventId={} contractId={}", envelope.eventId(),
                         command.contractId());
                 return;
             }
-            if (command.isSettlementLeg()) {
+            if (command.isRemedyLeg()) {
+                recordRemedyLegResult.execute(command);
+            } else if (command.isSettlementLeg()) {
                 recordSettlementLegResult.execute(command);
             } else {
                 recordReturnResult.execute(command);
@@ -93,7 +112,8 @@ public class BankReturnResultConsumer {
         }
     }
 
-    ReturnResultCommand toCommand(EventEnvelope envelope, String eventType, String entryType, boolean returned) {
+    ReturnResultCommand toCommand(EventEnvelope envelope, String eventType, Set<String> entryTypes,
+                                  boolean returned) {
         if (!eventType.equals(envelope.eventType()) || !PRODUCER.equals(envelope.producer())
                 || envelope.eventVersion() != 1) {
             throw new InvalidEventPayloadException("Unexpected event type, producer or version");
@@ -105,8 +125,15 @@ public class BankReturnResultConsumer {
                 || keys.size() != COMMON.size() + 1 + (keys.contains("milestoneId") ? 1 : 0)) {
             throw new InvalidEventPayloadException("Payload fields do not match " + eventType);
         }
-        if (!entryType.equals(payload.get("entryType"))) {
-            throw new InvalidEventPayloadException("entryType of " + eventType + " must be " + entryType);
+        if (!(payload.get("entryType") instanceof String entryType) || !entryTypes.contains(entryType)) {
+            throw new InvalidEventPayloadException("entryType of " + eventType + " must be one of " + entryTypes);
+        }
+        // remedyDecisionId and remedyLegId go together; a seize always has them (golden-flow bankSeize*).
+        String remedyDecisionId = nullableUuid(payload, "remedyDecisionId");
+        String remedyLegId = nullableUuid(payload, "remedyLegId");
+        if ((remedyDecisionId == null) != (remedyLegId == null)
+                || (remedyLegId == null && entryTypes == SEIZE_ENTRY_TYPES)) {
+            throw new InvalidEventPayloadException("remedyDecisionId and remedyLegId do not match " + eventType);
         }
         String eventId = envelope.eventId().toString();
         if (!(payload.get("fundType") instanceof String fundType) || !FUND_TYPES.contains(fundType)) {
@@ -125,7 +152,9 @@ public class BankReturnResultConsumer {
                 money(payload),
                 returned,
                 returned ? uuid(payload, "ledgerEntryId") : null,
-                returned ? null : reason(payload));
+                returned ? null : reason(payload),
+                remedyDecisionId,
+                remedyLegId);
     }
 
     private static String uuid(Map<String, Object> payload, String field) {
@@ -133,6 +162,10 @@ public class BankReturnResultConsumer {
             throw new InvalidEventPayloadException(field + " is not a UUID");
         }
         return text.toLowerCase();
+    }
+
+    private static String nullableUuid(Map<String, Object> payload, String field) {
+        return payload.get(field) == null ? null : uuid(payload, field);
     }
 
     private static BigDecimal money(Map<String, Object> payload) {
