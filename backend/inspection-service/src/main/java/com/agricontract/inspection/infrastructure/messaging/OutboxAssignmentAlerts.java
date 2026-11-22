@@ -49,6 +49,17 @@ public class OutboxAssignmentAlerts implements AssignmentAlerts {
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
+    public void cancelled(TimedAssignment assignment, String email, String correlationId, String causationId) {
+        var payload = Map.<String, Object>of("contractId", assignment.contractId(), "milestoneId", assignment.milestoneId(),
+                "commissionId", assignment.commissionId(), "recipients", List.of(Map.of("userId", assignment.inspectorId(),
+                        "email", email, "role", "INSPECTOR")), "reportDueAt", assignment.reportDueAt().toString(),
+                "freeCancelUntil", assignment.assignedAt().plus(Duration.ofHours(freeCancelHours)).toString(), "stage", "CANCELLED");
+        outbox.append(new EventEnvelope(UUID.randomUUID(), "notification.level1_5_inspector_assignment_requested", 1,
+                clock.instant(), "inspection-service", assignment.milestoneId(), correlationId, causationId, null, payload));
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
     public void waitingChanged(WaitingAssignment waiting, Stage stage, String correlationId, String causationId) {
         UUID eventId = UUID.randomUUID();
         var payload = Map.<String, Object>of("contractId", waiting.contractId(), "milestoneId", waiting.milestoneId(),

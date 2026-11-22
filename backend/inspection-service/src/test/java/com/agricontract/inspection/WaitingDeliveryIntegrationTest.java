@@ -83,5 +83,43 @@ class WaitingDeliveryIntegrationTest {
         assertThat(command.payload()).containsEntry("stage", "WAITING_STARTED").containsEntry("reason", "NO_ELIGIBLE")
                 .containsEntry("contractId", contract).containsEntry("milestoneId", milestone);
         assertThat(rabbit.receive(WaitingNotificationConfiguration.QUEUE)).isNull();
+        var cancelled = new EventEnvelope(UUID.randomUUID(), AssignmentRabbitConfiguration.CANCEL_KEY, 1, Instant.now(),
+                "contract-service", contract, UUID.randomUUID().toString(), null, null,
+                Map.of("contractId", contract, "milestoneId", milestone, "reason", "DISPUTE_SETTLED", "cancelledAt", Instant.now().toString()));
+        var invalid = new EventEnvelope(UUID.randomUUID(), AssignmentRabbitConfiguration.CANCEL_KEY, 1, Instant.now(),
+                "contract-service", contract, UUID.randomUUID().toString(), null, null,
+                Map.of("contractId", contract, "milestoneId", milestone, "reason", "INVALID", "cancelledAt", Instant.now().toString()));
+        for (var event : List.of(cancelled, cancelled, invalid)) {
+            rabbit.send("agricontract.contracts", AssignmentRabbitConfiguration.CANCEL_KEY,
+                    new Message(codec.toJson(event).getBytes(StandardCharsets.UTF_8)));
+        }
+        await().atMost(Duration.ofSeconds(20)).untilAsserted(() -> {
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM processed_event", Integer.class)).isEqualTo(3);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM level1_5_assignment_waiting", Integer.class)).isZero();
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM event_outbox WHERE JSON_UNQUOTE(JSON_EXTRACT(envelope,'$.payload.stage'))='CANCELLED'", Integer.class)).isEqualTo(1);
+        });
+        var rejected = rabbit.receive(AssignmentRabbitConfiguration.DLQ, 10000);
+        assertThat(rejected).isNotNull();
+        assertThat(codec.parse(rejected.getBody()).eventId()).isEqualTo(invalid.eventId());
+        var invalidRequest = new EventEnvelope(UUID.randomUUID(), AssignmentRabbitConfiguration.KEY, 1, Instant.now(),
+                "contract-service", contract, UUID.randomUUID().toString(), null, null,
+                Map.of("contractId", contract, "milestoneId", milestone, "reason", "INVALID", "reportDueBusinessDays", 2,
+                        "initiatedByActorId", UUID.randomUUID().toString(), "requestedAt", Instant.now().toString()));
+        rabbit.send("agricontract.contracts", AssignmentRabbitConfiguration.KEY,
+                new Message(codec.toJson(invalidRequest).getBytes(StandardCharsets.UTF_8)));
+        var invalidRequestDelivery = rabbit.receive(AssignmentRabbitConfiguration.DLQ, 10000);
+        assertThat(invalidRequestDelivery).isNotNull();
+        assertThat(codec.parse(invalidRequestDelivery.getBody()).eventId()).isEqualTo(invalidRequest.eventId());
+        String nextMilestone = UUID.randomUUID().toString();
+        var next = new EventEnvelope(UUID.randomUUID(), AssignmentRabbitConfiguration.KEY, 1, Instant.now(),
+                "contract-service", contract, UUID.randomUUID().toString(), null, null,
+                Map.of("contractId", contract, "milestoneId", nextMilestone, "reason", "DISPUTE_ROUTED", "reportDueBusinessDays", 2,
+                        "initiatedByActorId", UUID.randomUUID().toString(), "requestedAt", Instant.now().toString()));
+        rabbit.send("agricontract.contracts", AssignmentRabbitConfiguration.KEY,
+                new Message(codec.toJson(next).getBytes(StandardCharsets.UTF_8)));
+        await().atMost(Duration.ofSeconds(20)).untilAsserted(() -> {
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM level1_5_assignment_waiting WHERE milestone_id=?", Integer.class, nextMilestone)).isEqualTo(1);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM processed_event", Integer.class)).isEqualTo(4);
+        });
     }
 }

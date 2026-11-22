@@ -14,6 +14,7 @@ public interface AssignmentWaitingRepository {
     void started(Key key, Instant at, LocalDate lastReminderOn);
     /** Lock the actual waiting row without waiting for another worker. */
     Optional<WaitingAssignment> lockSkippingLocked(Key key);
+    Optional<WaitingAssignment> lock(Key key);
     /** Keyset page; a failed row must not starve later rows on every scan. */
     List<Key> pendingAfter(Key after, int limit);
     void attempted(Key key, Instant at, LocalDate lastReminderOn);

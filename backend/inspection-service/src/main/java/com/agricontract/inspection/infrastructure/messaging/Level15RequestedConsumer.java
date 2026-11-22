@@ -35,20 +35,40 @@ public class Level15RequestedConsumer {
     @RabbitListener(queues = AssignmentRabbitConfiguration.QUEUE)
     public void accept(Message message) {
         EventEnvelope event;
-        Level15AssignmentRequestedCommand command;
+        Level15AssignmentRequestedCommand command = null;
+        String contract = null;
+        String milestone = null;
+        java.time.Instant cancelledAt = null;
         try {
             event = codec.parse(message.getBody());
-            if (!"inspection.level1_5_requested".equals(event.eventType())
-                    || !"contract-service".equals(event.producer()) || event.eventVersion() != 1)
+            if (!"contract-service".equals(event.producer()) || event.eventVersion() != 1)
                 throw new IllegalArgumentException("Unexpected assignment event");
-            command = toCommand(event);
+            if (AssignmentRabbitConfiguration.KEY.equals(event.eventType())) {
+                command = toCommand(event);
+            } else if (AssignmentRabbitConfiguration.CANCEL_KEY.equals(event.eventType())) {
+                var payload = event.payload();
+                if (!payload.keySet().equals(Set.of("contractId", "milestoneId", "reason", "cancelledAt"))
+                        || !Set.of("DISPUTE_CONCEDED", "DISPUTE_SETTLED").contains(text(payload.get("reason"))))
+                    throw new IllegalArgumentException("Invalid cancellation payload");
+                contract = id(payload.get("contractId"));
+                milestone = id(payload.get("milestoneId"));
+                cancelledAt = OffsetDateTime.parse(text(payload.get("cancelledAt"))).toInstant();
+            } else throw new IllegalArgumentException("Unexpected assignment event");
         } catch (InvalidEnvelopeException | IllegalArgumentException | DateTimeException ex) {
             throw new InvalidEventPayloadException("Invalid Level 1.5 request; inspect the restricted DLQ");
         }
         // Dependency/database failures remain retryable and roll back the processed-event claim.
+        var request = command;
+        var cancelledContract = contract;
+        var cancelledMilestone = milestone;
+        var timestamp = cancelledAt;
+        String correlation = event.correlationId();
+        try { id(correlation); } catch (IllegalArgumentException invalid) { correlation = event.eventId().toString(); }
+        var safeCorrelation = correlation;
         transactions.inReadCommittedTransaction(() -> {
             if (!processedEvents.markProcessed(CONSUMER_NAME, event)) return;
-            assignments.requested(command);
+            if (request != null) assignments.requested(request);
+            else assignments.cancel(cancelledContract, cancelledMilestone, timestamp, safeCorrelation, event.eventId().toString());
         });
     }
 

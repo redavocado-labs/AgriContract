@@ -24,6 +24,7 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
 @Configuration
 public class AssignmentRabbitConfiguration {
     public static final String KEY = "inspection.level1_5_requested";
+    public static final String CANCEL_KEY = "inspection.level1_5_cancelled";
     public static final String QUEUE = "inspection-svc." + KEY;
     public static final String DLQ = QUEUE + ".dlq";
     public static final String DLX = "agricontract.inspection.dlx";
@@ -44,7 +45,9 @@ public class AssignmentRabbitConfiguration {
         var dlq = QueueBuilder.durable(DLQ).build();
         return new Declarables(exchange, dlx, queue, dlq,
                 BindingBuilder.bind(queue).to(exchange).with(KEY),
-                BindingBuilder.bind(dlq).to(dlx).with(KEY));
+                BindingBuilder.bind(queue).to(exchange).with(CANCEL_KEY),
+                BindingBuilder.bind(dlq).to(dlx).with(KEY),
+                BindingBuilder.bind(dlq).to(dlx).with(CANCEL_KEY));
     }
 
     @Bean

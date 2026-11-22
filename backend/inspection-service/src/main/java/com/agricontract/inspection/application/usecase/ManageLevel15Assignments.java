@@ -44,6 +44,31 @@ public class ManageLevel15Assignments {
         });
     }
 
+    public void cancel(String contract, String milestone, Instant cancelledAt, String correlationId, String eventId) {
+        transactions.inReadCommittedTransaction(() -> {
+            assignments.lock(contract, milestone);
+            var pending = waiting.lock(new WaitingAssignment.Key(contract, milestone));
+            var active = assignments.active(contract, milestone);
+            if (pending.isPresent() && active.isPresent()) {
+                throw new IllegalStateException("Waiting request has an active assignment");
+            }
+            if (pending.isPresent()) {
+                waiting.delete(pending.get().key());
+                alerts.waitingChanged(pending.get(), AssignmentAlerts.Stage.CANCELLED, correlationId, eventId);
+            } else if (active.isPresent()) {
+                var assignment = active.get();
+                if (cancelledAt.isBefore(assignment.assignedAt())) {
+                    throw new IllegalStateException("Cancellation predates assignment; requires investigation");
+                }
+                String email = inspectors.loadInspectorEmail(assignment.inspectorId());
+                if (!assignments.end(assignment.commissionId(), cancelledAt)) {
+                    throw new IllegalStateException("Assignment already ended");
+                }
+                alerts.cancelled(assignment, email, correlationId, eventId);
+            }
+        });
+    }
+
     public void timeout(String commissionId) {
         transactions.inReadCommittedTransaction(() -> {
             var initial = assignments.find(commissionId).orElseThrow();

@@ -9,6 +9,10 @@ import com.agricontract.inspection.application.exception.EligibilityUnavailableE
 import com.agricontract.inspection.application.dto.Level15AssignmentRequestedCommand;
 import com.agricontract.inspection.application.port.AssignmentAlerts.Stage;
 import com.agricontract.inspection.application.port.InspectorEligibilityPort;
+import com.agricontract.inspection.application.port.AuthenticatedInspectorPort;
+import com.agricontract.inspection.application.usecase.InspectionAuthorization;
+import com.agricontract.inspection.application.exception.InspectionAssignmentAccessDeniedException;
+import com.agricontract.inspection.domain.model.InspectorEligibility;
 import com.agricontract.inspection.application.port.TransactionRunner;
 import com.agricontract.inspection.application.usecase.ManageLevel15Assignments;
 import com.agricontract.inspection.domain.model.WaitingAssignment;
@@ -120,6 +124,8 @@ class AssignmentWaitingIntegrationTest {
     @SpyBean OutboxAssignmentAlerts alerts;
     @SpyBean OutboxWriter outbox;
     @MockBean InspectorEligibilityPort inspectors;
+    @MockBean AuthenticatedInspectorPort identity;
+    @Autowired InspectionAuthorization authorization;
     @MockBean RandomGenerator random;
     @MockBean Clock clock;
     static final Instant NOW = Instant.parse("2026-10-23T03:00:00Z");
@@ -131,6 +137,7 @@ class AssignmentWaitingIntegrationTest {
         jdbc.update("DELETE FROM event_outbox");
         jdbc.update("DELETE FROM processed_event");
         jdbc.update("DELETE FROM level1_5_assignment_waiting");
+        jdbc.update("DELETE FROM inspection_report");
         jdbc.update("DELETE FROM level1_5_inspection_assignment");
         jdbc.update("DELETE FROM level1_5_assignment_lock");
         when(clock.instant()).thenReturn(NOW);
@@ -143,6 +150,238 @@ class AssignmentWaitingIntegrationTest {
                 "contract-service", contract, UUID.randomUUID().toString(), null, null,
                 Map.of("contractId", contract, "milestoneId", milestone, "reason", "DISPUTE_ROUTED",
                         "reportDueBusinessDays", 2, "initiatedByActorId", actor, "requestedAt", NOW.toString()));
+    }
+    EventEnvelope cancellation(Instant at) {
+        return new EventEnvelope(UUID.randomUUID(), "inspection.level1_5_cancelled", 1, NOW,
+                "contract-service", contract, UUID.randomUUID().toString(), null, null,
+                Map.of("contractId", contract, "milestoneId", milestone, "reason", "DISPUTE_SETTLED", "cancelledAt", at.toString()));
+    }
+    @Test void cancellationRemovesWaitingAndDeduplicates() {
+        deliver(event());
+        var before = pending();
+        var cancel = cancellation(NOW.plusSeconds(1));
+        deliver(cancel); deliver(cancel);
+        assertThat(count("level1_5_assignment_waiting")).isZero();
+        assertThat(count("level1_5_inspection_assignment")).isZero();
+        assertThat(commands(Stage.CANCELLED)).isEqualTo(1);
+        assertThat(events("notification.level1_5_inspector_assignment_requested")).isZero();
+        assertThat(command(Stage.CANCELLED).payload()).containsEntry("reason", before.reason().name())
+                .containsEntry("waitingSince", before.waitingSince().toString()).doesNotContainKey("recipients");
+    }
+    @Test void cancellationEndsActiveAssignmentAndDeduplicates() {
+        when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+        deliver(event());
+        var assignment = assignments.active(contract, milestone).orElseThrow();
+        var at = NOW.plusSeconds(5);
+        var cancel = cancellation(at);
+        deliver(cancel); deliver(cancel);
+        assertThat(assignments.active(contract, milestone)).isEmpty();
+        assertThat(assignments.find(assignment.commissionId()).orElseThrow().endedAt()).isEqualTo(at);
+        assertThat(events("notification.level1_5_inspector_assignment_requested")).isEqualTo(2);
+        String json = jdbc.queryForObject("SELECT envelope FROM event_outbox WHERE event_type='notification.level1_5_inspector_assignment_requested' AND JSON_UNQUOTE(JSON_EXTRACT(envelope,'$.payload.stage'))='CANCELLED'", String.class);
+        var payload = codec.parse(json.getBytes(StandardCharsets.UTF_8)).payload();
+        assertThat(payload.get("recipients")).isEqualTo(List.of(Map.of("userId", a, "email", "inspector@example.com", "role", "INSPECTOR")));
+    }
+    @Test void failedCancellationRollsBackReceiptAndCanRetry() {
+        when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+        deliver(event());
+        var assignment = assignments.active(contract, milestone).orElseThrow();
+        var cancel = cancellation(NOW.plusSeconds(1));
+        when(inspectors.loadInspectorEmail(a)).thenThrow(new EligibilityUnavailableException()).thenReturn("inspector@example.com");
+        assertThatThrownBy(() -> deliver(cancel)).isInstanceOf(EligibilityUnavailableException.class);
+        assertThat(assignments.active(contract, milestone)).isPresent();
+        assertThat(count("processed_event")).isEqualTo(1);
+        deliver(cancel);
+        assertThat(assignments.find(assignment.commissionId()).orElseThrow().endedAt()).isEqualTo(NOW.plusSeconds(1));
+        assertThat(count("processed_event")).isEqualTo(2);
+    }
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void outboxFailureRollsBackCancellationAndReceipt(boolean active) {
+        when(inspectors.loadEligibleInspectors()).thenReturn(active ? List.of(a) : List.of());
+        deliver(event());
+        var cancel = cancellation(NOW.plusSeconds(1));
+        var writer = org.springframework.test.util.AopTestUtils.<OutboxWriter>getUltimateTargetObject(outbox);
+        doAnswer(call -> {
+            EventEnvelope envelope = call.getArgument(0);
+            if ("CANCELLED".equals(envelope.payload().get("stage"))) throw new IllegalStateException("injected");
+            return call.callRealMethod();
+        }).when(writer).append(any());
+        assertThatThrownBy(() -> deliver(cancel)).isInstanceOf(IllegalStateException.class);
+        assertThat(count("processed_event")).isEqualTo(1);
+        assertThat(count("level1_5_assignment_waiting")).isEqualTo(active ? 0 : 1);
+        assertThat(assignments.active(contract, milestone).isPresent()).isEqualTo(active);
+        doCallRealMethod().when(writer).append(any());
+        deliver(cancel);
+        assertThat(count("processed_event")).isEqualTo(2);
+        assertThat(count("level1_5_assignment_waiting")).isZero();
+        assertThat(assignments.active(contract, milestone)).isEmpty();
+    }
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void cancellationOutboxValidatesFrozenSchema(boolean active) throws Exception {
+        when(inspectors.loadEligibleInspectors()).thenReturn(active ? List.of(a) : List.of());
+        deliver(event()); deliver(cancellation(NOW.plusSeconds(1)));
+        String type = active ? "notification.level1_5_inspector_assignment_requested" : "notification.level1_5_assignment_waiting_requested";
+        String definition = active ? "level15InspectorAssignmentRequested" : "level15AssignmentWaitingRequested";
+        String json = jdbc.queryForObject("SELECT envelope FROM event_outbox WHERE event_type=? AND JSON_UNQUOTE(JSON_EXTRACT(envelope,'$.payload.stage'))='CANCELLED'", String.class, type);
+        var root = (ObjectNode) new ObjectMapper(new YAMLFactory()).readTree(Path.of(System.getProperty("contracts.directory"), "events", "notification-commands.yaml").toFile());
+        root.remove("oneOf"); root.put("$ref", "#/$defs/" + definition);
+        var schema = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012).getSchema(root,
+                SchemaValidatorsConfig.builder().formatAssertionsEnabled(true).build());
+        assertThat(schema.validate(new ObjectMapper().readTree(json))).isEmpty();
+    }
+    @Test void cancellationWaitsForRetryAndEndsItsAssignment() throws Exception {
+        deliver(event());
+        var entered = new CountDownLatch(1);
+        var release = new CountDownLatch(1);
+        when(inspectors.loadEligibleInspectors()).thenAnswer(call -> { entered.countDown(); await(release); return List.of(a); });
+        var cancel = cancellation(NOW.plusSeconds(1));
+        try (var pool = Executors.newFixedThreadPool(2)) {
+            var retry = pool.submit(() -> lifecycle.retryWaiting(key));
+            try {
+                assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+                var cancelled = pool.submit(() -> deliver(cancel));
+                release.countDown();
+                retry.get(15, TimeUnit.SECONDS);
+                cancelled.get(15, TimeUnit.SECONDS);
+            } finally { release.countDown(); }
+        }
+        assertThat(count("level1_5_assignment_waiting")).isZero();
+        assertThat(assignments.active(contract, milestone)).isEmpty();
+        assertThat(count("level1_5_inspection_assignment")).isEqualTo(1);
+        assertThat(events("notification.level1_5_inspector_assignment_requested")).isEqualTo(2);
+    }
+    @Test void concurrentDuplicateCancellationHasOneEffect() throws Exception {
+        deliver(event());
+        var cancel = cancellation(NOW.plusSeconds(1));
+        var start = new CountDownLatch(1);
+        try (var pool = Executors.newFixedThreadPool(2)) {
+            var first = pool.submit(() -> { await(start); deliver(cancel); });
+            var second = pool.submit(() -> { await(start); deliver(cancel); });
+            start.countDown();
+            first.get(15, TimeUnit.SECONDS); second.get(15, TimeUnit.SECONDS);
+        }
+        assertThat(commands(Stage.CANCELLED)).isEqualTo(1);
+        assertThat(count("processed_event")).isEqualTo(2);
+    }
+    @Test void cancellationAfterTimeoutRepickEndsNewAssignment() throws Exception {
+        when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+        deliver(event());
+        var old = assignments.active(contract, milestone).orElseThrow();
+        when(clock.instant()).thenReturn(old.reportDueAt());
+        var entered = new CountDownLatch(1);
+        var release = new CountDownLatch(1);
+        when(inspectors.loadEligibleInspectors()).thenAnswer(call -> { entered.countDown(); await(release); return List.of(b); });
+        var cancel = cancellation(old.reportDueAt().plusSeconds(1));
+        try (var pool = Executors.newFixedThreadPool(2)) {
+            var timeout = pool.submit(() -> lifecycle.timeout(old.commissionId()));
+            try {
+                assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+                var cancelled = pool.submit(() -> deliver(cancel));
+                release.countDown();
+                timeout.get(15, TimeUnit.SECONDS); cancelled.get(15, TimeUnit.SECONDS);
+            } finally { release.countDown(); }
+        }
+        assertThat(count("level1_5_inspection_assignment")).isEqualTo(2);
+        assertThat(assignments.active(contract, milestone)).isEmpty();
+        assertThat(count("level1_5_assignment_waiting")).isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM event_outbox WHERE JSON_UNQUOTE(JSON_EXTRACT(envelope,'$.payload.stage'))='CANCELLED'", Integer.class)).isEqualTo(1);
+    }
+    @Test void retryAfterCancellationDoesNotRecreateWaiting() {
+        deliver(event());
+        deliver(cancellation(NOW.plusSeconds(1)));
+        when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+        lifecycle.retryWaiting(key);
+        assertThat(count("level1_5_assignment_waiting")).isZero();
+        assertThat(count("level1_5_inspection_assignment")).isZero();
+        assertThat(commands(Stage.CANCELLED)).isEqualTo(1);
+    }
+    @Test void cancellationBeforeAssignmentIsRejectedWithoutChangingHistory() {
+        when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+        deliver(event());
+        var cancel = cancellation(NOW.minusSeconds(1));
+        assertThatThrownBy(() -> deliver(cancel)).isInstanceOf(IllegalStateException.class);
+        assertThat(assignments.active(contract, milestone)).isPresent();
+        assertThat(count("processed_event")).isEqualTo(1);
+        assertThat(events("notification.level1_5_inspector_assignment_requested")).isEqualTo(1);
+    }
+    @Test void cancellationWithNothingOpenIsNoOp() {
+        deliver(cancellation(NOW));
+        assertThat(count("processed_event")).isEqualTo(1);
+        assertThat(count("level1_5_inspection_assignment")).isZero();
+        assertThat(count("level1_5_assignment_waiting")).isZero();
+        assertThat(count("event_outbox")).isZero();
+    }
+    @Test void cancellationRejectsAuthorizationAndPreservesEndedHistory() {
+        when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+        when(identity.requireInspectorId()).thenReturn(a);
+        when(inspectors.load(a)).thenReturn(new InspectorEligibility(a, "INSPECTOR", "VERIFIED", null));
+        deliver(event());
+        var assignment = assignments.active(contract, milestone).orElseThrow();
+        assertThat(authorization.requireMilestone(contract, milestone).commissionId()).isEqualTo(assignment.commissionId());
+        deliver(cancellation(NOW.plusSeconds(1)));
+        assertThatThrownBy(() -> authorization.requireMilestone(contract, milestone))
+                .isInstanceOf(InspectionAssignmentAccessDeniedException.class);
+        assertThatThrownBy(() -> authorization.requireCommission(assignment.commissionId()))
+                .isInstanceOf(InspectionAssignmentAccessDeniedException.class);
+        int eventsBefore = count("event_outbox");
+        deliver(cancellation(NOW.plusSeconds(2)));
+        assertThat(count("event_outbox")).isEqualTo(eventsBefore);
+        assertThat(assignments.find(assignment.commissionId()).orElseThrow().endedAt()).isEqualTo(NOW.plusSeconds(1));
+    }
+    @Test void cancellationAfterConfirmedCloseIsNoOp() {
+        when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+        deliver(event());
+        var assignment = assignments.active(contract, milestone).orElseThrow();
+        String reportId = UUID.randomUUID().toString();
+        transactions.inTransaction(() -> {
+            jdbc.update("""
+                    INSERT INTO inspection_report (report_id,l15_commission_id,contract_id,milestone_id,inspector_id,
+                    tier,status,content,normalized_result,report_file_hash,result_hash,report_hash,confirmed_at)
+                    VALUES (?,?,?,?,?,'LEVEL_1_5','CONFIRMED','{}','{}',?,?,?,?)
+                    """, reportId, assignment.commissionId(), contract, milestone, a,
+                    "a".repeat(64), "b".repeat(64), "c".repeat(64), java.sql.Timestamp.from(NOW));
+            lifecycle.closeConfirmed(contract, milestone, assignment.commissionId(), a, NOW);
+        });
+        int eventsBefore = count("event_outbox");
+        deliver(cancellation(NOW.plusSeconds(1)));
+        assertThat(assignments.find(assignment.commissionId()).orElseThrow().endedAt()).isEqualTo(NOW);
+        assertThat(count("event_outbox")).isEqualTo(eventsBefore);
+        assertThat(jdbc.queryForObject("SELECT status FROM inspection_report WHERE report_id=?", String.class, reportId)).isEqualTo("CONFIRMED");
+        assertThat(jdbc.queryForObject("SELECT report_hash FROM inspection_report WHERE report_id=?", String.class, reportId)).isEqualTo("c".repeat(64));
+    }
+    @Test void cancellationWaitsForConfirmedCloseAndDoesNotOverwriteIt() throws Exception {
+        when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+        deliver(event());
+        var assignment = assignments.active(contract, milestone).orElseThrow();
+        var closed = new CountDownLatch(1);
+        var release = new CountDownLatch(1);
+        var started = new CountDownLatch(1);
+        try (var pool = Executors.newFixedThreadPool(2)) {
+            var confirm = pool.submit(() -> transactions.inTransaction(() -> {
+                lifecycle.closeConfirmed(contract, milestone, assignment.commissionId(), a, NOW);
+                closed.countDown(); await(release);
+            }));
+            try {
+                assertThat(closed.await(10, TimeUnit.SECONDS)).isTrue();
+                var cancel = pool.submit(() -> { started.countDown(); deliver(cancellation(NOW.plusSeconds(1))); });
+                assertThat(started.await(10, TimeUnit.SECONDS)).isTrue();
+                release.countDown();
+                confirm.get(15, TimeUnit.SECONDS); cancel.get(15, TimeUnit.SECONDS);
+            } finally { release.countDown(); }
+        }
+        assertThat(assignments.find(assignment.commissionId()).orElseThrow().endedAt()).isEqualTo(NOW);
+        assertThat(events("notification.level1_5_inspector_assignment_requested")).isEqualTo(1);
+    }
+    @Test void confirmedCloseAfterCancellationFails() {
+        when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+        deliver(event());
+        var assignment = assignments.active(contract, milestone).orElseThrow();
+        deliver(cancellation(NOW.plusSeconds(1)));
+        assertThatThrownBy(() -> transactions.inTransaction(() -> lifecycle.closeConfirmed(contract, milestone, assignment.commissionId(), a, NOW)))
+                .isInstanceOf(IllegalStateException.class);
+        assertThat(assignments.find(assignment.commissionId()).orElseThrow().endedAt()).isEqualTo(NOW.plusSeconds(1));
     }
     void deliver(EventEnvelope event) {
         consumer.accept(new Message(codec.toJson(event).getBytes(StandardCharsets.UTF_8)));
