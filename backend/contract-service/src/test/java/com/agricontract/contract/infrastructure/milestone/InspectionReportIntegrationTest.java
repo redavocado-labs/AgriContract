@@ -7,16 +7,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.agricontract.contract.application.dto.MilestoneEvidenceCommands;
-import com.agricontract.contract.application.exception.IdempotencyKeyReusedException;
 import com.agricontract.contract.application.exception.InvalidEventPayloadException;
-import com.agricontract.contract.application.exception.MilestoneNotFoundException;
 import com.agricontract.contract.application.port.EvidenceFileStore;
 import com.agricontract.contract.application.port.TransactionRunner;
 import com.agricontract.contract.application.service.EvidenceAttachment;
 import com.agricontract.contract.application.service.MilestoneFunding;
 import com.agricontract.contract.application.service.MilestoneReadAccess;
-import com.agricontract.contract.application.dto.MilestoneDetailView;
-import com.agricontract.contract.application.exception.EvidenceFileNotFoundException;
 import com.agricontract.contract.application.service.MilestoneCleanSettlement;
 import com.agricontract.contract.application.usecase.AutoConfirmMilestonesUseCase;
 import com.agricontract.contract.application.usecase.ApplyInspectionReportUseCase;
@@ -24,16 +20,12 @@ import com.agricontract.contract.infrastructure.messaging.InspectionReportConfir
 import com.agricontract.contract.application.usecase.ConfirmMilestoneCleanUseCase;
 import com.agricontract.contract.application.usecase.GetMilestoneDetailUseCase;
 import com.agricontract.contract.application.dto.BreachCaseCommands;
-import com.agricontract.contract.application.exception.BreachCaseNotFoundException;
 import com.agricontract.contract.application.usecase.GetBreachCaseUseCase;
 import com.agricontract.contract.application.usecase.ListBreachCasesForArbitrationUseCase;
 import com.agricontract.contract.application.usecase.ResolveBreachCaseUseCase;
 import com.agricontract.contract.application.usecase.ReviewBreachCaseUseCase;
-import com.agricontract.contract.domain.model.breach.BreachCase;
-import com.agricontract.contract.domain.model.breach.BreachCaseStatus;
 import com.agricontract.contract.domain.model.breach.DecisionSource;
 import com.agricontract.contract.domain.model.consent.SignerRole;
-import com.agricontract.contract.infrastructure.web.dto.BreachCaseResponse;
 import com.agricontract.contract.application.usecase.FlagMilestoneUseCase;
 import com.agricontract.contract.application.usecase.RespondToMilestoneFlagUseCase;
 import com.agricontract.contract.application.usecase.SellerSilenceMilestonesUseCase;
@@ -49,7 +41,6 @@ import com.agricontract.contract.application.usecase.RecordSellerWeighedUseCase;
 import com.agricontract.contract.application.usecase.UploadMilestoneEvidenceUseCase;
 import com.agricontract.contract.domain.exception.ContractConflictException;
 import com.agricontract.contract.domain.exception.MilestoneRequestInvalidException;
-import com.agricontract.contract.domain.exception.UnauthorizedContractAccessException;
 import com.agricontract.contract.domain.model.Contract;
 import com.agricontract.contract.domain.model.milestone.EvidenceScanStatus;
 import com.agricontract.contract.domain.model.milestone.Milestone;
@@ -58,7 +49,6 @@ import com.agricontract.contract.domain.model.milestone.SettlementPath;
 import com.agricontract.contract.domain.model.milestone.BuyerReceiptConsent;
 import com.agricontract.contract.domain.model.milestone.CleanReceiptConsent;
 import com.agricontract.contract.domain.model.milestone.SellerWeighConsent;
-import com.agricontract.contract.domain.model.milestone.SellerWeighDeclaration;
 import com.agricontract.contract.domain.model.terms.CanonicalTerms;
 import com.agricontract.contract.domain.model.terms.ContractTemplateProfile;
 import com.agricontract.contract.domain.model.terms.ContractTermsRules;
@@ -69,7 +59,6 @@ import com.agricontract.contract.infrastructure.config.BusinessCalendarConfigura
 import com.agricontract.contract.infrastructure.config.MilestoneDeliveryConfiguration;
 import com.agricontract.contract.infrastructure.consent.ConsentConfiguration;
 import com.agricontract.contract.infrastructure.contract.FrozenSchemas;
-import com.agricontract.contract.infrastructure.web.dto.MilestoneDetailResponse;
 import com.agricontract.contract.infrastructure.messaging.FileScanResultConsumer;
 import com.agricontract.contract.infrastructure.messaging.OutboxContractEventPublisher;
 import com.agricontract.contract.infrastructure.persistence.SpringTransactionRunner;
@@ -95,14 +84,11 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.Set;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
@@ -114,7 +100,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -148,7 +133,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 class InspectionReportIntegrationTest {
     private static final String BUYER = "0b7e3b7a-1c1e-4c5e-9f0a-3d2b1a0c9e8f";
     private static final String ARBITRATOR = "7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f";
-    private static final String STRANGER = "9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a";
+
     private static final String SELLER = "5a4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a";
 
     @Container
@@ -231,7 +216,6 @@ class InspectionReportIntegrationTest {
     private Contract contract;
     private Milestone first;
     private Milestone second;
-
 
     @Autowired InspectionReportConfirmedConsumer reportConsumer;
 
@@ -679,46 +663,8 @@ class InspectionReportIntegrationTest {
         return payload;
     }
 
-    private static final String OPERATOR_ID = "3b2a1c0d-9e8f-4a7b-8c6d-5e4f3a2b1c0d";
-
-    /** A contested milestone (QUANTITY, 9500 declared, 9000 received) through the #134 flow; returns the case id. */
-    private String contestedCase() {
-        flaggedMilestone(first, FlagIssueType.QUANTITY);
-        respond.execute(respondCommand(first, SELLER, UUID.randomUUID()));
-        return reload(first).flag().breachCaseId();
-    }
-
-    /** A case with no milestone (contract level), inserted directly: allegation against the seller. */
-    private String contractLevelCase(String reportedAt, String status, boolean withComputed) {
-        String caseId = UUID.randomUUID().toString();
-        boolean resolved = status.equals("RESOLVED");
-        jdbc.update("INSERT INTO breach_case (breach_case_id, contract_id, milestone_id, requested_by,"
-                + " alleged_breaching_role, breach_reason_code, severity, status, evidence_file_ids, reported_at,"
-                + " decision_source, resolved_at) VALUES (?, ?, NULL, 'BUYER', 'SELLER', 'NON_DELIVERY', 'MATERIAL',"
-                + " ?, '[]', ?, ?, ?)", caseId, id(), status, reportedAt, resolved ? "ARBITRATOR" : null,
-                resolved ? reportedAt : null);
-        if (withComputed) {
-            seedComputed(caseId, null, "CONFORMING");
-        }
-        return caseId;
-    }
-
-    /** What #246 will write: the computed resolution of a confirmed Level 1.5 report (9000 of 9500 kg at 95,000). */
-    private void seedComputed(String caseId, String finalRole, String disposition) {
-        String json = "{\"inspectionReportId\":\"" + UUID.randomUUID() + "\",\"issueType\":\"QUANTITY\","
-                + "\"acceptedQuantityKg\":\"9000\",\"qualityDisposition\":\"" + disposition + "\","
-                + "\"finalBreachingRole\":" + (finalRole == null ? "null" : "\"" + finalRole + "\"") + ","
-                + "\"decisionSource\":\"INSPECTOR_L1_5\",\"sellerEntitlementAmount\":\"855000000.00\","
-                + "\"buyerRefundAmount\":\"47500000.00\",\"prevailingRole\":\"BUYER\"}";
-        jdbc.update("UPDATE breach_case SET computed_resolution = ? WHERE breach_case_id = ?", json, caseId);
-    }
-
     private int outboxCount() {
         return jdbc.queryForObject("SELECT COUNT(*) FROM event_outbox", Integer.class);
-    }
-
-    private BreachCaseCommands.Review review(String caseId, UUID key) {
-        return new BreachCaseCommands.Review(id(), caseId, ARBITRATOR, key);
     }
 
     private BreachCaseCommands.Resolve resolve(String caseId, SignerRole role, DecisionSource source) {
@@ -727,29 +673,6 @@ class InspectionReportIntegrationTest {
 
     private BreachCaseCommands.Resolve resolve(String caseId, SignerRole role, DecisionSource source, UUID key) {
         return new BreachCaseCommands.Resolve(id(), caseId, ARBITRATOR, key, role, source, List.of("report-1"));
-    }
-
-    private MilestoneDetailResponse detailFor(String actor, String role) {
-        return MilestoneDetailResponse.from(detail.execute(id(), first.milestoneId(), actor, java.util.Set.of(role)));
-    }
-
-    /** Received by the buyer (9500 declared, 9000 received) and flagged. Returns {sellerPhoto, buyerPhoto}. */
-    private String[] flaggedMilestone(Milestone milestone, FlagIssueType type) {
-        String sellerPhoto = weighedByTheSeller(milestone);
-        String buyerPhoto = uploadReady(BUYER, milestone);
-        receive.execute(receiveCommand(milestone, "9000", buyerPhoto, null, UUID.randomUUID()));
-        flag.execute(flagCommand(milestone, BUYER, UUID.randomUUID(), type));
-        return new String[] {sellerPhoto, buyerPhoto};
-    }
-
-    private void expireResponseWindow(Milestone milestone) {
-        jdbc.update("UPDATE milestone SET flagged_at = ? WHERE milestone_id = ?",
-                Timestamp.from(Instant.now().minus(30, ChronoUnit.DAYS)), milestone.milestoneId());
-    }
-
-    private int reportDueBusinessDays() {
-        return contracts.findById(contract.getContractId()).orElseThrow().getCoffeeTerms().snapshot().negotiated()
-                .inspectionTerms().reportDueBusinessDays();
     }
 
     private MilestoneEvidenceCommands.Flag flagCommand(Milestone milestone, String actor, UUID key,
@@ -788,13 +711,6 @@ class InspectionReportIntegrationTest {
         return ContestFlagConsent.contentHash(current);
     }
 
-    /** The seller declares 9500 kg (the batch is 9500 x 95,000 = 902,500,000), the buyer receives the given weight. */
-    private void receivedByTheBuyer(Milestone milestone, String buyerKg) {
-        weighedByTheSeller(milestone);
-        String photo = uploadReady(BUYER, milestone);
-        receive.execute(receiveCommand(milestone, buyerKg, photo, null, UUID.randomUUID()));
-    }
-
     private MilestoneEvidenceCommands.Confirm confirmCommand(Milestone milestone, String actor, UUID key) {
         return confirmCommandWithHash(milestone, actor, key, hashOf(milestone));
     }
@@ -825,13 +741,6 @@ class InspectionReportIntegrationTest {
 
     // ---- helpers ----
 
-    /** The seller weighs 9500 kg with a ready photo; returns the photo's id. */
-    private String weighedByTheSeller(Milestone milestone) {
-        String photo = uploadReady(SELLER, milestone);
-        weigh.execute(weighCommand(milestone, "9500", photo, null, UUID.randomUUID()));
-        return photo;
-    }
-
     private MilestoneEvidenceCommands.Receive receiveCommand(Milestone milestone, String weight, String photo,
                                                              String certificate, UUID key) {
         return receiveCommand(milestone, BUYER, weight, photo, certificate, key);
@@ -842,17 +751,6 @@ class InspectionReportIntegrationTest {
         BigDecimal kg = new BigDecimal(weight);
         return new MilestoneEvidenceCommands.Receive(id(), milestone.milestoneId(), actor, key, kg, photo,
                 certificate, "1.0", BuyerReceiptConsent.contentHash(milestone.milestoneId(), kg, photo, certificate));
-    }
-
-    private List<JsonNode> receivedEvents() {
-        return jdbc.queryForList("SELECT envelope FROM event_outbox WHERE event_type = 'milestone.buyer_received'"
-                + " AND aggregate_id = ?", String.class, first.milestoneId()).stream().map(json -> {
-                    try {
-                        return new ObjectMapper().readTree(json);
-                    } catch (Exception e) {
-                        throw new IllegalStateException(e);
-                    }
-                }).toList();
     }
 
     private String uploadReady(String actor, Milestone milestone) {
@@ -892,15 +790,6 @@ class InspectionReportIntegrationTest {
         return envelope("file.ready", readyPayload(fileId));
     }
 
-    private EventEnvelope failed(String fileId) {
-        Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("fileId", fileId);
-        payload.put("uploadedBy", SELLER);
-        payload.put("ingestChannel", "DIRECT_UPLOAD");
-        payload.put("failureReason", "EICAR test signature");
-        return envelope("file.failed", payload);
-    }
-
     private static Map<String, Object> readyPayload(String fileId) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("fileId", fileId);
@@ -920,17 +809,6 @@ class InspectionReportIntegrationTest {
         MessageProperties properties = new MessageProperties();
         properties.setContentType(MessageProperties.CONTENT_TYPE_JSON);
         return new Message(new EventEnvelopeCodec().toJson(envelope).getBytes(), properties);
-    }
-
-    private List<JsonNode> weighedEvents() {
-        return jdbc.queryForList("SELECT envelope FROM event_outbox WHERE event_type = 'milestone.seller_weighed'"
-                + " AND aggregate_id = ?", String.class, first.milestoneId()).stream().map(json -> {
-                    try {
-                        return new ObjectMapper().readTree(json);
-                    } catch (Exception e) {
-                        throw new IllegalStateException(e);
-                    }
-                }).toList();
     }
 
     private String id() {
