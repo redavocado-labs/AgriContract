@@ -200,10 +200,11 @@ class RemedyCalculatorTest {
         BreachCase notResolved = new BreachCase(CASE, CONTRACT, MILESTONE, BreachRequester.BUYER, SignerRole.SELLER,
                 BreachReasonCode.QUALITY_BELOW_COMMITTED, BreachSeverity.MINOR, BreachCaseStatus.UNDER_REVIEW,
                 List.of(), NOW, null, null, List.of(), null, null, ContestStatus.NOT_APPLICABLE, null,
-                underReview.computedResolution());
+                underReview.computedResolution(), null, List.of(), null, null);
         BreachCase noComputed = new BreachCase(CASE, CONTRACT, MILESTONE, BreachRequester.BUYER, SignerRole.SELLER,
                 BreachReasonCode.QUALITY_BELOW_COMMITTED, BreachSeverity.MINOR, BreachCaseStatus.RESOLVED, List.of(),
-                NOW, null, DecisionSource.ARBITRATOR, List.of(), NOW, "a", ContestStatus.NOT_APPLICABLE, null, null);
+                NOW, null, DecisionSource.ARBITRATOR, List.of(), NOW, "a", ContestStatus.NOT_APPLICABLE, null, null, null,
+                List.of(), null, null);
         var terms = terms("0.08", GoverningLaw.VN_COMMERCIAL_LAW);
 
         assertThatThrownBy(() -> calculator.calculate(notResolved, milestone("10000"), terms, deposit("0.00"), 0, NOW))
@@ -259,7 +260,7 @@ class RemedyCalculatorTest {
         return new BreachCase(CASE, CONTRACT, MILESTONE, BreachRequester.BUYER, SignerRole.SELLER,
                 BreachReasonCode.QUALITY_BELOW_COMMITTED, BreachSeverity.MINOR, BreachCaseStatus.RESOLVED, List.of(),
                 NOW, computed.finalBreachingRole(), DecisionSource.INSPECTOR_L1_5, List.of("r"), NOW, "arbitrator",
-                ContestStatus.NOT_APPLICABLE, null, computed);
+                ContestStatus.NOT_APPLICABLE, null, computed, null, List.of(), null, null);
     }
 
     private static Milestone milestone(String committedKg) {

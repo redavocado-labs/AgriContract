@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 /** #135: review, resolve (D81 guards) and the computed resolution of a BreachCase. */
 class BreachCaseTest {
     private static final Instant AT = Instant.parse("2036-12-10T03:00:00Z");
+    private static final Instant DEADLINE = Instant.parse("2036-12-12T03:00:00Z");
     private static final String ARBITRATOR = "7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f";
 
     @Test
@@ -30,7 +31,7 @@ class BreachCaseTest {
 
     @Test
     void resolve_isOnlyFromUnderReview_andOnlyOnce() {
-        assertCode(() -> reported().resolve(null, DecisionSource.ARBITRATOR, List.of(), false, AT, ARBITRATOR),
+        assertCode(() -> reported().resolve(null, DecisionSource.ARBITRATOR, List.of(), false, AT, ARBITRATOR, DEADLINE),
                 ContractConflictException.BREACH_CASE_ACTION_NOT_ALLOWED);
         BreachCase resolved = resolved(reported().review());
 
@@ -41,7 +42,7 @@ class BreachCaseTest {
         assertThat(resolved.decisionEvidenceRefs()).containsExactly("ref-1");
         assertThat(resolved.contestStatus()).isEqualTo(ContestStatus.NOT_APPLICABLE);
         assertThat(resolved.contestDeadline()).isNull();
-        assertCode(() -> resolved.resolve(null, DecisionSource.ARBITRATOR, List.of(), false, AT, ARBITRATOR),
+        assertCode(() -> resolved.resolve(null, DecisionSource.ARBITRATOR, List.of(), false, AT, ARBITRATOR, DEADLINE),
                 ContractConflictException.BREACH_CASE_ACTION_NOT_ALLOWED);
     }
 
@@ -53,7 +54,7 @@ class BreachCaseTest {
         assertThat(noFault.requestedBy()).isEqualTo(BreachRequester.BUYER);
 
         BreachCase buyerAtFault = reported().review().resolve(SignerRole.BUYER, DecisionSource.ARBITRATOR,
-                List.of(), false, AT, ARBITRATOR);
+                List.of(), false, AT, ARBITRATOR, DEADLINE);
         assertThat(buyerAtFault.finalBreachingRole()).isEqualTo(SignerRole.BUYER);
         assertThat(buyerAtFault.allegedBreachingRole()).isEqualTo(SignerRole.SELLER);
     }
@@ -62,39 +63,39 @@ class BreachCaseTest {
     void aContestedMilestoneWithoutAComputedResolution_isReportPending() {
         BreachCase underReview = reported().review();
 
-        assertCode(() -> underReview.resolve(null, DecisionSource.ARBITRATOR, List.of(), true, AT, ARBITRATOR),
+        assertCode(() -> underReview.resolve(null, DecisionSource.ARBITRATOR, List.of(), true, AT, ARBITRATOR, DEADLINE),
                 ContractConflictException.INSPECTION_REPORT_PENDING);
-        assertCode(() -> underReview.resolve(null, DecisionSource.INSPECTOR_L1_5, List.of(), true, AT, ARBITRATOR),
+        assertCode(() -> underReview.resolve(null, DecisionSource.INSPECTOR_L1_5, List.of(), true, AT, ARBITRATOR, DEADLINE),
                 ContractConflictException.INSPECTION_REPORT_PENDING);
     }
 
     @Test
     void inspectorL15WithoutAComputedResolution_isAMismatch() {
         assertCode(() -> reported().review().resolve(null, DecisionSource.INSPECTOR_L1_5, List.of(), false, AT,
-                ARBITRATOR), ContractConflictException.RESOLUTION_MISMATCH);
+                ARBITRATOR, DEADLINE), ContractConflictException.RESOLUTION_MISMATCH);
     }
 
     @Test
     void aComputedResolution_isOnlyApproved_asItIs() {
         BreachCase withComputed = reported().attachComputedResolution(computed(SignerRole.SELLER)).review();
 
-        assertCode(() -> withComputed.resolve(null, DecisionSource.INSPECTOR_L1_5, List.of(), true, AT, ARBITRATOR),
+        assertCode(() -> withComputed.resolve(null, DecisionSource.INSPECTOR_L1_5, List.of(), true, AT, ARBITRATOR, DEADLINE),
                 ContractConflictException.RESOLUTION_MISMATCH);
         assertCode(() -> withComputed.resolve(SignerRole.BUYER, DecisionSource.INSPECTOR_L1_5, List.of(), true, AT,
-                ARBITRATOR), ContractConflictException.RESOLUTION_MISMATCH);
+                ARBITRATOR, DEADLINE), ContractConflictException.RESOLUTION_MISMATCH);
         assertCode(() -> withComputed.resolve(SignerRole.SELLER, DecisionSource.ARBITRATOR, List.of(), true, AT,
-                ARBITRATOR), ContractConflictException.RESOLUTION_MISMATCH);
+                ARBITRATOR, DEADLINE), ContractConflictException.RESOLUTION_MISMATCH);
 
         BreachCase approved = withComputed.resolve(SignerRole.SELLER, DecisionSource.INSPECTOR_L1_5, List.of("r"),
-                true, AT, ARBITRATOR);
+                true, AT, ARBITRATOR, DEADLINE);
         assertThat(approved.status()).isEqualTo(BreachCaseStatus.RESOLVED);
         assertThat(approved.finalBreachingRole()).isEqualTo(SignerRole.SELLER);
 
         BreachCase noFault = reported().attachComputedResolution(computed(null)).review();
-        assertThat(noFault.resolve(null, DecisionSource.INSPECTOR_L1_5, List.of(), true, AT, ARBITRATOR)
+        assertThat(noFault.resolve(null, DecisionSource.INSPECTOR_L1_5, List.of(), true, AT, ARBITRATOR, DEADLINE)
                 .finalBreachingRole()).isNull();
         assertCode(() -> noFault.resolve(SignerRole.SELLER, DecisionSource.INSPECTOR_L1_5, List.of(), true, AT,
-                ARBITRATOR), ContractConflictException.RESOLUTION_MISMATCH);
+                ARBITRATOR, DEADLINE), ContractConflictException.RESOLUTION_MISMATCH);
     }
 
     @Test
@@ -126,7 +127,7 @@ class BreachCaseTest {
     }
 
     private static BreachCase resolved(BreachCase underReview) {
-        return underReview.resolve(null, DecisionSource.ARBITRATOR, List.of("ref-1"), false, AT, ARBITRATOR);
+        return underReview.resolve(null, DecisionSource.ARBITRATOR, List.of("ref-1"), false, AT, ARBITRATOR, DEADLINE);
     }
 
     private static BreachCase reported() {

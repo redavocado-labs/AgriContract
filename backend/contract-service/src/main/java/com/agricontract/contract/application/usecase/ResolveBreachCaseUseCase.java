@@ -1,5 +1,6 @@
 package com.agricontract.contract.application.usecase;
 
+import com.agricontract.calendar.VietnamBusinessDays;
 import com.agricontract.contract.application.dto.BreachCaseCommands;
 import com.agricontract.contract.application.exception.BreachCaseNotFoundException;
 import com.agricontract.contract.application.exception.ContractNotFoundException;
@@ -39,8 +40,10 @@ import java.util.UUID;
  * <p>#137: a case with a computed resolution (the BF-04 path) also gets its RemedyDecision in the same transaction.
  * No fault: the decision is FINALIZED at once, the milestone is SETTLED and remedy.finalized and
  * milestone.dispute_resolved are written. Fault: the decision waits as PENDING_CONTEST, with no event and the
- * milestone still CONTESTED, until {@link FinalizeRemedyDecisionUseCase} runs (the contest window is #241). A case
- * without a computed resolution gets no RemedyDecision here (system-decided remedies are #240).
+ * milestone still CONTESTED, and the contest window opens (GB-50: 2 business days from the decision, contestStatus
+ * OPEN) until the window expires without a contest ({@link ExpireContestWindowsUseCase}) and
+ * {@link FinalizeRemedyDecisionUseCase} runs. The decision of a contested case (its second Level 1.5 report, D91) is
+ * final at once. A case without a computed resolution gets no RemedyDecision here (system-decided remedies are #240).
  */
 @Slf4j
 @Service
@@ -53,6 +56,7 @@ public class ResolveBreachCaseUseCase {
     private final MilestoneRepository milestones;
     private final RemedyDecisionRepository remedyDecisions;
     private final RemedySettlement remedySettlement;
+    private final VietnamBusinessDays calendar;
     private final IdempotencyStore idempotencyStore;
     private final TransactionRunner transactions;
     private final Clock clock;
@@ -79,7 +83,8 @@ public class ResolveBreachCaseUseCase {
                 .map(m -> m.status() == MilestoneStatus.CONTESTED).orElse(false);
         Instant now = Instant.now(clock).truncatedTo(ChronoUnit.MICROS);
         BreachCase resolved = breachCase.resolve(command.finalBreachingRole(), command.decisionSource(),
-                command.evidenceRefs(), contested, now, command.actorId());
+                command.evidenceRefs(), contested, now, command.actorId(),
+                calendar.deadline(now, BreachCase.CONTEST_WINDOW_BUSINESS_DAYS));
         breachCases.update(resolved);
         buildRemedy(contract, resolved, now);
         idempotencyStore.recordResult(command.actorId(), OPERATION, command.idempotencyKey(), command.breachCaseId());
