@@ -132,7 +132,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ImportAutoConfiguration({JacksonAutoConfiguration.class, EventingAutoConfiguration.class})
 @Import({BusinessCalendarConfiguration.class, SpringTransactionRunner.class, MilestoneFunding.class,
-        JdbcMilestoneRepository.class, JdbcInspectionReportRepository.class, JdbcBreachCaseRepository.class, ReviewBreachCaseUseCase.class, ResolveBreachCaseUseCase.class,
+        JdbcMilestoneRepository.class, JdbcInspectionReportRepository.class, JdbcBreachCaseRepository.class, ReviewBreachCaseUseCase.class, ResolveBreachCaseUseCase.class, com.agricontract.contract.infrastructure.persistence.remedy.JdbcRemedyDecisionRepository.class, com.agricontract.contract.application.service.RemedySettlement.class,
         GetBreachCaseUseCase.class, ListBreachCasesForArbitrationUseCase.class, FlagMilestoneUseCase.class,
         RespondToMilestoneFlagUseCase.class, SellerSilenceMilestonesUseCase.class, MilestoneContestStep.class,
         OutboxContractEventPublisher.class, ContractRepositoryImpl.class,
@@ -245,6 +245,8 @@ class InspectionReportIntegrationTest {
      * (IN_PROGRESS); the second is still CREATED. The quality policy is the one of the #136 examples.
      */
     private void activate(boolean mandatory) {
+        jdbc.update("DELETE FROM remedy_leg");
+        jdbc.update("DELETE FROM remedy_decision");
         jdbc.update("DELETE FROM breach_case");
         fileStore.confirmed.clear();
         fileStore.confirmFails = false;

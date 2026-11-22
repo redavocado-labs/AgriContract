@@ -7,6 +7,7 @@ import com.agricontract.contract.domain.model.consent.SignerRole;
 import com.agricontract.contract.domain.model.inspection.InspectionRequestReason;
 import com.agricontract.contract.domain.model.milestone.Milestone;
 import com.agricontract.contract.domain.model.milestone.SellerWeighDeclaration;
+import com.agricontract.contract.domain.model.remedy.RemedyDecision;
 
 import java.time.Instant;
 import java.util.List;
@@ -112,5 +113,19 @@ public interface ContractEventPublisher {
      * milestone.dispute_resolved (D82): the QUANTITY flag settled on the buyer's weight because the seller was silent;
      * resolutionFavors BUYER.
      */
-    void milestoneDisputeResolvedForBuyer(Contract contract, Milestone milestone);
+    default void milestoneDisputeResolvedForBuyer(Contract contract, Milestone milestone) {
+        milestoneDisputeResolved(contract, milestone, SignerRole.BUYER);
+    }
+
+    /**
+     * milestone.dispute_resolved (D82, #137): the dispute ended with the milestone SETTLED; resolutionFavors is the
+     * prevailing role. The milestone must be SETTLED.
+     */
+    void milestoneDisputeResolved(Contract contract, Milestone milestone, SignerRole resolutionFavors);
+
+    /**
+     * remedy.finalized (#137): the sole trigger of the remedy money legs and of the reputation lock. Written when the
+     * RemedyDecision becomes FINALIZED, in that transaction, once.
+     */
+    void remedyFinalized(Contract contract, RemedyDecision decision, Instant at);
 }
