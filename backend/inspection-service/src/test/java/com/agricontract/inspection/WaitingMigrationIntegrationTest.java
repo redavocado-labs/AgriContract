@@ -35,7 +35,7 @@ class WaitingMigrationIntegrationTest {
                 UUID.randomUUID().toString(), Timestamp.from(assigned), Timestamp.from(assigned.plusSeconds(3600)),
                 Timestamp.from(assigned.plusSeconds(86400)));
         var history = jdbc.queryForList("SELECT * FROM level1_5_inspection_assignment");
-        var flyway = Flyway.configure().dataSource(url, MYSQL.getUsername(), MYSQL.getPassword()).load();
+        var flyway = Flyway.configure().dataSource(url, MYSQL.getUsername(), MYSQL.getPassword()).target("5").load();
         assertThat(flyway.migrate().migrationsExecuted).isEqualTo(1);
         flyway.validate();
         assertThat(jdbc.queryForList("SELECT version,checksum FROM flyway_schema_history WHERE version IN ('1','2','3','4') ORDER BY installed_rank"))

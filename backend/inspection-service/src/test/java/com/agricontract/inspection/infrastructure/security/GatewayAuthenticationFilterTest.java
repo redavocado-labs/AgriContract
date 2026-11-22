@@ -49,6 +49,28 @@ class GatewayAuthenticationFilterTest {
                 assertThat(new SecurityContextInspector().requireInspectorId()).isEqualTo("inspector-b"));
     }
 
+    @Test
+    void trustedGatewayCarriesAuthTimeAndRejectsAmbiguousFreshness() throws Exception {
+        var request = identityRequest();
+        request.addHeader("X-Gateway-Secret", "gateway-test-secret");
+        request.addHeader("X-User-Auth-Time", "1792897200");
+        filter.doFilter(request, new MockHttpServletResponse(), (req, res) ->
+                assertThat(new AuthenticatedSession().authenticatedAt()).isEqualTo(java.time.Instant.ofEpochSecond(1792897200)));
+        request.addHeader("X-User-Auth-Time", "1792897201");
+        filter.doFilter(request, new MockHttpServletResponse(), (req, res) ->
+                assertThat(new AuthenticatedSession().authenticatedAt()).isNull());
+    }
+
+    @Test
+    void existingPrincipalCannotAcquireAuthTimeFromHeaders() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                "inspector-b", null, List.of(new SimpleGrantedAuthority("ROLE_INSPECTOR"))));
+        var request = identityRequest();
+        request.addHeader("X-User-Auth-Time", "1792897200");
+        filter.doFilter(request, new MockHttpServletResponse(), (req, res) ->
+                assertThat(new AuthenticatedSession().authenticatedAt()).isNull());
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"X-User-Id", "X-User-Role", "X-Gateway-Secret"})
     void ambiguousIdentityHeadersAreRejected(String header) throws Exception {
