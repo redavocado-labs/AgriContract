@@ -21,6 +21,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.CannotAcquireLockException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -402,6 +404,7 @@ class ScaffoldBoundaryTest {
             assertThat(first.get(10, TimeUnit.SECONDS) + second.get(10, TimeUnit.SECONDS)).isEqualTo(1);
         }
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM level1_5_inspection_assignment", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM level1_5_inspection_assignment WHERE ended_at IS NULL", Integer.class)).isEqualTo(1);
     }
 
     @Test
@@ -435,7 +438,17 @@ class ScaffoldBoundaryTest {
         try {
             insert(UUID.randomUUID().toString(), CONTRACT, MILESTONE, inspector, null);
             return 1;
-        } catch (DataIntegrityViolationException expected) {
+        } catch (DuplicateKeyException expected) {
+            assertThat(expected.getMostSpecificCause()).isInstanceOf(SQLException.class);
+            var sql = (SQLException) expected.getMostSpecificCause();
+            assertThat(sql.getErrorCode()).isEqualTo(1062);
+            assertThat(sql.getMessage()).contains("uk_l15_active_milestone");
+            return 0;
+        } catch (CannotAcquireLockException expected) {
+            assertThat(expected.getMostSpecificCause()).isInstanceOf(SQLException.class);
+            var sql = (SQLException) expected.getMostSpecificCause();
+            assertThat(sql.getErrorCode()).isEqualTo(1213);
+            assertThat(sql.getSQLState()).isEqualTo("40001");
             return 0;
         }
     }
