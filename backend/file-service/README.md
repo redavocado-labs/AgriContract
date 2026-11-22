@@ -13,7 +13,9 @@ NestJS 11 on Node 22, port **8089**. Internal only: the gateway never routes it.
 request frozen by D60 in `contracts/events/supplementary-services-api.yaml`). #274: `GET`, `DELETE` and
 `confirm-attached` on `/internal/v1/files/{fileId}`, and `store()` for `SYSTEM_GENERATED`
 (`POST /internal/v1/files/system-generated`, D88). #131: the virus scan (ClamAV) and `file.ready` / `file.failed`.
-Not done yet: email intake (#275), the retention and orphan-cleanup jobs (#276).
+#276: the lifecycle job (orphans, retention, legal hold, self-healing two-step deletion). Not done yet: email intake
+(#275), and a way to set `retention_until` / `legal_hold` (the contract has none; the owning side's flows decide
+them).
 
 ## `POST /internal/v1/files` (storeOnBehalfOf)
 
@@ -147,6 +149,26 @@ OutboxPoller ──> agricontract.files (topic, routing key = eventType)
 `test/contract/file-events.contract.spec.ts` checks `file.ready` / `file.failed` against `fileReady` / `fileFailed`
 of the contract, both directions, so a contract change fails the build until the code follows.
 
+## Lifecycle job (orphans, retention, legal hold)
+
+Design §7, governance §8, matrix 21d / 21e (#276). `LifecycleScheduler` runs `FileLifecycleUseCase` a minute after
+start and then every `FILE_LIFECYCLE_INTERVAL_MS` (hourly; `0` = off). One run, at most 100 rows per kind:
+
+1. **Orphans**: not attached 7 days after the upload (nobody called confirm-attached) → tombstone
+   (`ORPHAN: not attached within 7 days …`), then blob.
+2. **Expired**: `retention_until` has passed → tombstone (`RETENTION_EXPIRED: …`), then blob. file-service does not
+   decide retention; it applies the date the owning side set. `NULL` keeps the file.
+3. **Pending blobs**: every tombstoned row whose blob is not marked gone (`blob_deleted_at`, V3), from this run, an
+   earlier run or a `DELETE` whose blob step failed → blob removed and marked. So a failed step 2 heals on the
+   next run, and a finished one is never redone.
+4. **Stray blobs**: an object whose key is a fileId with no row at all (a store that failed after its PUT, and whose
+   own clean-up failed too), older than a day → removed and logged by key. Other keys are never touched.
+
+**A legal hold blocks every deletion**: candidates exclude held rows, and the tombstone `UPDATE` checks the hold
+again together with the candidate's own condition (still unattached / still expired), so a hold or a
+confirm-attached arriving meanwhile wins. Every step is idempotent, so several instances, or a run cut short, are
+safe. A failed run is logged and the next one tries again.
+
 ## The store core
 
 `StoreFileUseCase` is the one function every entrypoint will call (design §3). The entrypoint passes its own
@@ -183,8 +205,8 @@ Failure handling:
   the missing bytes until the 30 s socket timeout.
 - **Blob first, row second**, because `storage_hash` is `NOT NULL` and comes from the stored bytes. If the row cannot
   be written, the blob is deleted, so a row never points at a missing blob. If that delete fails too, or the process
-  dies in between, a blob is left with no row. §7's orphan cleanup works from rows and cannot see it, so the
-  warning names the object key for a manual delete.
+  dies in between, a blob is left with no row. The warning names the object key, and the lifecycle job's sweep
+  removes it once it is a day old.
 - Errors carry a code (`ECONNREFUSED`, `ER_...`, the S3 error name), never a message that could quote hosts, keys
   or the uploader.
 
@@ -206,6 +228,7 @@ Environment variables only (no `.env` file). The defaults match the compose serv
 | `RABBITMQ_USERNAME` / `RABBITMQ_PASSWORD` | `guest` / `guest` | |
 | `CLAMAV_HOST` / `CLAMAV_PORT` | `localhost` / `3410` | compose `clamav` (host port 3410; `clamav:3310` inside compose) |
 | `FILE_DLQ_CHECK_INTERVAL_MS` | `300000` | Period of the DLQ check, whole ms up to 24 h; `0` turns it off |
+| `FILE_LIFECYCLE_INTERVAL_MS` | `3600000` | Period of the lifecycle job, 0 to 86400000; `0` turns it off |
 
 Startup fails when MySQL or the bucket cannot be reached. `GET /actuator/health` answers 200 with
 `components.db` and `components.storage` UP, or 503 with an error code for the one that is down. RabbitMQ and
@@ -219,7 +242,8 @@ defaults, CHECK constraint and indexes, including `idempotency_key` and its uniq
 `idempotency_key` is `ascii` / `ascii_bin`: MySQL's default collation ignores case, so `Key-A` and `key-a` would
 otherwise be one upload. `email_intake_failure` comes with the email intake (#275). `V2__create_event_outbox.sql`
 is the `event_outbox` of `@agricontract/eventing` (additive; its `processed_event` is left out, no consumer here
-dedupes by eventId). The app does not migrate: compose's `file-migrate` (Flyway 10.10) runs before `file-service`, and CI runs the same image.
+dedupes by eventId). `V3__add_blob_deleted_at.sql` marks step 2 of a deletion done (#276). The app does not
+migrate: compose's `file-migrate` (Flyway 10.10) runs before `file-service`, and CI runs the same image.
 
 ## Run and test
 
@@ -251,6 +275,7 @@ src/application/read-file.use-case   GET; verified-read.ts checks the bytes on t
 src/application/confirm-attached.use-case, delete-file.use-case
 src/application/scan-file.use-case   the scan decision: READY / FAILED + its event
 src/application/file-events.ts       file.uploaded.direct, file.ready, file.failed envelopes
+src/application/file-lifecycle.use-case  one lifecycle run (§7); infrastructure/lifecycle/ schedules it
 src/application/ports/               ObjectStoragePort, FileRepository, VirusScannerPort
 src/infrastructure/messaging/        AMQP connection, topology, outbox poller, VirusScanConsumer
 src/infrastructure/scan/             clamd INSTREAM client
