@@ -9,5 +9,7 @@ public enum SettlementPath {
     /** A QUANTITY flag the seller left unanswered: settled on the buyer's weight (D82). */
     SELLER_SILENT_QUANTITY,
     /** Mandatory inspection (D77): the confirmed Level 1.5 report found the goods CONFORMING. */
-    INSPECTED_CONFORMING
+    INSPECTED_CONFORMING,
+    /** A CONTESTED milestone settled by its RemedyDecision (#137, remedy.finalized). */
+    DISPUTE_RESOLVED
 }
