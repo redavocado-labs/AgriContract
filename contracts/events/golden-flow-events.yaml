@@ -1274,7 +1274,21 @@ $defs:
               ingestChannel: {enum: [DIRECT_UPLOAD, EMAIL_INTAKE, SYSTEM_GENERATED]}
               contentType: {type: string}
               fileSize: {type: integer, minimum: 0}
-              emailMeta: {type: object}
+              emailMeta:
+                description: >-
+                  Present only when ingestChannel = EMAIL_INTAKE (D88). spfDkimResult is PASS when
+                  DMARC passed, FAIL when SPF, DKIM or DMARC failed, NONE when there is no result
+                  written by the platform's own receiving server (only Authentication-Results headers
+                  carrying the platform's authserv-id are read; the sender can write any other).
+                  A signal for the Admin, never a reason to reject on its own.
+                type: object
+                required: [senderDomain, spfDkimResult, subject, receivedAt]
+                additionalProperties: false
+                properties:
+                  senderDomain: {type: string, description: "Domain of the From address only, lower case; empty when there is none."}
+                  spfDkimResult: {enum: [PASS, FAIL, NONE]}
+                  subject: {type: string}
+                  receivedAt: {type: string, format: date-time, description: "When the platform mailbox received the mail (IMAP INTERNALDATE)."}
         x-publisher: file-service
         x-consumers: [contract-service, inspection-service]
         x-source: file-service-phase2-design.md section 5
@@ -1550,10 +1564,10 @@ $defs:
             required: [senderDomain, spfDkimResult, subject, snippet, receivedAt]
             additionalProperties: false
             properties:
-              senderDomain: {type: string}
-              spfDkimResult: {type: string}
+              senderDomain: {type: string, description: "Domain of the From address only, lower case; empty when there is none."}
+              spfDkimResult: {enum: [PASS, FAIL, NONE], description: "Same rule as file.ready emailMeta.spfDkimResult (D88)."}
               subject: {type: string}
-              snippet: {type: string}
+              snippet: {type: string, maxLength: 200, description: "First 200 characters of the text body, whitespace collapsed."}
               receivedAt: {type: string, format: date-time}
         x-publisher: file-service
         x-consumers: [inspection-service]
