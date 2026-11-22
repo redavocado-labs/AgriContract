@@ -19,10 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-/** remedy_decision and remedy_leg (V23): insert once, then only the status and finalized_at change. */
+/** remedy_decision and remedy_leg (V23, V24): insert once, then only the status and its timestamp change. */
 @Repository
 @RequiredArgsConstructor
 public class JdbcRemedyDecisionRepository implements RemedyDecisionRepository {
@@ -33,13 +34,13 @@ public class JdbcRemedyDecisionRepository implements RemedyDecisionRepository {
     public void insert(RemedyDecision d) {
         jdbc.update("INSERT INTO remedy_decision (remedy_decision_id, contract_id, breach_case_id, milestone_id,"
                         + " status, final_breaching_role, breach_reason_code, quality_disposition, decision_source,"
-                        + " penalty_amount, penalty_debt_amount, settled_milestone_count, created_at, finalized_at)"
-                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        + " penalty_amount, penalty_debt_amount, settled_milestone_count, created_at, finalized_at,"
+                        + " `round`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 d.remedyDecisionId(), d.contractId(), d.breachCaseId(), d.milestoneId(), d.status().name(),
                 name(d.finalBreachingRole()), name(d.breachReasonCode()), name(d.qualityDisposition()),
                 d.decisionSource().name(), d.penaltyAmount().value(), d.penaltyDebtAmount().value(),
                 d.settledMilestoneCount(), Timestamp.from(d.createdAt()),
-                d.finalizedAt() == null ? null : Timestamp.from(d.finalizedAt()));
+                d.finalizedAt() == null ? null : Timestamp.from(d.finalizedAt()), nextRound(d.breachCaseId()));
         int seq = 0;
         for (RemedyLeg leg : d.legs()) {
             jdbc.update("INSERT INTO remedy_leg (remedy_leg_id, remedy_decision_id, seq, remedy_type, fund_type,"
@@ -62,7 +63,8 @@ public class JdbcRemedyDecisionRepository implements RemedyDecisionRepository {
 
     @Override
     public Optional<RemedyDecision> findByBreachCaseId(String breachCaseId) {
-        return find("SELECT * FROM remedy_decision WHERE breach_case_id = ?", breachCaseId);
+        return find("SELECT * FROM remedy_decision WHERE breach_case_id = ? ORDER BY `round` DESC LIMIT 1",
+                breachCaseId);
     }
 
     @Override
@@ -80,10 +82,21 @@ public class JdbcRemedyDecisionRepository implements RemedyDecisionRepository {
     }
 
     @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void markSuperseded(String remedyDecisionId, Instant at) {
+        int updated = jdbc.update("UPDATE remedy_decision SET status = 'SUPERSEDED', superseded_at = ?"
+                + " WHERE remedy_decision_id = ? AND status = 'PENDING_CONTEST'", Timestamp.from(at),
+                remedyDecisionId);
+        if (updated != 1) {
+            throw new IllegalStateException("Remedy decision " + remedyDecisionId + " is not PENDING_CONTEST");
+        }
+    }
+
+    @Override
     public VndAmount sellerDepositForfeited(String contractId) {
         BigDecimal sum = jdbc.queryForObject("SELECT COALESCE(SUM(l.amount), 0) FROM remedy_leg l JOIN remedy_decision d"
                 + " ON d.remedy_decision_id = l.remedy_decision_id WHERE d.contract_id = ? AND l.fund_type ="
-                + " 'SELLER_DEPOSIT'", BigDecimal.class, contractId);
+                + " 'SELLER_DEPOSIT' AND d.status <> 'SUPERSEDED'", BigDecimal.class, contractId);
         return new VndAmount(sum == null ? BigDecimal.ZERO : sum);
     }
 
@@ -112,6 +125,16 @@ public class JdbcRemedyDecisionRepository implements RemedyDecisionRepository {
                 (rs, n) -> new RemedyLeg(rs.getString("remedy_leg_id"), RemedyType.valueOf(rs.getString("remedy_type")),
                         RemedyFundType.valueOf(rs.getString("fund_type")), SignerRole.valueOf(rs.getString("role")),
                         new VndAmount(rs.getBigDecimal("amount"))), decisionId);
+    }
+
+    /** 1 for the first decision of a case, 2 for the one that superseded it (V24); 1 when there is no case. */
+    private int nextRound(String breachCaseId) {
+        if (breachCaseId == null) {
+            return 1;
+        }
+        Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM remedy_decision WHERE breach_case_id = ?",
+                Integer.class, breachCaseId);
+        return (count == null ? 0 : count) + 1;
     }
 
     private static String name(Enum<?> value) {
