@@ -369,6 +369,90 @@ paths:
         '401': {$ref: '#/components/responses/Unauthorized'}
         '403': {$ref: '#/components/responses/Forbidden'}
         '409': {$ref: '#/components/responses/Conflict'}
+  /api/v1/contracts/{contractId}/breach-cases/{breachCaseId}:
+    x-service-owner: contract-service
+    get:
+      operationId: getBreachCase
+      x-roles: [BUYER, SELLER, ARBITRATOR]
+      x-domain-ownership-check: true
+      description: >-
+        D84 (22/11/2026). One breach case of a contract, computedResolution included. BUYER/SELLER must be a party of
+        the contract (403 otherwise, checked before the case lookup); ARBITRATOR reads any case.
+      parameters:
+        - {name: contractId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: breachCaseId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200': {description: The breach case., content: {application/json: {schema: {$ref: '#/components/schemas/BreachCase'}}}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/arbitration/breach-cases:
+    x-service-owner: contract-service
+    get:
+      operationId: listBreachCasesForArbitration
+      x-roles: [ARBITRATOR]
+      description: >-
+        D84 (22/11/2026). The ARBITRATOR work queue across all contracts, newest reportedAt first. awaitingApproval=true
+        keeps only cases that are not RESOLVED and carry a computedResolution (D81: the Level 1.5 report is confirmed
+        and the Arbitrator only has to approve). The gateway routes /api/v1/arbitration/** to contract-service.
+      parameters:
+        - {name: status, in: query, required: false, schema: {enum: [REPORTED, UNDER_REVIEW, RESOLVED]}}
+        - {name: awaitingApproval, in: query, required: false, schema: {type: boolean}}
+        - {name: page, in: query, required: false, schema: {type: integer, minimum: 0}}
+        - {name: size, in: query, required: false, schema: {type: integer, minimum: 1, maximum: 100}}
+      responses:
+        '200': {description: One page of breach cases., content: {application/json: {schema: {$ref: '#/components/schemas/BreachCasePage'}}}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /api/v1/contracts/{contractId}/milestones/{milestoneId}:
+    x-service-owner: contract-service
+    get:
+      operationId: getMilestoneDetail
+      x-roles: [BUYER, SELLER, ARBITRATOR, OPERATOR]
+      x-domain-ownership-check: true
+      description: >-
+        D84 (22/11/2026). Read model of one milestone for the BF-04 screens: the MilestoneResponse summary plus the
+        current seller declaration, the buyer receipt, the flag, every evidence file with its scan status, the
+        settlement result and the open breach case. BUYER/SELLER must be a party of the contract (403 otherwise,
+        checked before the milestone lookup, same order as uploadMilestoneEvidence); ARBITRATOR and OPERATOR read any
+        milestone. Every deadline is computed by the server (UTC instants); the client never derives one.
+      parameters:
+        - {name: contractId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: milestoneId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200': {description: The milestone read model., content: {application/json: {schema: {$ref: '#/components/schemas/MilestoneDetailResponse'}}}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/contracts/{contractId}/milestones/{milestoneId}/evidence/{fileId}:
+    x-service-owner: contract-service
+    get:
+      operationId: readMilestoneEvidence
+      x-roles: [BUYER, SELLER, ARBITRATOR]
+      x-domain-ownership-check: true
+      description: >-
+        D84 (22/11/2026), file-service design (proxy through the owning service). Streams the bytes of an evidence file
+        recorded for this milestone, so the other party and the Arbitrator can see the photos. BUYER/SELLER must be a
+        party (403 first); the file must be recorded for this milestone (404 otherwise, never a probe into
+        file-service) and READY (409 EVIDENCE_NOT_READY while PROCESSING, 409 EVIDENCE_REJECTED when FAILED).
+        contract-service reads the bytes through the internal file-service GET (#274) and copies Content-Type;
+        Cache-Control is private, no-store.
+      parameters:
+        - {name: contractId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: milestoneId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: fileId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: The file bytes.
+          content:
+            image/jpeg: {schema: {type: string, format: binary}}
+            image/png: {schema: {type: string, format: binary}}
+            application/pdf: {schema: {type: string, format: binary}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: "EVIDENCE_NOT_READY or EVIDENCE_REJECTED.", content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}}
+        '503': {description: "file-service unavailable; safe to retry.", content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}}
   /api/v1/contracts/{contractId}/milestones/{milestoneId}/evidence:
     x-service-owner: contract-service
     post:
@@ -1357,7 +1441,7 @@ components:
         acceptedAt: {type: string, format: date-time}
     BreachCase:
       type: object
-      required: [breachCaseId, contractId, milestoneId, requestedBy, allegedBreachingRole, breachReasonCode, severity, evidenceFileIds, finalBreachingRole, decisionSource, status, contestStatus, contestDeadline, computedResolution]
+      required: [breachCaseId, contractId, milestoneId, requestedBy, allegedBreachingRole, breachReasonCode, severity, evidenceFileIds, finalBreachingRole, decisionSource, status, contestStatus, contestDeadline, computedResolution, reportedAt, resolvedAt]
       additionalProperties: false
       properties:
         breachCaseId: {type: string, format: uuid}
@@ -1374,6 +1458,8 @@ components:
         decisionSource:
           oneOf: [{enum: [ARBITRATOR, INSPECTOR_L1_5, INSPECTOR_L2, MUTUAL]}, {type: 'null'}]
         status: {enum: [REPORTED, UNDER_REVIEW, RESOLVED]}
+        reportedAt: {type: string, format: date-time, description: D84; the Arbitrator queue sorts by it.}
+        resolvedAt: {type: [string, 'null'], format: date-time}
         contestStatus:
           enum: [NOT_APPLICABLE, OPEN, CONTESTED, EXPIRED]
           description: NOT_APPLICABLE before RESOLVED, for no-fault or refund/release-only decisions, and for contract-level cases (milestoneId null); OPEN until contestDeadline. Milestone-escrow design 6.4.
@@ -1399,8 +1485,8 @@ components:
           oneOf: [{enum: [SELLER]}, {type: 'null'}]
           description: SELLER only for NON_CONFORMING; null for QUANTITY (D83) and for CONFORMING/PARTIALLY_CONFORMING.
         decisionSource: {const: INSPECTOR_L1_5}
-        sellerEntitlementAmount: {type: number, minimum: 0, description: "VND, whole dong (D65); sellerEntitlementAmount + buyerRefundAmount = lockedAmount."}
-        buyerRefundAmount: {type: number, minimum: 0}
+        sellerEntitlementAmount: {type: string, pattern: '^[0-9]+\.00$', maxLength: 19, description: "VND, whole dong (D65), decimal string like every other money field (D84); sellerEntitlementAmount + buyerRefundAmount = lockedAmount."}
+        buyerRefundAmount: {type: string, pattern: '^[0-9]+\.00$', maxLength: 19}
         prevailingRole:
           enum: [BUYER, SELLER]
           description: "D83 for QUANTITY: the side whose weight is closer to acceptedQuantityKg, SELLER on a tie. For QUALITY: SELLER for CONFORMING, BUYER otherwise. The other side bears the inspection cost (recorded on the RemedyDecision only)."
@@ -1690,7 +1776,7 @@ components:
       additionalProperties: false
       properties:
         statementVersion: {type: string, minLength: 1}
-        presentedContentHash: {type: string, pattern: '^[a-f0-9]{64}$', description: Current server-verifiable hash of the action subject/content shown with the checkbox.}
+        presentedContentHash: {type: string, pattern: '^[a-f0-9]{64}$', description: "Current server-verifiable hash of the action subject/content shown with the checkbox. Milestone actions: recipe in milestone-escrow design §3.2.3 (D84)."}
     InitiateSignResponse:
       type: object
       required: [otpId, expiresAt]
@@ -1737,6 +1823,93 @@ components:
         deliveryCertificateFileId: {type: string, format: uuid, description: Optional batch certificate used only as delivery/dispute evidence; never parsed as actual quality metrics. Uploaded the same way as sellerEvidenceFileId and different from it.}
         consent: {$ref: '#/components/schemas/ConsentInput'}
       additionalProperties: false
+    MilestoneDetailResponse:
+      type: object
+      required: [contractId, milestone, sellerDeclaration, buyerReceipt, flag, evidence, settlement, breachCaseId]
+      additionalProperties: false
+      description: D84. Read model for the BF-04 screens; nested blocks are null until their step has happened.
+      properties:
+        contractId: {type: string, format: uuid}
+        milestone: {$ref: '#/components/schemas/MilestoneResponse'}
+        sellerDeclaration:
+          oneOf: [{$ref: '#/components/schemas/MilestoneSellerDeclarationView'}, {type: 'null'}]
+        buyerReceipt:
+          oneOf: [{$ref: '#/components/schemas/MilestoneBuyerReceiptView'}, {type: 'null'}]
+        flag:
+          oneOf: [{$ref: '#/components/schemas/MilestoneFlagView'}, {type: 'null'}]
+        evidence:
+          type: array
+          description: Every file uploaded for this milestone, oldest first, with the scan status contract-service knows.
+          items: {$ref: '#/components/schemas/MilestoneEvidenceView'}
+        settlement:
+          oneOf: [{$ref: '#/components/schemas/MilestoneSettlementView'}, {type: 'null'}]
+        breachCaseId: {type: [string, 'null'], format: uuid, description: The milestone's breach case opened by a contest (D80); null otherwise.}
+    MilestoneSellerDeclarationView:
+      type: object
+      required: [declarationNumber, sellerDeclaredWeight, sellerEvidenceFileId, deliveryCertificateFileId, declaredAt, correctionWindowClosesAt]
+      additionalProperties: false
+      description: The declaration in force (the latest one, D75).
+      properties:
+        declarationNumber: {type: integer, minimum: 1}
+        sellerDeclaredWeight: {type: number, exclusiveMinimum: 0, maximum: 1000000, multipleOf: 0.001}
+        sellerEvidenceFileId: {type: string, format: uuid}
+        deliveryCertificateFileId: {type: [string, 'null'], format: uuid}
+        declaredAt: {type: string, format: date-time, description: Time of this declaration.}
+        correctionWindowClosesAt: {type: string, format: date-time, description: "First declaration + the correction window (D75); a correction never moves it. Correction is also closed once buyerReceipt exists."}
+    MilestoneBuyerReceiptView:
+      type: object
+      required: [buyerReceivedWeight, buyerEvidenceFileId, deliveryCertificateFileId, receivedAt, confirmWindowClosesAt]
+      additionalProperties: false
+      properties:
+        buyerReceivedWeight: {type: number, exclusiveMinimum: 0, maximum: 1000000, multipleOf: 0.001}
+        buyerEvidenceFileId: {type: string, format: uuid}
+        deliveryCertificateFileId: {type: [string, 'null'], format: uuid}
+        receivedAt: {type: string, format: date-time}
+        confirmWindowClosesAt: {type: string, format: date-time, description: "receivedAt + buyerConfirmWindowDays business days (D76); after it the auto-confirm job may settle the milestone."}
+    MilestoneFlagView:
+      type: object
+      required: [issueType, flaggedAt, sellerResponseWindowClosesAt, contestedAt, contestedBy]
+      additionalProperties: false
+      properties:
+        issueType: {enum: [QUANTITY, QUALITY]}
+        flaggedAt: {type: string, format: date-time}
+        sellerResponseWindowClosesAt: {type: string, format: date-time, description: flaggedAt + sellerResponseWindowDays business days.}
+        contestedAt: {type: [string, 'null'], format: date-time}
+        contestedBy:
+          oneOf: [{enum: [SELLER, SYSTEM]}, {type: 'null'}]
+          description: SYSTEM when a silent QUALITY flag was contested automatically (D82).
+    MilestoneEvidenceView:
+      type: object
+      required: [fileId, uploadedByRole, status, uploadedAt]
+      additionalProperties: false
+      properties:
+        fileId: {type: string, format: uuid}
+        uploadedByRole: {enum: [BUYER, SELLER]}
+        status: {enum: [PROCESSING, READY, FAILED]}
+        uploadedAt: {type: string, format: date-time}
+    MilestoneSettlementView:
+      type: object
+      required: [path, billableQuantityKg, sellerAmount, buyerRefundAmount, settledAt]
+      additionalProperties: false
+      description: "Final amounts of a SETTLED milestone, computed by the server; sellerAmount + buyerRefundAmount = the milestone's locked batch amount."
+      properties:
+        path:
+          enum: [CLEAN_CONFIRMED, CLEAN_AUTO_CONFIRMED, SELLER_SILENT_QUANTITY, INSPECTION_RESOLVED, CONCEDED, MUTUAL_SETTLEMENT]
+          description: "CLEAN_*: D77 formula; SELLER_SILENT_QUANTITY: buyer weight, no tolerance (D82); INSPECTION_RESOLVED: computedResolution approved (D81/D83); CONCEDED / MUTUAL_SETTLEMENT: D57."
+        billableQuantityKg: {type: [number, 'null'], minimum: 0, description: Quantity the seller is paid for; null when the path pays by amount only.}
+        sellerAmount: {type: string, pattern: '^[0-9]+\.00$', maxLength: 19}
+        buyerRefundAmount: {type: string, pattern: '^[0-9]+\.00$', maxLength: 19}
+        settledAt: {type: string, format: date-time}
+    BreachCasePage:
+      type: object
+      required: [content, page, size, totalElements, totalPages]
+      additionalProperties: false
+      properties:
+        content: {type: array, items: {$ref: '#/components/schemas/BreachCase'}}
+        page: {type: integer, minimum: 0}
+        size: {type: integer, minimum: 1}
+        totalElements: {type: integer, minimum: 0}
+        totalPages: {type: integer, minimum: 0}
     MilestoneEvidenceAccepted:
       type: object
       required: [fileId, status]
