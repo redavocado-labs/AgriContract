@@ -133,8 +133,24 @@ class MilestoneDeliveryEndpointTest {
                 "{\"sellerDeclaredWeight\":1,\"sellerEvidenceFileId\":\"not-a-uuid\",\"consent\":"
                         + "{\"statementVersion\":\"1.0\",\"presentedContentHash\":\"" + HASH + "\"}}",
                 body("1").replace("}}", "},\"extra\":1}"))) {
-            mvc.perform(weighRequest("SELLER", bad)).andExpect(status().isBadRequest());
+            mvc.perform(weighRequest("SELLER", bad)).andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
         }
+        mvc.perform(weighRequest("SELLER", "{not json")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        verify(weigh, never()).execute(any());
+    }
+
+    @Test
+    void weighChecks_partyThenMilestone_beforeTheBody() throws Exception {
+        doThrow(new com.agricontract.contract.domain.exception.UnauthorizedContractAccessException("x"))
+                .doThrow(new MilestoneNotFoundException(CONTRACT.toString(), MILESTONE.toString()))
+                .when(weigh).requireSellerOfMilestone(CONTRACT.toString(), MILESTONE.toString(), "user-1");
+
+        mvc.perform(weighRequest("SELLER", body("0"))).andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+        mvc.perform(weighRequest("SELLER", body("0"))).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("MILESTONE_NOT_FOUND"));
         verify(weigh, never()).execute(any());
     }
 
