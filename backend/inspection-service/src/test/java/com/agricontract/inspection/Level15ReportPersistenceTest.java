@@ -7,11 +7,14 @@ import com.agricontract.inspection.application.usecase.Level15ReportPersistence;
 import com.agricontract.inspection.application.usecase.ConfirmLevel15Report;
 import com.agricontract.inspection.application.usecase.ManageLevel15Assignments;
 import com.agricontract.inspection.application.port.TransactionRunner;
+import com.agricontract.inspection.application.port.ReportSubmissionIdempotency;
+import com.agricontract.inspection.application.usecase.InspectorEligibilityGate;
 import com.agricontract.inspection.domain.repository.AssignmentLifecycleRepository;
 import com.agricontract.inspection.domain.service.InspectionCanonicalizer;
 import com.agricontract.inspection.domain.model.*;
 import com.agricontract.inspection.domain.repository.Level15ReportRepository;
 import com.agricontract.inspection.infrastructure.persistence.JdbcLevel15ReportRepository;
+import com.agricontract.inspection.infrastructure.persistence.JdbcReportFileBindings;
 import java.sql.Timestamp;
 import java.sql.SQLException;
 import java.time.*;
@@ -65,6 +68,9 @@ class Level15ReportPersistenceTest {
     @Autowired TransactionRunner runner;
     @Autowired InspectionCanonicalizer canonicalizer;
     @Autowired ConfirmLevel15Report.ConfirmationWrites confirmationWrites;
+    @Autowired JdbcReportFileBindings fileBindings;
+    @Autowired ReportSubmissionIdempotency submissionReceipts;
+    @Autowired InspectorEligibilityGate eligibilityGate;
     @MockBean InspectorEligibilityPort users;
     @MockBean Clock clock;
     String actor,contract,milestone,commission;
@@ -118,6 +124,7 @@ class Level15ReportPersistenceTest {
         return new ConfirmLevel15Report(service, lifecycleRepository, lifecycle, runner, canonicalizer,
                 () -> auth, (assignment, file) -> {
                     assertThat(assignment).isEqualTo(commission);
+                    new TransactionTemplate(transactions).executeWithoutResult(s -> fileBindings.bind(file, assignment, NOW));
                     return "verified file fixture".getBytes(java.nio.charset.StandardCharsets.UTF_8);
                 }, writes, clock, Duration.ofMinutes(30));
     }
@@ -142,6 +149,8 @@ class Level15ReportPersistenceTest {
         assertThat(factory.getSchema(envelopeSchema, config).validate(json.readTree(envelope))).isEmpty();
         var payload = json.readTree(envelope).path("payload");
         assertThat(json.readTree(envelope).path("correlationId").asText()).isNotBlank();
+        assertThat(payload.path("reportFileHash").asText()).isEqualTo(java.util.HexFormat.of().formatHex(
+                java.security.MessageDigest.getInstance("SHA-256").digest("verified file fixture".getBytes(java.nio.charset.StandardCharsets.UTF_8))));
         assertThat(factory.getSchema(schema, config).validate(payload)).isEmpty();
         var hashes = new com.agricontract.inspection.domain.service.InspectionHashes(canonicalizer);
         assertThat(payload.path("resultHash").asText()).isEqualTo(hashes.calculateResultHash(result()));
@@ -191,10 +200,89 @@ class Level15ReportPersistenceTest {
         assertThat(jdbc.queryForObject("SELECT ended_at IS NULL FROM level1_5_inspection_assignment WHERE commission_id=?", Boolean.class, commission)).isTrue();
     }
 
+    @Test void successfulSubmissionReplaysWithoutAnotherFileReadAndRejectsConflictingRequest() {
+        String file = id();
+        var reads = new AtomicInteger();
+        var core = new ConfirmLevel15Report(service, lifecycleRepository, lifecycle, runner, canonicalizer,
+                () -> NOW.minusSeconds(60), (assignment, fileId) -> {
+                    reads.incrementAndGet();
+                    new TransactionTemplate(transactions).executeWithoutResult(s -> fileBindings.bind(fileId, assignment, NOW));
+                    return new byte[]{1, 2, 3};
+                }, confirmationWrites, clock, Duration.ofMinutes(30));
+        String report = core.confirmIdempotent(contract, milestone, file, "{}", result(), "same-key", eligibilityGate, submissionReceipts);
+        assertThat(core.confirmIdempotent(contract, milestone, file, "{}", result(), "same-key", eligibilityGate, submissionReceipts)).isEqualTo(report);
+        assertThat(reads).hasValue(1);
+        assertThatThrownBy(() -> core.confirmIdempotent(contract, milestone, id(), "{}", result(), "same-key", eligibilityGate, submissionReceipts))
+                .isInstanceOf(ConfirmLevel15Report.IdempotencyConflict.class);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM event_outbox WHERE aggregate_id=? AND event_type='inspection.report_confirmed'", Integer.class, report)).isEqualTo(1);
+    }
+
+    @Test void failedOutboxLeavesNoIdempotencyReceipt() {
+        String file = id();
+        var failing = new ConfirmLevel15Report.ConfirmationWrites() {
+            public void insertSignature(ReportIdentity i, Instant a, Instant s, String h) { confirmationWrites.insertSignature(i, a, s, h); }
+            public void appendConfirmed(ReportIdentity i, InspectionSettlementResultV1 r, ReportEvidence e) { throw new IllegalStateException("outbox failed"); }
+        };
+        assertThatThrownBy(() -> confirmation(NOW.minusSeconds(60), failing).confirmIdempotent(contract, milestone, file, "{}", result(), "failure-key", eligibilityGate, submissionReceipts))
+                .isInstanceOf(IllegalStateException.class);
+        assertThat(submissionReceipts.find(actor, "failure-key")).isEmpty();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE l15_commission_id=?", Integer.class, commission)).isZero();
+    }
+
+    @Test void reportInsertSignatureAndClosureFailuresRollbackLocalConfirmation() {
+        String file = id();
+        var failSignature = new ConfirmLevel15Report.ConfirmationWrites() {
+            public void insertSignature(ReportIdentity i, Instant a, Instant s, String h) { throw new IllegalStateException("signature failed"); }
+            public void appendConfirmed(ReportIdentity i, InspectionSettlementResultV1 r, ReportEvidence e) { fail("outbox must not run"); }
+        };
+        assertThatThrownBy(() -> confirmation(NOW.minusSeconds(60), confirmationWrites)
+                .confirmIdempotent(contract, milestone, file, "not-json", result(), "insert-fail", eligibilityGate, submissionReceipts))
+                .isInstanceOf(RuntimeException.class);
+        assertThatThrownBy(() -> confirmation(NOW.minusSeconds(60), failSignature)
+                .confirmIdempotent(contract, milestone, file, "{}", result(), "signature-fail", eligibilityGate, submissionReceipts))
+                .isInstanceOf(IllegalStateException.class);
+        var failedLifecycle = mock(ManageLevel15Assignments.class);
+        doThrow(new IllegalStateException("closure failed")).when(failedLifecycle)
+                .closeConfirmed(anyString(), anyString(), anyString(), anyString(), any());
+        var closure = new ConfirmLevel15Report(service, lifecycleRepository, failedLifecycle, runner, canonicalizer,
+                () -> NOW.minusSeconds(60), (assignment, fileId) -> new byte[]{1}, confirmationWrites, clock, Duration.ofMinutes(30));
+        assertThatThrownBy(() -> closure.confirmIdempotent(contract, milestone, file, "{}", result(), "closure-fail", eligibilityGate, submissionReceipts))
+                .isInstanceOf(IllegalStateException.class);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE l15_commission_id=?", Integer.class, commission)).isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspector_signature WHERE contract_id=?", Integer.class, contract)).isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM level1_5_report_submission_receipt WHERE inspector_id=?", Integer.class, actor)).isZero();
+        assertThat(jdbc.queryForObject("SELECT ended_at IS NULL FROM level1_5_inspection_assignment WHERE commission_id=?", Boolean.class, commission)).isTrue();
+    }
+
+    @Test void concurrentSameKeySubmissionsReturnSameReport() throws Exception {
+        String file = id();
+        var barrier = new CountDownLatch(2);
+        var core = new ConfirmLevel15Report(service, lifecycleRepository, lifecycle, runner, canonicalizer,
+                () -> NOW.minusSeconds(60), (assignment, fileId) -> {
+                    new TransactionTemplate(transactions).executeWithoutResult(s -> fileBindings.bind(fileId, assignment, NOW));
+                    barrier.countDown();
+                    try { if (!barrier.await(10, TimeUnit.SECONDS)) throw new IllegalStateException("barrier timeout"); }
+                    catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new IllegalStateException(e); }
+                    return new byte[]{1};
+                }, confirmationWrites, clock, Duration.ofMinutes(30));
+        try (var pool = Executors.newFixedThreadPool(2)) {
+            Callable<String> submit = () -> {
+                authenticate(actor, "INSPECTOR");
+                try { return core.confirmIdempotent(contract, milestone, file, "{}", result(), "concurrent", eligibilityGate, submissionReceipts); }
+                finally { SecurityContextHolder.clearContext(); }
+            };
+            var one = pool.submit(submit); var two = pool.submit(submit);
+            String report = one.get(30, TimeUnit.SECONDS);
+            assertThat(two.get(30, TimeUnit.SECONDS)).isEqualTo(report);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM event_outbox WHERE aggregate_id=? AND event_type='inspection.report_confirmed'", Integer.class, report)).isEqualTo(1);
+        }
+    }
+
     @Test void concurrentConfirmationsCannotCreateTwoReportsOrEvents() throws Exception {
         var barrier = new CountDownLatch(2);
         var core = new ConfirmLevel15Report(service, lifecycleRepository, lifecycle, runner, canonicalizer,
                 () -> NOW.minusSeconds(60), (assignment, file) -> {
+                    new TransactionTemplate(transactions).executeWithoutResult(s -> fileBindings.bind(file, assignment, NOW));
                     barrier.countDown();
                     try { if (!barrier.await(10, TimeUnit.SECONDS)) throw new IllegalStateException("barrier timeout"); }
                     catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); throw new IllegalStateException(interrupted); }
@@ -326,9 +414,9 @@ class Level15ReportPersistenceTest {
                 s -> reports.insert(second,evidence(),NOW)), 1062, "uk_report_l15_commission");
     }
 
-    @Test void freshDatabaseHasAllSixMigrationsAndCompleteReportSchema() {
+    @Test void freshDatabaseHasAllEightMigrationsAndCompleteReportSchema() {
         assertThat(jdbc.queryForList("SELECT version FROM flyway_schema_history WHERE success=1 ORDER BY installed_rank",
-                String.class)).containsExactly("1", "2", "3", "4", "5", "6");
+                String.class)).containsExactly("1", "2", "3", "4", "5", "6", "7", "8");
         var expected = """
                 report_id|char(36)|NO
                 l15_commission_id|char(36)|YES
@@ -340,6 +428,7 @@ class Level15ReportPersistenceTest {
                 content|json|NO
                 normalized_result|json|YES
                 report_file_hash|varchar(64)|NO
+                report_file_id|char(36)|YES
                 result_hash|varchar(64)|YES
                 report_hash|varchar(64)|YES
                 external_org|varchar(255)|YES
@@ -379,11 +468,64 @@ class Level15ReportPersistenceTest {
         assertThat(jdbc.queryForObject("""
                 SELECT COUNT(*) FROM information_schema.referential_constraints
                 WHERE constraint_schema=DATABASE() AND table_name='inspection_report'
-                """, Integer.class)).isEqualTo(1);
+                """, Integer.class)).isEqualTo(2);
         assertThat(jdbc.queryForObject("""
                 SELECT collation_name FROM information_schema.columns
                 WHERE table_schema=DATABASE() AND table_name='inspection_report' AND column_name='commission_id'
                 """, String.class)).isEqualTo("ascii_bin");
+    }
+
+    @Test void reportFileBindingEnforcesCommissionAndAllowsMultipleFiles() {
+        String first = id();
+        String second = id();
+        String otherCommission = id();
+        assignment(otherCommission, id(), id(), actor, null);
+        jdbc.update("INSERT INTO level1_5_report_file(file_id,commission_id,uploaded_at) VALUES (?,?,?)", first, commission, Timestamp.from(NOW));
+        jdbc.update("INSERT INTO level1_5_report_file(file_id,commission_id,uploaded_at) VALUES (?,?,?)", second, commission, Timestamp.from(NOW));
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM level1_5_report_file WHERE commission_id=?", Integer.class, commission)).isEqualTo(2);
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO level1_5_report_file(file_id,commission_id,uploaded_at) VALUES (?,?,?)", first, otherCommission, Timestamp.from(NOW)))
+                .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
+        String foreignFile = id();
+        jdbc.update("INSERT INTO level1_5_report_file(file_id,commission_id,uploaded_at) VALUES (?,?,?)", foreignFile, otherCommission, Timestamp.from(NOW));
+        var report = level15Row();
+        report.put("report_file_id", foreignFile);
+        assertDatabaseRejects(() -> insertRow(report), 1452, "fk_report_l15_file");
+        report.put("report_file_id", first);
+        insertRow(report);
+    }
+
+    @Test void attachmentRecoveryIncludesOnlySubmittedFilesAndIsIdempotent() {
+        String file = id();
+        String unused = id();
+        var tx = new TransactionTemplate(transactions);
+        tx.executeWithoutResult(s -> {
+            fileBindings.bind(file, commission, NOW);
+            fileBindings.bind(file, commission, NOW);
+            fileBindings.bind(unused, commission, NOW);
+        });
+        assertThat(fileBindings.pendingAttachments(100)).doesNotContain(file, unused);
+        var report = level15Row(); report.put("report_file_id", file); insertRow(report);
+        assertThat(fileBindings.pendingAttachments(100)).contains(file).doesNotContain(unused);
+        tx.executeWithoutResult(s -> {
+            assertThat(fileBindings.markAttached(unused, NOW)).isFalse();
+            assertThat(fileBindings.markAttached(file, NOW)).isTrue();
+            assertThat(fileBindings.markAttached(file, NOW)).isFalse();
+        });
+        assertThat(fileBindings.pendingAttachments(100)).doesNotContain(file, unused);
+    }
+
+    @Test void concurrentDuplicateFileAssociationsResolveToOneBinding() throws Exception {
+        String file = id(); var start = new CountDownLatch(1);
+        try (var pool = Executors.newFixedThreadPool(2)) {
+            Callable<Void> bind = () -> {
+                start.await();
+                new TransactionTemplate(transactions).executeWithoutResult(s -> fileBindings.bind(file, commission, NOW));
+                return null;
+            };
+            var first = pool.submit(bind); var second = pool.submit(bind); start.countDown();
+            first.get(30, TimeUnit.SECONDS); second.get(30, TimeUnit.SECONDS);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM level1_5_report_file WHERE file_id=? AND commission_id=?", Integer.class, file, commission)).isEqualTo(1);
+        }
     }
 
     @ParameterizedTest

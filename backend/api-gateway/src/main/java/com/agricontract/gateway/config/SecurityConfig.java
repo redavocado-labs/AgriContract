@@ -119,7 +119,8 @@ public class SecurityConfig {
                                 "/api/v1/admin/reputation/actions/*/approve",
                                 "/api/v1/admin/reputation/actions/*/reject").hasRole("ARBITRATOR")
                         .pathMatchers("/api/v1/admin/reputation/**").hasAnyRole("OPERATOR", "ARBITRATOR")
-                        .pathMatchers(HttpMethod.POST, "/api/v1/inspections/*/milestones/*/reports").hasRole("INSPECTOR")
+                        .pathMatchers(HttpMethod.POST, "/api/v1/inspections/*/milestones/*/reports",
+                                "/api/v1/inspections/*/milestones/*/report-files").hasRole("INSPECTOR")
                         .pathMatchers("/api/v1/inspector/**").hasRole("INSPECTOR")
                         .pathMatchers("/api/v1/admin/inspections/**").hasRole("OPERATOR")
                         .pathMatchers(HttpMethod.POST, "/api/v1/prices/manual").hasRole("OPERATOR")

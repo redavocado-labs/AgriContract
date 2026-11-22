@@ -405,6 +405,8 @@ class GatewayBoundaryTest {
             new StaffAction("GET", "/api/v1/admin/reputation/actions", "OPERATOR", "ARBITRATOR"),
             new StaffAction("POST", "/api/v1/inspections/" + LISTING_ID + "/milestones/" + LISTING_ID + "/reports",
                     "INSPECTOR"),
+            new StaffAction("POST", "/api/v1/inspections/" + LISTING_ID + "/milestones/" + LISTING_ID + "/report-files",
+                    "INSPECTOR"),
             new StaffAction("GET", "/api/v1/inspector/assignments", "INSPECTOR"),
             new StaffAction("POST", "/api/v1/admin/inspections/cases", "OPERATOR"),
             new StaffAction("POST", "/api/v1/prices/manual", "OPERATOR"),
