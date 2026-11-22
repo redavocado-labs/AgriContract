@@ -40,13 +40,14 @@ public final class Milestone {
     private int fundingDelayBusinessDays;
     private String lastFundingFailureReason;
     private SellerWeighing sellerWeighing;
+    private BuyerReceipt buyerReceipt;
 
     private Milestone(String milestoneId, String contractId, int milestoneIndex, BigDecimal committedQuantity,
                       LocalDate expectedDeliveryDate, int graceDays, LocalDate fundingScheduledDate,
                       MilestoneStatus status, FundingStatus fundingStatus, VndAmount effectiveUnitPrice,
                       VndAmount batchAmount, Instant fundingRequestedAt, Instant fundingLockedAt,
                       int fundingDelayBusinessDays, String lastFundingFailureReason,
-                      SellerWeighing sellerWeighing) {
+                      SellerWeighing sellerWeighing, BuyerReceipt buyerReceipt) {
         this.milestoneId = milestoneId;
         this.contractId = contractId;
         this.milestoneIndex = milestoneIndex;
@@ -63,6 +64,7 @@ public final class Milestone {
         this.fundingDelayBusinessDays = fundingDelayBusinessDays;
         this.lastFundingFailureReason = lastFundingFailureReason;
         this.sellerWeighing = sellerWeighing;
+        this.buyerReceipt = buyerReceipt;
     }
 
     /**
@@ -80,7 +82,7 @@ public final class Milestone {
         }
         return new Milestone(milestoneId, contractId, term.milestoneIndex(), term.committedQuantity(),
                 term.expectedDeliveryDate(), term.graceDays(), fundingScheduledDate, MilestoneStatus.CREATED,
-                FundingStatus.NOT_REQUESTED, null, null, null, null, 0, null, null);
+                FundingStatus.NOT_REQUESTED, null, null, null, null, 0, null, null, null);
     }
 
     public static Milestone reconstitute(String milestoneId, String contractId, int milestoneIndex,
@@ -89,11 +91,11 @@ public final class Milestone {
                                          FundingStatus fundingStatus, VndAmount effectiveUnitPrice,
                                          VndAmount batchAmount, Instant fundingRequestedAt, Instant fundingLockedAt,
                                          int fundingDelayBusinessDays, String lastFundingFailureReason,
-                                         SellerWeighing sellerWeighing) {
+                                         SellerWeighing sellerWeighing, BuyerReceipt buyerReceipt) {
         return new Milestone(milestoneId, contractId, milestoneIndex, committedQuantity, expectedDeliveryDate,
                 graceDays, fundingScheduledDate, status, fundingStatus, effectiveUnitPrice, batchAmount,
                 fundingRequestedAt, fundingLockedAt, fundingDelayBusinessDays, lastFundingFailureReason,
-                sellerWeighing);
+                sellerWeighing, buyerReceipt);
     }
 
     /** True from fundingScheduledDate on (ICT date), while funding has not been requested. */
@@ -217,6 +219,24 @@ public final class Milestone {
         return number;
     }
 
+    /**
+     * The buyer records the unloaded weight (D76 step 1): SELLER_WEIGHED becomes BUYER_RECEIVED. This closes the
+     * seller's correction window at once (isCorrectable needs SELLER_WEIGHED). There is no correction: any other
+     * state, a second receipt included, is MILESTONE_ACTION_NOT_ALLOWED. The weight is not compared with the seller's.
+     */
+    public void recordBuyerReceipt(BigDecimal weight, String evidenceFileId, String certificateFileId,
+                                   Instant receivedAt) {
+        Objects.requireNonNull(receivedAt, "receivedAt");
+        SellerWeight.requireValid(weight);
+        Objects.requireNonNull(evidenceFileId, "evidenceFileId");
+        if (status != MilestoneStatus.SELLER_WEIGHED) {
+            throw new ContractConflictException(ContractConflictException.MILESTONE_ACTION_NOT_ALLOWED,
+                    "The receipt can only be recorded on a SELLER_WEIGHED milestone (" + status + ").");
+        }
+        this.buyerReceipt = new BuyerReceipt(weight, evidenceFileId, certificateFileId, receivedAt);
+        this.status = MilestoneStatus.BUYER_RECEIVED;
+    }
+
     /** SELLER_WEIGHED and still before firstDeclaredAt + window (D75). */
     public boolean isCorrectable(Instant now, Duration correctionWindow) {
         return status == MilestoneStatus.SELLER_WEIGHED && sellerWeighing != null
@@ -230,6 +250,11 @@ public final class Milestone {
     /** The declaration in force, null before the seller weighed. */
     public SellerWeighing sellerWeighing() {
         return sellerWeighing;
+    }
+
+    /** The buyer's receipt, null before the buyer recorded it. */
+    public BuyerReceipt buyerReceipt() {
+        return buyerReceipt;
     }
 
     public String milestoneId() {

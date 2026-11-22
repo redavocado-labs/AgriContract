@@ -18,6 +18,7 @@ import com.agricontract.contract.application.exception.MilestoneNotFoundExceptio
 import com.agricontract.contract.application.port.EvidenceFileStore;
 import com.agricontract.contract.application.usecase.GetMilestoneDetailUseCase;
 import com.agricontract.contract.application.usecase.ReadMilestoneEvidenceUseCase;
+import com.agricontract.contract.application.usecase.RecordBuyerReceiptUseCase;
 import com.agricontract.contract.application.usecase.RecordSellerWeighedUseCase;
 import com.agricontract.contract.application.usecase.UploadMilestoneEvidenceUseCase;
 import com.agricontract.contract.domain.exception.ContractConflictException;
@@ -46,13 +47,14 @@ class MilestoneDeliveryEndpointTest {
 
     private final UploadMilestoneEvidenceUseCase upload = mock(UploadMilestoneEvidenceUseCase.class);
     private final RecordSellerWeighedUseCase weigh = mock(RecordSellerWeighedUseCase.class);
+    private final RecordBuyerReceiptUseCase receive = mock(RecordBuyerReceiptUseCase.class);
     private final GetMilestoneDetailUseCase detail = mock(GetMilestoneDetailUseCase.class);
     private final ReadMilestoneEvidenceUseCase readEvidence = mock(ReadMilestoneEvidenceUseCase.class);
     private MockMvc mvc;
 
     @BeforeEach
     void setUp() {
-        MilestoneDeliveryController controller = new MilestoneDeliveryController(upload, weigh, detail,
+        MilestoneDeliveryController controller = new MilestoneDeliveryController(upload, weigh, receive, detail,
                 readEvidence, new ObjectMapper());
         mvc = MockMvcBuilders.standaloneSetup(controller).setControllerAdvice(new GlobalExceptionHandler()).build();
     }
@@ -181,6 +183,64 @@ class MilestoneDeliveryEndpointTest {
                         .string("Cache-Control", "private, no-store"))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
                         .bytes(new byte[] {7, 8, 9}));
+    }
+
+    @Test
+    void receive_isBuyerOnly_checksPartyThenMilestone_beforeTheMalformedBodyIsParsed() throws Exception {
+        for (String role : List.of("SELLER", "ADMIN", "OPERATOR", "ARBITRATOR", "INSPECTOR")) {
+            mvc.perform(receiveRequest(role, "{not json")).andExpect(status().isForbidden());
+        }
+        doThrow(new com.agricontract.contract.domain.exception.UnauthorizedContractAccessException("x"))
+                .doThrow(new MilestoneNotFoundException(CONTRACT.toString(), MILESTONE.toString()))
+                .doNothing()
+                .when(receive).requireBuyerOfMilestone(CONTRACT.toString(), MILESTONE.toString(), "user-1");
+
+        mvc.perform(receiveRequest("BUYER", "{not json")).andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+        mvc.perform(receiveRequest("BUYER", "{not json")).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("MILESTONE_NOT_FOUND"));
+        mvc.perform(receiveRequest("BUYER", "{not json")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        verify(receive, never()).execute(any());
+    }
+
+    @Test
+    void aReceive_isMappedToTheCommand_204_andRefusalsCarryTheirCodes() throws Exception {
+        UUID key = UUID.randomUUID();
+        String received = "{\"buyerReceivedWeight\":9400.500,\"buyerEvidenceFileId\":\"" + PHOTO + "\","
+                + "\"consent\":{\"statementVersion\":\"1.0\",\"presentedContentHash\":\"" + HASH + "\"}}";
+
+        mvc.perform(post("/api/v1/contracts/{c}/milestones/{m}/receive", CONTRACT, MILESTONE)
+                        .principal(auth("BUYER")).header("Idempotency-Key", key.toString())
+                        .contentType(MediaType.APPLICATION_JSON).content(received))
+                .andExpect(status().isNoContent());
+
+        ArgumentCaptor<MilestoneEvidenceCommands.Receive> command =
+                ArgumentCaptor.forClass(MilestoneEvidenceCommands.Receive.class);
+        verify(receive).execute(command.capture());
+        assertThat(command.getValue().buyerReceivedWeight()).isEqualByComparingTo(new BigDecimal("9400.5"));
+        assertThat(command.getValue()).usingRecursiveComparison().ignoringFields("buyerReceivedWeight")
+                .isEqualTo(new MilestoneEvidenceCommands.Receive(CONTRACT.toString(), MILESTONE.toString(), "user-1",
+                        key, null, PHOTO.toString(), null, "1.0", HASH));
+
+        doThrow(new MilestoneRequestInvalidException(MilestoneRequestInvalidException.EVIDENCE_NOT_UPLOADED, "x"))
+                .doThrow(new ContractConflictException(ContractConflictException.MILESTONE_ACTION_NOT_ALLOWED, "x"))
+                .when(receive).execute(any());
+        mvc.perform(receiveRequest("BUYER", received)).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("EVIDENCE_NOT_UPLOADED"));
+        mvc.perform(receiveRequest("BUYER", received)).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("MILESTONE_ACTION_NOT_ALLOWED"));
+        for (String bad : List.of(received.replace("9400.500", "0"), received.replace("}}", "},\"extra\":1}"),
+                received.replace("\"buyerEvidenceFileId\":\"" + PHOTO + "\",", ""))) {
+            mvc.perform(receiveRequest("BUYER", bad)).andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        }
+    }
+
+    private static MockHttpServletRequestBuilder receiveRequest(String role, String body) {
+        return post("/api/v1/contracts/{c}/milestones/{m}/receive", CONTRACT, MILESTONE).principal(auth(role))
+                .header("Idempotency-Key", UUID.randomUUID().toString())
+                .contentType(MediaType.APPLICATION_JSON).content(body);
     }
 
     private static String body(String weight) {
