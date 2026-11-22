@@ -5,6 +5,7 @@ import com.agricontract.contract.domain.exception.MilestoneRequestInvalidExcepti
 import com.agricontract.contract.domain.model.consent.SignerRole;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
@@ -42,6 +43,21 @@ public record MilestoneEvidenceFile(String fileId, String milestoneId, String co
         requireReady(known.get(evidenceFileId));
         if (certificateFileId != null) {
             requireReady(known.get(certificateFileId));
+        }
+    }
+
+    /** {@link #requireUploadedBy} for any number of files (the contest evidence of D91); 400 on the first that fails. */
+    public static void requireAllUploadedBy(Collection<String> fileIds, String actorId, String milestoneId,
+                                            Map<String, MilestoneEvidenceFile> known) {
+        for (String fileId : fileIds) {
+            requireUploadedBy(known.get(fileId), actorId, milestoneId);
+        }
+    }
+
+    /** {@link #requireReady} for any number of files (409 on the first that is not READY). */
+    public static void requireAllReady(Collection<String> fileIds, Map<String, MilestoneEvidenceFile> known) {
+        for (String fileId : fileIds) {
+            requireReady(known.get(fileId));
         }
     }
 

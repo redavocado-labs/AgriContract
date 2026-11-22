@@ -2,6 +2,7 @@ package com.agricontract.contract.infrastructure.web;
 
 import com.agricontract.contract.application.dto.BreachCaseCommands;
 import com.agricontract.contract.application.exception.UnauthorizedContractActionException;
+import com.agricontract.contract.application.usecase.ContestBreachDecisionUseCase;
 import com.agricontract.contract.application.usecase.GetBreachCaseUseCase;
 import com.agricontract.contract.application.usecase.ListBreachCasesForArbitrationUseCase;
 import com.agricontract.contract.application.usecase.ResolveBreachCaseUseCase;
@@ -9,6 +10,7 @@ import com.agricontract.contract.application.usecase.ReviewBreachCaseUseCase;
 import com.agricontract.contract.domain.model.breach.BreachCaseStatus;
 import com.agricontract.contract.infrastructure.web.dto.BreachCaseResolutionRequest;
 import com.agricontract.contract.infrastructure.web.dto.BreachCaseResponse;
+import com.agricontract.contract.infrastructure.web.dto.BreachContestRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.MediaType;
@@ -29,23 +31,26 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * BreachCase review, decision and reads (D80, D81, D84). The ARBITRATOR role is checked here, with no fallback: ADMIN
- * and OPERATOR cannot review or resolve. The use cases check the contract and the case.
+ * BreachCase review, decision, contest and reads (D80, D81, D84, D91). The ARBITRATOR role is checked here, with no
+ * fallback: ADMIN and OPERATOR cannot review or resolve; the contest is for BUYER and SELLER. The use cases check the
+ * contract and the case.
  */
 @RestController
 @RequestMapping("/api/v1")
 public class BreachCaseController {
     private final ReviewBreachCaseUseCase review;
     private final ResolveBreachCaseUseCase resolve;
+    private final ContestBreachDecisionUseCase contest;
     private final GetBreachCaseUseCase get;
     private final ListBreachCasesForArbitrationUseCase list;
     private final ObjectMapper objectMapper;
 
     public BreachCaseController(ReviewBreachCaseUseCase review, ResolveBreachCaseUseCase resolve,
-                                GetBreachCaseUseCase get, ListBreachCasesForArbitrationUseCase list,
-                                ObjectMapper objectMapper) {
+                                ContestBreachDecisionUseCase contest, GetBreachCaseUseCase get,
+                                ListBreachCasesForArbitrationUseCase list, ObjectMapper objectMapper) {
         this.review = review;
         this.resolve = resolve;
+        this.contest = contest;
         this.get = get;
         this.list = list;
         this.objectMapper = objectMapper;
@@ -75,6 +80,36 @@ public class BreachCaseController {
         resolve.execute(new BreachCaseCommands.Resolve(contractId.toString(), breachCaseId.toString(),
                 auth.getName(), idempotencyKey, request.finalBreachingRole(), request.decisionSource(),
                 request.evidenceRefs()));
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(path = "/contracts/{contractId}/breach-cases/{breachCaseId}/contest",
+            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(operationId = "contestBreachDecision", summary = "BUYER or SELLER at fault: contest the decision once")
+    public ResponseEntity<Void> contestBreachDecision(@PathVariable UUID contractId, @PathVariable UUID breachCaseId,
+                                                      @RequestHeader("Idempotency-Key") UUID idempotencyKey,
+                                                      @RequestBody String body, Authentication auth) {
+        requireParty(auth, "Only the BUYER or the SELLER can contest a breach decision.");
+        // API order: role (403), case (404), the party the decision blames (403), then the body (400), then the state (409).
+        contest.requireContester(contractId.toString(), breachCaseId.toString(), auth.getName());
+        BreachContestRequest.Contest request = BreachContestRequest.Contest.parse(objectMapper, body);
+        contest.contest(new BreachCaseCommands.Contest(contractId.toString(), breachCaseId.toString(),
+                auth.getName(), idempotencyKey, request.reason(), request.evidenceFileIds()));
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(path = "/contracts/{contractId}/breach-cases/{breachCaseId}/contest/evidence",
+            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(operationId = "contestBreachDecisionEvidence", summary = "BUYER or SELLER who contested: add evidence")
+    public ResponseEntity<Void> contestBreachDecisionEvidence(@PathVariable UUID contractId,
+                                                              @PathVariable UUID breachCaseId,
+                                                              @RequestHeader("Idempotency-Key") UUID idempotencyKey,
+                                                              @RequestBody String body, Authentication auth) {
+        requireParty(auth, "Only the BUYER or the SELLER can add contest evidence.");
+        contest.requireContestOwner(contractId.toString(), breachCaseId.toString(), auth.getName());
+        BreachContestRequest.Evidence request = BreachContestRequest.Evidence.parse(objectMapper, body);
+        contest.addEvidence(new BreachCaseCommands.AddContestEvidence(contractId.toString(),
+                breachCaseId.toString(), auth.getName(), idempotencyKey, request.fileIds()));
         return ResponseEntity.noContent().build();
     }
 
@@ -114,6 +149,14 @@ public class BreachCaseController {
         boolean arbitrator = auth.getAuthorities().stream().map(GrantedAuthority::getAuthority)
                 .anyMatch("ROLE_ARBITRATOR"::equals);
         if (!arbitrator) {
+            throw new UnauthorizedContractActionException(message);
+        }
+    }
+
+    private static void requireParty(Authentication auth, String message) {
+        boolean party = auth.getAuthorities().stream().map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("ROLE_BUYER") || a.equals("ROLE_SELLER"));
+        if (!party) {
             throw new UnauthorizedContractActionException(message);
         }
     }

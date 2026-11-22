@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.agricontract.contract.application.dto.BreachCaseCommands;
 import com.agricontract.contract.application.exception.BreachCaseNotFoundException;
+import com.agricontract.contract.application.usecase.ContestBreachDecisionUseCase;
 import com.agricontract.contract.application.usecase.GetBreachCaseUseCase;
 import com.agricontract.contract.application.usecase.ListBreachCasesForArbitrationUseCase;
 import com.agricontract.contract.application.usecase.ResolveBreachCaseUseCase;
@@ -39,13 +40,14 @@ class BreachCaseEndpointTest {
 
     private final ReviewBreachCaseUseCase review = mock(ReviewBreachCaseUseCase.class);
     private final ResolveBreachCaseUseCase resolve = mock(ResolveBreachCaseUseCase.class);
+    private final ContestBreachDecisionUseCase contest = mock(ContestBreachDecisionUseCase.class);
     private final GetBreachCaseUseCase get = mock(GetBreachCaseUseCase.class);
     private final ListBreachCasesForArbitrationUseCase list = mock(ListBreachCasesForArbitrationUseCase.class);
     private MockMvc mvc;
 
     @BeforeEach
     void setUp() {
-        BreachCaseController controller = new BreachCaseController(review, resolve, get, list, new ObjectMapper());
+        BreachCaseController controller = new BreachCaseController(review, resolve, contest, get, list, new ObjectMapper());
         mvc = MockMvcBuilders.standaloneSetup(controller).setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
