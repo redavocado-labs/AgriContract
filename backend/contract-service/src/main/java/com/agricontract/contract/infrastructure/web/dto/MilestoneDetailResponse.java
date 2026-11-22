@@ -12,12 +12,12 @@ import java.util.List;
 
 /**
  * MilestoneDetailResponse (golden-flow-api.yaml, D84). Every key is always present; a block is null until its step
- * has happened. flag, settlement and breachCaseId are filled by the issues that produce them (#123 onward); until then they are null, which is also their true value before those steps.
+ * has happened. settlement is null until the milestone is SETTLED; flag and breachCaseId are filled by the issues that produce them (#124 onward); until then they are null, which is also their true value before those steps.
  */
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public record MilestoneDetailResponse(String contractId, MilestoneResponse milestone,
                                       SellerDeclarationView sellerDeclaration, BuyerReceiptView buyerReceipt, Object flag,
-                                      List<EvidenceView> evidence, Object settlement, String breachCaseId) {
+                                      List<EvidenceView> evidence, SettlementView settlement, String breachCaseId) {
 
     public static MilestoneDetailResponse from(MilestoneDetailView view) {
         Milestone m = view.milestone();
@@ -40,7 +40,14 @@ public record MilestoneDetailResponse(String contractId, MilestoneResponse miles
                     r.receivedAt().toString(), view.buyerReceipt().confirmWindowClosesAt().toString());
         }
         List<EvidenceView> evidence = view.evidence().stream().map(MilestoneDetailResponse::evidence).toList();
-        return new MilestoneDetailResponse(view.contractId(), summary, declaration, receipt, null, evidence, null, null);
+        SettlementView settlement = null;
+        if (m.settlement() != null) {
+            var s = m.settlement();
+            settlement = new SettlementView(s.path().name(), kg4(s.billableQuantityKg()), s.sellerAmount().wire(),
+                    s.buyerRefundAmount().wire(), s.settledAt().toString());
+        }
+        return new MilestoneDetailResponse(view.contractId(), summary, declaration, receipt, null, evidence,
+                settlement, null);
     }
 
     private static EvidenceView evidence(MilestoneEvidenceFile f) {
@@ -59,6 +66,16 @@ public record MilestoneDetailResponse(String contractId, MilestoneResponse miles
                                     String effectiveUnitPrice, Object acceptedPriceAdjustment,
                                     String expectedDeliveryDate, int graceDays, int fundingDelayBusinessDays,
                                     String effectiveDeliveryDeadline) {
+    }
+
+    /** The billable quantity is exact (up to four decimals), a JSON number with no trailing zeros. */
+    private static BigDecimal kg4(BigDecimal value) {
+        return value.stripTrailingZeros();
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record SettlementView(String path, BigDecimal billableQuantityKg, String sellerAmount,
+                                 String buyerRefundAmount, String settledAt) {
     }
 
     @JsonInclude(JsonInclude.Include.ALWAYS)

@@ -29,4 +29,7 @@ public interface MilestoneRepository {
      * oldest date first.
      */
     List<String> findIdsDueForFunding(LocalDate today, int limit);
+
+    /** Ids of BUYER_RECEIVED milestones of ACTIVE contracts, oldest receipt first (D78 auto-confirm candidates). */
+    List<String> findIdsBuyerReceivedOfActiveContracts(int limit);
 }

@@ -31,6 +31,11 @@ public final class MilestoneEvidenceCommands {
                           String deliveryCertificateFileId, String statementVersion, String presentedContentHash) {
     }
 
+    /** confirmMilestoneClean (D77): the buyer confirms the receipt; the consent only. */
+    public record Confirm(String contractId, String milestoneId, String actorId, UUID idempotencyKey,
+                          String statementVersion, String presentedContentHash) {
+    }
+
     /** file.ready / file.failed; failureReason only for FAILED. */
     public record ScanResult(String eventId, String fileId, EvidenceScanStatus status, String failureReason) {
     }

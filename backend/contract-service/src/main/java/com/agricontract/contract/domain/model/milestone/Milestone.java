@@ -41,13 +41,15 @@ public final class Milestone {
     private String lastFundingFailureReason;
     private SellerWeighing sellerWeighing;
     private BuyerReceipt buyerReceipt;
+    private MilestoneSettlement settlement;
 
     private Milestone(String milestoneId, String contractId, int milestoneIndex, BigDecimal committedQuantity,
                       LocalDate expectedDeliveryDate, int graceDays, LocalDate fundingScheduledDate,
                       MilestoneStatus status, FundingStatus fundingStatus, VndAmount effectiveUnitPrice,
                       VndAmount batchAmount, Instant fundingRequestedAt, Instant fundingLockedAt,
                       int fundingDelayBusinessDays, String lastFundingFailureReason,
-                      SellerWeighing sellerWeighing, BuyerReceipt buyerReceipt) {
+                      SellerWeighing sellerWeighing, BuyerReceipt buyerReceipt,
+                      MilestoneSettlement settlement) {
         this.milestoneId = milestoneId;
         this.contractId = contractId;
         this.milestoneIndex = milestoneIndex;
@@ -65,6 +67,7 @@ public final class Milestone {
         this.lastFundingFailureReason = lastFundingFailureReason;
         this.sellerWeighing = sellerWeighing;
         this.buyerReceipt = buyerReceipt;
+        this.settlement = settlement;
     }
 
     /**
@@ -82,7 +85,7 @@ public final class Milestone {
         }
         return new Milestone(milestoneId, contractId, term.milestoneIndex(), term.committedQuantity(),
                 term.expectedDeliveryDate(), term.graceDays(), fundingScheduledDate, MilestoneStatus.CREATED,
-                FundingStatus.NOT_REQUESTED, null, null, null, null, 0, null, null, null);
+                FundingStatus.NOT_REQUESTED, null, null, null, null, 0, null, null, null, null);
     }
 
     public static Milestone reconstitute(String milestoneId, String contractId, int milestoneIndex,
@@ -91,11 +94,12 @@ public final class Milestone {
                                          FundingStatus fundingStatus, VndAmount effectiveUnitPrice,
                                          VndAmount batchAmount, Instant fundingRequestedAt, Instant fundingLockedAt,
                                          int fundingDelayBusinessDays, String lastFundingFailureReason,
-                                         SellerWeighing sellerWeighing, BuyerReceipt buyerReceipt) {
+                                         SellerWeighing sellerWeighing, BuyerReceipt buyerReceipt,
+                                         MilestoneSettlement settlement) {
         return new Milestone(milestoneId, contractId, milestoneIndex, committedQuantity, expectedDeliveryDate,
                 graceDays, fundingScheduledDate, status, fundingStatus, effectiveUnitPrice, batchAmount,
                 fundingRequestedAt, fundingLockedAt, fundingDelayBusinessDays, lastFundingFailureReason,
-                sellerWeighing, buyerReceipt);
+                sellerWeighing, buyerReceipt, settlement);
     }
 
     /** True from fundingScheduledDate on (ICT date), while funding has not been requested. */
@@ -235,6 +239,33 @@ public final class Milestone {
         }
         this.buyerReceipt = new BuyerReceipt(weight, evidenceFileId, certificateFileId, receivedAt);
         this.status = MilestoneStatus.BUYER_RECEIVED;
+    }
+
+    /**
+     * Clean settlement (D77, D78): BUYER_RECEIVED becomes SETTLED with the computed money. Only from BUYER_RECEIVED
+     * with a locked batch, so a second settle (or a settle after a flag) is MILESTONE_ACTION_NOT_ALLOWED.
+     */
+    public MilestoneSettlement settleClean(SettlementPath path, BigDecimal toleranceRate, Instant settledAt) {
+        Objects.requireNonNull(path, "path");
+        Objects.requireNonNull(settledAt, "settledAt");
+        if (status != MilestoneStatus.BUYER_RECEIVED || buyerReceipt == null || sellerWeighing == null) {
+            throw new ContractConflictException(ContractConflictException.MILESTONE_ACTION_NOT_ALLOWED,
+                    "Only a BUYER_RECEIVED milestone can be settled (" + status + ").");
+        }
+        if (batchAmount == null || effectiveUnitPrice == null) {
+            throw new InvalidMilestoneTransitionException("Milestone " + milestoneId + " has no locked batch");
+        }
+        CleanSettlement.Result result = CleanSettlement.compute(sellerWeighing.declaredWeight(),
+                buyerReceipt.receivedWeight(), toleranceRate, effectiveUnitPrice, batchAmount);
+        this.settlement = new MilestoneSettlement(path, result.billableKg(), result.sellerAmount(),
+                result.buyerRefund(), settledAt);
+        this.status = MilestoneStatus.SETTLED;
+        return settlement;
+    }
+
+    /** The settlement, null until SETTLED. */
+    public MilestoneSettlement settlement() {
+        return settlement;
     }
 
     /** SELLER_WEIGHED and still before firstDeclaredAt + window (D75). */

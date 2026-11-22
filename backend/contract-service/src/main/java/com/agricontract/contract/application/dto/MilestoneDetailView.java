@@ -12,7 +12,8 @@ import java.util.List;
 
 /**
  * getMilestoneDetail (D84, design §3.2.3): the milestone and what has happened on it, every deadline computed here.
- * The flag, settlement and breach case blocks are added by the issues that produce them (#123 onward).
+ * The flag and breach case blocks are added by the issues that produce them (#124 onward); the settlement is read
+ * from the milestone itself (null until SETTLED).
  *
  * @param effectiveUnitPrice the milestone's own price once funding was requested, the signed price before
  * @param sellerDeclaration  the declaration in force, null before the seller weighed

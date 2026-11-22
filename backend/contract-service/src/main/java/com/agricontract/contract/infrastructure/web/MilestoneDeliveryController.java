@@ -3,12 +3,14 @@ package com.agricontract.contract.infrastructure.web;
 import com.agricontract.contract.application.dto.MilestoneEvidenceCommands;
 import com.agricontract.contract.application.exception.UnauthorizedContractActionException;
 import com.agricontract.contract.application.port.EvidenceFileStore;
+import com.agricontract.contract.application.usecase.ConfirmMilestoneCleanUseCase;
 import com.agricontract.contract.application.usecase.GetMilestoneDetailUseCase;
 import com.agricontract.contract.application.usecase.ReadMilestoneEvidenceUseCase;
 import com.agricontract.contract.application.usecase.RecordBuyerReceiptUseCase;
 import com.agricontract.contract.application.usecase.RecordSellerWeighedUseCase;
 import com.agricontract.contract.application.usecase.UploadMilestoneEvidenceUseCase;
 import com.agricontract.contract.infrastructure.web.dto.BuyerReceivedRequest;
+import com.agricontract.contract.infrastructure.web.dto.ConsentInput;
 import com.agricontract.contract.infrastructure.web.dto.MilestoneDetailResponse;
 import com.agricontract.contract.infrastructure.web.dto.MilestoneEvidenceAccepted;
 import com.agricontract.contract.infrastructure.web.dto.SellerWeighedRequest;
@@ -41,7 +43,7 @@ import java.util.stream.Collectors;
 
 /**
  * Milestone delivery actions of the parties (milestone-escrow design §3.2.1): evidence upload (D71), the seller's
- * weigh (D72-D75) and the buyer's receipt (D76); and the BF-04 reads (D84): the milestone detail and the evidence bytes. The gateway's role is checked here coarsely; the use cases check the party on the contract.
+ * weigh (D72-D75) the buyer's receipt (D76) and clean confirmation (D77); and the BF-04 reads (D84): the milestone detail and the evidence bytes. The gateway's role is checked here coarsely; the use cases check the party on the contract.
  */
 @RestController
 @RequestMapping("/api/v1/contracts/{contractId}/milestones/{milestoneId}")
@@ -50,17 +52,21 @@ public class MilestoneDeliveryController {
     private final UploadMilestoneEvidenceUseCase upload;
     private final RecordSellerWeighedUseCase weigh;
     private final RecordBuyerReceiptUseCase receive;
+    private final ConfirmMilestoneCleanUseCase confirm;
     private final GetMilestoneDetailUseCase detail;
     private final ReadMilestoneEvidenceUseCase readEvidence;
     private final ObjectReader weighReader;
     private final ObjectReader receiveReader;
+    private final ObjectReader confirmReader;
 
     public MilestoneDeliveryController(UploadMilestoneEvidenceUseCase upload, RecordSellerWeighedUseCase weigh,
-                                       RecordBuyerReceiptUseCase receive, GetMilestoneDetailUseCase detail, ReadMilestoneEvidenceUseCase readEvidence,
+                                       RecordBuyerReceiptUseCase receive, ConfirmMilestoneCleanUseCase confirm,
+                                       GetMilestoneDetailUseCase detail, ReadMilestoneEvidenceUseCase readEvidence,
                                        ObjectMapper objectMapper) {
         this.upload = upload;
         this.weigh = weigh;
         this.receive = receive;
+        this.confirm = confirm;
         this.detail = detail;
         this.readEvidence = readEvidence;
         this.weighReader = objectMapper.readerFor(SellerWeighedRequest.class)
@@ -69,6 +75,8 @@ public class MilestoneDeliveryController {
         this.receiveReader = objectMapper.readerFor(BuyerReceivedRequest.class)
                 .with(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .with(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
+        this.confirmReader = objectMapper.readerFor(ConsentInput.class)
+                .with(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     }
 
     /**
@@ -129,6 +137,24 @@ public class MilestoneDeliveryController {
                 request.buyerEvidenceFileId().toString(),
                 request.deliveryCertificateFileId() == null ? null : request.deliveryCertificateFileId().toString(),
                 request.consent().statementVersion(), request.consent().presentedContentHash()));
+        return ResponseEntity.noContent().build();
+    }
+
+    /** The buyer confirms a clean receipt (D77); the milestone is settled in the same transaction. 204. */
+    @PostMapping(path = "/confirm", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(operationId = "confirmMilestoneClean", summary = "BUYER: confirm a clean receipt and settle this milestone")
+    public ResponseEntity<Void> confirmMilestoneClean(
+            @PathVariable UUID contractId,
+            @PathVariable UUID milestoneId,
+            @RequestHeader("Idempotency-Key") UUID idempotencyKey,
+            @RequestBody String body,
+            Authentication auth) {
+        requireRole(auth, Set.of("ROLE_BUYER"), "Only the BUYER can confirm the receipt.");
+        // API order: party (403), milestone (404), then the body (400).
+        confirm.requireBuyerOfMilestone(contractId.toString(), milestoneId.toString(), auth.getName());
+        ConsentInput consent = read(confirmReader, body, ConsentInput.class);
+        confirm.execute(new MilestoneEvidenceCommands.Confirm(contractId.toString(), milestoneId.toString(),
+                auth.getName(), idempotencyKey, consent.statementVersion(), consent.presentedContentHash()));
         return ResponseEntity.noContent().build();
     }
 

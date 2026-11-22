@@ -15,11 +15,22 @@ public final class CoffeeTermsFixtures {
     }
 
     public static ContractTermsInput input() {
+        return input(inspection(InspectionTier.LEVEL_1_5));
+    }
+
+    /** The same terms with the inspection report required before settlement (D77). */
+    public static ContractTermsInput inputMandatoryInspection() {
+        InspectionTerms base = inspection(InspectionTier.LEVEL_1_5);
+        return input(new InspectionTerms(InspectionRequirement.MANDATORY_BEFORE_SETTLEMENT, base.requiredTier(),
+                base.reportDueBusinessDays(), base.inspectionCostResponsibility()));
+    }
+
+    private static ContractTermsInput input(InspectionTerms inspectionTerms) {
         return new ContractTermsInput(
                 VndAmount.parse("95000.00"), "VND",
                 List.of(new MilestoneTerm(1, new BigDecimal("1000"), LocalDate.of(2036, 12, 15), 2),
                         new MilestoneTerm(2, new BigDecimal("1500.5"), LocalDate.of(2037, 1, 20), 2)),
-                quality(), delivery(), inspection(InspectionTier.LEVEL_1_5),
+                quality(), delivery(), inspectionTerms,
                 new PriceBand(VndAmount.parse("90000.00"), VndAmount.parse("100000.00")),
                 new PriceAdjustmentRule(AcceptanceMode.BOTH_ACCEPT, AdjustmentCutoff.BEFORE_FUNDING_REQUEST, 1),
                 new BigDecimal("0.05"), new BigDecimal("0.05"), new BigDecimal("0.08"), new BigDecimal("0.06"),

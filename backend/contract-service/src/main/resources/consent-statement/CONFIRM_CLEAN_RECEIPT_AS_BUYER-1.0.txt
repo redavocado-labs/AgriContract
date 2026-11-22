@@ -1,0 +1,1 @@
+Tôi xác nhận lô hàng của đợt giao này đạt yêu cầu, với số cân bên bán khai [S] kg và bên mua cân [B] kg, và đồng ý tất toán đợt theo khối lượng tính tiền hệ thống tính. Việc xác nhận nhận hàng không làm mất quyền khiếu nại hay giám định còn hiệu lực theo hợp đồng.
