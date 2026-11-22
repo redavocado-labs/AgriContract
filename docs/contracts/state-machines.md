@@ -92,6 +92,9 @@ IN_PROGRESS|SELLER_WEIGHED -> FORCE_MAJEURE_PENDING_REVIEW -> normal/settled pat
 
 - Seller deadline checks use `effectiveDeliveryDeadline`, never raw `expectedDeliveryDate` after delayed funding.
 - Buyer timeout at `BUYER_RECEIVED` may auto-confirm only while the milestone remains in that state and no inspection is pending.
+- Receipt is two steps (D76): `recordBuyerReceipt` moves `SELLER_WEIGHED -> BUYER_RECEIVED` and starts `buyerConfirmWindowDays`; then `confirmMilestoneClean` (`-> SETTLED`) or `flagMilestoneIssue` (`-> AWAITING_SELLER_RESPONSE`, with `issueType` QUANTITY|QUALITY).
+- `AWAITING_SELLER_RESPONSE`: seller contest -> `CONTESTED` + Level 1.5 (D80). Seller silence: QUANTITY settles on the buyer weight (`milestone.settled`), QUALITY is contested by the system (D82).
+- `CONTESTED -> SETTLED` only through Arbitrator approval of the computed result from the confirmed report and `remedy.finalized` (D81); a fault decision waits for `contestDeadline` first. No `milestone.settled` on this path.
 - `NONE_UNLESS_DISPUTED` clean confirmation creates no inspection result or actual metrics.
 - `MANDATORY_BEFORE_SETTLEMENT` adds an auxiliary inspection guard, not a milestone state. A confirmed report may attach while the milestone is `BUYER_RECEIVED` or `CONTESTED`; settlement remains blocked until the guard is satisfied.
 - `SELLER_WEIGHED` timeout never auto-settles from seller-only evidence.
