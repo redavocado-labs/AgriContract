@@ -67,6 +67,19 @@ spring:
           metadata:
             response-timeout: ${GATEWAY_DOWNLOAD_RESPONSE_TIMEOUT_MS:60000}
 
+        # D71: a party uploads a weighing photo or certificate as a raw body of up to 10 MiB, the file-service
+        # storeOnBehalfOf cap. Only this path lifts the 1 MiB default (RequestBodyLimit reads this metadata); the
+        # longer timeout covers streaming the file through contract-service to file-service.
+        - id: contract-milestone-evidence-upload
+          uri: ${CONTRACT_SERVICE_URL:http://localhost:8083}
+          order: 0
+          predicates:
+            - Path=/api/v1/contracts/*/milestones/*/evidence
+            - Method=POST
+          metadata:
+            request-body-limit-bytes: 10485760
+            response-timeout: ${GATEWAY_DOWNLOAD_RESPONSE_TIMEOUT_MS:60000}
+
         - id: user-service
           uri: ${USER_SERVICE_URL:http://localhost:8081}
           order: 1
