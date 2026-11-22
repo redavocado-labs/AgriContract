@@ -71,9 +71,9 @@ proxies the bytes to its end-user (§6). A `{fileId}` that is not a UUID names n
 | `DELETE` | 204: tombstone, then blob; also on a repeat. 409 `LEGAL_HOLD_ACTIVE`. 404 for an unknown file. 503 when storage did not remove the blob. 400 without an `Idempotency-Key` |
 
 **The read is checked as it streams.** `VerifiedRead` hashes the bytes on their way out and compares length and
-SHA-256 with the row (§2: `storage_hash` detects tampering in object storage). The bytes cannot wait for the check,
-so a mismatch can only show at the end: the response is then **cut** (fewer bytes than `Content-Length`, no clean
-end) and an error is logged. A caller that hashes what it got (inspection, D62) gets an error, never a wrong file
+SHA-256 with the row (§2: `storage_hash` detects tampering in object storage). Only the end can tell, so the
+latest chunk is held back until the next one comes or the hash matched: on a mismatch that last chunk never goes
+out, the response is **cut** (fewer bytes than `Content-Length`, no clean end) and an error is logged. A caller that hashes what it got (inspection, D62) gets an error, never a wrong file
 that looks complete. A `READY` row with no object is a 503 and an error log, not a 404: the file exists.
 
 **confirm-attached and DELETE are idempotent by nature**, so their `Idempotency-Key` is checked but not stored.
