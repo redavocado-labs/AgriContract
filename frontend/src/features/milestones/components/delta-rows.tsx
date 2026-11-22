@@ -28,9 +28,14 @@ export function MilestoneDeltas({
       before: kg(committed),
       after: kg(seller),
       delta: diff(seller - committed),
-      consequence: seller < committed ? "danger" : "neutral",
+      // D78: a shortfall is not a penalty here; a breach case for it is #240.
+      consequence: "neutral",
       consequenceLabel:
-        seller < committed ? "Có thể tính phạt" : "Không tính phạt",
+        seller < committed
+          ? "Thiếu so với cam kết"
+          : seller > committed
+            ? "Vượt cam kết"
+            : "Đúng cam kết",
     })
   if (seller != null && buyer != null)
     rows.push({
