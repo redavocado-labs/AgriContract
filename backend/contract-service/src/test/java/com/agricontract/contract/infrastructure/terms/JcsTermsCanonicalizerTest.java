@@ -131,6 +131,20 @@ class JcsTermsCanonicalizerTest {
         return CanonicalTerms.of(snapshot, canonicalizer).signedContentHash();
     }
 
+    @Test
+    void inspectionCostResponsibilityOtherThanLoserPays_isRejectedAsInvalidTerms() {
+        String json = canonicalizer.canonicalInputJson(input());
+        String loserPays = "\"inspectionCostResponsibility\":\"LOSER_PAYS\"";
+        assertThat(json).contains(loserPays);
+        canonicalizer.readInput(json);
+
+        for (String other : new String[] {"\"BUYER_PAYS\"", "\"SELLER_PAYS\"", "\"SPLIT\""}) {
+            String body = json.replace(loserPays, "\"inspectionCostResponsibility\":" + other);
+            assertThatThrownBy(() -> canonicalizer.readInput(body)).isInstanceOf(
+                    com.agricontract.contract.domain.model.terms.InvalidContractTermsException.class);
+        }
+    }
+
     private static ContractTermsSnapshot withTemplate(ContractTemplateProfile template) {
         return ContractTermsSnapshot.assemble(input(), goods(), template, RULES);
     }
