@@ -1,6 +1,7 @@
 package com.agricontract.audit.infrastructure;
 
 import com.agricontract.audit.domain.model.AuditRecord;
+import com.agricontract.audit.domain.model.ChainedAuditRecord;
 import com.agricontract.audit.domain.model.SubjectType;
 import com.agricontract.audit.infrastructure.persistence.JdbcAuditRecordRepository;
 import org.flywaydb.core.Flyway;
@@ -55,7 +56,7 @@ class AuditRecordSchemaMySqlTest {
     @Test
     void runtimeAccountCannotUpdateOrDelete() {
         String eventId = UUID.randomUUID().toString();
-        repository.insert(record(eventId, Map.of("a", "1")));
+        repository.insert(chain(record(eventId, Map.of("a", "1"))));
         assertThatThrownBy(() -> runtime.update("UPDATE audit_record SET subject_id = 'x' WHERE source_event_id = ?", eventId))
                 .isInstanceOf(DataAccessException.class);
         assertThatThrownBy(() -> runtime.update("DELETE FROM audit_record WHERE source_event_id = ?", eventId))
@@ -66,7 +67,7 @@ class AuditRecordSchemaMySqlTest {
     void insertsAndReadsBackEveryTypedColumn() {
         String eventId = UUID.randomUUID().toString();
         AuditRecord written = record(eventId, Map.of("contractId", "c-1", "reservedQuantity", "1250.50"));
-        assertThat(repository.insert(written)).isTrue();
+        assertThat(repository.insert(chain(written))).isTrue();
 
         AuditRecord read = repository.findBySourceEventId(eventId).orElseThrow();
         assertThat(read).isEqualTo(written);
@@ -81,15 +82,15 @@ class AuditRecordSchemaMySqlTest {
         AuditRecord written = new AuditRecord(UUID.randomUUID().toString(), SubjectType.SYSTEM, "sys", "OTHER", "a.b",
                 eventId, null, null, null, Instant.parse("2026-10-27T03:00:00.123456Z"), Map.of("k", "v"),
                 Instant.parse("2026-10-27T04:00:00.654321Z"));
-        repository.insert(written);
+        repository.insert(chain(written));
         assertThat(repository.findBySourceEventId(eventId).orElseThrow()).isEqualTo(written);
     }
 
     @Test
     void secondInsertOfTheSameSourceEventIdLeavesOneRow() {
         String eventId = UUID.randomUUID().toString();
-        assertThat(repository.insert(record(eventId, Map.of("a", "1")))).isTrue();
-        assertThat(repository.insert(record(eventId, Map.of("a", "2")))).isFalse();
+        assertThat(repository.insert(chain(record(eventId, Map.of("a", "1"))))).isTrue();
+        assertThat(repository.insert(chain(record(eventId, Map.of("a", "2"))))).isFalse();
 
         assertThat(runtime.queryForObject("SELECT COUNT(*) FROM audit_record WHERE source_event_id = ?",
                 Integer.class, eventId)).isEqualTo(1);
@@ -121,13 +122,17 @@ class AuditRecordSchemaMySqlTest {
     private static void rawInsert(String eventId, String subjectType, String hash) {
         runtime.update("""
                 INSERT INTO audit_record (record_id, subject_type, subject_id, source_type, source_event_type,
-                    source_event_id, source_hash, occurred_at, content, created_at)
+                    source_event_id, source_hash, occurred_at, content, created_at, record_hash)
                 VALUES (?, ?, 's', 'CONTRACT_SIGNED', 'contract.signed', ?, ?, CURRENT_TIMESTAMP(6), '{"k":"v"}',
-                    CURRENT_TIMESTAMP(6))
-                """, UUID.randomUUID().toString(), subjectType, eventId, hash);
+                    CURRENT_TIMESTAMP(6), SHA2(?, 256))
+                """, UUID.randomUUID().toString(), subjectType, eventId, hash, eventId);
     }
 
-    private static AuditRecord record(String eventId, Map<String, String> content) {
+    private static ChainedAuditRecord chain(AuditRecord record) {
+        return ChainedAuditRecord.chain(record, null, null);
+    }
+
+    private static AuditRecord record(String eventId, Map<String, Object> content) {
         return new AuditRecord(UUID.randomUUID().toString(), SubjectType.CONTRACT, "contract-1", "CONTRACT_SIGNED",
                 "contract.signed", eventId, "cause", "corr", HASH, Instant.parse("2026-10-27T03:00:00Z"), content,
                 Instant.parse("2026-10-27T04:00:00Z"));

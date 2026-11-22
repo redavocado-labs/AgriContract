@@ -8,6 +8,7 @@ import com.agricontract.audit.application.dto.AuditIngestCommand;
 import com.agricontract.audit.application.port.TransactionRunner;
 import com.agricontract.audit.domain.exception.InvalidAuditRecordException;
 import com.agricontract.audit.domain.model.AuditRecord;
+import com.agricontract.audit.domain.model.ChainedAuditRecord;
 import com.agricontract.audit.domain.model.SubjectType;
 import com.agricontract.audit.domain.repository.AuditRecordRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -36,16 +37,42 @@ class IngestAuditEventUseCaseImplTest {
     /** Records inserts; can pretend a concurrent delivery won the race (insert says duplicate). */
     static class FakeRepository implements AuditRecordRepository {
         final List<AuditRecord> rows = new ArrayList<>();
+        final List<ChainedAuditRecord> chained = new ArrayList<>();
+        int locks;
         boolean raceOnInsert;
 
         @Override
-        public boolean insert(AuditRecord record) {
-            if (raceOnInsert) {
-                rows.add(record); // the concurrent winner, same content
-                return false;
-            }
-            rows.add(record);
-            return true;
+        public void lockChain() {
+            locks++;
+        }
+
+        @Override
+        public Optional<String> latestHash() {
+            return chained.isEmpty() ? Optional.empty() : Optional.of(chained.get(chained.size() - 1).recordHash());
+        }
+
+        @Override
+        public Optional<String> latestHash(SubjectType type, String subjectId) {
+            return chained.stream()
+                    .filter(c -> c.record().subjectType() == type && c.record().subjectId().equals(subjectId))
+                    .reduce((a, b) -> b).map(ChainedAuditRecord::recordHash);
+        }
+
+        @Override
+        public boolean insert(ChainedAuditRecord record) {
+            rows.add(record.record());
+            chained.add(record);
+            return !raceOnInsert; // raceOnInsert: the concurrent winner, same content
+        }
+
+        @Override
+        public List<ChainedAuditRecord> findAfter(long afterSeq, int limit) {
+            return List.of();
+        }
+
+        @Override
+        public List<ChainedAuditRecord> findAfter(SubjectType type, String subjectId, long afterSeq, int limit) {
+            return List.of();
         }
 
         @Override
@@ -90,6 +117,36 @@ class IngestAuditEventUseCaseImplTest {
         assertThat(row.sourceEventId()).isEqualTo(command.sourceEventId());
         assertThat(row.subjectType()).isEqualTo(SubjectType.CONTRACT);
         assertThat(messages()).anyMatch(m -> m.startsWith("event=audit_record_ingested sourceType=CONTRACT_SIGNED"));
+    }
+
+    @Test
+    void firstRecordHasNoPrevAndTheSecondPointsAtTheFirstGlobally() {
+        useCase.execute(command(UUID.randomUUID().toString(), Map.of("a", "1")));
+        useCase.execute(command(UUID.randomUUID().toString(), Map.of("a", "2")));
+
+        ChainedAuditRecord first = repository.chained.get(0);
+        ChainedAuditRecord second = repository.chained.get(1);
+        assertThat(first.prevHashGlobal()).isNull();
+        assertThat(first.prevHashSubject()).isNull();
+        assertThat(second.prevHashGlobal()).isEqualTo(first.recordHash());
+        assertThat(second.prevHashSubject()).isEqualTo(first.recordHash());
+        assertThat(second.hashMatches()).isTrue();
+        assertThat(repository.locks).isEqualTo(2);
+    }
+
+    @Test
+    void subjectPrevOnlyComesFromTheSameSubject() {
+        useCase.execute(commandFor("A", UUID.randomUUID().toString()));
+        useCase.execute(commandFor("B", UUID.randomUUID().toString()));
+        useCase.execute(commandFor("A", UUID.randomUUID().toString()));
+
+        ChainedAuditRecord a1 = repository.chained.get(0);
+        ChainedAuditRecord b1 = repository.chained.get(1);
+        ChainedAuditRecord a2 = repository.chained.get(2);
+        assertThat(b1.prevHashGlobal()).isEqualTo(a1.recordHash());
+        assertThat(b1.prevHashSubject()).isNull();
+        assertThat(a2.prevHashGlobal()).isEqualTo(b1.recordHash());
+        assertThat(a2.prevHashSubject()).isEqualTo(a1.recordHash());
     }
 
     @Test
@@ -138,7 +195,12 @@ class IngestAuditEventUseCaseImplTest {
         return logs.list.stream().map(ILoggingEvent::getFormattedMessage).toList();
     }
 
-    static AuditIngestCommand command(String eventId, Map<String, String> content) {
+    static AuditIngestCommand commandFor(String subjectId, String eventId) {
+        return new AuditIngestCommand(SubjectType.CONTRACT, subjectId, "CONTRACT_SIGNED", "contract.signed",
+                eventId, "cause", "corr", HASH, NOW, Map.of("a", "1"));
+    }
+
+    static AuditIngestCommand command(String eventId, Map<String, Object> content) {
         return new AuditIngestCommand(SubjectType.CONTRACT, "contract-1", "CONTRACT_SIGNED", "contract.signed",
                 eventId, "cause", "corr", HASH, NOW, content);
     }
