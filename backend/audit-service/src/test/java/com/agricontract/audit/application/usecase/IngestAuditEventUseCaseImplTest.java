@@ -9,6 +9,7 @@ import com.agricontract.audit.application.port.TransactionRunner;
 import com.agricontract.audit.domain.exception.InvalidAuditRecordException;
 import com.agricontract.audit.domain.model.AuditRecord;
 import com.agricontract.audit.domain.model.ChainedAuditRecord;
+import com.agricontract.audit.domain.model.StoredAuditRecord;
 import com.agricontract.audit.domain.model.SubjectType;
 import com.agricontract.audit.domain.repository.AuditRecordRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -66,18 +67,20 @@ class IngestAuditEventUseCaseImplTest {
         }
 
         @Override
-        public List<ChainedAuditRecord> findAfter(long afterSeq, int limit) {
+        public List<StoredAuditRecord> findAfter(long afterSeq, int limit) {
             return List.of();
         }
 
         @Override
-        public List<ChainedAuditRecord> findAfter(SubjectType type, String subjectId, long afterSeq, int limit) {
+        public List<StoredAuditRecord> findAfter(SubjectType type, String subjectId, long afterSeq, int limit) {
             return List.of();
         }
 
         @Override
-        public Optional<AuditRecord> findBySourceEventId(String sourceEventId) {
-            return rows.stream().filter(r -> r.sourceEventId().equals(sourceEventId)).findFirst();
+        public Optional<StoredAuditRecord> findBySourceEventId(String sourceEventId) {
+            return chained.stream().filter(c -> c.record().sourceEventId().equals(sourceEventId)).findFirst()
+                    .map(c -> new StoredAuditRecord(c.record().recordId(), 1, c.recordHash(), c.prevHashGlobal(),
+                            c.prevHashSubject(), c));
         }
     }
 

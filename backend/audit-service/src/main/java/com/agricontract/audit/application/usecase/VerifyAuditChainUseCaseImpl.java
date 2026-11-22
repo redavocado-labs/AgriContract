@@ -3,7 +3,7 @@ package com.agricontract.audit.application.usecase;
 import com.agricontract.audit.application.dto.ChainVerificationResult;
 import com.agricontract.audit.application.dto.ChainVerificationResult.Reason;
 import com.agricontract.audit.application.dto.ChainVerificationResult.Violation;
-import com.agricontract.audit.domain.model.ChainedAuditRecord;
+import com.agricontract.audit.domain.model.StoredAuditRecord;
 import com.agricontract.audit.domain.model.SubjectType;
 import com.agricontract.audit.domain.repository.AuditRecordRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -33,32 +33,34 @@ public class VerifyAuditChainUseCaseImpl implements VerifyAuditChainUseCase {
     @Override
     public ChainVerificationResult verifyGlobal() {
         return walk("global", Reason.PREV_GLOBAL_MISMATCH, after -> records.findAfter(after, PAGE_SIZE),
-                ChainedAuditRecord::prevHashGlobal);
+                StoredAuditRecord::prevHashGlobal);
     }
 
     @Override
     public ChainVerificationResult verifySubject(SubjectType subjectType, String subjectId) {
         return walk("subject:" + subjectType + ":" + subjectId, Reason.PREV_SUBJECT_MISMATCH,
                 after -> records.findAfter(subjectType, subjectId, after, PAGE_SIZE),
-                ChainedAuditRecord::prevHashSubject);
+                StoredAuditRecord::prevHashSubject);
     }
 
     private ChainVerificationResult walk(String scope, Reason prevReason,
-                                         LongFunction<List<ChainedAuditRecord>> page,
-                                         Function<ChainedAuditRecord, String> prevPointer) {
+                                         LongFunction<List<StoredAuditRecord>> page,
+                                         Function<StoredAuditRecord, String> prevPointer) {
         List<Violation> violations = new ArrayList<>();
         long checked = 0;
         long afterSeq = 0;
         String previousHash = null;
-        List<ChainedAuditRecord> batch;
+        List<StoredAuditRecord> batch;
         while (!(batch = page.apply(afterSeq)).isEmpty()) {
-            for (ChainedAuditRecord current : batch) {
+            for (StoredAuditRecord current : batch) {
                 long seq = current.globalSeq();
-                if (!current.hashMatches()) {
-                    violations.add(new Violation(current.record().recordId(), seq, Reason.HASH_MISMATCH));
+                if (!current.readable()) {
+                    violations.add(new Violation(current.recordId(), seq, Reason.RECORD_UNREADABLE));
+                } else if (!current.chained().hashMatches()) {
+                    violations.add(new Violation(current.recordId(), seq, Reason.HASH_MISMATCH));
                 }
                 if (!Objects.equals(prevPointer.apply(current), previousHash)) {
-                    violations.add(new Violation(current.record().recordId(), seq, prevReason));
+                    violations.add(new Violation(current.recordId(), seq, prevReason));
                 }
                 previousHash = current.recordHash();
                 afterSeq = seq;

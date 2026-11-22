@@ -4,6 +4,7 @@ import com.agricontract.audit.application.dto.AuditIngestCommand;
 import com.agricontract.audit.application.port.TransactionRunner;
 import com.agricontract.audit.domain.model.AuditRecord;
 import com.agricontract.audit.domain.model.ChainedAuditRecord;
+import com.agricontract.audit.domain.model.StoredAuditRecord;
 import com.agricontract.audit.domain.repository.AuditRecordRepository;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,7 +32,7 @@ public class IngestAuditEventUseCaseImpl implements IngestAuditEventUseCase {
     }
 
     /** Inserted, or the record that was already there (null when it vanished, which cannot happen append-only). */
-    private record Outcome(boolean inserted, AuditRecord stored) {
+    private record Outcome(boolean inserted, StoredAuditRecord stored) {
     }
 
     @Override
@@ -56,7 +57,7 @@ public class IngestAuditEventUseCaseImpl implements IngestAuditEventUseCase {
 
     private Outcome chainedInsert(AuditRecord record) {
         records.lockChain();
-        Optional<AuditRecord> existing = records.findBySourceEventId(record.sourceEventId());
+        Optional<StoredAuditRecord> existing = records.findBySourceEventId(record.sourceEventId());
         if (existing.isPresent()) {
             return new Outcome(false, existing.get());
         }
@@ -69,9 +70,9 @@ public class IngestAuditEventUseCaseImpl implements IngestAuditEventUseCase {
         return new Outcome(false, records.findBySourceEventId(record.sourceEventId()).orElse(null));
     }
 
-    private void duplicate(AuditRecord incoming, AuditRecord stored) {
+    private void duplicate(AuditRecord incoming, StoredAuditRecord stored) {
         log.info("event=audit_duplicate_ignored sourceEventId={}", incoming.sourceEventId());
-        if (!stored.content().equals(incoming.content())) {
+        if (!stored.readable() || !stored.record().content().equals(incoming.content())) {
             log.warn("event=audit_duplicate_content_mismatch sourceEventId={} sourceType={}",
                     incoming.sourceEventId(), incoming.sourceType());
         }

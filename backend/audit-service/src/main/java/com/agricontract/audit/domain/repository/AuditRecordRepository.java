@@ -1,6 +1,6 @@
 package com.agricontract.audit.domain.repository;
 
-import com.agricontract.audit.domain.model.AuditRecord;
+import com.agricontract.audit.domain.model.StoredAuditRecord;
 import com.agricontract.audit.domain.model.ChainedAuditRecord;
 import com.agricontract.audit.domain.model.SubjectType;
 
@@ -25,11 +25,11 @@ public interface AuditRecordRepository {
     /** @return true when the row was written, false when a record with that sourceEventId is already there. */
     boolean insert(ChainedAuditRecord record);
 
-    Optional<AuditRecord> findBySourceEventId(String sourceEventId);
+    Optional<StoredAuditRecord> findBySourceEventId(String sourceEventId);
 
     /** Up to {@code limit} records with global_seq greater than {@code afterSeq}, in global_seq order. */
-    List<ChainedAuditRecord> findAfter(long afterSeq, int limit);
+    List<StoredAuditRecord> findAfter(long afterSeq, int limit);
 
     /** Same as {@link #findAfter} restricted to one subject. */
-    List<ChainedAuditRecord> findAfter(SubjectType subjectType, String subjectId, long afterSeq, int limit);
+    List<StoredAuditRecord> findAfter(SubjectType subjectType, String subjectId, long afterSeq, int limit);
 }

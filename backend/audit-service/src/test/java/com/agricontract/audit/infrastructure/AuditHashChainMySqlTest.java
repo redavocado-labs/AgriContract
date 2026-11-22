@@ -157,6 +157,32 @@ class AuditHashChainMySqlTest {
     }
 
     @Test
+    void unreadableRowIsReportedAndTheWalkContinues() {
+        seed();
+        String target = recordId(2);
+        root.update("UPDATE audit_record SET content = ? WHERE record_id = ?", "{\"totalAmount\": 1500000}", target);
+
+        ChainVerificationResult global = verify.verifyGlobal();
+        assertThat(global.valid()).isFalse();
+        assertThat(global.checkedCount()).isEqualTo(4);
+        assertThat(global.violations()).extracting(v -> v.recordId() + ":" + v.reason())
+                .containsExactly(target + ":" + Reason.RECORD_UNREADABLE);
+        assertThat(verify.verifySubject(SubjectType.CONTRACT, subjectOf(target)).violations())
+                .extracting(v -> v.reason()).containsExactly(Reason.RECORD_UNREADABLE);
+    }
+
+    @Test
+    void duplicateOfAnUnreadableRowDoesNotCrashIngest() {
+        String subject = UUID.randomUUID().toString();
+        String eventId = UUID.randomUUID().toString();
+        ingest.execute(command(subject, eventId));
+        root.update("UPDATE audit_record SET content = ? WHERE source_event_id = ?", "{\"a\": 1}", eventId);
+        ingest.execute(command(subject, eventId));
+
+        assertThat(root.queryForObject("SELECT COUNT(*) FROM audit_record", Integer.class)).isEqualTo(1);
+    }
+
+    @Test
     void concurrentIngestsNeverShareAPreviousHash() throws Exception {
         ExecutorService pool = Executors.newFixedThreadPool(8);
         List<Future<?>> futures = new ArrayList<>();
