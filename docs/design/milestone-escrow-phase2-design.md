@@ -299,7 +299,7 @@ Các action do Buyer/Seller xác nhận (`weigh`, `confirm`, `flag`, `respond`, 
 - **Weigh:** `sellerEvidenceFileId` (và `deliveryCertificateFileId` nếu có) phải là file chính seller đó upload cho đúng đợt đó (sai → 400 `EVIDENCE_NOT_UPLOADED`), hai file khác nhau (400 `EVIDENCE_FILE_REUSED`), và `READY` (đang quét → 409 `EVIDENCE_NOT_READY`; bị loại → 409 `EVIDENCE_REJECTED`). Hợp đồng phải `ACTIVE`.
 - **Số kg (D72):** `> 0`, `≤ 1.000.000`, tối đa 3 chữ số thập phân. Ghi đúng số cân thật kể cả vượt `committedQuantity`; tiền không tăng vì entitlement bị chặn ở số đã khoá (§3.3 `min()`). Giao dư có được trả tiền hay không (điều khoản dung sai giao hàng) là quyết định riêng, chưa làm.
 - **Cân trễ (D73):** không chặn theo `effectiveDeliveryDeadline`. Đợt còn `IN_PROGRESS` là cho cân (hai bên có thể tự thoả thuận lùi ngày); buyer đã mở nhánh seller-quá-hạn thì đợt đã rời `IN_PROGRESS`, check trạng thái tự chặn. Hạn cũ và thời điểm cân thật vẫn lưu.
-- **Consent (D74):** mức xác nhận vận hành (consent design §4), action `DECLARE_SELLER_WEIGHT`. Câu: *"Tôi xác nhận lô hàng của đợt giao này đã được cân với khối lượng [X] kg như tôi nhập, ảnh đính kèm là ảnh chụp thật của lần cân đó, và tôi chịu trách nhiệm về số liệu đã khai."* `presentedContentHash` do server tính lại từ (milestoneId, sellerDeclaredWeight, sellerEvidenceFileId, deliveryCertificateFileId); lệch → 409 `CONSENT_CONTENT_MISMATCH`, không side effect.
+- **Consent (D74):** mức xác nhận vận hành (consent design §4), action `DECLARE_SELLER_WEIGHT`. Câu: *"Tôi xác nhận lô hàng của đợt giao này đã được cân với khối lượng [X] kg như tôi nhập, ảnh đính kèm là ảnh chụp thật của lần cân đó, và tôi chịu trách nhiệm về số liệu đã khai."* `presentedContentHash` do server tính lại theo công thức §3.2.3 (D84); lệch → 409 `CONSENT_CONTENT_MISMATCH`, không side effect.
 - **Sửa trong 1 tiếng (D75):** FE có bước duyệt lại trước khi gửi. Sau khi gửi, seller gọi lại `weigh` để sửa khi **còn trong 1 tiếng tính từ lần khai đầu** (cấu hình, sửa không gia hạn) **và** đợt còn `SELLER_WEIGHED`. Buyer đã ghi nhận cân thì khoá ngay dù còn giờ — seller đã thấy số buyer, không được chỉnh cho khớp để né Delta 2. Hết điều kiện → 409 `WEIGH_CORRECTION_CLOSED`. Mỗi lần khai là một dòng `seller_weigh_declaration` (append-only, kèm consent), lần mới nhất là số hiệu lực trên milestone; mỗi lần publish lại `milestone.seller_weighed` với `declarationNumber` tăng dần.
 - **Giữ file:** khai xong → gọi `confirm-attached` (file-service #274) sau commit cho các file được khai, ghi `attached_confirmed_at`; lỗi → job thử lại các dòng còn NULL, trước hạn 1 tuần dọn orphan của file-service. File upload mà không được khai thì không confirm, file-service tự dọn. File của lần khai cũ đã được confirm nên vẫn được giữ làm lịch sử.
 
@@ -322,6 +322,38 @@ Bản cũ của API gộp "buyer cân" với "xác nhận sạch/báo lỗi" và
   - `QUANTITY` (D83): `sellerEntitlement = min(lockedAmount, acceptedQuantityKg × effectiveUnitPrice)`, phần còn lại hoàn buyer; `finalBreachingRole = NULL`, không penalty/uy tín, `qualityDisposition = null`. Bên thắng = |acceptedQuantityKg − số bên đó| nhỏ hơn; bằng nhau → SELLER. Bên thua chịu phí giám định (chỉ ghi trên `RemedyDecision`, D57 điểm 4).
   - ARBITRATOR gọi `resolveBreachCase` với đúng `finalBreachingRole`/`decisionSource = INSPECTOR_L1_5` của `computedResolution`; lệch → 409 `RESOLUTION_MISMATCH`, chưa có report → 409 `INSPECTION_REPORT_PENDING`. Arbitrator chỉ duyệt, không sửa con số.
   - Sau duyệt: không lỗi → `remedy.finalized` ngay; có lỗi (`NON_CONFORMING`) → chờ `contestDeadline` (GB-50, #241) rồi mới `remedy.finalized`. Đợt → `SETTLED` cùng transaction với `remedy.finalized`; publish `milestone.dispute_resolved` theo bên thắng. Không publish `milestone.settled` cho resolution này.
+
+- **Phản đối sau kết quả Level 1.5 (D85, GB-50, #241).** Quyết định `NON_CONFORMING` duyệt từ `computedResolution` vẫn mở cửa sổ 2 ngày làm việc. Bên bị quy lỗi phản đối được **1 lần** → `inspection.level1_5_requested` `reason = DECISION_CONTESTED`, giám định Level 1.5 lần 2. Kết quả lần 2 là cuối: tính lại `computedResolution`, Arbitrator duyệt như D81, `contestStatus` không mở lại (không có lần phản đối thứ hai, Level 2 ngoài BF-04). `remedy.finalized` chỉ phát khi cửa sổ hết mà không ai phản đối, hoặc khi kết quả lần 2 đã được duyệt.
+- **Report `INCONCLUSIVE` (D85).** Không tạo `computedResolution`, không attribution, không tiền. Lần đầu: contract-service tự yêu cầu Level 1.5 lại một lần, cùng `reason` với yêu cầu gốc (không đổi enum event). Lần 2 vẫn `INCONCLUSIVE`: đợt giữ `CONTESTED`, tiền vẫn khoá, cảnh báo OPERATOR; xử lý tay ngoài hệ thống (Known Limitation §8c). Ca này hiếm, chấp nhận.
+
+#### 3.2.3 Read model và consent cho màn BF-04 (chốt 22/11/2026, D84)
+
+API cũ chỉ có lệnh ghi; `MilestoneResponse` trong `ContractResponse` không mang số cân, hạn, file hay kết quả, nên FE không vẽ được màn nào sau `IN_PROGRESS`. Bổ sung (OpenAPI là nguồn chuẩn):
+
+- **`getMilestoneDetail`** `GET /contracts/{id}/milestones/{mid}` → `MilestoneDetailResponse`: tóm tắt `MilestoneResponse` + `sellerDeclaration` (khai đang hiệu lực, `correctionWindowClosesAt`) + `buyerReceipt` (`confirmWindowClosesAt`) + `flag` (`issueType`, `sellerResponseWindowClosesAt`, ai phản đối) + `evidence[]` (mọi file của đợt kèm `PROCESSING/READY/FAILED`) + `settlement` (đường tất toán, kg tính tiền, tiền trả seller/hoàn buyer) + `breachCaseId`. Mọi hạn do server tính (UTC), client không tự cộng ngày làm việc. Quyền: BUYER/SELLER là bên của hợp đồng (403 kiểm trước), ARBITRATOR/OPERATOR đọc mọi đợt.
+- **`readMilestoneEvidence`** `GET .../milestones/{mid}/evidence/{fileId}`: proxy bytes qua contract-service (đúng pattern file-service: service sở hữu kiểm quyền rồi gọi file-service nội bộ, #274). File phải thuộc đợt (404), phải `READY` (409). BUYER, SELLER, ARBITRATOR.
+- **`getBreachCase`** và hàng đợi **`listBreachCasesForArbitration`** `GET /arbitration/breach-cases?status=&awaitingApproval=` (ARBITRATOR, phân trang như `ContractPage`). `awaitingApproval=true` = chưa `RESOLVED` và đã có `computedResolution`. `BreachCase` thêm `reportedAt`, `resolvedAt`. Gateway route `/api/v1/arbitration/**` → contract-service.
+- **Tiền là chuỗi thập phân:** `computedResolution.sellerEntitlementAmount`/`buyerRefundAmount` đổi từ number sang chuỗi `"123000.00"` như mọi field tiền khác.
+
+**Consent milestone (thay câu chữ/hash rời rạc ở §3.2.1–3.2.2).** Cùng pattern ký hợp đồng: câu cố định theo hành vi, version `1.0`, file text trên classpath, `statementHash` tính từ đúng template (placeholder giữ nguyên chữ). FE hiển thị nguyên văn, điền placeholder từ dữ liệu đang hiển thị.
+
+| Action | Câu (v1.0) |
+|---|---|
+| `DECLARE_SELLER_WEIGHT` | Tôi xác nhận lô hàng của đợt giao này đã được cân với khối lượng [X] kg như tôi nhập, ảnh đính kèm là ảnh chụp thật của lần cân đó, và tôi chịu trách nhiệm về số liệu đã khai. |
+| `RECORD_BUYER_RECEIPT` | Tôi xác nhận đã nhận lô hàng của đợt giao này và cân được [X] kg như tôi nhập, ảnh đính kèm là ảnh chụp thật của lần cân đó. Tôi hiểu số này không sửa được sau khi gửi. |
+| `CONFIRM_CLEAN_RECEIPT` | Tôi xác nhận lô hàng của đợt giao này đạt yêu cầu, với số cân bên bán khai [S] kg và bên mua cân [B] kg, và đồng ý tất toán đợt theo khối lượng tính tiền hệ thống tính. Việc xác nhận nhận hàng không làm mất quyền khiếu nại hay giám định còn hiệu lực theo hợp đồng. |
+| `FLAG_MILESTONE_ISSUE` | Tôi báo lô hàng của đợt giao này có vấn đề về [khối lượng/chất lượng]. Tôi hiểu đây mới là báo lỗi: tiền của đợt vẫn được giữ cho tới khi bên bán phản hồi hoặc có kết quả giám định. |
+| `CONTEST_MILESTONE_FLAG` | Tôi không đồng ý với báo lỗi của bên mua và yêu cầu giám định độc lập. Tôi hiểu kết quả giám định là căn cứ tất toán đợt này, và bên không được kết quả giám định ủng hộ chịu phí giám định. |
+
+`presentedContentHash` = SHA-256 (hex thường) của chuỗi UTF-8 nối bằng `|`, theo thứ tự cố định; uuid viết thường, kg viết đúng 3 chữ số thập phân (`9700.000`), giá trị null là chuỗi rỗng. Server dựng lại chuỗi từ body + trạng thái hiện hành của đợt; lệch → 409 `CONSENT_CONTENT_MISMATCH`, không side effect. Hash có tên action ở đầu nên không dùng lại được cho action khác.
+
+| Action | Chuỗi |
+|---|---|
+| `DECLARE_SELLER_WEIGHT` | `DECLARE_SELLER_WEIGHT\|milestoneId\|sellerDeclaredWeight\|sellerEvidenceFileId\|deliveryCertificateFileId` (từ body) |
+| `RECORD_BUYER_RECEIPT` | `RECORD_BUYER_RECEIPT\|milestoneId\|buyerReceivedWeight\|buyerEvidenceFileId\|deliveryCertificateFileId` (từ body) |
+| `CONFIRM_CLEAN_RECEIPT` | `CONFIRM_CLEAN_RECEIPT\|milestoneId\|declarationNumber\|sellerDeclaredWeight\|buyerReceivedWeight` (từ đợt) |
+| `FLAG_MILESTONE_ISSUE` | `FLAG_MILESTONE_ISSUE\|milestoneId\|declarationNumber\|sellerDeclaredWeight\|buyerReceivedWeight\|issueType` (issueType từ body) |
+| `CONTEST_MILESTONE_FLAG` | `CONTEST_MILESTONE_FLAG\|milestoneId\|sellerDeclaredWeight\|buyerReceivedWeight\|issueType` (từ đợt) |
 
 Activation recovery (sửa 08/11/2026, D42): OPERATOR chỉ gọi retry; 2 bên gửi/rút yêu cầu huỷ. Cùng SDS error envelope và idempotent write policy:
 
@@ -998,6 +1030,7 @@ Các mẫu nghiệp vụ dưới đây được literature/standard-contract xá
 - **INDEXED/HYBRID pricing tự động:** Phase 2 hỗ trợ both-accept chọn giá trong band đã ký (§6c), nhưng không tự kéo VNSAT/chỉ số thị trường vào funding. Cơ chế index/reopener tự động vẫn cần `ContractVersion` hoặc điều khoản chỉ số chuyên biệt và legal review.
 - **PaymentTerms / SellerSecurityPackage đầy đủ:** Phase 2 có `buyerDepositRate`/`sellerDepositRate` (cash) + payment-per-milestone. Đầy đủ gồm advance/post-delivery mode, late-payment interest, và 9 loại security thay cash deposit (cooperative/third-party guarantee, retention, receivable assignment... — UNIDROIT). Hoãn; `sellerDepositRate` optional hiện tại là bản tối giản đủ dùng.
 - **Conflict-of-interest enforce bằng org graph:** Phase 2 chống xung đột (Software Buyer = Platform Buyer) bằng prose + maker-checker + audit + phân phối qua hiệp hội trung lập (governance §5). Enforce **tự động** (máy tự route vụ khỏi OPERATOR cùng tổ chức buyer) cần `organizationId`/`deploymentId`/org-relationship graph — chỉ có ý nghĩa ở quy mô nhiều tổ chức thật, vô nghĩa trong mock. Hoãn (SF-07: completeness ≠ fairness).
+- **Giám định Level 1.5 không kết luận được hai lần (D85):** BF-04 không có Level 2, nên đợt dừng ở `CONTESTED` với tiền khoá và cảnh báo OPERATOR; xử lý ngoài hệ thống. Hiếm trong thực tế; đầy đủ là route Level 2.
 - **Anticipatory breach / adequate assurance (CISG 71-73):** khi một bên có dấu hiệu sắp vi phạm nhưng chưa vi phạm — suspend → đòi cam kết → resume/terminate. Cố tình out-of-scope: luật VN nội địa chưa có cơ chế assurance tương đương UCC/CISG; áp SLA cứng (vd 30 ngày UCC) là copy sai bối cảnh. Ghi nhận là hướng cần legal review.
 
 ## 8d. Verification additions cho goods/quality/delivery/pricing (mới, 23/07/2026)

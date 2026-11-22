@@ -3,6 +3,7 @@ package com.agricontract.escrow.infrastructure.messaging;
 import com.agricontract.escrow.application.dto.ReturnResultCommand;
 import com.agricontract.escrow.application.exception.InvalidEventPayloadException;
 import com.agricontract.escrow.application.usecase.RecordReturnResultUseCase;
+import com.agricontract.escrow.application.usecase.RecordSettlementLegResultUseCase;
 import com.agricontract.escrow.infrastructure.config.RabbitMQConfig;
 import com.agricontract.eventing.EventEnvelope;
 import com.agricontract.eventing.EventEnvelopeCodec;
@@ -22,8 +23,9 @@ import java.util.regex.Pattern;
 
 /**
  * bank.refund_completed / _failed and bank.release_completed / _failed (golden-flow-events.yaml) for activation deposit
- * returns (#247). Same parse as the lock results: every required field, milestoneId the only optional one, nothing
- * else; the entryType must be the operation's. Bad payload → DLQ without retry.
+ * returns (#247) and milestone settlement legs (#248). Same parse as the lock results: every required field,
+ * milestoneId the only optional one, nothing else; the entryType must be the operation's. The fundType routes it:
+ * MILESTONE_PAYMENT is a settlement leg, a deposit fund a deposit return. Bad payload → DLQ without retry.
  */
 @Slf4j
 @Component
@@ -34,6 +36,7 @@ public class BankReturnResultConsumer {
 
     private static final Set<String> COMMON = Set.of("contractId", "userId", "entryType", "fundType",
             "remedyDecisionId", "remedyLegId", "amount", "sourceEventId");
+    private static final Set<String> FUND_TYPES = Set.of("BUYER_DEPOSIT", "SELLER_DEPOSIT", "MILESTONE_PAYMENT");
     private static final Pattern UUID =
             Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
     private static final Pattern POSITIVE_MONEY =
@@ -42,6 +45,7 @@ public class BankReturnResultConsumer {
     private final EventEnvelopeCodec codec;
     private final ProcessedEventStore processedEvents;
     private final RecordReturnResultUseCase recordReturnResult;
+    private final RecordSettlementLegResultUseCase recordSettlementLegResult;
     private final TransactionTemplate transactionTemplate;
 
     @RabbitListener(queues = RabbitMQConfig.REFUND_COMPLETED_QUEUE)
@@ -73,7 +77,11 @@ public class BankReturnResultConsumer {
                         command.contractId());
                 return;
             }
-            recordReturnResult.execute(command);
+            if (command.isSettlementLeg()) {
+                recordSettlementLegResult.execute(command);
+            } else {
+                recordReturnResult.execute(command);
+            }
         });
     }
 
@@ -101,6 +109,10 @@ public class BankReturnResultConsumer {
             throw new InvalidEventPayloadException("entryType of " + eventType + " must be " + entryType);
         }
         String eventId = envelope.eventId().toString();
+        if (!(payload.get("fundType") instanceof String fundType) || !FUND_TYPES.contains(fundType)) {
+            throw new InvalidEventPayloadException("fundType is not a fund type");
+        }
+        String milestoneId = payload.get("milestoneId") == null ? null : uuid(payload, "milestoneId");
         return new ReturnResultCommand(
                 eventId,
                 envelope.correlationId() != null ? envelope.correlationId() : eventId,
@@ -108,6 +120,8 @@ public class BankReturnResultConsumer {
                 uuid(payload, "sourceEventId"),
                 uuid(payload, "userId"),
                 entryType,
+                fundType,
+                milestoneId,
                 money(payload),
                 returned,
                 returned ? uuid(payload, "ledgerEntryId") : null,
