@@ -1,6 +1,7 @@
 package com.agricontract.contract.infrastructure.file;
 
 import com.agricontract.contract.application.exception.FileRejectedException;
+import com.agricontract.contract.application.exception.FileServiceFailedException;
 import com.agricontract.contract.application.exception.FileServiceUnavailableException;
 import com.agricontract.contract.application.port.EvidenceFileStore;
 import com.agricontract.contract.domain.model.milestone.EvidenceScanStatus;
@@ -73,8 +74,7 @@ public class HttpEvidenceFileStore implements EvidenceFileStore {
             throw new FileRejectedException(status, code, status == 413 ? "The file is larger than 10 MiB."
                     : "The file was refused: check its type (JPEG, PNG or PDF) and length.");
         }
-        log.error("event=file_service_store_failed status={} body={}", status, abbreviate(response.body()));
-        throw new FileServiceUnavailableException("file-service answered " + status, null);
+        throw unexpected("storeOnBehalfOf", status, response.body());
     }
 
     @Override
@@ -90,8 +90,7 @@ public class HttpEvidenceFileStore implements EvidenceFileStore {
                 .build();
         HttpResponse<String> response = send(request, "confirmAttached");
         if (response.statusCode() != 204 && response.statusCode() != 200) {
-            throw new FileServiceUnavailableException("confirm-attached of " + fileId + " answered "
-                    + response.statusCode(), null);
+            throw unexpected("confirmAttached " + fileId, response.statusCode(), response.body());
         }
     }
 
@@ -117,12 +116,11 @@ public class HttpEvidenceFileStore implements EvidenceFileStore {
         }
         if (response.statusCode() != 200) {
             try (InputStream ignored = response.body()) {
-                log.error("event=file_service_read_failed fileId={} status={}", fileId, response.statusCode());
+                // only released: the body of a failed read is not logged
             } catch (IOException ignored) {
                 // nothing to release
             }
-            throw new FileServiceUnavailableException("file-service getFile of " + fileId + " answered "
-                    + response.statusCode(), null);
+            throw unexpected("getFile " + fileId, response.statusCode(), null);
         }
         String contentType = response.headers().firstValue("Content-Type").orElse("application/octet-stream");
         long length = response.headers().firstValueAsLong("Content-Length").orElse(-1);
@@ -140,6 +138,22 @@ public class HttpEvidenceFileStore implements EvidenceFileStore {
         }
     }
 
+    /**
+     * The one classifier of a status outside the operation's contract: a 5xx is file-service being down (503 to the
+     * client, retryable with the same key, like a connection failure); anything else is a broken contract that a
+     * retry cannot fix (non-retryable, logged as an error).
+     */
+    static RuntimeException unexpected(String operation, int status, String body) {
+        if (status >= 500 && status <= 599) {
+            log.warn("event=file_service_unavailable operation={} status={} body={}", operation, status,
+                    abbreviate(body));
+            return new FileServiceUnavailableException("file-service " + operation + " answered " + status, null);
+        }
+        log.error("event=file_service_unexpected_status operation={} status={} body={}", operation, status,
+                abbreviate(body));
+        return new FileServiceFailedException("file-service " + operation + " answered " + status, null);
+    }
+
     private StoredFile parseStored(String body) {
         try {
             JsonNode json = objectMapper.readTree(body);
@@ -150,7 +164,7 @@ public class HttpEvidenceFileStore implements EvidenceFileStore {
             return new StoredFile(fileId.toLowerCase(), EvidenceScanStatus.valueOf(json.path("status").asText()));
         } catch (IOException | IllegalArgumentException | IllegalStateException e) {
             log.error("event=file_service_store_unreadable body={}", abbreviate(body));
-            throw new FileServiceUnavailableException("file-service answered an unreadable body", e);
+            throw new FileServiceFailedException("file-service answered an unreadable body", e);
         }
     }
 
