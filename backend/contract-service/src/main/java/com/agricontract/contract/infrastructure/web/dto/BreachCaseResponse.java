@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * BreachCase (golden-flow-api.yaml, D84). Every key is always present; nulls are written as null. contestStatus is
- * NOT_APPLICABLE and contestDeadline null until the contest window exists (#241).
+ * NOT_APPLICABLE and contestDeadline null unless the decision opened a contest window (GB-50, #241).
  */
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public record BreachCaseResponse(String breachCaseId, String contractId, String milestoneId, String requestedBy,

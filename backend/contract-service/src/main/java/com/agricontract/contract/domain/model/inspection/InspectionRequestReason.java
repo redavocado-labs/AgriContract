@@ -5,5 +5,7 @@ public enum InspectionRequestReason {
     /** A contested milestone (D80, D82). */
     DISPUTE_ROUTED,
     /** The contract requires a report before settlement and the milestone entered BUYER_RECEIVED (D77). */
-    MANDATORY_INSPECTION
+    MANDATORY_INSPECTION,
+    /** The party held at fault contested the decision (D85, D91, GB-50). */
+    DECISION_CONTESTED
 }
