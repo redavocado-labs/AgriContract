@@ -10,5 +10,9 @@ public enum ConsentActionType {
     /** D76: the buyer records the unloaded weight of a SELLER_WEIGHED milestone. Operational tier, no OTP. */
     RECORD_BUYER_RECEIPT,
     /** D77: the buyer confirms a clean receipt and agrees to settle the milestone. Operational tier, no OTP. */
-    CONFIRM_CLEAN_RECEIPT
+    CONFIRM_CLEAN_RECEIPT,
+    /** D80: the buyer flags a BUYER_RECEIVED milestone (not yet a breach). Operational tier, no OTP. */
+    FLAG_MILESTONE_ISSUE,
+    /** D80: the seller contests the buyer's flag and asks for an independent inspection. Operational tier, no OTP. */
+    CONTEST_MILESTONE_FLAG
 }

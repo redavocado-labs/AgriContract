@@ -32,4 +32,7 @@ public interface MilestoneRepository {
 
     /** Ids of BUYER_RECEIVED milestones of ACTIVE contracts, oldest receipt first (D78 auto-confirm candidates). */
     List<String> findIdsBuyerReceivedOfActiveContracts(int limit);
+
+    /** Ids of AWAITING_SELLER_RESPONSE milestones of ACTIVE contracts, oldest flag first (D82 seller-silence candidates). */
+    List<String> findIdsAwaitingSellerResponseOfActiveContracts(int limit);
 }

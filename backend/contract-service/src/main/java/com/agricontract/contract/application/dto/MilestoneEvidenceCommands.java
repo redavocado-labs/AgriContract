@@ -2,6 +2,8 @@ package com.agricontract.contract.application.dto;
 
 import com.agricontract.contract.domain.model.milestone.EvidenceScanStatus;
 
+import com.agricontract.contract.domain.model.milestone.FlagIssueType;
+
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -33,6 +35,16 @@ public final class MilestoneEvidenceCommands {
 
     /** confirmMilestoneClean (D77): the buyer confirms the receipt; the consent only. */
     public record Confirm(String contractId, String milestoneId, String actorId, UUID idempotencyKey,
+                          String statementVersion, String presentedContentHash) {
+    }
+
+    /** flagMilestoneIssue (D80): the buyer flags the receipt; issueType comes from the body, next to the consent. */
+    public record Flag(String contractId, String milestoneId, String actorId, UUID idempotencyKey,
+                       FlagIssueType issueType, String statementVersion, String presentedContentHash) {
+    }
+
+    /** respondToMilestoneFlag (D80): the seller contests the flag; the consent only. */
+    public record Respond(String contractId, String milestoneId, String actorId, UUID idempotencyKey,
                           String statementVersion, String presentedContentHash) {
     }
 

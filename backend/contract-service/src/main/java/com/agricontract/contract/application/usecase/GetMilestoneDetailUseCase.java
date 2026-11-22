@@ -3,6 +3,7 @@ package com.agricontract.contract.application.usecase;
 import com.agricontract.calendar.VietnamBusinessDays;
 import com.agricontract.contract.application.dto.MilestoneDetailView;
 import com.agricontract.contract.application.port.MilestoneDeliverySettings;
+import com.agricontract.contract.application.port.MilestoneFlagSettings;
 import com.agricontract.contract.application.port.TransactionRunner;
 import com.agricontract.contract.application.service.MilestoneReadAccess;
 import com.agricontract.contract.domain.model.Contract;
@@ -33,6 +34,7 @@ public class GetMilestoneDetailUseCase {
     private final SellerWeighDeclarationRepository declarations;
     private final MilestoneEvidenceRepository evidence;
     private final MilestoneDeliverySettings settings;
+    private final MilestoneFlagSettings flagSettings;
     private final VietnamBusinessDays calendar;
     private final TransactionRunner transactions;
 
@@ -44,6 +46,7 @@ public class GetMilestoneDetailUseCase {
                     : readable.contract().getCoffeeTerms().snapshot().negotiated().agreedPrice();
             return new MilestoneDetailView(contractId, milestone, price, effectiveDeliveryDeadline(milestone),
                     sellerDeclaration(milestone), buyerReceipt(milestone, readable.contract()),
+                    flag(milestone),
                     evidence.findByMilestoneId(milestoneId));
         });
     }
@@ -57,6 +60,14 @@ public class GetMilestoneDetailUseCase {
         SellerWeighDeclaration inForce = history.get(history.size() - 1);
         return new MilestoneDetailView.SellerDeclaration(inForce,
                 weighing.firstDeclaredAt().plus(settings.weighCorrectionWindow()));
+    }
+
+    private MilestoneDetailView.FlagBlock flag(Milestone milestone) {
+        if (milestone.flag() == null) {
+            return null;
+        }
+        return new MilestoneDetailView.FlagBlock(milestone.flag(),
+                calendar.deadline(milestone.flag().flaggedAt(), flagSettings.sellerResponseWindowDays()));
     }
 
     private MilestoneDetailView.BuyerReceiptBlock buyerReceipt(Milestone milestone, Contract contract) {

@@ -91,12 +91,18 @@ contract:
       DECLARE_SELLER_WEIGHT: "1.0"
       RECORD_BUYER_RECEIPT: "1.0"
       CONFIRM_CLEAN_RECEIPT: "1.0"
+      FLAG_MILESTONE_ISSUE: "1.0"
+      CONTEST_MILESTONE_FLAG: "1.0"
   milestone:
     # D75: the seller may correct the declared weight for this long after the first declaration (never extended),
     # while the buyer has not recorded receipt. Lower it on the demo (e.g. PT5M).
     weigh-correction-window: ${WEIGH_CORRECTION_WINDOW:PT1H}
     # D78: how often BUYER_RECEIVED milestones whose confirm window has passed are settled by the system.
     auto-confirm-poll-interval: PT1M
+    # D80, D82: business days the seller has to answer a flag (service-wide, not a contract term).
+    seller-response-window-days: 2
+    # D82: how often AWAITING_SELLER_RESPONSE milestones whose response window has passed are handled by the system.
+    seller-silence-poll-interval: PT1M
     # Named evidence whose confirm-attached failed is sent again this often (file-service cleans orphans after 1 week).
     evidence-attach-retry-interval: PT5M
   signature:

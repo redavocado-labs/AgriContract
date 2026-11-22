@@ -1,6 +1,9 @@
 package com.agricontract.contract.infrastructure.persistence.milestone;
 
 import com.agricontract.contract.domain.model.milestone.BuyerReceipt;
+import com.agricontract.contract.domain.model.milestone.ContestedBy;
+import com.agricontract.contract.domain.model.milestone.FlagIssueType;
+import com.agricontract.contract.domain.model.milestone.MilestoneFlag;
 import com.agricontract.contract.domain.model.milestone.FundingStatus;
 import com.agricontract.contract.domain.model.milestone.Milestone;
 import com.agricontract.contract.domain.model.milestone.MilestoneSettlement;
@@ -27,7 +30,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
-/** milestone (V16, V17 seller declaration, V18 buyer receipt, V19 settlement). Inserted once per contract on activation; later changes update one row under its lock. */
+/** milestone (V16, V17 seller declaration, V18 buyer receipt, V19 settlement, V20 flag). Inserted once per contract on activation; later changes update one row under its lock. */
 @Repository
 @RequiredArgsConstructor
 public class JdbcMilestoneRepository implements MilestoneRepository {
@@ -50,7 +53,8 @@ public class JdbcMilestoneRepository implements MilestoneRepository {
             rs.getString("last_funding_failure_reason"),
             sellerWeighing(rs),
             buyerReceipt(rs),
-            settlement(rs));
+            settlement(rs),
+            flag(rs));
 
     private final JdbcTemplate jdbc;
     private final Clock clock;
@@ -79,6 +83,7 @@ public class JdbcMilestoneRepository implements MilestoneRepository {
         SellerWeighing w = m.sellerWeighing();
         BuyerReceipt r = m.buyerReceipt();
         MilestoneSettlement s = m.settlement();
+        MilestoneFlag f = m.flag();
         int updated = jdbc.update("UPDATE milestone SET status = ?, funding_status = ?, effective_unit_price = ?,"
                         + " batch_amount = ?, funding_requested_at = ?, funding_locked_at = ?,"
                         + " funding_delay_business_days = ?, last_funding_failure_reason = ?,"
@@ -86,8 +91,9 @@ public class JdbcMilestoneRepository implements MilestoneRepository {
                         + " seller_delivery_certificate_file_id = ?, seller_first_declared_at = ?,"
                         + " seller_declaration_count = ?, buyer_received_weight = ?, buyer_evidence_file_id = ?,"
                         + " buyer_certificate_file_id = ?, buyer_received_at = ?, settlement_path = ?,"
-                        + " billable_quantity_kg = ?, seller_amount = ?, buyer_refund_amount = ?, settled_at = ?"
-                        + " WHERE milestone_id = ?",
+                        + " billable_quantity_kg = ?, seller_amount = ?, buyer_refund_amount = ?, settled_at = ?,"
+                        + " flag_issue_type = ?, flagged_at = ?, contested_at = ?, contested_by = ?,"
+                        + " breach_case_id = ? WHERE milestone_id = ?",
                 m.status().name(), m.fundingStatus().name(), value(m.effectiveUnitPrice()), value(m.batchAmount()),
                 timestamp(m.fundingRequestedAt()), timestamp(m.fundingLockedAt()), m.fundingDelayBusinessDays(),
                 m.lastFundingFailureReason(), w == null ? null : w.declaredWeight(),
@@ -97,7 +103,10 @@ public class JdbcMilestoneRepository implements MilestoneRepository {
                 r == null ? null : r.certificateFileId(), r == null ? null : timestamp(r.receivedAt()),
                 s == null ? null : s.path().name(), s == null ? null : s.billableQuantityKg(),
                 s == null ? null : value(s.sellerAmount()), s == null ? null : value(s.buyerRefundAmount()),
-                s == null ? null : timestamp(s.settledAt()), m.milestoneId());
+                s == null ? null : timestamp(s.settledAt()), f == null ? null : f.issueType().name(),
+                f == null ? null : timestamp(f.flaggedAt()), f == null ? null : timestamp(f.contestedAt()),
+                f == null || f.contestedBy() == null ? null : f.contestedBy().name(),
+                f == null ? null : f.breachCaseId(), m.milestoneId());
         if (updated != 1) {
             throw new IllegalStateException("Milestone " + m.milestoneId() + " does not exist");
         }
@@ -141,6 +150,25 @@ public class JdbcMilestoneRepository implements MilestoneRepository {
                         + " m.contract_id WHERE m.status = 'BUYER_RECEIVED' AND c.status = 'ACTIVE'"
                         + " ORDER BY m.buyer_received_at, m.milestone_id LIMIT ?",
                 String.class, limit);
+    }
+
+    @Override
+    public List<String> findIdsAwaitingSellerResponseOfActiveContracts(int limit) {
+        return jdbc.queryForList("SELECT m.milestone_id FROM milestone m JOIN contracts c ON c.contract_id ="
+                        + " m.contract_id WHERE m.status = 'AWAITING_SELLER_RESPONSE' AND c.status = 'ACTIVE'"
+                        + " ORDER BY m.flagged_at, m.milestone_id LIMIT ?",
+                String.class, limit);
+    }
+
+    private static MilestoneFlag flag(ResultSet rs) throws SQLException {
+        String issueType = rs.getString("flag_issue_type");
+        if (issueType == null) {
+            return null;
+        }
+        String contestedBy = rs.getString("contested_by");
+        return new MilestoneFlag(FlagIssueType.valueOf(issueType), instant(rs.getTimestamp("flagged_at")),
+                instant(rs.getTimestamp("contested_at")), contestedBy == null ? null : ContestedBy.valueOf(contestedBy),
+                rs.getString("breach_case_id"));
     }
 
     private static MilestoneSettlement settlement(ResultSet rs) throws SQLException {
