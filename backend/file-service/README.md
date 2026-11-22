@@ -10,9 +10,10 @@ NestJS 11 on Node 22, port **8089**. Internal only: the gateway never routes it.
 ## Status
 
 #116: the scaffold, the store core and its one entrypoint so far, `POST /internal/v1/files` (`storeOnBehalfOf`,
-request frozen by D60 in `contracts/events/supplementary-services-api.yaml`). Not done yet: virus scan and
-`file.ready`/`file.failed` (#131, so every file stays `PROCESSING` for now), `store()`, confirm-attached, download
-and delete (#274), email intake (#275), retention (#276).
+request frozen by D60 in `contracts/events/supplementary-services-api.yaml`). #274: `GET`, `DELETE` and
+`confirm-attached` on `/internal/v1/files/{fileId}`. Not done yet: virus scan and `file.ready`/`file.failed` (#131,
+so every file stays `PROCESSING` and `GET` answers 404 for now), `store()` for `SYSTEM_GENERATED` (no path in the
+contract yet), email intake (#275), the retention and orphan-cleanup jobs (#276).
 
 ## `POST /internal/v1/files` (storeOnBehalfOf)
 
@@ -56,6 +57,29 @@ the same pair both stream a blob, but only one row gets in: the other removes it
 and throws them away **before** it answers: answering first would let Node close a `Connection: close` socket while
 the caller is still sending, and the caller would get a reset instead of the answer. A body over the cap (413) or
 without a length is not read; the answer carries `Connection: close`.
+
+## `/internal/v1/files/{fileId}`: read, confirm-attached, delete
+
+`getFile`, `confirmAttached` and `deleteFile` of the contract (design §6, §7). Every route needs `X-Internal-Secret`;
+a caller holding it is a trusted service. file-service does no business check: the owning service did it before it
+proxies the bytes to its end-user (§6). A `{fileId}` that is not a UUID names no file: 404.
+
+| Route | Answer |
+| --- | --- |
+| `GET` | 200: the exact stored bytes, with the file's `Content-Type` and `Content-Length`, `Cache-Control: no-store`. 404 `NOT_FOUND` unless the file is `READY` and not deleted: still scanning, `FAILED`, deleted and unknown look the same (inspection reads it as "not ready yet", D62). 503 `FILE_STORAGE_UNAVAILABLE` / `FILE_METADATA_UNAVAILABLE` |
+| `POST …/confirm-attached` | 204: `attached = TRUE`, also on a repeat. A `PROCESSING` file can be confirmed. 404 for an unknown or deleted file. 400 without an `Idempotency-Key` |
+| `DELETE` | 204: tombstone, then blob; also on a repeat. 409 `LEGAL_HOLD_ACTIVE`. 404 for an unknown file. 503 when storage did not remove the blob. 400 without an `Idempotency-Key` |
+
+**The read is checked as it streams.** `VerifiedRead` hashes the bytes on their way out and compares length and
+SHA-256 with the row (§2: `storage_hash` detects tampering in object storage). The bytes cannot wait for the check,
+so a mismatch can only show at the end: the response is then **cut** (fewer bytes than `Content-Length`, no clean
+end) and an error is logged. A caller that hashes what it got (inspection, D62) gets an error, never a wrong file
+that looks complete. A `READY` row with no object is a 503 and an error log, not a 404: the file exists.
+
+**confirm-attached and DELETE are idempotent by nature**, so their `Idempotency-Key` is checked but not stored.
+DELETE runs the two steps of §7: (1) `deleted_at` + `deletion_reason` on the row, in one statement that also
+requires `legal_hold = FALSE`, so a hold set meanwhile still wins; (2) the blob. If step 2 fails the answer is 503
+and the repeat finishes it, since step 1 is already done. The row stays as the record of the deletion.
 
 ## The store core
 
@@ -133,7 +157,7 @@ docker compose up -d --build file-service      # optional: the service itself on
 | --- | --- |
 | `npm run lint:check` | ESLint with Prettier |
 | `npm test` | Unit tests, no Docker |
-| `npm run test:int` | The store core and `POST /internal/v1/files` (whole app) on the compose `object-storage` and `file-db` (migrated). Uses a bucket of its own per run and deletes it |
+| `npm run test:int` | The store core and every `/internal/v1/files` route (whole app) on the compose `object-storage` and `file-db` (migrated). Uses a bucket of its own per run and deletes it |
 | `npm run build` | |
 
 In Git Bash on Windows, put `MSYS_NO_PATHCONV=1` in front of a `docker run` that passes container paths such as
@@ -146,8 +170,10 @@ src/domain/stored-file.ts            the File aggregate (§2): channels, statuse
 src/application/store-file.use-case  the store core shared by every entrypoint
 src/application/byte-meter.ts        count + SHA-256 + length enforcement while streaming
 src/application/ingest-policy.ts     what each entrypoint accepts
+src/application/read-file.use-case   GET; verified-read.ts checks the bytes on the way out
+src/application/confirm-attached.use-case, delete-file.use-case
 src/application/ports/               ObjectStoragePort, FileRepository
-src/infrastructure/http/             POST /internal/v1/files: guard, headers, error envelope, unread body
+src/infrastructure/http/             the /internal/v1/files routes: guard, headers, error envelope, unread body
 src/infrastructure/storage/          S3 client and adapter, bucket creation on startup
 src/infrastructure/persistence/      mysql2 pool, `file` repository
 src/infrastructure/health/           /actuator/health
