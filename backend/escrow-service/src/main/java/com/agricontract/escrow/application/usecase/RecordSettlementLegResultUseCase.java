@@ -90,6 +90,7 @@ public class RecordSettlementLegResultUseCase {
                         leg.getNextAttemptAt(), command.failureReason());
             }
             case RETRIES_EXHAUSTED -> {
+                // TODO(#528): the stuck-leg scan (D68) must also cover settlement_leg REQUESTED, not only deposit legs.
                 settlementLegs.update(leg);
                 log.error("event=settlement_leg_failed_alert contractId={} milestoneId={} entryType={} amount={}"
                                 + " sourceEventId={} reason={}: money still locked, milestone stays SETTLING,"
