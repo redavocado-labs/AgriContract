@@ -801,7 +801,7 @@ $defs:
                     remedyLegId: {$ref: "#/$defs/uuid"}
                     remedyType: {$ref: "#/$defs/remedyType"}
                     fundType: {$ref: "#/$defs/fundType"}
-                    role: {enum: [BUYER, SELLER]}
+                    role: {enum: [BUYER, SELLER], description: "D86: the party that RECEIVES the money of this leg (payee), never the breaching party. PAYMENT_SETTLEMENT is SELLER, PAYMENT_REFUND is BUYER; DEPOSIT_FORFEITURE of BUYER_DEPOSIT is SELLER and of SELLER_DEPOSIT is BUYER; CONTRACTUAL_PENALTY and DAMAGES_COMPENSATION name the injured party. escrow-service sends the bank command with userId = buyerId or sellerId of this role."}
                     amount: {$ref: "#/$defs/money"}
         x-publisher: contract-service
         x-consumers: [escrow-service, reputation-service, audit-service]
