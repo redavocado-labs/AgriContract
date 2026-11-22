@@ -12,6 +12,7 @@ COPY escrow-service/pom.xml ./escrow-service/pom.xml
 COPY reputation-service/pom.xml ./reputation-service/pom.xml
 COPY inspection-service/pom.xml ./inspection-service/pom.xml
 COPY bank-service/pom.xml ./bank-service/pom.xml
+COPY audit-service/pom.xml ./audit-service/pom.xml
 RUN mvn dependency:go-offline -pl reputation-service -am -q
 # Shared library modules the service may depend on; -am builds them in the same reactor.
 COPY shared/java-eventing/src ./shared/java-eventing/src

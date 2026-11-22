@@ -607,6 +607,30 @@ services:
     networks:
       - agricontract-net
 
+  audit-service:
+    build:
+      context: .
+      dockerfile: audit-service/Dockerfile
+    container_name: audit-service
+    environment:
+      AUDIT_DB_URL: jdbc:mysql://audit-db:3306/audit_db?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true
+      # Dev only: one root account for Flyway and runtime. Production uses a migration account
+      # and audit_runtime with the append-only grants of audit-service/ops/grants.sql.
+      AUDIT_DB_USERNAME: ${DB_USERNAME:-root}
+      AUDIT_DB_PASSWORD: ${DB_PASSWORD:-password}
+      AUDIT_MIGRATION_USERNAME: ${DB_USERNAME:-root}
+      AUDIT_MIGRATION_PASSWORD: ${DB_PASSWORD:-password}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-guest}
+    depends_on:
+      audit-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - agricontract-net
+
   notification-migrate:
     image: flyway/flyway:10.10.0
     container_name: notification-migrate
