@@ -1,12 +1,18 @@
 import { Readable } from 'node:stream';
+import type { EventEnvelope } from '@agricontract/eventing';
 import {
   IdempotencyKeyTakenError,
   type FileRepository,
+  type ScanOutcome,
 } from '../../src/application/ports/file.repository';
 import {
   ObjectNotFoundError,
   type ObjectStoragePort,
 } from '../../src/application/ports/object-storage.port';
+import type {
+  ScanVerdict,
+  VirusScannerPort,
+} from '../../src/application/ports/virus-scanner.port';
 import type { StoredFile } from '../../src/domain/stored-file';
 
 /** In-memory bucket. Reads the body like S3 would and keeps what it received. */
@@ -87,15 +93,26 @@ export class FakeObjectStorage implements ObjectStoragePort {
   }
 }
 
-/** The `file` table, with its unique (uploadedBy, idempotencyKey) index. */
+/**
+ * The `file` table, with its unique (uploadedBy, idempotencyKey) index, and
+ * the outbox: an event is kept only when its row change is.
+ */
 export class InMemoryFileRepository implements FileRepository {
   readonly rows = new Map<string, StoredFile>();
+  /** event_outbox, in insertion order. */
+  readonly outbox: EventEnvelope[] = [];
+  /** failure_reason of the FAILED rows. */
+  readonly failureReasons = new Map<string, string>();
   insertError: Error | null = null;
   findError: Error | null = null;
+  recordError: Error | null = null;
   /** Runs just before insert checks the index, to let a concurrent store win. */
   beforeInsert: (file: StoredFile) => void = () => undefined;
 
-  insert(file: StoredFile): Promise<void> {
+  insert(
+    file: StoredFile,
+    events: readonly EventEnvelope[] = [],
+  ): Promise<void> {
     this.beforeInsert(file);
     if (this.insertError) return Promise.reject(this.insertError);
     if (this.rows.has(file.fileId)) {
@@ -108,7 +125,26 @@ export class InMemoryFileRepository implements FileRepository {
       return Promise.reject(new IdempotencyKeyTakenError());
     }
     this.rows.set(file.fileId, { ...file });
+    this.outbox.push(...events);
     return Promise.resolve();
+  }
+
+  recordScanOutcome(
+    fileId: string,
+    outcome: ScanOutcome,
+    event: EventEnvelope,
+  ): Promise<boolean> {
+    if (this.recordError) return Promise.reject(this.recordError);
+    const row = this.rows.get(fileId);
+    if (!row || row.status !== 'PROCESSING' || row.deletedAt !== null) {
+      return Promise.resolve(false);
+    }
+    row.status = outcome.status;
+    if (outcome.status === 'FAILED') {
+      this.failureReasons.set(fileId, outcome.failureReason);
+    }
+    this.outbox.push(event);
+    return Promise.resolve(true);
   }
 
   findById(fileId: string): Promise<StoredFile | null> {
@@ -130,11 +166,18 @@ export class InMemoryFileRepository implements FileRepository {
   beforeTombstone: (fileId: string) => void = () => undefined;
   readonly tombstones: { fileId: string; reason: string }[] = [];
 
-  markAttached(fileId: string): Promise<void> {
+  /** Runs just before markAttached checks the row, to let a scan or a delete win. */
+  beforeMarkAttached: (fileId: string) => void = () => undefined;
+
+  markAttached(fileId: string): Promise<boolean> {
+    this.beforeMarkAttached(fileId);
     if (this.updateError) return Promise.reject(this.updateError);
     const row = this.rows.get(fileId);
-    if (row && row.deletedAt === null) row.attached = true;
-    return Promise.resolve();
+    if (!row || row.deletedAt !== null || row.status === 'FAILED') {
+      return Promise.resolve(false);
+    }
+    row.attached = true;
+    return Promise.resolve(true);
   }
 
   tombstone(fileId: string, reason: string): Promise<boolean> {
@@ -183,4 +226,23 @@ export function lazyBody(
       this.push(chunk);
     },
   });
+}
+
+/**
+ * A scanner that reads the whole body as clamd would, then answers
+ * `verdict`, or fails with `error`. A body that fails rejects with its error.
+ */
+export class FakeScanner implements VirusScannerPort {
+  verdict: ScanVerdict = { clean: true };
+  error: Error | null = null;
+  /** Bytes of each scan, in order. */
+  readonly scanned: Buffer[] = [];
+
+  async scan(body: Readable): Promise<ScanVerdict> {
+    const chunks: Buffer[] = [];
+    for await (const chunk of body as AsyncIterable<Buffer>) chunks.push(chunk);
+    this.scanned.push(Buffer.concat(chunks));
+    if (this.error) throw this.error;
+    return this.verdict;
+  }
 }

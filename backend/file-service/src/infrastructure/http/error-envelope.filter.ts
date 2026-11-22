@@ -9,6 +9,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import type { Request, Response } from 'express';
 import {
+  FileFailedError,
   FileLengthMismatchError,
   FileMetadataUnavailableError,
   FileNotFoundError,
@@ -108,6 +109,13 @@ function map(exception: unknown): Mapped {
     return {
       status: HttpStatus.NOT_FOUND,
       code: 'NOT_FOUND',
+      message: exception.message,
+    };
+  }
+  if (exception instanceof FileFailedError) {
+    return {
+      status: HttpStatus.CONFLICT,
+      code: 'FILE_FAILED',
       message: exception.message,
     };
   }

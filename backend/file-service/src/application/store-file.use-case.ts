@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { Readable } from 'node:stream';
 import { newStoredFile, type StoredFile } from '../domain/stored-file';
 import { ByteMeter } from './byte-meter';
+import { scanRequested } from './file-events';
 import {
   FileLengthMismatchError,
   FileMetadataUnavailableError,
@@ -59,6 +60,11 @@ export interface StoreLogger {
  * fileId (= object key) for a manual delete. After a failed put the delete is
  * still tried (the PUT may have committed), but a failure there is not
  * reported as a known orphan.
+ *
+ * With a policy that scans (DIRECT_UPLOAD), the row and its scan job
+ * (file.uploaded.direct, §4) are written in one transaction: a file that has
+ * a row always gets scanned, and a repeat or the loser of a race writes no
+ * second job.
  *
  * Idempotency (D60): with a key, an earlier store of the same (uploadedBy,
  * key) pair is returned as it is now, without reading the body. Two stores
@@ -143,7 +149,10 @@ export class StoreFileUseCase {
       policy.virusScan ? 'PROCESSING' : 'READY',
     );
     try {
-      await this.files.insert(file);
+      await this.files.insert(
+        file,
+        policy.virusScan ? [scanRequested(file)] : [],
+      );
     } catch (err) {
       await this.removeBlob(fileId, 'stored');
       if (err instanceof IdempotencyKeyTakenError && idempotencyKey !== null) {
