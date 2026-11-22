@@ -6,6 +6,12 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: ${KEYCLOAK_JWK_URI:http://localhost:8180/realms/agricontract/protocol/openid-connect/certs}
+          # Keys are still fetched from jwk-set-uri (no discovery call at startup); issuer-uri only adds the iss check.
+          # It is the public URL the browser logs in through, which is what Keycloak writes into iss, so it differs
+          # from the in-network JWK host.
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/agricontract}
+          # A token signed by the realm for another client (e.g. a service account) has no frontend aud and gets 401.
+          audiences: ${KEYCLOAK_AUDIENCE:agricontract-frontend}
   cloud:
     gateway:
       # Gateway design 5.1: explicit timeouts, downstream timeout answers 504. No route has a Retry filter
