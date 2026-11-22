@@ -28,6 +28,9 @@ agricontract:
 bank:
   dlq-monitor:
     interval-ms: 300000
+service:
+  # No default: startup fails without it, and InternalSecretFilter rejects a blank value.
+  internal-secret: ${SERVICE_INTERNAL_SECRET}
 server:
   port: ${SERVER_PORT:8086}
 management:

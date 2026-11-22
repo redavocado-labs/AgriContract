@@ -5,6 +5,7 @@ import com.agricontract.bank.domain.model.EntryType;
 import com.agricontract.bank.domain.model.FundType;
 import com.agricontract.bank.domain.model.LedgerEntry;
 import com.agricontract.bank.domain.model.Money;
+import com.agricontract.bank.domain.repository.LedgerEntryFilter;
 import com.agricontract.bank.domain.repository.LedgerEntryRepository;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -12,6 +13,8 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 // Plain JDBC on purpose: the runtime account only has SELECT, INSERT, so there is no ORM that could try an UPDATE.
@@ -90,5 +93,33 @@ public class JdbcLedgerEntryRepository implements LedgerEntryRepository {
     @Override
     public Optional<LedgerEntry> findByRemedyLegId(String remedyLegId) {
         return jdbc.query(SELECT_BY_REMEDY_LEG, ROW, remedyLegId).stream().findFirst();
+    }
+
+    @Override
+    public List<LedgerEntry> search(LedgerEntryFilter filter) {
+        StringBuilder sql = new StringBuilder("""
+                SELECT entry_id, source_event_id, contract_id, milestone_id, user_id, entry_type, fund_type,
+                       remedy_decision_id, remedy_leg_id, amount, created_at
+                FROM ledger_entry WHERE 1 = 1""");
+        List<Object> args = new ArrayList<>();
+        if (filter.contractId() != null) {
+            sql.append(" AND contract_id = ?");
+            args.add(filter.contractId());
+        }
+        if (filter.participantId() != null) {
+            sql.append(" AND user_id = ?");
+            args.add(filter.participantId());
+        }
+        if (filter.remedyDecisionId() != null) {
+            sql.append(" AND remedy_decision_id = ?");
+            args.add(filter.remedyDecisionId());
+        }
+        if (filter.from() != null && filter.to() != null) {
+            sql.append(" AND created_at >= ? AND created_at < ?");
+            args.add(Timestamp.from(filter.from()));
+            args.add(Timestamp.from(filter.to()));
+        }
+        sql.append(" ORDER BY created_at, entry_id");
+        return jdbc.query(sql.toString(), ROW, args.toArray());
     }
 }
