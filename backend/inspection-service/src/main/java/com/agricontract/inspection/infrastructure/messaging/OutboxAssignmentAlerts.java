@@ -4,13 +4,17 @@ import com.agricontract.eventing.EventEnvelope;
 import com.agricontract.eventing.outbox.OutboxWriter;
 import com.agricontract.inspection.application.port.AssignmentAlerts;
 import com.agricontract.inspection.domain.model.WaitingAssignment;
+import com.agricontract.inspection.domain.model.TimedAssignment;
 import java.time.Clock;
+import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -23,6 +27,25 @@ public class OutboxAssignmentAlerts implements AssignmentAlerts {
     private static final Logger LOG = LoggerFactory.getLogger(OutboxAssignmentAlerts.class);
     private final OutboxWriter outbox;
     private final Clock clock;
+    @Value("${inspection.assignment.free-cancel-hours:4}")
+    private long freeCancelHours = 4;
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void assigned(TimedAssignment assignment, String email, String correlationId, String causationId) {
+        var freeCancelUntil = assignment.assignedAt().plus(Duration.ofHours(freeCancelHours)).toString();
+        var common = Map.<String, Object>of("contractId", assignment.contractId(), "milestoneId", assignment.milestoneId(),
+                "commissionId", assignment.commissionId(), "assignedAt", assignment.assignedAt().toString(),
+                "freeCancelUntil", freeCancelUntil, "reportDueAt", assignment.reportDueAt().toString());
+        outbox.append(new EventEnvelope(UUID.randomUUID(), "inspection.level1_5_assigned", 1, clock.instant(),
+                "inspection-service", assignment.milestoneId(), correlationId, causationId, null, common));
+        var payload = Map.<String, Object>of("contractId", assignment.contractId(), "milestoneId", assignment.milestoneId(),
+                "commissionId", assignment.commissionId(), "recipients", List.of(Map.of("userId", assignment.inspectorId(),
+                        "email", email, "role", "INSPECTOR")), "reportDueAt", assignment.reportDueAt().toString(),
+                "freeCancelUntil", freeCancelUntil, "stage", "ASSIGNED");
+        outbox.append(new EventEnvelope(UUID.randomUUID(), "notification.level1_5_inspector_assignment_requested", 1,
+                clock.instant(), "inspection-service", assignment.milestoneId(), correlationId, causationId, null, payload));
+    }
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)

@@ -39,6 +39,9 @@ class InternalUserEligibilityClientTest {
     private String expectedCategory;
     private volatile CountDownLatch responseGate;
     private volatile boolean interruptBody;
+    private volatile CountDownLatch bodyGate;
+    private volatile boolean partialBody;
+    private volatile int bodyDelayMs;
     private HttpServer server;
     private InternalUserEligibilityClient client;
     private volatile int status = 200;
@@ -64,12 +67,86 @@ class InternalUserEligibilityClientTest {
                 return;
             }
             try (var stream = exchange.getResponseBody()) {
+                var gate = bodyGate;
+                if (gate != null) {
+                    if (partialBody) { stream.write(bytes, 0, Math.min(5, bytes.length)); stream.flush(); }
+                    try { gate.await(3, TimeUnit.SECONDS); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+                    return;
+                }
+                if (bodyDelayMs > 0) {
+                    try { Thread.sleep(bodyDelayMs); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+                }
                 stream.write(bytes);
             }
         });
         server.start();
         client = new InternalUserEligibilityClient(RestClient.builder(),
                 "http://127.0.0.1:" + server.getAddress().getPort(), "test-service-secret", 500, 500);
+    }
+
+    @Test
+    void inspectorEmailUsesVerifiedInternalProfile() {
+        response = "{\"userId\":\"" + ID + "\",\"email\":\"inspector@example.com\",\"emailVerified\":true}";
+        assertThat(client.loadInspectorEmail(ID)).isEqualTo("inspector@example.com");
+        assertThat(requestedPath.get()).isEqualTo("/internal/v1/users/" + ID);
+        assertThat(internalSecret.get()).isEqualTo("test-service-secret");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{}", "{\"userId\":\"wrong\",\"email\":\"a@example.test\",\"emailVerified\":true}",
+            "{\"userId\":\"1349fbf6-44b6-450c-b01d-4b5abaf7c326\",\"email\":\"invalid\",\"emailVerified\":true}",
+            "{\"userId\":\"1349fbf6-44b6-450c-b01d-4b5abaf7c326\",\"email\":\"a..b@example.com\",\"emailVerified\":true}",
+            "{\"userId\":\"1349fbf6-44b6-450c-b01d-4b5abaf7c326\",\"email\":null,\"emailVerified\":false}"})
+    void inspectorEmailRejectsMalformedOrMismatchedProfiles(String profile) {
+        response = profile;
+        expectedCategory = "malformed_response";
+        assertThatThrownBy(() -> client.loadInspectorEmail(ID)).isInstanceOf(EligibilityUnavailableException.class);
+    }
+
+    @Test void inspectorEmailTreatsServerFailureAsRetryable() {
+        status = 503;
+        expectedCategory = "dependency_http";
+        assertThatThrownBy(() -> client.loadInspectorEmail(ID)).isInstanceOf(EligibilityUnavailableException.class);
+    }
+
+    @Test void inspectorEmailTimeoutIsRetryable() {
+        expectedCategory = "transport";
+        responseGate = new CountDownLatch(1);
+        try {
+            assertThatThrownBy(() -> client.loadInspectorEmail(ID)).isInstanceOf(EligibilityUnavailableException.class);
+        } finally {
+            responseGate.countDown();
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    @org.junit.jupiter.api.Timeout(5)
+    void stalledInspectorBodyTimesOutAndClientRecovers(boolean partial) {
+        response = "{\"userId\":\"" + ID + "\",\"email\":\"inspector@example.com\",\"emailVerified\":true}";
+        partialBody = partial;
+        bodyGate = new CountDownLatch(1);
+        expectedCategory = "transport";
+        long started = System.nanoTime();
+        assertThatThrownBy(() -> client.loadInspectorEmail(ID)).isInstanceOf(EligibilityUnavailableException.class);
+        assertThat(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started)).isLessThan(2000);
+        bodyGate.countDown();
+        bodyGate = null;
+        assertThat(client.loadInspectorEmail(ID)).isEqualTo("inspector@example.com");
+    }
+
+    @Test @org.junit.jupiter.api.Timeout(5)
+    void slowCompleteInspectorBodyWithinDeadlineSucceeds() {
+        response = "{\"userId\":\"" + ID + "\",\"email\":\"inspector@example.com\",\"emailVerified\":true}";
+        bodyDelayMs = 100;
+        assertThat(client.loadInspectorEmail(ID)).isEqualTo("inspector@example.com");
+    }
+
+    @Test @org.junit.jupiter.api.Timeout(5)
+    void oversizedInspectorBodyFailsClosed() {
+        response = "x".repeat(100_000);
+        expectedCategory = "transport";
+        assertThatThrownBy(() -> client.loadInspectorEmail(ID)).isInstanceOf(EligibilityUnavailableException.class);
     }
 
     @Test
@@ -130,6 +207,8 @@ class InternalUserEligibilityClientTest {
     @AfterEach
     void stopStub() {
         if (responseGate != null) responseGate.countDown();
+        if (bodyGate != null) bodyGate.countDown();
+        if (client != null) client.close();
         server.stop(0);
         logger.detachAppender(logs);
         logs.stop();

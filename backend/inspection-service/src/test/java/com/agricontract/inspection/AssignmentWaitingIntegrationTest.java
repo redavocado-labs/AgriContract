@@ -4,6 +4,7 @@ import com.agricontract.calendar.VietnamBusinessDays;
 import com.agricontract.eventing.EventEnvelope;
 import com.agricontract.eventing.EventEnvelopeCodec;
 import com.agricontract.eventing.outbox.OutboxPoller;
+import com.agricontract.eventing.outbox.OutboxWriter;
 import com.agricontract.inspection.application.exception.EligibilityUnavailableException;
 import com.agricontract.inspection.application.dto.Level15AssignmentRequestedCommand;
 import com.agricontract.inspection.application.port.AssignmentAlerts.Stage;
@@ -17,6 +18,10 @@ import com.agricontract.inspection.domain.repository.AssignmentLifecycleReposito
 import com.agricontract.inspection.infrastructure.config.WaitingNotificationConfiguration;
 import com.agricontract.inspection.infrastructure.messaging.Level15RequestedConsumer;
 import com.agricontract.inspection.infrastructure.messaging.OutboxAssignmentAlerts;
+import com.agricontract.inspection.infrastructure.client.InternalUserEligibilityClient;
+import com.sun.net.httpserver.HttpServer;
+import java.net.InetSocketAddress;
+import org.springframework.web.client.RestClient;
 import com.agricontract.inspection.infrastructure.persistence.JdbcAssignmentWaitingRepository;
 import com.agricontract.inspection.infrastructure.scheduling.AssignmentWaitingJob;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,6 +57,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -109,6 +118,7 @@ class AssignmentWaitingIntegrationTest {
     @Autowired VietnamBusinessDays calendar;
     @SpyBean JdbcAssignmentWaitingRepository waiting;
     @SpyBean OutboxAssignmentAlerts alerts;
+    @SpyBean OutboxWriter outbox;
     @MockBean InspectorEligibilityPort inspectors;
     @MockBean RandomGenerator random;
     @MockBean Clock clock;
@@ -125,6 +135,7 @@ class AssignmentWaitingIntegrationTest {
         jdbc.update("DELETE FROM level1_5_assignment_lock");
         when(clock.instant()).thenReturn(NOW);
         when(inspectors.loadEligibleInspectors()).thenReturn(List.of());
+        when(inspectors.loadInspectorEmail(any())).thenReturn("inspector@example.com");
     }
 
     EventEnvelope event() {
@@ -139,11 +150,11 @@ class AssignmentWaitingIntegrationTest {
     WaitingAssignment pending() { return transactions.inTransaction(() -> waiting.lockSkippingLocked(key).orElseThrow()); }
     int count(String table) { return jdbc.queryForObject("SELECT COUNT(*) FROM " + table, Integer.class); }
     int commands(Stage stage) {
-        return jdbc.queryForObject("SELECT COUNT(*) FROM event_outbox WHERE JSON_UNQUOTE(JSON_EXTRACT(envelope,'$.payload.stage'))=?",
+        return jdbc.queryForObject("SELECT COUNT(*) FROM event_outbox WHERE event_type='notification.level1_5_assignment_waiting_requested' AND JSON_UNQUOTE(JSON_EXTRACT(envelope,'$.payload.stage'))=?",
                 Integer.class, stage.name());
     }
     EventEnvelope command(Stage stage) {
-        String json = jdbc.queryForObject("SELECT envelope FROM event_outbox WHERE JSON_UNQUOTE(JSON_EXTRACT(envelope,'$.payload.stage'))=?",
+        String json = jdbc.queryForObject("SELECT envelope FROM event_outbox WHERE event_type='notification.level1_5_assignment_waiting_requested' AND JSON_UNQUOTE(JSON_EXTRACT(envelope,'$.payload.stage'))=?",
                 String.class, stage.name());
         return codec.parse(json.getBytes(StandardCharsets.UTF_8));
     }
@@ -151,6 +162,151 @@ class AssignmentWaitingIntegrationTest {
     OutboxAssignmentAlerts alertTarget() { return org.springframework.test.util.AopTestUtils.getUltimateTargetObject(alerts); }
     JdbcAssignmentWaitingRepository waitingTarget() { return org.springframework.test.util.AopTestUtils.getUltimateTargetObject(waiting); }
     AssignmentWaitingJob job() { return new AssignmentWaitingJob(waiting, lifecycle); }
+    int events(String type) {
+        return jdbc.queryForObject("SELECT COUNT(*) FROM event_outbox WHERE event_type=?", Integer.class, type);
+    }
+    void assertAssignmentPair(int count) {
+        assertThat(events("inspection.level1_5_assigned")).isEqualTo(count);
+        assertThat(events("notification.level1_5_inspector_assignment_requested")).isEqualTo(count);
+    }
+
+    @Test void firstPickAndTimeoutWriteFreshAssignmentPairs() {
+        when(clock.instant()).thenReturn(Instant.parse("2026-10-23T23:30:00Z"));
+        when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a, b));
+        var request = event();
+        deliver(request);
+        var first = assignments.active(contract, milestone).orElseThrow();
+        assertAssignmentPair(1);
+        var assigned = codec.parse(jdbc.queryForObject("SELECT envelope FROM event_outbox WHERE event_type='inspection.level1_5_assigned'", String.class).getBytes(StandardCharsets.UTF_8));
+        var notification = codec.parse(jdbc.queryForObject("SELECT envelope FROM event_outbox WHERE event_type='notification.level1_5_inspector_assignment_requested'", String.class).getBytes(StandardCharsets.UTF_8));
+        assertThat(assigned.payload()).doesNotContainKeys("inspectorId", "email", "recipients");
+        assertThat(assigned.payload().get("assignedAt")).isEqualTo(first.assignedAt().toString());
+        assertThat(assigned.payload().get("freeCancelUntil")).isEqualTo(first.assignedAt().plus(Duration.ofHours(4)).toString());
+        assertThat(notification.payload().get("recipients")).isEqualTo(List.of(Map.of("userId", a, "email", "inspector@example.com", "role", "INSPECTOR")));
+        assertThat(notification.causationId()).isEqualTo(request.eventId().toString());
+        when(clock.instant()).thenReturn(first.reportDueAt());
+        lifecycle.timeout(first.commissionId());
+        assertAssignmentPair(2);
+        assertThat(assignments.active(contract, milestone).orElseThrow().inspectorId()).isEqualTo(b);
+    }
+
+    @Test void waitingRetryPublishesPairAlongsideOperatorCommand() {
+        deliver(event());
+        when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+        job().scan();
+        assertAssignmentPair(1);
+        assertThat(commands(Stage.ASSIGNED)).isEqualTo(1);
+        assertThat(count("level1_5_assignment_waiting")).isZero();
+    }
+
+    @Test void brokerRoutesBothOutboxEventsWhenContractConsumerIsBound() {
+        var admin = new RabbitAdmin(connectionFactory);
+        var queue = new Queue("test.contract-assigned." + UUID.randomUUID(), false, true, true);
+        admin.declareQueue(queue);
+        admin.declareBinding(BindingBuilder.bind(queue).to(new TopicExchange(WaitingNotificationConfiguration.EXCHANGE))
+                .with("inspection.level1_5_assigned"));
+        try {
+            when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+            deliver(event());
+            var rabbit = new RabbitTemplate(connectionFactory);
+            rabbit.setMandatory(true); rabbit.setReturnsCallback(returned -> {});
+            new OutboxPoller(jdbc, rabbit, new TransactionTemplate(manager), WaitingNotificationConfiguration.EXCHANGE,
+                    100, Duration.ofSeconds(5)).poll();
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM event_outbox WHERE status='PUBLISHED'", Integer.class)).isEqualTo(2);
+            assertThat(codec.parse(rabbit.receive(queue.getName(), 5000).getBody()).eventType()).isEqualTo("inspection.level1_5_assigned");
+            assertThat(codec.parse(rabbit.receive(WaitingNotificationConfiguration.INSPECTOR_QUEUE, 5000).getBody()).eventType())
+                    .isEqualTo("notification.level1_5_inspector_assignment_requested");
+        } finally {
+            admin.deleteQueue(queue.getName());
+        }
+    }
+
+    @Test void actualAssignmentEnvelopesValidateFrozenSchemas() throws Exception {
+        when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+        deliver(event());
+        var yaml = new ObjectMapper(new YAMLFactory());
+        var json = new ObjectMapper();
+        var directory = Path.of(System.getProperty("contracts.directory"), "events");
+        var notification = (ObjectNode) yaml.readTree(directory.resolve("notification-commands.yaml").toFile());
+        notification.remove("oneOf");
+        notification.put("$ref", "#/$defs/level15InspectorAssignmentRequested");
+        var golden = (ObjectNode) yaml.readTree(directory.resolve("golden-flow-events.yaml").toFile());
+        var envelopeSchema = (ObjectNode) yaml.readTree(directory.resolve("event-envelope.yaml").toFile());
+        ((ObjectNode) golden.path("$defs")).set("inspectionEnvelope", envelopeSchema);
+        ((ObjectNode) golden.path("$defs")).set("subject", envelopeSchema.path("$defs").path("subject"));
+        ((ObjectNode) golden.path("$defs").path("inspectionLevel15Assigned").path("allOf").get(0))
+                .put("$ref", "#/$defs/inspectionEnvelope");
+        golden.remove("oneOf");
+        golden.put("$ref", "#/$defs/inspectionLevel15Assigned");
+        var factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
+        var options = SchemaValidatorsConfig.builder().formatAssertionsEnabled(true).build();
+        for (var entry : Map.of("inspection.level1_5_assigned", golden,
+                "notification.level1_5_inspector_assignment_requested", notification).entrySet()) {
+            var actual = json.readTree(jdbc.queryForObject("SELECT envelope FROM event_outbox WHERE event_type=?", String.class, entry.getKey()));
+            assertThat(factory.getSchema(entry.getValue(), options).validate(actual)).isEmpty();
+        }
+    }
+
+    @Test void emailFailureRollsBackAndRedeliverySucceedsOnce() {
+        when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+        when(inspectors.loadInspectorEmail(a)).thenThrow(new EligibilityUnavailableException()).thenReturn("inspector@example.com");
+        var request = event();
+        assertThatThrownBy(() -> deliver(request)).isInstanceOf(EligibilityUnavailableException.class);
+        assertEmptyState();
+        deliver(request); deliver(request);
+        assertThat(count("level1_5_inspection_assignment")).isEqualTo(1);
+        assertAssignmentPair(1);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    @org.junit.jupiter.api.Timeout(12)
+    void stalledRealUserInfoBodyRollsBackAssignment(boolean partial) throws Exception {
+        var gate = new CountDownLatch(1);
+        var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/", exchange -> {
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, 0);
+            try (var stream = exchange.getResponseBody()) {
+                if (partial) { stream.write("{\"userId\":".getBytes(StandardCharsets.UTF_8)); stream.flush(); }
+                gate.await(5, TimeUnit.SECONDS);
+            } catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
+        });
+        server.start();
+        var client = new InternalUserEligibilityClient(RestClient.builder(),
+                "http://127.0.0.1:" + server.getAddress().getPort(), "secret", 500, 500);
+        try {
+            when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+            when(inspectors.loadInspectorEmail(a)).thenAnswer(call -> client.loadInspectorEmail(a));
+            long started = System.nanoTime();
+            assertThatThrownBy(() -> deliver(event())).isInstanceOf(EligibilityUnavailableException.class);
+            assertThat(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started)).isLessThan(3000);
+            assertEmptyState();
+        } finally {
+            gate.countDown();
+            client.close();
+            server.stop(0);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"inspection.level1_5_assigned", "notification.level1_5_inspector_assignment_requested"})
+    void outboxAppendFailureRollsBackAssignmentAndAnyEarlierEvent(String failedType) {
+        when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+        var writer = org.springframework.test.util.AopTestUtils.<OutboxWriter>getUltimateTargetObject(outbox);
+        doAnswer(call -> {
+            EventEnvelope envelope = call.getArgument(0);
+            if (envelope.eventType().equals(failedType))
+                throw new IllegalStateException("injected outbox failure");
+            return call.callRealMethod();
+        }).when(writer).append(any());
+        var request = event();
+        assertThatThrownBy(() -> deliver(request)).isInstanceOf(IllegalStateException.class);
+        assertEmptyState();
+        doCallRealMethod().when(writer).append(any());
+        deliver(request);
+        assertAssignmentPair(1);
+    }
     void assertEmptyState() {
         assertThat(count("level1_5_assignment_waiting")).isZero();
         assertThat(count("level1_5_inspection_assignment")).isZero();
@@ -284,7 +440,7 @@ class AssignmentWaitingIntegrationTest {
         deliver(event());
         assertThat(count("level1_5_inspection_assignment")).isEqualTo(1);
         assertThat(count("level1_5_assignment_waiting")).isZero();
-        assertThat(count("event_outbox")).isZero();
+        assertAssignmentPair(1);
         verify(inspectors, times(1)).loadEligibleInspectors();
     }
 
@@ -385,7 +541,7 @@ class AssignmentWaitingIntegrationTest {
         }
         assertThat(count("level1_5_inspection_assignment")).isEqualTo(2);
         assertThat(count("level1_5_assignment_waiting")).isZero();
-        assertThat(count("event_outbox")).isZero();
+        assertAssignmentPair(2);
         assertThat(count("processed_event")).isEqualTo(2);
         for (String milestoneId : List.of(milestone, otherMilestone)) {
             assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM level1_5_inspection_assignment WHERE milestone_id=? AND ended_at IS NULL",
@@ -465,7 +621,7 @@ class AssignmentWaitingIntegrationTest {
         }
         assertThat(count("level1_5_inspection_assignment")).isEqualTo(1);
         assertThat(count("level1_5_assignment_waiting")).isZero();
-        assertThat(count("event_outbox")).isZero();
+        assertAssignmentPair(1);
         verify(inspectors, times(1)).loadEligibleInspectors();
     }
 
@@ -533,7 +689,7 @@ class AssignmentWaitingIntegrationTest {
         assertThat(assignments.find(old.commissionId()).orElseThrow().endedAt()).isEqualTo(confirmed);
         assertThat(count("level1_5_inspection_assignment")).isEqualTo(1);
         assertThat(count("level1_5_assignment_waiting")).isZero();
-        assertThat(count("event_outbox")).isZero();
+        assertAssignmentPair(1);
     }
 
     @Test void overdueAllExcludedPreservesHistoryContextAndRetriesWithFreshDeadline() {
@@ -565,7 +721,7 @@ class AssignmentWaitingIntegrationTest {
         assertThat(count("level1_5_assignment_waiting")).isZero();
         assertThat(count("level1_5_inspection_assignment")).isEqualTo(2);
         assertThat(commands(Stage.ASSIGNED)).isEqualTo(1);
-        assertThat(jdbc.queryForObject("SELECT JSON_UNQUOTE(JSON_EXTRACT(envelope,'$.payload.waitingSince')) FROM event_outbox WHERE JSON_UNQUOTE(JSON_EXTRACT(envelope,'$.payload.stage'))='ASSIGNED'", String.class))
+        assertThat(jdbc.queryForObject("SELECT JSON_UNQUOTE(JSON_EXTRACT(envelope,'$.payload.waitingSince')) FROM event_outbox WHERE event_type='notification.level1_5_assignment_waiting_requested' AND JSON_UNQUOTE(JSON_EXTRACT(envelope,'$.payload.stage'))='ASSIGNED'", String.class))
                 .isEqualTo(originalWaiting.waitingSince().toString());
     }
 
@@ -577,7 +733,7 @@ class AssignmentWaitingIntegrationTest {
         assertThatThrownBy(() -> lifecycle.timeout(old.commissionId())).isInstanceOf(IllegalStateException.class);
         assertThat(assignments.active(contract, milestone).orElseThrow()).isEqualTo(old);
         assertThat(count("level1_5_assignment_waiting")).isZero();
-        assertThat(count("event_outbox")).isZero();
+        assertAssignmentPair(1);
         doCallRealMethod().when(alertTarget()).waitingChanged(any(), any(), any(), any());
         lifecycle.timeout(old.commissionId());
         assertThat(pending().reason()).isEqualTo(Reason.ALL_EXCLUDED);

@@ -1,3 +1,4 @@
 inspection:
   assignment:
+    free-cancel-hours: 1
     waiting-retry-interval-ms: ${INSPECTION_WAITING_RETRY_INTERVAL_MS:60000}

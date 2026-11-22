@@ -88,7 +88,7 @@ public class ManageLevel15Assignments {
                     attempted, attempted, reminder);
             alerts.waitingChanged(pending, AssignmentAlerts.Stage.WAITING_STARTED, correlationId, causationId);
         } else {
-            assign(contract, milestone, days, actor, service, candidates);
+            assign(contract, milestone, days, actor, service, candidates, correlationId, causationId);
             waiting.delete(pending.key());
         }
     }
@@ -100,11 +100,14 @@ public class ManageLevel15Assignments {
     }
 
     private void assign(String contract, String milestone, int days, String actor, String service,
-                        List<String> candidates) {
+                        List<String> candidates, String correlationId, String causationId) {
         String inspector = candidates.get(random.nextInt(candidates.size()));
+        String email = inspectors.loadInspectorEmail(inspector);
         Instant assigned = now();
-        assignments.insert(new TimedAssignment(UUID.randomUUID().toString(), contract, milestone,
-                inspector, assigned, null, days, calendar.deadline(assigned, days), actor, service));
+        var assignment = new TimedAssignment(UUID.randomUUID().toString(), contract, milestone,
+                inspector, assigned, null, days, calendar.deadline(assigned, days), actor, service);
+        assignments.insert(assignment);
+        alerts.assigned(assignment, email, correlationId, causationId);
     }
 
     public void retryWaiting(WaitingAssignment.Key key) {
@@ -126,7 +129,8 @@ public class ManageLevel15Assignments {
             var candidates = candidates(assignments.previousInspectors(key.contractId(), key.milestoneId()));
             if (!candidates.isEmpty()) {
                 assign(key.contractId(), key.milestoneId(), pending.reportDueBusinessDays(),
-                        pending.initiatedByActorId(), pending.assignedByService(), candidates);
+                        pending.initiatedByActorId(), pending.assignedByService(), candidates,
+                        UUID.randomUUID().toString(), null);
                 waiting.delete(key);
                 alerts.waitingChanged(pending, AssignmentAlerts.Stage.ASSIGNED, UUID.randomUUID().toString(), null);
                 return;
