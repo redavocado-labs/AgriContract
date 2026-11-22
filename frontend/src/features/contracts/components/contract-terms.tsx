@@ -226,15 +226,6 @@ export function ContractTerms({ contract }: { contract: Contract }) {
           </section>
         ))}
       </div>
-      <h2 className="text-lg">Các đợt thực hiện</h2>
-      {contract.milestones.length ? (
-        <Value field="milestones" value={contract.milestones} />
-      ) : (
-        <p className="text-sm text-text-secondary">
-          Chưa có dữ liệu đợt thực hiện từ API. Lịch giao cam kết (nếu có) được
-          trình bày trong điều khoản phía trên.
-        </p>
-      )}
     </section>
   )
 }

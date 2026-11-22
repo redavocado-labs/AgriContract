@@ -22,6 +22,8 @@ import { OrganizationOnboardingPage } from "@/routes/organization-onboarding-pag
 import { ContractsPage } from "@/routes/contracts-page"
 import { ContractDetailPage } from "@/routes/contract-detail-page"
 import { CreateContractPage } from "@/routes/create-contract-page"
+import { MilestonePage } from "@/routes/milestone-page"
+import { DisputesPage } from "@/routes/disputes-page"
 
 function App() {
   return (
@@ -33,6 +35,25 @@ function App() {
               path="/onboarding"
               element={<OrganizationOnboardingPage />}
             />
+            <Route
+              element={
+                <RequireRole
+                  roles={["BUYER", "SELLER", "ARBITRATOR", "OPERATOR"]}
+                />
+              }
+            >
+              <Route
+                path="/contracts/:id/milestones/:milestoneId"
+                element={<MilestonePage />}
+              />
+            </Route>
+            <Route element={<RequireRole roles={["ARBITRATOR"]} />}>
+              <Route path="/disputes" element={<DisputesPage />} />
+              <Route
+                path="/disputes/:breachCaseId"
+                element={<DisputesPage />}
+              />
+            </Route>
             <Route element={<RequireOrganizationProfile />}>
               <Route element={<RequireRole roles={["BUYER", "SELLER"]} />}>
                 <Route path="/contracts" element={<ContractsPage />} />

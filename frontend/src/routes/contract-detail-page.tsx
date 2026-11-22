@@ -13,6 +13,7 @@ import { NegotiationForm } from "@/features/contracts/components/negotiation-for
 import { activationMessage } from "@/features/contracts/types/presentation"
 import { capabilities } from "@/features/contracts/api/capabilities"
 import { WithdrawOffer } from "@/features/contracts/components/withdraw-offer"
+import { ContractMilestones } from "@/features/milestones/components/contract-milestones"
 import { Banner } from "@/shared/ui/banner"
 import { Button } from "@/shared/ui/button"
 import { ContentHashDisplay } from "@/shared/ui/content-hash-display"
@@ -112,6 +113,7 @@ function Detail({ id }: { id: string }) {
                 Chưa có mã vân tay nội dung.
               </p>
             )}
+            <ContractMilestones contract={contract} />
             <ContractTerms contract={contract} />
             {contract.generation === "coffee" &&
               ["OFFERED", "NEGOTIATING"].includes(contract.status) && (

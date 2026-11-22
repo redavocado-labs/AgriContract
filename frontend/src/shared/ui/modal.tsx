@@ -6,9 +6,9 @@ import { cn } from "@/shared/lib/utils"
 type ModalSize = "sm" | "md" | "lg"
 
 const sizeClassName: Record<ModalSize, string> = {
-  sm: "w-[400px]",
-  md: "w-[560px]",
-  lg: "w-[720px]",
+  sm: "w-[400px] max-w-[calc(100vw-2rem)]",
+  md: "w-[560px] max-w-[calc(100vw-2rem)]",
+  lg: "w-[720px] max-w-[calc(100vw-2rem)]",
 }
 
 interface ModalProps {
