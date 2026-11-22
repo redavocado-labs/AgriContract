@@ -3,6 +3,8 @@ package com.agricontract.audit.infrastructure.config;
 import com.agricontract.audit.application.port.TransactionRunner;
 import com.agricontract.audit.application.usecase.IngestAuditEventUseCase;
 import com.agricontract.audit.application.usecase.IngestAuditEventUseCaseImpl;
+import com.agricontract.audit.application.usecase.VerifyAuditChainUseCase;
+import com.agricontract.audit.application.usecase.VerifyAuditChainUseCaseImpl;
 import com.agricontract.audit.domain.repository.AuditRecordRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,5 +24,10 @@ public class ClockConfig {
     IngestAuditEventUseCase ingestAuditEventUseCase(AuditRecordRepository records, TransactionRunner transactions,
                                                     Clock clock) {
         return new IngestAuditEventUseCaseImpl(records, transactions, clock);
+    }
+
+    @Bean
+    VerifyAuditChainUseCase verifyAuditChainUseCase(AuditRecordRepository records) {
+        return new VerifyAuditChainUseCaseImpl(records);
     }
 }
