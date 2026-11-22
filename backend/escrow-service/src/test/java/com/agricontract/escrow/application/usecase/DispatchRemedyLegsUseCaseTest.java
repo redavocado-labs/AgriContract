@@ -21,8 +21,12 @@ import com.agricontract.escrow.domain.model.RemedyDecision;
 import com.agricontract.escrow.domain.model.RemedyDecisionStatus;
 import com.agricontract.escrow.domain.model.RemedyLeg;
 import com.agricontract.escrow.domain.model.RemedyLegInput;
+import com.agricontract.escrow.domain.model.EscrowMilestone;
+import com.agricontract.escrow.domain.repository.DepositLegRepository;
+import com.agricontract.escrow.domain.repository.EscrowMilestoneRepository;
 import com.agricontract.escrow.domain.repository.OutstandingCommandRepository;
 import com.agricontract.escrow.domain.repository.RemedyLegRepository;
+import com.agricontract.escrow.domain.repository.SettlementLegRepository;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -32,15 +36,20 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
 
 /** The vectors of #249 through the use case: what is written, and what is not. */
 class DispatchRemedyLegsUseCaseTest {
 
     final RemedyLegRepository repo = mock(RemedyLegRepository.class);
+    final DepositLegRepository depositLegs = mock(DepositLegRepository.class);
+    final EscrowMilestoneRepository milestones = mock(EscrowMilestoneRepository.class);
+    final SettlementLegRepository settlementLegs = mock(SettlementLegRepository.class);
     final OutstandingCommandRepository outstanding = mock(OutstandingCommandRepository.class);
     final BankLedgerReader ledger = mock(BankLedgerReader.class);
     final RemedyCommandPublisher commands = mock(RemedyCommandPublisher.class);
-    final DispatchRemedyLegsUseCase useCase = new DispatchRemedyLegsUseCase(repo, outstanding, ledger, commands,
+    final DispatchRemedyLegsUseCase useCase = new DispatchRemedyLegsUseCase(repo, depositLegs, milestones, settlementLegs, outstanding, ledger, commands,
             Clock.fixed(Instant.parse("2026-11-20T00:00:00Z"), ZoneOffset.UTC));
 
     final String contractId = UUID.randomUUID().toString();
@@ -173,6 +182,7 @@ class DispatchRemedyLegsUseCaseTest {
         when(ledger.entriesOf(contractId)).thenReturn(entries);
         when(outstanding.inFlight(contractId)).thenReturn(List.of());
         when(repo.findDecisionForUpdate(anyString())).thenReturn(Optional.empty());
+        when(milestones.findByIdForUpdate(anyString())).thenReturn(Optional.of(mock(EscrowMilestone.class)));
     }
 
     private RemedyFinalizedCommand command(List<String> milestones, RemedyLegInput... legs) {
@@ -182,5 +192,36 @@ class DispatchRemedyLegsUseCaseTest {
 
     private static RemedyLegInput leg(String type, String fund, String role, String amount) {
         return new RemedyLegInput(UUID.randomUUID().toString(), type, fund, role, new BigDecimal(amount));
+    }
+
+    @Test
+    void locksComeBeforeTheLedgerRead_depositsFirst_thenTheMilestoneAndItsSettlementLegs() {
+        stubLedger(List.of(
+                new LedgerEntryView("LOCK_MILESTONE", "MILESTONE_PAYMENT", milestone, new BigDecimal("10.00")),
+                new LedgerEntryView("LOCK_BUYER_DEPOSIT", "BUYER_DEPOSIT", null, new BigDecimal("1.00"))));
+
+        useCase.execute(command(List.of(milestone), leg("PAYMENT_SETTLEMENT", "MILESTONE_PAYMENT", "SELLER", "10.00"),
+                leg("PAYMENT_REFUND", "BUYER_DEPOSIT", "BUYER", "0.01")));
+
+        InOrder order = Mockito.inOrder(depositLegs, milestones, settlementLegs, ledger, outstanding);
+        order.verify(depositLegs).findByContractIdForUpdate(contractId);
+        order.verify(milestones).findByIdForUpdate(milestone);
+        order.verify(settlementLegs).findByMilestoneIdForUpdate(milestone);
+        order.verify(ledger).entriesOf(contractId);
+        order.verify(outstanding).inFlight(contractId);
+    }
+
+    @Test
+    void milestoneUnknownToEscrow_isRejected_withoutReadingTheBank() {
+        when(repo.findDecisionForUpdate(anyString())).thenReturn(Optional.empty());
+        when(milestones.findByIdForUpdate(anyString())).thenReturn(Optional.empty());
+
+        useCase.execute(command(List.of(milestone), leg("PAYMENT_SETTLEMENT", "MILESTONE_PAYMENT", "SELLER", "10.00")));
+
+        verify(ledger, never()).entriesOf(anyString());
+        verify(commands, never()).requested(any(), anyString(), anyString());
+        ArgumentCaptor<RemedyDecision> decision = ArgumentCaptor.forClass(RemedyDecision.class);
+        verify(repo).insertDecision(decision.capture());
+        assertThat(decision.getValue().status()).isEqualTo(RemedyDecisionStatus.REJECTED);
     }
 }

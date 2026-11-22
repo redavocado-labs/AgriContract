@@ -36,7 +36,7 @@ public class RabbitMQConfig {
     public static final String MILESTONE_FUNDING_REQUESTED_QUEUE = "escrow-svc.milestone.funding_requested";
     public static final String MILESTONE_SETTLED_QUEUE = "escrow-svc.milestone.settled";
     // Remedy legs (#249). The seize result queues have the name and DLX bank-service declared ahead for them.
-    public static final String REMEDY_FINALIZED_QUEUE = "escrow-service.remedy-finalized";
+    public static final String REMEDY_FINALIZED_QUEUE = "escrow-svc.contract.remedy_finalized";
     public static final String SEIZE_COMPLETED_QUEUE = "escrow-svc.bank.seize_completed";
     public static final String SEIZE_FAILED_QUEUE = "escrow-svc.bank.seize_failed";
 
