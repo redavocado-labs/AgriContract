@@ -29,6 +29,7 @@
         <module>reputation-service</module>
         <module>inspection-service</module>
         <module>bank-service</module>
+        <module>audit-service</module>
     </modules>
 
     <properties>

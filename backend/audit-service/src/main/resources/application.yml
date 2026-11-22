@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: audit-service
+  datasource:
+    url: ${AUDIT_DB_URL:jdbc:mysql://localhost:3315/audit_db?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true}
+    username: ${AUDIT_DB_USERNAME}
+    password: ${AUDIT_DB_PASSWORD}
+    hikari:
+      connection-init-sql: "SET time_zone = '+00:00'"
+  flyway:
+    url: ${spring.datasource.url}
+    user: ${AUDIT_MIGRATION_USERNAME}
+    password: ${AUDIT_MIGRATION_PASSWORD}
+    clean-disabled: true
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+agricontract:
+  eventing:
+    outbox:
+      # audit-service publishes nothing in this scope.
+      enabled: false
+audit:
+  dlq-monitor:
+    interval-ms: 300000
+server:
+  port: ${SERVER_PORT:8092}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
