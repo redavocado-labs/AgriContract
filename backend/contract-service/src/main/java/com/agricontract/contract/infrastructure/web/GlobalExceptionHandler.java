@@ -3,6 +3,7 @@ package com.agricontract.contract.infrastructure.web;
 import com.agricontract.contract.application.exception.ContractNotFoundException;
 import com.agricontract.contract.application.exception.EvidenceFileNotFoundException;
 import com.agricontract.contract.application.exception.FileRejectedException;
+import com.agricontract.contract.application.exception.FileServiceFailedException;
 import com.agricontract.contract.application.exception.FileServiceUnavailableException;
 import com.agricontract.contract.application.exception.MilestoneNotFoundException;
 import com.agricontract.contract.domain.exception.MilestoneRequestInvalidException;
@@ -79,6 +80,16 @@ public class GlobalExceptionHandler extends ErrorEnvelopeExceptionHandler {
         log.warn("503 FILE_SERVICE_UNAVAILABLE {}", ex.getMessage());
         return envelope(HttpStatus.SERVICE_UNAVAILABLE, "FILE_SERVICE_UNAVAILABLE",
                 "The file could not be stored right now; try again shortly with the same Idempotency-Key.", request);
+    }
+
+    /** file-service broke its contract (unexpected non-5xx status, unreadable body): retrying cannot help. */
+    @ExceptionHandler(FileServiceFailedException.class)
+    public ResponseEntity<ErrorEnvelope> handleFileServiceFailed(FileServiceFailedException ex,
+                                                                 HttpServletRequest request) {
+        ResponseEntity<ErrorEnvelope> response = envelope(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR",
+                "Internal server error", request);
+        log.error("500 FILE_SERVICE_FAILED traceId={} {}", response.getBody().traceId(), ex.getMessage(), ex);
+        return response;
     }
 
     @ExceptionHandler({UnauthorizedContractActionException.class, UnauthorizedContractAccessException.class})
@@ -177,7 +188,8 @@ public class GlobalExceptionHandler extends ErrorEnvelopeExceptionHandler {
 
     @ExceptionHandler({IllegalArgumentException.class, InvalidEventPayloadException.class})
     public ResponseEntity<ErrorEnvelope> handleBadRequest(RuntimeException ex, HttpServletRequest request) {
-        log.warn("400 VALIDATION_FAILED {}", ex.getMessage());
-        return envelope(HttpStatus.BAD_REQUEST, "VALIDATION_FAILED", ex.getMessage(), request);
+        // golden-flow-api BadRequest: the canonical 400 code is VALIDATION_ERROR (same as the evidence upload path).
+        log.warn("400 VALIDATION_ERROR {}", ex.getMessage());
+        return envelope(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", ex.getMessage(), request);
     }
 }
