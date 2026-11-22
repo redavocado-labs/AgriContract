@@ -1,13 +1,15 @@
 import type { TestingModuleBuilder } from '@nestjs/testing';
+import { LifecycleScheduler } from '../../src/infrastructure/lifecycle/lifecycle-scheduler';
 import { AmqpService } from '../../src/infrastructure/messaging/amqp.service';
 import { DlqMonitor } from '../../src/infrastructure/messaging/dlq-monitor';
 import { ScanWorker } from '../../src/infrastructure/messaging/scan-worker';
 
 /**
- * AppModule for the HTTP int-specs: no broker connection, no scan worker
- * and no DLQ check, so nothing scans the test files behind the test's back
- * (it sets READY itself) and no RabbitMQ is needed. Uploads still write their scan
- * job to the outbox, which is what these tests may check.
+ * AppModule for the HTTP int-specs: no broker connection, no scan worker, no
+ * DLQ check and no lifecycle job, so nothing scans or deletes the test files
+ * behind the test's back (it sets READY itself) and no RabbitMQ is needed.
+ * Uploads still write their scan job to the outbox, which is what these
+ * tests may check.
  */
 export function withoutBroker(
   builder: TestingModuleBuilder,
@@ -18,5 +20,7 @@ export function withoutBroker(
     .overrideProvider(ScanWorker)
     .useValue({})
     .overrideProvider(DlqMonitor)
+    .useValue({})
+    .overrideProvider(LifecycleScheduler)
     .useValue({});
 }
