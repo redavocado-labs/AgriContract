@@ -105,6 +105,9 @@ contract:
     seller-silence-poll-interval: PT1M
     # Named evidence whose confirm-attached failed is sent again this often (file-service cleans orphans after 1 week).
     evidence-attach-retry-interval: PT5M
+  breach:
+    # GB-50: how often OPEN contest windows that have passed with no contest are closed and their remedy finalized.
+    contest-expiry-poll-interval: PT5M
   signature:
     # signatureAuthMaxAgeSeconds (signature design §4): the password must have been entered this recently.
     auth-max-age-seconds: 300
