@@ -267,15 +267,36 @@ paths:
         before contestDeadline. Routes the case to Level 1.5
         (inspection.level1_5_requested, reason DECISION_CONTESTED); the Level 1.5
         result creates a new AttributionDecision (decisionSource INSPECTOR_L1_5)
-        that supersedes the Arbitrator decision. 409 when contestStatus is not OPEN
-        or the decision was based on an inspection report. Contract-level cases
-        (milestoneId null) are never contestable on the platform. Source milestone-escrow
+        that supersedes the Arbitrator decision. D85/D91 (23/11/2026): a NON_CONFORMING
+        decision approved from computedResolution is contestable once; the second Level 1.5
+        result is final (Arbitrator approves it as D81, remedy.finalized right after, no new
+        window, contestStatus never reopens). 409 when contestStatus is not OPEN. Contract-level
+        cases (milestoneId null) are never contestable on the platform. No consent statement:
+        a contest only asks for a re-inspection. evidenceFileIds are READY files the caller
+        uploaded; more can be added with contestBreachDecisionEvidence. Source milestone-escrow
         design 6.4, SRS v1.6 GB-50.
       parameters:
         - {name: contractId, in: path, required: true, schema: {type: string, format: uuid}}
         - {name: breachCaseId, in: path, required: true, schema: {type: string, format: uuid}}
         - {$ref: '#/components/parameters/IdempotencyKey'}
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/BreachContestRequest'}}}}
       responses: {'204': {description: Contest recorded; sanctions stay unpublished until the Level 1.5 decision.}, '400': {$ref: '#/components/responses/BadRequest'}, '401': {$ref: '#/components/responses/Unauthorized'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}, '409': {$ref: '#/components/responses/Conflict'}}
+  /api/v1/contracts/{contractId}/breach-cases/{breachCaseId}/contest/evidence:
+    x-service-owner: contract-service
+    post:
+      operationId: contestBreachDecisionEvidence
+      x-roles: [BUYER, SELLER]
+      description: >-
+        D91 (23/11/2026): the participant who contested adds evidence files to the contest
+        while the second Level 1.5 report is not confirmed yet. Files must be READY and
+        uploaded by the caller; ids already attached are ignored (idempotent). 409 when the
+        case is not CONTESTED or the second report is already confirmed.
+      parameters:
+        - {name: contractId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: breachCaseId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {$ref: '#/components/parameters/IdempotencyKey'}
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/BreachContestEvidenceRequest'}}}}
+      responses: {'204': {description: Evidence attached to the contest.}, '400': {$ref: '#/components/responses/BadRequest'}, '401': {$ref: '#/components/responses/Unauthorized'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}, '409': {$ref: '#/components/responses/Conflict'}}
   /api/v1/contracts/{contractId}/termination/execute:
     x-service-owner: contract-service
     post:
@@ -1507,6 +1528,29 @@ components:
         breachReasonCode: {$ref: '#/components/schemas/BreachReasonCode'}
         severity: {enum: [MINOR, MATERIAL]}
         evidenceFileIds: {type: array, items: {type: string, format: uuid}}
+    BreachContestRequest:
+      type: object
+      required: [reason]
+      additionalProperties: false
+      properties:
+        reason: {type: string, minLength: 1, maxLength: 1000, description: Why the contesting party disagrees (D91).}
+        evidenceFileIds:
+          type: array
+          maxItems: 10
+          uniqueItems: true
+          items: {type: string, format: uuid}
+          description: Optional READY files uploaded by the caller; more can be added later (D91).
+    BreachContestEvidenceRequest:
+      type: object
+      required: [fileIds]
+      additionalProperties: false
+      properties:
+        fileIds:
+          type: array
+          minItems: 1
+          maxItems: 10
+          uniqueItems: true
+          items: {type: string, format: uuid}
     BreachCaseResolutionRequest:
       type: object
       required: [finalBreachingRole, decisionSource, evidenceRefs]
