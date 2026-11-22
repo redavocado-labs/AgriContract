@@ -9,9 +9,8 @@ const auth = vi.hoisted(() => ({
 vi.mock("../src/shared/auth/keycloak", () => auth)
 vi.stubGlobal("window", { location: { origin: "http://localhost:5173" } })
 vi.stubEnv("VITE_API_BASE_URL", "http://localhost:8080")
-const { apiClient, newIdempotencyKey } = await import(
-  "../src/shared/api/client"
-)
+const { apiClient, newIdempotencyKey } =
+  await import("../src/shared/api/client")
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -20,7 +19,7 @@ beforeEach(() => {
 })
 
 describe("Gateway authentication", () => {
-  it("refreshes before sending and unwraps the legacy response", async () => {
+  it("refreshes before sending and returns the raw DTO", async () => {
     const adapter = vi.fn(async (config) => {
       expect(auth.refreshAccessToken).toHaveBeenCalledOnce()
       expect(config.headers.get("Authorization")).toBe("Bearer fresh-token")
@@ -29,7 +28,7 @@ describe("Gateway authentication", () => {
         status: 200,
         statusText: "OK",
         headers: {},
-        data: { success: true, data: { userId: "user" } },
+        data: { userId: "user" },
       }
     })
     const response = await apiClient.get("/api/v1/users/me", { adapter })
@@ -75,7 +74,7 @@ describe("Gateway authentication", () => {
           status,
           statusText: "",
           headers: {},
-          data: { code: "STEP_UP_REQUIRED" },
+          data: { status, code: "STEP_UP_REQUIRED", message: "" },
         })
       })
       await expect(
