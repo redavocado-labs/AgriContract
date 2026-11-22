@@ -2,6 +2,7 @@ package com.agricontract.contract.application.port;
 
 import com.agricontract.contract.domain.model.Contract;
 import com.agricontract.contract.domain.model.activation.ActivationRecovery;
+import com.agricontract.contract.domain.model.breach.BreachCase;
 import com.agricontract.contract.domain.model.consent.SignerRole;
 import com.agricontract.contract.domain.model.milestone.Milestone;
 import com.agricontract.contract.domain.model.milestone.SellerWeighDeclaration;
@@ -92,4 +93,22 @@ public interface ContractEventPublisher {
 
     /** milestone.buyer_confirmed (D78): confirmedBy is BUYER, or SYSTEM_TIMEOUT when the confirm window passed. */
     void milestoneBuyerConfirmed(Contract contract, Milestone milestone, String confirmedBy);
+
+    /** milestone.flagged (D80, D82): the buyer flagged the milestone; an allegation, no money or reputation effect. */
+    void milestoneFlagged(Contract contract, Milestone milestone);
+
+    /** breach.reported (D80): the allegation opened by the contest step; audit only, never money or reputation. */
+    void breachReported(BreachCase breachCase);
+
+    /**
+     * inspection.level1_5_requested with reason DISPUTE_ROUTED (D80, D82). initiatedByActorId is the seller who
+     * contested, or null when the system contested a silent QUALITY flag.
+     */
+    void inspectionLevel15Requested(Contract contract, Milestone milestone, String initiatedByActorId, Instant at);
+
+    /**
+     * milestone.dispute_resolved (D82): the QUANTITY flag settled on the buyer's weight because the seller was silent;
+     * resolutionFavors BUYER.
+     */
+    void milestoneDisputeResolvedForBuyer(Contract contract, Milestone milestone);
 }

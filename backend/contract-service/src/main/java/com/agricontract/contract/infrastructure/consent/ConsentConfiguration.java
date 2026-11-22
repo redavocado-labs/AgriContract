@@ -51,7 +51,9 @@ public class ConsentConfiguration {
             throws IOException {
         Map<ConsentActionType, SignerRole> actions = Map.of(ConsentActionType.DECLARE_SELLER_WEIGHT, SignerRole.SELLER,
                 ConsentActionType.RECORD_BUYER_RECEIPT, SignerRole.BUYER,
-                ConsentActionType.CONFIRM_CLEAN_RECEIPT, SignerRole.BUYER);
+                ConsentActionType.CONFIRM_CLEAN_RECEIPT, SignerRole.BUYER,
+                ConsentActionType.FLAG_MILESTONE_ISSUE, SignerRole.BUYER,
+                ConsentActionType.CONTEST_MILESTONE_FLAG, SignerRole.SELLER);
         Map<ConsentActionType, ConsentStatement> templates = new EnumMap<>(ConsentActionType.class);
         for (Map.Entry<ConsentActionType, SignerRole> action : actions.entrySet()) {
             String version = properties.milestoneActionVersions().get(action.getKey());

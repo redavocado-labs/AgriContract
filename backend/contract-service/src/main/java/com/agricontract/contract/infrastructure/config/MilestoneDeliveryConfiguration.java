@@ -1,6 +1,7 @@
 package com.agricontract.contract.infrastructure.config;
 
 import com.agricontract.contract.application.port.MilestoneDeliverySettings;
+import com.agricontract.contract.application.port.MilestoneFlagSettings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,5 +16,11 @@ public class MilestoneDeliveryConfiguration {
     MilestoneDeliverySettings milestoneDeliverySettings(
             @Value("${contract.milestone.weigh-correction-window:PT1H}") Duration weighCorrectionWindow) {
         return new MilestoneDeliverySettings(weighCorrectionWindow);
+    }
+
+    @Bean
+    MilestoneFlagSettings milestoneFlagSettings(
+            @Value("${contract.milestone.seller-response-window-days:2}") int sellerResponseWindowDays) {
+        return new MilestoneFlagSettings(sellerResponseWindowDays);
     }
 }

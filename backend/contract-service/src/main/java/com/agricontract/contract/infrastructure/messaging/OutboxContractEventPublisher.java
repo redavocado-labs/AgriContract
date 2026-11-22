@@ -3,6 +3,7 @@ package com.agricontract.contract.infrastructure.messaging;
 import com.agricontract.contract.application.port.ContractEventPublisher;
 import com.agricontract.contract.domain.model.Contract;
 import com.agricontract.contract.domain.model.activation.ActivationRecovery;
+import com.agricontract.contract.domain.model.breach.BreachCase;
 import com.agricontract.contract.domain.model.consent.SignerRole;
 import com.agricontract.contract.domain.model.milestone.BuyerReceipt;
 import com.agricontract.contract.domain.model.milestone.FundingStatus;
@@ -61,6 +62,10 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
     static final String MILESTONE_BUYER_RECEIVED = "milestone.buyer_received";
     static final String MILESTONE_SETTLED = "milestone.settled";
     static final String MILESTONE_BUYER_CONFIRMED = "milestone.buyer_confirmed";
+    static final String MILESTONE_FLAGGED = "milestone.flagged";
+    static final String BREACH_REPORTED = "breach.reported";
+    static final String INSPECTION_LEVEL1_5_REQUESTED = "inspection.level1_5_requested";
+    static final String MILESTONE_DISPUTE_RESOLVED = "milestone.dispute_resolved";
 
     private static final Pattern UUID_TEXT =
             Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -486,6 +491,89 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
         payload.put("confirmedBy", confirmedBy);
 
         outbox.append(new EventEnvelope(UUID.randomUUID(), MILESTONE_BUYER_CONFIRMED, 1, settlement.settledAt(),
+                PRODUCER, milestoneId, contractId, null, null, payload));
+    }
+
+    /** golden-flow-events.yaml milestoneFlagged, on agricontract.contracts; no mandatory consumer. */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void milestoneFlagged(Contract contract, Milestone milestone) {
+        if (milestone.flag() == null || !milestone.contractId().equals(contract.getContractId().value())) {
+            throw new IllegalStateException("milestone.flagged for milestone " + milestone.milestoneId()
+                    + " in status " + milestone.status());
+        }
+        String contractId = uuid(contract.getContractId().value(), "contractId");
+        String milestoneId = uuid(milestone.milestoneId(), "milestoneId");
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("contractId", contractId);
+        payload.put("milestoneId", milestoneId);
+        payload.put("flaggedBy", "BUYER");
+        payload.put("issueType", milestone.flag().issueType().name());
+
+        outbox.append(new EventEnvelope(UUID.randomUUID(), MILESTONE_FLAGGED, 1, milestone.flag().flaggedAt(),
+                PRODUCER, milestoneId, contractId, null, null, payload));
+    }
+
+    /** golden-flow-events.yaml breachReported: the allegation only; aggregateId is the BreachCase. */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void breachReported(BreachCase breachCase) {
+        String breachCaseId = uuid(breachCase.breachCaseId(), "breachCaseId");
+        String contractId = uuid(breachCase.contractId(), "contractId");
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("breachCaseId", breachCaseId);
+        payload.put("contractId", contractId);
+        payload.put("milestoneId", breachCase.milestoneId() == null ? null : uuid(breachCase.milestoneId(), "milestoneId"));
+        payload.put("requestedBy", breachCase.requestedBy().name());
+        payload.put("allegedBreachingRole",
+                breachCase.allegedBreachingRole() == null ? null : breachCase.allegedBreachingRole().name());
+        payload.put("breachReasonCode", breachCase.breachReasonCode().name());
+        payload.put("severity", breachCase.severity().name());
+
+        outbox.append(new EventEnvelope(UUID.randomUUID(), BREACH_REPORTED, 1, breachCase.reportedAt(), PRODUCER,
+                breachCaseId, contractId, null, null, payload));
+    }
+
+    /** golden-flow-events.yaml inspectionLevel15Requested, a command to inspection-service (DISPUTE_ROUTED). */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void inspectionLevel15Requested(Contract contract, Milestone milestone, String initiatedByActorId,
+                                           Instant at) {
+        if (!milestone.contractId().equals(contract.getContractId().value())) {
+            throw new IllegalStateException("inspection.level1_5_requested for milestone " + milestone.milestoneId()
+                    + " of another contract");
+        }
+        String contractId = uuid(contract.getContractId().value(), "contractId");
+        String milestoneId = uuid(milestone.milestoneId(), "milestoneId");
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("contractId", contractId);
+        payload.put("milestoneId", milestoneId);
+        payload.put("reason", "DISPUTE_ROUTED");
+        payload.put("reportDueBusinessDays", contract.getCoffeeTerms().snapshot().negotiated().inspectionTerms()
+                .reportDueBusinessDays());
+        payload.put("initiatedByActorId",
+                initiatedByActorId == null ? null : uuid(initiatedByActorId, "initiatedByActorId"));
+        payload.put("requestedAt", at.toString());
+
+        outbox.append(new EventEnvelope(UUID.randomUUID(), INSPECTION_LEVEL1_5_REQUESTED, 1, at, PRODUCER,
+                milestoneId, contractId, null, null, payload));
+    }
+
+    /** golden-flow-events.yaml milestoneDisputeResolved, to reputation-service: only the silent QUANTITY path, for the buyer. */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void milestoneDisputeResolvedForBuyer(Contract contract, Milestone milestone) {
+        MilestoneSettlement settlement = requireSettled(contract, milestone, MILESTONE_DISPUTE_RESOLVED);
+        String contractId = uuid(contract.getContractId().value(), "contractId");
+        String milestoneId = uuid(milestone.milestoneId(), "milestoneId");
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("contractId", contractId);
+        payload.put("milestoneId", milestoneId);
+        payload.put("flaggedBy", "BUYER");
+        payload.put("flaggedByUserId", uuid(contract.getBuyerId(), "flaggedByUserId"));
+        payload.put("resolutionFavors", "BUYER");
+
+        outbox.append(new EventEnvelope(UUID.randomUUID(), MILESTONE_DISPUTE_RESOLVED, 1, settlement.settledAt(),
                 PRODUCER, milestoneId, contractId, null, null, payload));
     }
 

@@ -1,0 +1,1 @@
+Tôi báo lô hàng của đợt giao này có vấn đề về [khối lượng/chất lượng]. Tôi hiểu đây mới là báo lỗi: tiền của đợt vẫn được giữ cho tới khi bên bán phản hồi hoặc có kết quả giám định.

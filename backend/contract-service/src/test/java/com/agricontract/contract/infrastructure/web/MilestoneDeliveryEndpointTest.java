@@ -17,10 +17,12 @@ import com.agricontract.contract.application.exception.FileServiceUnavailableExc
 import com.agricontract.contract.application.exception.MilestoneNotFoundException;
 import com.agricontract.contract.application.port.EvidenceFileStore;
 import com.agricontract.contract.application.usecase.ConfirmMilestoneCleanUseCase;
+import com.agricontract.contract.application.usecase.FlagMilestoneUseCase;
 import com.agricontract.contract.application.usecase.GetMilestoneDetailUseCase;
 import com.agricontract.contract.application.usecase.ReadMilestoneEvidenceUseCase;
 import com.agricontract.contract.application.usecase.RecordBuyerReceiptUseCase;
 import com.agricontract.contract.application.usecase.RecordSellerWeighedUseCase;
+import com.agricontract.contract.application.usecase.RespondToMilestoneFlagUseCase;
 import com.agricontract.contract.application.usecase.UploadMilestoneEvidenceUseCase;
 import com.agricontract.contract.domain.exception.ContractConflictException;
 import com.agricontract.contract.domain.exception.MilestoneRequestInvalidException;
@@ -50,14 +52,16 @@ class MilestoneDeliveryEndpointTest {
     private final RecordSellerWeighedUseCase weigh = mock(RecordSellerWeighedUseCase.class);
     private final RecordBuyerReceiptUseCase receive = mock(RecordBuyerReceiptUseCase.class);
     private final ConfirmMilestoneCleanUseCase confirm = mock(ConfirmMilestoneCleanUseCase.class);
+    private final FlagMilestoneUseCase flag = mock(FlagMilestoneUseCase.class);
+    private final RespondToMilestoneFlagUseCase respond = mock(RespondToMilestoneFlagUseCase.class);
     private final GetMilestoneDetailUseCase detail = mock(GetMilestoneDetailUseCase.class);
     private final ReadMilestoneEvidenceUseCase readEvidence = mock(ReadMilestoneEvidenceUseCase.class);
     private MockMvc mvc;
 
     @BeforeEach
     void setUp() {
-        MilestoneDeliveryController controller = new MilestoneDeliveryController(upload, weigh, receive, confirm, detail,
-                readEvidence, new ObjectMapper());
+        MilestoneDeliveryController controller = new MilestoneDeliveryController(upload, weigh, receive, confirm, flag, respond,
+                detail, readEvidence, new ObjectMapper());
         mvc = MockMvcBuilders.standaloneSetup(controller).setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
@@ -262,6 +266,68 @@ class MilestoneDeliveryEndpointTest {
         assertThat(command.getValue().statementVersion()).isEqualTo("1.0");
         assertThat(command.getValue().presentedContentHash()).isEqualTo(HASH);
         assertThat(command.getValue().actorId()).isEqualTo("user-1");
+    }
+
+    @Test
+    void flag_isBuyerOnly_hasAWrappedConsent_andReachesTheUseCaseWithTheIssueType() throws Exception {
+        String consent = "\"consent\":{\"statementVersion\":\"1.0\",\"presentedContentHash\":\"" + HASH + "\"}";
+        String good = "{\"issueType\":\"QUALITY\"," + consent + "}";
+        for (String role : List.of("SELLER", "ADMIN", "OPERATOR", "ARBITRATOR", "INSPECTOR")) {
+            mvc.perform(flagRequest(role, good)).andExpect(status().isForbidden());
+        }
+        doThrow(new MilestoneNotFoundException(CONTRACT.toString(), MILESTONE.toString())).doNothing()
+                .when(flag).requireBuyerOfMilestone(CONTRACT.toString(), MILESTONE.toString(), "user-1");
+
+        mvc.perform(flagRequest("BUYER", "{not json")).andExpect(status().isNotFound());
+        mvc.perform(flagRequest("BUYER", "{not json")).andExpect(status().isBadRequest());
+        mvc.perform(flagRequest("BUYER", "{\"issueType\":\"OTHER\"," + consent + "}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(flagRequest("BUYER", "{" + consent + "}")).andExpect(status().isBadRequest());
+        mvc.perform(flagRequest("BUYER", "{\"issueType\":\"QUANTITY\"}")).andExpect(status().isBadRequest());
+        mvc.perform(flagRequest("BUYER", good.replace("}}", "},\"extra\":1}"))).andExpect(status().isBadRequest());
+        verify(flag, never()).execute(any());
+
+        mvc.perform(flagRequest("BUYER", good)).andExpect(status().isNoContent());
+        ArgumentCaptor<MilestoneEvidenceCommands.Flag> command =
+                ArgumentCaptor.forClass(MilestoneEvidenceCommands.Flag.class);
+        verify(flag).execute(command.capture());
+        assertThat(command.getValue().issueType())
+                .isEqualTo(com.agricontract.contract.domain.model.milestone.FlagIssueType.QUALITY);
+        assertThat(command.getValue().presentedContentHash()).isEqualTo(HASH);
+        assertThat(command.getValue().actorId()).isEqualTo("user-1");
+    }
+
+    @Test
+    void respond_isSellerOnly_hasAFlatConsent_andReachesTheUseCase() throws Exception {
+        String good = "{\"statementVersion\":\"1.0\",\"presentedContentHash\":\"" + HASH + "\"}";
+        for (String role : List.of("BUYER", "ADMIN", "OPERATOR", "ARBITRATOR", "INSPECTOR")) {
+            mvc.perform(respondRequest(role, good)).andExpect(status().isForbidden());
+        }
+        doThrow(new MilestoneNotFoundException(CONTRACT.toString(), MILESTONE.toString())).doNothing()
+                .when(respond).requireSellerOfMilestone(CONTRACT.toString(), MILESTONE.toString(), "user-1");
+
+        mvc.perform(respondRequest("SELLER", "{not json")).andExpect(status().isNotFound());
+        mvc.perform(respondRequest("SELLER", "{not json")).andExpect(status().isBadRequest());
+        mvc.perform(respondRequest("SELLER", good.replace("}", ",\"extra\":1}"))).andExpect(status().isBadRequest());
+        verify(respond, never()).execute(any());
+
+        mvc.perform(respondRequest("SELLER", good)).andExpect(status().isNoContent());
+        ArgumentCaptor<MilestoneEvidenceCommands.Respond> command =
+                ArgumentCaptor.forClass(MilestoneEvidenceCommands.Respond.class);
+        verify(respond).execute(command.capture());
+        assertThat(command.getValue().presentedContentHash()).isEqualTo(HASH);
+    }
+
+    private static MockHttpServletRequestBuilder flagRequest(String role, String body) {
+        return post("/api/v1/contracts/{c}/milestones/{m}/flag", CONTRACT, MILESTONE).principal(auth(role))
+                .header("Idempotency-Key", UUID.randomUUID().toString())
+                .contentType(MediaType.APPLICATION_JSON).content(body);
+    }
+
+    private static MockHttpServletRequestBuilder respondRequest(String role, String body) {
+        return post("/api/v1/contracts/{c}/milestones/{m}/respond", CONTRACT, MILESTONE).principal(auth(role))
+                .header("Idempotency-Key", UUID.randomUUID().toString())
+                .contentType(MediaType.APPLICATION_JSON).content(body);
     }
 
     private static MockHttpServletRequestBuilder confirmRequest(String role, String body) {

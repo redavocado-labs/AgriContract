@@ -42,6 +42,7 @@ public final class Milestone {
     private SellerWeighing sellerWeighing;
     private BuyerReceipt buyerReceipt;
     private MilestoneSettlement settlement;
+    private MilestoneFlag flag;
 
     private Milestone(String milestoneId, String contractId, int milestoneIndex, BigDecimal committedQuantity,
                       LocalDate expectedDeliveryDate, int graceDays, LocalDate fundingScheduledDate,
@@ -49,7 +50,8 @@ public final class Milestone {
                       VndAmount batchAmount, Instant fundingRequestedAt, Instant fundingLockedAt,
                       int fundingDelayBusinessDays, String lastFundingFailureReason,
                       SellerWeighing sellerWeighing, BuyerReceipt buyerReceipt,
-                      MilestoneSettlement settlement) {
+                      MilestoneSettlement settlement, MilestoneFlag flag) {
+        this.flag = flag;
         this.milestoneId = milestoneId;
         this.contractId = contractId;
         this.milestoneIndex = milestoneIndex;
@@ -85,7 +87,7 @@ public final class Milestone {
         }
         return new Milestone(milestoneId, contractId, term.milestoneIndex(), term.committedQuantity(),
                 term.expectedDeliveryDate(), term.graceDays(), fundingScheduledDate, MilestoneStatus.CREATED,
-                FundingStatus.NOT_REQUESTED, null, null, null, null, 0, null, null, null, null);
+                FundingStatus.NOT_REQUESTED, null, null, null, null, 0, null, null, null, null, null);
     }
 
     public static Milestone reconstitute(String milestoneId, String contractId, int milestoneIndex,
@@ -96,10 +98,24 @@ public final class Milestone {
                                          int fundingDelayBusinessDays, String lastFundingFailureReason,
                                          SellerWeighing sellerWeighing, BuyerReceipt buyerReceipt,
                                          MilestoneSettlement settlement) {
+        return reconstitute(milestoneId, contractId, milestoneIndex, committedQuantity, expectedDeliveryDate,
+                graceDays, fundingScheduledDate, status, fundingStatus, effectiveUnitPrice, batchAmount,
+                fundingRequestedAt, fundingLockedAt, fundingDelayBusinessDays, lastFundingFailureReason,
+                sellerWeighing, buyerReceipt, settlement, null);
+    }
+
+    public static Milestone reconstitute(String milestoneId, String contractId, int milestoneIndex,
+                                         BigDecimal committedQuantity, LocalDate expectedDeliveryDate, int graceDays,
+                                         LocalDate fundingScheduledDate, MilestoneStatus status,
+                                         FundingStatus fundingStatus, VndAmount effectiveUnitPrice,
+                                         VndAmount batchAmount, Instant fundingRequestedAt, Instant fundingLockedAt,
+                                         int fundingDelayBusinessDays, String lastFundingFailureReason,
+                                         SellerWeighing sellerWeighing, BuyerReceipt buyerReceipt,
+                                         MilestoneSettlement settlement, MilestoneFlag flag) {
         return new Milestone(milestoneId, contractId, milestoneIndex, committedQuantity, expectedDeliveryDate,
                 graceDays, fundingScheduledDate, status, fundingStatus, effectiveUnitPrice, batchAmount,
                 fundingRequestedAt, fundingLockedAt, fundingDelayBusinessDays, lastFundingFailureReason,
-                sellerWeighing, buyerReceipt, settlement);
+                sellerWeighing, buyerReceipt, settlement, flag);
     }
 
     /** True from fundingScheduledDate on (ICT date), while funding has not been requested. */
@@ -261,6 +277,69 @@ public final class Milestone {
                 result.buyerRefund(), settledAt);
         this.status = MilestoneStatus.SETTLED;
         return settlement;
+    }
+
+    /**
+     * The buyer's flag (D80, D82): BUYER_RECEIVED becomes AWAITING_SELLER_RESPONSE. Only from BUYER_RECEIVED, so a
+     * second flag is MILESTONE_ACTION_NOT_ALLOWED. The confirm window and the contract state are checked by the caller.
+     */
+    public void flagIssue(FlagIssueType issueType, Instant flaggedAt) {
+        Objects.requireNonNull(issueType, "issueType");
+        Objects.requireNonNull(flaggedAt, "flaggedAt");
+        if (status != MilestoneStatus.BUYER_RECEIVED || buyerReceipt == null || sellerWeighing == null) {
+            throw new ContractConflictException(ContractConflictException.MILESTONE_ACTION_NOT_ALLOWED,
+                    "Only a BUYER_RECEIVED milestone can be flagged (" + status + ").");
+        }
+        this.flag = new MilestoneFlag(issueType, flaggedAt, null, null, null);
+        this.status = MilestoneStatus.AWAITING_SELLER_RESPONSE;
+    }
+
+    /**
+     * The contest step (D80, D82), by the seller or by the system for a silent QUALITY flag: AWAITING_SELLER_RESPONSE
+     * becomes CONTESTED and remembers the BreachCase opened for it. Only from AWAITING_SELLER_RESPONSE.
+     */
+    public void contest(ContestedBy by, String breachCaseId, Instant contestedAt) {
+        Objects.requireNonNull(by, "by");
+        Objects.requireNonNull(breachCaseId, "breachCaseId");
+        Objects.requireNonNull(contestedAt, "contestedAt");
+        requireAwaitingSellerResponse("contested");
+        this.flag = new MilestoneFlag(flag.issueType(), flag.flaggedAt(), contestedAt, by, breachCaseId);
+        this.status = MilestoneStatus.CONTESTED;
+    }
+
+    /**
+     * D82: a QUANTITY flag the seller left unanswered settles on the buyer's weight. Only from
+     * AWAITING_SELLER_RESPONSE with a QUANTITY flag and a locked batch.
+     */
+    public MilestoneSettlement settleSellerSilentQuantity(Instant settledAt) {
+        Objects.requireNonNull(settledAt, "settledAt");
+        requireAwaitingSellerResponse("settled on the seller's silence");
+        if (flag.issueType() != FlagIssueType.QUANTITY) {
+            throw new ContractConflictException(ContractConflictException.MILESTONE_ACTION_NOT_ALLOWED,
+                    "Only a QUANTITY flag settles on the seller's silence (" + flag.issueType() + ").");
+        }
+        if (batchAmount == null || effectiveUnitPrice == null) {
+            throw new InvalidMilestoneTransitionException("Milestone " + milestoneId + " has no locked batch");
+        }
+        CleanSettlement.Result result = SellerSilenceSettlement.compute(buyerReceipt.receivedWeight(),
+                effectiveUnitPrice, batchAmount);
+        this.settlement = new MilestoneSettlement(SettlementPath.SELLER_SILENT_QUANTITY, result.billableKg(),
+                result.sellerAmount(), result.buyerRefund(), settledAt);
+        this.status = MilestoneStatus.SETTLED;
+        return settlement;
+    }
+
+    private void requireAwaitingSellerResponse(String action) {
+        if (status != MilestoneStatus.AWAITING_SELLER_RESPONSE || flag == null || buyerReceipt == null
+                || sellerWeighing == null) {
+            throw new ContractConflictException(ContractConflictException.MILESTONE_ACTION_NOT_ALLOWED,
+                    "Only an AWAITING_SELLER_RESPONSE milestone can be " + action + " (" + status + ").");
+        }
+    }
+
+    /** The buyer's flag and the contest, null until flagged. */
+    public MilestoneFlag flag() {
+        return flag;
     }
 
     /** The settlement, null until SETTLED. */

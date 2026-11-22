@@ -4,15 +4,18 @@ import com.agricontract.contract.application.dto.MilestoneEvidenceCommands;
 import com.agricontract.contract.application.exception.UnauthorizedContractActionException;
 import com.agricontract.contract.application.port.EvidenceFileStore;
 import com.agricontract.contract.application.usecase.ConfirmMilestoneCleanUseCase;
+import com.agricontract.contract.application.usecase.FlagMilestoneUseCase;
 import com.agricontract.contract.application.usecase.GetMilestoneDetailUseCase;
 import com.agricontract.contract.application.usecase.ReadMilestoneEvidenceUseCase;
 import com.agricontract.contract.application.usecase.RecordBuyerReceiptUseCase;
 import com.agricontract.contract.application.usecase.RecordSellerWeighedUseCase;
+import com.agricontract.contract.application.usecase.RespondToMilestoneFlagUseCase;
 import com.agricontract.contract.application.usecase.UploadMilestoneEvidenceUseCase;
 import com.agricontract.contract.infrastructure.web.dto.BuyerReceivedRequest;
 import com.agricontract.contract.infrastructure.web.dto.ConsentInput;
 import com.agricontract.contract.infrastructure.web.dto.MilestoneDetailResponse;
 import com.agricontract.contract.infrastructure.web.dto.MilestoneEvidenceAccepted;
+import com.agricontract.contract.infrastructure.web.dto.MilestoneFlagRequest;
 import com.agricontract.contract.infrastructure.web.dto.SellerWeighedRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -43,7 +46,7 @@ import java.util.stream.Collectors;
 
 /**
  * Milestone delivery actions of the parties (milestone-escrow design §3.2.1): evidence upload (D71), the seller's
- * weigh (D72-D75) the buyer's receipt (D76) and clean confirmation (D77); and the BF-04 reads (D84): the milestone detail and the evidence bytes. The gateway's role is checked here coarsely; the use cases check the party on the contract.
+ * weigh (D72-D75) the buyer's receipt (D76) and clean confirmation (D77), the buyer's flag and the seller's contest (D80); and the BF-04 reads (D84): the milestone detail and the evidence bytes. The gateway's role is checked here coarsely; the use cases check the party on the contract.
  */
 @RestController
 @RequestMapping("/api/v1/contracts/{contractId}/milestones/{milestoneId}")
@@ -53,20 +56,26 @@ public class MilestoneDeliveryController {
     private final RecordSellerWeighedUseCase weigh;
     private final RecordBuyerReceiptUseCase receive;
     private final ConfirmMilestoneCleanUseCase confirm;
+    private final FlagMilestoneUseCase flag;
+    private final RespondToMilestoneFlagUseCase respond;
     private final GetMilestoneDetailUseCase detail;
     private final ReadMilestoneEvidenceUseCase readEvidence;
     private final ObjectReader weighReader;
     private final ObjectReader receiveReader;
     private final ObjectReader confirmReader;
+    private final ObjectReader flagReader;
 
     public MilestoneDeliveryController(UploadMilestoneEvidenceUseCase upload, RecordSellerWeighedUseCase weigh,
                                        RecordBuyerReceiptUseCase receive, ConfirmMilestoneCleanUseCase confirm,
+                                       FlagMilestoneUseCase flag, RespondToMilestoneFlagUseCase respond,
                                        GetMilestoneDetailUseCase detail, ReadMilestoneEvidenceUseCase readEvidence,
                                        ObjectMapper objectMapper) {
         this.upload = upload;
         this.weigh = weigh;
         this.receive = receive;
         this.confirm = confirm;
+        this.flag = flag;
+        this.respond = respond;
         this.detail = detail;
         this.readEvidence = readEvidence;
         this.weighReader = objectMapper.readerFor(SellerWeighedRequest.class)
@@ -76,6 +85,8 @@ public class MilestoneDeliveryController {
                 .with(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .with(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
         this.confirmReader = objectMapper.readerFor(ConsentInput.class)
+                .with(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        this.flagReader = objectMapper.readerFor(MilestoneFlagRequest.class)
                 .with(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     }
 
@@ -154,6 +165,43 @@ public class MilestoneDeliveryController {
         confirm.requireBuyerOfMilestone(contractId.toString(), milestoneId.toString(), auth.getName());
         ConsentInput consent = read(confirmReader, body, ConsentInput.class);
         confirm.execute(new MilestoneEvidenceCommands.Confirm(contractId.toString(), milestoneId.toString(),
+                auth.getName(), idempotencyKey, consent.statementVersion(), consent.presentedContentHash()));
+        return ResponseEntity.noContent().build();
+    }
+
+    /** The buyer flags a BUYER_RECEIVED milestone inside the confirm window (D80, D82). 204. */
+    @PostMapping(path = "/flag", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(operationId = "flagMilestoneIssue", summary = "BUYER: flag a quantity or quality issue on this milestone")
+    public ResponseEntity<Void> flagMilestoneIssue(
+            @PathVariable UUID contractId,
+            @PathVariable UUID milestoneId,
+            @RequestHeader("Idempotency-Key") UUID idempotencyKey,
+            @RequestBody String body,
+            Authentication auth) {
+        requireRole(auth, Set.of("ROLE_BUYER"), "Only the BUYER can flag a milestone.");
+        // API order: party (403), milestone (404), then the body (400).
+        flag.requireBuyerOfMilestone(contractId.toString(), milestoneId.toString(), auth.getName());
+        MilestoneFlagRequest request = read(flagReader, body, MilestoneFlagRequest.class);
+        flag.execute(new MilestoneEvidenceCommands.Flag(contractId.toString(), milestoneId.toString(),
+                auth.getName(), idempotencyKey, request.issueType(), request.consent().statementVersion(),
+                request.consent().presentedContentHash()));
+        return ResponseEntity.noContent().build();
+    }
+
+    /** The seller contests the flag inside the response window (D80): CONTESTED, Level 1.5 requested. 204. */
+    @PostMapping(path = "/respond", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(operationId = "respondToMilestoneFlag", summary = "SELLER: contest the buyer's flag and request an inspection")
+    public ResponseEntity<Void> respondToMilestoneFlag(
+            @PathVariable UUID contractId,
+            @PathVariable UUID milestoneId,
+            @RequestHeader("Idempotency-Key") UUID idempotencyKey,
+            @RequestBody String body,
+            Authentication auth) {
+        requireRole(auth, Set.of("ROLE_SELLER"), "Only the SELLER can respond to a flag.");
+        // API order: party (403), milestone (404), then the body (400).
+        respond.requireSellerOfMilestone(contractId.toString(), milestoneId.toString(), auth.getName());
+        ConsentInput consent = read(confirmReader, body, ConsentInput.class);
+        respond.execute(new MilestoneEvidenceCommands.Respond(contractId.toString(), milestoneId.toString(),
                 auth.getName(), idempotencyKey, consent.statementVersion(), consent.presentedContentHash()));
         return ResponseEntity.noContent().build();
     }

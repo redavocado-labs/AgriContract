@@ -12,11 +12,11 @@ import java.util.List;
 
 /**
  * MilestoneDetailResponse (golden-flow-api.yaml, D84). Every key is always present; a block is null until its step
- * has happened. settlement is null until the milestone is SETTLED; flag and breachCaseId are filled by the issues that produce them (#124 onward); until then they are null, which is also their true value before those steps.
+ * has happened. settlement is null until the milestone is SETTLED; flag and breachCaseId are null until the milestone is flagged / contested (MilestoneFlagView).
  */
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public record MilestoneDetailResponse(String contractId, MilestoneResponse milestone,
-                                      SellerDeclarationView sellerDeclaration, BuyerReceiptView buyerReceipt, Object flag,
+                                      SellerDeclarationView sellerDeclaration, BuyerReceiptView buyerReceipt, FlagView flag,
                                       List<EvidenceView> evidence, SettlementView settlement, String breachCaseId) {
 
     public static MilestoneDetailResponse from(MilestoneDetailView view) {
@@ -46,8 +46,16 @@ public record MilestoneDetailResponse(String contractId, MilestoneResponse miles
             settlement = new SettlementView(s.path().name(), kg4(s.billableQuantityKg()), s.sellerAmount().wire(),
                     s.buyerRefundAmount().wire(), s.settledAt().toString());
         }
-        return new MilestoneDetailResponse(view.contractId(), summary, declaration, receipt, null, evidence,
-                settlement, null);
+        FlagView flag = null;
+        if (view.flag() != null) {
+            var f = view.flag().flag();
+            flag = new FlagView(f.issueType().name(), f.flaggedAt().toString(),
+                    view.flag().sellerResponseWindowClosesAt().toString(),
+                    f.contestedAt() == null ? null : f.contestedAt().toString(),
+                    f.contestedBy() == null ? null : f.contestedBy().name());
+        }
+        return new MilestoneDetailResponse(view.contractId(), summary, declaration, receipt, flag, evidence,
+                settlement, m.flag() == null ? null : m.flag().breachCaseId());
     }
 
     private static EvidenceView evidence(MilestoneEvidenceFile f) {
@@ -71,6 +79,11 @@ public record MilestoneDetailResponse(String contractId, MilestoneResponse miles
     /** The billable quantity is exact (up to four decimals), a JSON number with no trailing zeros. */
     private static BigDecimal kg4(BigDecimal value) {
         return value.stripTrailingZeros();
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record FlagView(String issueType, String flaggedAt, String sellerResponseWindowClosesAt,
+                           String contestedAt, String contestedBy) {
     }
 
     @JsonInclude(JsonInclude.Include.ALWAYS)
