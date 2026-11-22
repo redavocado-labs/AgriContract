@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from './config/env.validation';
+import { FileByIdModule } from './file-by-id.module';
 import { HealthModule } from './infrastructure/health/health';
 import { PersistenceModule } from './infrastructure/persistence/persistence.module';
 import { StorageModule } from './infrastructure/storage/storage.module';
@@ -16,6 +17,7 @@ import { StoreOnBehalfOfModule } from './store-on-behalf-of.module';
     HealthModule,
     StoreFileModule,
     StoreOnBehalfOfModule,
+    FileByIdModule,
   ],
 })
 export class AppModule {}

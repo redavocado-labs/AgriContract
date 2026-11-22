@@ -30,7 +30,12 @@ export interface StoredFile {
   /** Bytes actually stored, counted while streaming (not the declared length). */
   fileSize: number;
   status: FileStatus;
+  /** Set by confirm-attached once the owning service kept the fileId (§7). */
   attached: boolean;
+  /** Blocks every deletion while set (§7). Set by an Admin, never by file-service. */
+  legalHold: boolean;
+  /** Tombstone of the two-step deletion (§7); the blob goes after it. Null while kept. */
+  deletedAt: Date | null;
   /**
    * The caller's Idempotency-Key, unique per uploadedBy (D60); null when the
    * entrypoint has none.
@@ -51,5 +56,20 @@ export function newStoredFile(
     | 'idempotencyKey'
   >,
 ): StoredFile {
-  return { ...fields, status: 'PROCESSING', attached: false };
+  return {
+    ...fields,
+    status: 'PROCESSING',
+    attached: false,
+    legalHold: false,
+    deletedAt: null,
+  };
+}
+
+/**
+ * Whether GET serves the file (supplementary-services-api.yaml getFile: "404
+ * Not found or not READY"): READY and not deleted. A file still being
+ * scanned, a rejected one and a deleted one look the same to the caller.
+ */
+export function isReadable(file: StoredFile): boolean {
+  return file.status === 'READY' && file.deletedAt === null;
 }

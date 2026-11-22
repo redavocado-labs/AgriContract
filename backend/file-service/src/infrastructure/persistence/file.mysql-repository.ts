@@ -1,4 +1,4 @@
-import type { Pool, RowDataPacket } from 'mysql2/promise';
+import type { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import {
   IdempotencyKeyTakenError,
   type FileRepository,
@@ -20,11 +20,16 @@ interface FileRow extends RowDataPacket {
   file_size: number | string;
   status: string;
   attached: number;
+  legal_hold: number;
+  deleted_at: Date | null;
   idempotency_key: string | null;
 }
 
-const COLUMNS = `file_id, storage_hash, uploaded_by, ingest_channel, content_type,
+/** Written by insert(); the hold and deletion columns take their defaults. */
+const INSERT_COLUMNS = `file_id, storage_hash, uploaded_by, ingest_channel, content_type,
               file_size, status, attached, idempotency_key`;
+
+const COLUMNS = `${INSERT_COLUMNS}, legal_hold, deleted_at`;
 
 /** The unique index of V1 behind D60's one upload per (uploaded_by, idempotency_key). */
 const IDEMPOTENCY_INDEX = 'uq_file_uploader_idempotency';
@@ -34,10 +39,10 @@ export class FileMysqlRepository implements FileRepository {
   constructor(private readonly pool: Pool) {}
 
   async insert(file: StoredFile): Promise<void> {
-    // created_at, retention and deletion columns take their table defaults.
+    // created_at, retention, hold and deletion columns take their table defaults.
     try {
       await this.pool.execute(
-        `INSERT INTO file (${COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO file (${INSERT_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           file.fileId,
           file.storageHash,
@@ -77,6 +82,22 @@ export class FileMysqlRepository implements FileRepository {
     );
     return rows.length === 0 ? null : toStoredFile(rows[0]);
   }
+
+  async markAttached(fileId: string): Promise<void> {
+    await this.pool.execute(
+      'UPDATE file SET attached = TRUE WHERE file_id = ? AND deleted_at IS NULL',
+      [fileId],
+    );
+  }
+
+  async tombstone(fileId: string, reason: string): Promise<boolean> {
+    const [result] = await this.pool.execute<ResultSetHeader>(
+      `UPDATE file SET deleted_at = CURRENT_TIMESTAMP, deletion_reason = ?
+        WHERE file_id = ? AND deleted_at IS NULL AND legal_hold = FALSE`,
+      [reason, fileId],
+    );
+    return result.affectedRows === 1;
+  }
 }
 
 /**
@@ -104,6 +125,8 @@ function toStoredFile(row: FileRow): StoredFile {
     fileSize: Number(row.file_size),
     status: oneOf(FILE_STATUSES, row.status, 'status'),
     attached: row.attached === 1,
+    legalHold: row.legal_hold === 1,
+    deletedAt: row.deleted_at,
     idempotencyKey: row.idempotency_key,
   };
 }

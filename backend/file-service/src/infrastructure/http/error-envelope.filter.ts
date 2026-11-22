@@ -11,13 +11,15 @@ import type { Request, Response } from 'express';
 import {
   FileLengthMismatchError,
   FileMetadataUnavailableError,
+  FileNotFoundError,
   FileTooLargeError,
+  LegalHoldActiveError,
   InvalidFileLengthError,
   ObjectStorageUnavailableError,
   UnsupportedContentTypeError,
   failureCode,
 } from '../../application/file-errors';
-import { StoreOnBehalfOfRequestInvalidError } from './store-on-behalf-of.request';
+import { InvalidRequestHeadersError } from './store-on-behalf-of.request';
 import { discardUnreadBody } from './unread-body';
 
 /**
@@ -84,7 +86,7 @@ export class ErrorEnvelopeFilter implements ExceptionFilter {
 }
 
 function map(exception: unknown): Mapped {
-  if (exception instanceof StoreOnBehalfOfRequestInvalidError) {
+  if (exception instanceof InvalidRequestHeadersError) {
     return {
       status: HttpStatus.BAD_REQUEST,
       code: 'VALIDATION_ERROR',
@@ -102,6 +104,20 @@ function map(exception: unknown): Mapped {
       message: exception.message,
     };
   }
+  if (exception instanceof FileNotFoundError) {
+    return {
+      status: HttpStatus.NOT_FOUND,
+      code: 'NOT_FOUND',
+      message: exception.message,
+    };
+  }
+  if (exception instanceof LegalHoldActiveError) {
+    return {
+      status: HttpStatus.CONFLICT,
+      code: 'LEGAL_HOLD_ACTIVE',
+      message: exception.message,
+    };
+  }
   if (exception instanceof FileTooLargeError) {
     return {
       status: HttpStatus.PAYLOAD_TOO_LARGE,
@@ -113,7 +129,8 @@ function map(exception: unknown): Mapped {
     return {
       status: HttpStatus.SERVICE_UNAVAILABLE,
       code: 'FILE_STORAGE_UNAVAILABLE',
-      message: 'Object storage is unavailable; nothing was kept',
+      // An upload keeps nothing then, and every route is safe to send again.
+      message: 'Object storage is unavailable; safe to retry',
       log: exception.message,
     };
   }
@@ -121,7 +138,7 @@ function map(exception: unknown): Mapped {
     return {
       status: HttpStatus.SERVICE_UNAVAILABLE,
       code: 'FILE_METADATA_UNAVAILABLE',
-      message: 'The file database is unavailable; nothing was kept',
+      message: 'The file database is unavailable; safe to retry',
       log: exception.message,
     };
   }
@@ -149,6 +166,7 @@ const REASONS: Record<number, string> = {
   400: 'Bad Request',
   401: 'Unauthorized',
   404: 'Not Found',
+  409: 'Conflict',
   413: 'Payload Too Large',
   500: 'Internal Server Error',
   503: 'Service Unavailable',
