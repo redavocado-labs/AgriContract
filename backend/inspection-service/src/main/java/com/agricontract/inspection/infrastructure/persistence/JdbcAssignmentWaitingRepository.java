@@ -71,6 +71,13 @@ public class JdbcAssignmentWaitingRepository implements AssignmentWaitingReposit
     }
 
     @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Optional<WaitingAssignment> lock(Key key) {
+        return jdbc.query("SELECT * FROM level1_5_assignment_waiting WHERE contract_id=? AND milestone_id=? FOR UPDATE",
+                ROW, key.contractId(), key.milestoneId()).stream().findFirst();
+    }
+
+    @Override
     public List<Key> pendingAfter(Key after, int limit) {
         RowMapper<Key> keys = (rs, n) -> new Key(rs.getString("contract_id"), rs.getString("milestone_id"));
         if (after == null) {

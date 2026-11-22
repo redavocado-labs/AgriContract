@@ -73,6 +73,17 @@ automatically.
 
 ## Level 1.5 assignment lifecycle
 
+The cancellation event `inspection.level1_5_cancelled` shares the request queue on
+`agricontract.contracts`; both routing keys also bind the restricted DLQ through
+the direct inspection DLX. Event receipts and lifecycle changes share a transaction.
+Cancellation deletes a waiting row and queues an Operator CANCELLED command, or
+ends an active assignment at `cancelledAt` and queues an inspector CANCELLED command
+using the current verified User Service email. Nothing open is a no-op. Invalid
+messages are rejected to the DLQ; dependency failures follow the retry policy.
+An event predating the active assignment fails for investigation without changing history.
+No new migration is required for cancellation. A delayed retry of a previously failed
+request can still create a stale assignment after cancellation (D57); there is no tombstone.
+
 The contract-facing `inspection.level1_5_assigned` event uses exchange
 `agricontract.inspection` and that event type as routing key. Current main does
 not declare a durable contract-service queue bound to this key. Contract-service
