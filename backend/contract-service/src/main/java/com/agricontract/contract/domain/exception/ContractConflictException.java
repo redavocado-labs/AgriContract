@@ -37,6 +37,8 @@ public class ContractConflictException extends RuntimeException {
     public static final String EVIDENCE_REJECTED = "EVIDENCE_REJECTED";
     /** D74: the presentedContentHash of an operational consent is not the server's hash of the action content. */
     public static final String CONSENT_CONTENT_MISMATCH = "CONSENT_CONTENT_MISMATCH";
+    /** D77: the contract requires an inspection report before settlement and none is confirmed yet. */
+    public static final String INSPECTION_REPORT_PENDING = "INSPECTION_REPORT_PENDING";
 
     private final String code;
 

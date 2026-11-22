@@ -16,6 +16,7 @@ import com.agricontract.contract.application.exception.FileRejectedException;
 import com.agricontract.contract.application.exception.FileServiceUnavailableException;
 import com.agricontract.contract.application.exception.MilestoneNotFoundException;
 import com.agricontract.contract.application.port.EvidenceFileStore;
+import com.agricontract.contract.application.usecase.ConfirmMilestoneCleanUseCase;
 import com.agricontract.contract.application.usecase.GetMilestoneDetailUseCase;
 import com.agricontract.contract.application.usecase.ReadMilestoneEvidenceUseCase;
 import com.agricontract.contract.application.usecase.RecordBuyerReceiptUseCase;
@@ -48,13 +49,14 @@ class MilestoneDeliveryEndpointTest {
     private final UploadMilestoneEvidenceUseCase upload = mock(UploadMilestoneEvidenceUseCase.class);
     private final RecordSellerWeighedUseCase weigh = mock(RecordSellerWeighedUseCase.class);
     private final RecordBuyerReceiptUseCase receive = mock(RecordBuyerReceiptUseCase.class);
+    private final ConfirmMilestoneCleanUseCase confirm = mock(ConfirmMilestoneCleanUseCase.class);
     private final GetMilestoneDetailUseCase detail = mock(GetMilestoneDetailUseCase.class);
     private final ReadMilestoneEvidenceUseCase readEvidence = mock(ReadMilestoneEvidenceUseCase.class);
     private MockMvc mvc;
 
     @BeforeEach
     void setUp() {
-        MilestoneDeliveryController controller = new MilestoneDeliveryController(upload, weigh, receive, detail,
+        MilestoneDeliveryController controller = new MilestoneDeliveryController(upload, weigh, receive, confirm, detail,
                 readEvidence, new ObjectMapper());
         mvc = MockMvcBuilders.standaloneSetup(controller).setControllerAdvice(new GlobalExceptionHandler()).build();
     }
@@ -235,6 +237,37 @@ class MilestoneDeliveryEndpointTest {
             mvc.perform(receiveRequest("BUYER", bad)).andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
         }
+    }
+
+    @Test
+    void confirm_isBuyerOnly_checksPartyThenMilestone_thenTheBody_andReachesTheUseCase() throws Exception {
+        String good = "{\"statementVersion\":\"1.0\",\"presentedContentHash\":\"" + HASH + "\"}";
+        for (String role : List.of("SELLER", "ADMIN", "OPERATOR", "ARBITRATOR", "INSPECTOR")) {
+            mvc.perform(confirmRequest(role, good)).andExpect(status().isForbidden());
+        }
+        doThrow(new MilestoneNotFoundException(CONTRACT.toString(), MILESTONE.toString())).doNothing()
+                .when(confirm).requireBuyerOfMilestone(CONTRACT.toString(), MILESTONE.toString(), "user-1");
+
+        mvc.perform(confirmRequest("BUYER", "{not json")).andExpect(status().isNotFound());
+        mvc.perform(confirmRequest("BUYER", "{not json")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        mvc.perform(confirmRequest("BUYER", good.replace("}", ",\"extra\":1}"))).andExpect(status().isBadRequest());
+        mvc.perform(confirmRequest("BUYER", "{\"statementVersion\":\"1.0\"}")).andExpect(status().isBadRequest());
+        verify(confirm, never()).execute(any());
+
+        mvc.perform(confirmRequest("BUYER", good)).andExpect(status().isNoContent());
+        ArgumentCaptor<MilestoneEvidenceCommands.Confirm> command =
+                ArgumentCaptor.forClass(MilestoneEvidenceCommands.Confirm.class);
+        verify(confirm).execute(command.capture());
+        assertThat(command.getValue().statementVersion()).isEqualTo("1.0");
+        assertThat(command.getValue().presentedContentHash()).isEqualTo(HASH);
+        assertThat(command.getValue().actorId()).isEqualTo("user-1");
+    }
+
+    private static MockHttpServletRequestBuilder confirmRequest(String role, String body) {
+        return post("/api/v1/contracts/{c}/milestones/{m}/confirm", CONTRACT, MILESTONE).principal(auth(role))
+                .header("Idempotency-Key", UUID.randomUUID().toString())
+                .contentType(MediaType.APPLICATION_JSON).content(body);
     }
 
     private static MockHttpServletRequestBuilder receiveRequest(String role, String body) {

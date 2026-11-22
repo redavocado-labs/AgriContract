@@ -83,4 +83,13 @@ public interface ContractEventPublisher {
 
     /** milestone.buyer_received (D76): the milestone is BUYER_RECEIVED and holds the receipt; starts the confirm window. */
     void milestoneBuyerReceived(Contract contract, Milestone milestone);
+
+    /**
+     * milestone.settled (D77): the milestone is SETTLED and holds its settlement; escrow releases actualAmount to the
+     * seller and returns the rest of lockedAmount to the buyer.
+     */
+    void milestoneSettled(Contract contract, Milestone milestone);
+
+    /** milestone.buyer_confirmed (D78): confirmedBy is BUYER, or SYSTEM_TIMEOUT when the confirm window passed. */
+    void milestoneBuyerConfirmed(Contract contract, Milestone milestone, String confirmedBy);
 }

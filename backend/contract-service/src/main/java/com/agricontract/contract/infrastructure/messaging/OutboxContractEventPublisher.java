@@ -7,6 +7,7 @@ import com.agricontract.contract.domain.model.consent.SignerRole;
 import com.agricontract.contract.domain.model.milestone.BuyerReceipt;
 import com.agricontract.contract.domain.model.milestone.FundingStatus;
 import com.agricontract.contract.domain.model.milestone.Milestone;
+import com.agricontract.contract.domain.model.milestone.MilestoneSettlement;
 import com.agricontract.contract.domain.model.milestone.MilestoneStatus;
 import com.agricontract.contract.domain.model.milestone.SellerWeighDeclaration;
 import com.agricontract.contract.domain.model.milestone.SellerWeight;
@@ -58,6 +59,8 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
     static final String MILESTONE_FUNDING_REQUESTED = "milestone.funding_requested";
     static final String MILESTONE_SELLER_WEIGHED = "milestone.seller_weighed";
     static final String MILESTONE_BUYER_RECEIVED = "milestone.buyer_received";
+    static final String MILESTONE_SETTLED = "milestone.settled";
+    static final String MILESTONE_BUYER_CONFIRMED = "milestone.buyer_confirmed";
 
     private static final Pattern UUID_TEXT =
             Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -441,5 +444,58 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
 
         outbox.append(new EventEnvelope(UUID.randomUUID(), MILESTONE_BUYER_RECEIVED, 1, receipt.receivedAt(),
                 PRODUCER, milestoneId, contractId, null, null, payload));
+    }
+
+    /**
+     * golden-flow-events.yaml milestoneSettled, to escrow-service on agricontract.contracts. Money is the whole-dong
+     * string ("487500000.00"), as batchAmount in milestone.funding_requested; lockedAmount is the batch, actualAmount
+     * what the seller earns (0.00 is allowed), the rest goes back to the buyer.
+     */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void milestoneSettled(Contract contract, Milestone milestone) {
+        MilestoneSettlement settlement = requireSettled(contract, milestone, MILESTONE_SETTLED);
+        String contractId = uuid(contract.getContractId().value(), "contractId");
+        String milestoneId = uuid(milestone.milestoneId(), "milestoneId");
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("contractId", contractId);
+        payload.put("milestoneId", milestoneId);
+        payload.put("lockedAmount", milestone.batchAmount().wire());
+        payload.put("actualAmount", settlement.sellerAmount().wire());
+        payload.put("recipients", List.of(
+                recipient(contract.getBuyerId(), contract.getBuyerEmail(), "BUYER"),
+                recipient(contract.getSellerId(), contract.getSellerEmail(), "SELLER")));
+
+        outbox.append(new EventEnvelope(UUID.randomUUID(), MILESTONE_SETTLED, 1, settlement.settledAt(), PRODUCER,
+                milestoneId, contractId, null, null, payload));
+    }
+
+    /** golden-flow-events.yaml milestoneBuyerConfirmed, on agricontract.contracts. */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void milestoneBuyerConfirmed(Contract contract, Milestone milestone, String confirmedBy) {
+        MilestoneSettlement settlement = requireSettled(contract, milestone, MILESTONE_BUYER_CONFIRMED);
+        if (!"BUYER".equals(confirmedBy) && !"SYSTEM_TIMEOUT".equals(confirmedBy)) {
+            throw new IllegalStateException("milestone.buyer_confirmed confirmedBy " + confirmedBy);
+        }
+        String contractId = uuid(contract.getContractId().value(), "contractId");
+        String milestoneId = uuid(milestone.milestoneId(), "milestoneId");
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("contractId", contractId);
+        payload.put("milestoneId", milestoneId);
+        payload.put("confirmedBy", confirmedBy);
+
+        outbox.append(new EventEnvelope(UUID.randomUUID(), MILESTONE_BUYER_CONFIRMED, 1, settlement.settledAt(),
+                PRODUCER, milestoneId, contractId, null, null, payload));
+    }
+
+    private static MilestoneSettlement requireSettled(Contract contract, Milestone milestone, String eventType) {
+        MilestoneSettlement settlement = milestone.settlement();
+        if (milestone.status() != MilestoneStatus.SETTLED || settlement == null || milestone.batchAmount() == null
+                || !milestone.contractId().equals(contract.getContractId().value())) {
+            throw new IllegalStateException(eventType + " for milestone " + milestone.milestoneId()
+                    + " in status " + milestone.status());
+        }
+        return settlement;
     }
 }

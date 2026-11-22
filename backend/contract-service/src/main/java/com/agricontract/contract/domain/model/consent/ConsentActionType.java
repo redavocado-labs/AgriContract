@@ -8,5 +8,7 @@ public enum ConsentActionType {
     /** D74: the seller declares (or corrects, D75) the loaded weight of a milestone. Operational tier, no OTP. */
     DECLARE_SELLER_WEIGHT,
     /** D76: the buyer records the unloaded weight of a SELLER_WEIGHED milestone. Operational tier, no OTP. */
-    RECORD_BUYER_RECEIPT
+    RECORD_BUYER_RECEIPT,
+    /** D77: the buyer confirms a clean receipt and agrees to settle the milestone. Operational tier, no OTP. */
+    CONFIRM_CLEAN_RECEIPT
 }
