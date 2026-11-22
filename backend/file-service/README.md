@@ -12,9 +12,8 @@ NestJS 11 on Node 22, port **8089**. Internal only: the gateway never routes it.
 #116: the scaffold, the store core and its one entrypoint so far, `POST /internal/v1/files` (`storeOnBehalfOf`,
 request frozen by D60 in `contracts/events/supplementary-services-api.yaml`). #274: `GET`, `DELETE` and
 `confirm-attached` on `/internal/v1/files/{fileId}`, and `store()` for `SYSTEM_GENERATED`
-(`POST /internal/v1/files/system-generated`, D88). Not done yet: virus scan and `file.ready`/`file.failed` (#131, so
-every uploaded file stays `PROCESSING` and `GET` answers 404 for it for now), email intake (#275), the retention and
-orphan-cleanup jobs (#276).
+(`POST /internal/v1/files/system-generated`, D88). #131: the virus scan (ClamAV) and `file.ready` / `file.failed`.
+Not done yet: email intake (#275), the retention and orphan-cleanup jobs (#276).
 
 ## `POST /internal/v1/files` (storeOnBehalfOf)
 
@@ -101,6 +100,50 @@ DELETE runs the two steps of §7: (1) `deleted_at` + `deletion_reason` on the ro
 requires `legal_hold = FALSE`, so a hold set meanwhile still wins; (2) the blob. If step 2 fails the answer is 503
 and the repeat finishes it, since step 1 is already done. The row stays as the record of the deletion.
 
+## Virus scan and `file.ready` / `file.failed`
+
+Design §4–§5. Every `DIRECT_UPLOAD` file is `PROCESSING` until the scan decides; the owning service waits for the
+event, never polls.
+
+```
+POST /internal/v1/files ── one transaction ──> file row PROCESSING + event_outbox file.uploaded.direct
+OutboxPoller ──> agricontract.files (topic, routing key = eventType)
+   file.uploaded.direct ──> file-service.virus-scan ──> VirusScanConsumer ──> clamd INSTREAM
+   READY  + file.ready    ┐ one transaction, through the outbox,
+   FAILED + file.failed   ┘ published to agricontract.files as well
+```
+
+- **Nothing is published directly.** The row change and its event commit together in `event_outbox` (V2, from
+  `@agricontract/eventing`); `OutboxPoller` publishes committed rows with publisher confirms, at least once and
+  with the same `eventId` on a repeat. A row written while RabbitMQ is down waits for it.
+- **The scan reads the stored object back** and checks it on the way (`VerifiedRead`, same as `GET`) while clamd
+  reads it, chunk by chunk under backpressure. clamd only gets the end-of-stream marker once every byte passed the
+  check, so READY means "these exact bytes are clean".
+- **Outcomes.** `stream: OK` → `READY` + `file.ready` (the five contract fields, no `storageHash`). A signature →
+  `FAILED` + `file.failed` with `failureReason: "virus detected"` (the signature name only in the log). Bytes that
+  are not the upload, or no object at all → `FAILED` too (`stored bytes do not match the upload` / `stored object
+  missing`): waiting cannot fix them. Both events carry `causationId` = the scan job's `eventId`.
+- **One outcome, one event.** The `UPDATE` only moves a `PROCESSING`, not deleted row, and the event is written only
+  when it did. A redelivered or replayed job, or a second scan racing the first, publishes nothing.
+- **A FAILED file cannot be attached**: `confirm-attached` answers 409 `FILE_FAILED`, checked again in the `UPDATE`
+  so a scan failing the file meanwhile still wins. `GET` answers 404, as for any file that is not `READY`.
+- **Retry.** A failure without a verdict (clamd, storage or the database down) is retried in-process 3 times, 5 s
+  then 10 s apart, then the job is dead-lettered to `file-service.virus-scan.dlq` and the file stays `PROCESSING`.
+  A job that can never work (not an envelope, not a scan job, no fileId) goes there at once. Replay a DLQ message
+  by publishing its body and properties unchanged to `agricontract.files` with routing key `file.uploaded.direct`;
+  the scan then runs again.
+
+| Exchange / queue | Type | Bound with |
+| --- | --- | --- |
+| `agricontract.files` | topic | contract-service binds `contract-svc.file.ready` / `.failed` here |
+| `agricontract.files.dlx` | direct | |
+| `file-service.virus-scan` (DLX `agricontract.files.dlx`) | queue | `file.uploaded.direct` |
+| `file-service.virus-scan.dlq` | queue | `file.uploaded.direct` on the DLX |
+
+`file.uploaded.direct` is internal to file-service (design §4), not in `golden-flow-events.yaml`.
+`test/contract/file-events.contract.spec.ts` checks `file.ready` / `file.failed` against `fileReady` / `fileFailed`
+of the contract, both directions, so a contract change fails the build until the code follows.
+
 ## The store core
 
 `StoreFileUseCase` is the one function every entrypoint will call (design §3). The entrypoint passes its own
@@ -156,24 +199,31 @@ Environment variables only (no `.env` file). The defaults match the compose serv
 | `S3_ACCESS_KEY` / `S3_SECRET_KEY` | `agricontract` / `agricontract-dev-secret` | Dev identity of `infra/seaweedfs/s3.json` |
 | `SERVER_PORT` | `8089` | |
 | `SERVICE_INTERNAL_SECRET` | `changeme-internal` | `X-Internal-Secret` of the callers. Compose requires it in `backend/.env` |
+| `RABBITMQ_HOST` / `RABBITMQ_PORT` | `localhost` / `5672` | compose `rabbitmq` |
+| `RABBITMQ_USERNAME` / `RABBITMQ_PASSWORD` | `guest` / `guest` | |
+| `CLAMAV_HOST` / `CLAMAV_PORT` | `localhost` / `3410` | compose `clamav` (host port 3410; `clamav:3310` inside compose) |
 
 Startup fails when MySQL or the bucket cannot be reached. `GET /actuator/health` answers 200 with
-`components.db` and `components.storage` UP, or 503 with an error code for the one that is down.
+`components.db` and `components.storage` UP, or 503 with an error code for the one that is down. RabbitMQ and
+clamd are not part of it: uploads and reads work without them (the outbox keeps the events, the scan job waits or
+is dead-lettered). The broker connection is retried in the background (1 s … 30 s), like notification-service.
 
 ## Database
 
 `db/migration/V1__create_file.sql` is the `file` table of design §8 in MySQL syntax, with the same columns,
 defaults, CHECK constraint and indexes, including `idempotency_key` and its unique index with `uploaded_by` (D60).
 `idempotency_key` is `ascii` / `ascii_bin`: MySQL's default collation ignores case, so `Key-A` and `key-a` would
-otherwise be one upload. `email_intake_failure` comes with the email intake (#275). The app does not
-migrate: compose's `file-migrate` (Flyway 10.10) runs before `file-service`, and CI runs the same image.
+otherwise be one upload. `email_intake_failure` comes with the email intake (#275). `V2__create_event_outbox.sql`
+is the `event_outbox` of `@agricontract/eventing` (additive; its `processed_event` is left out, no consumer here
+dedupes by eventId). The app does not migrate: compose's `file-migrate` (Flyway 10.10) runs before `file-service`, and CI runs the same image.
 
 ## Run and test
 
 ```bash
 # in backend/
-docker compose up -d --wait file-db object-storage
+docker compose up -d --wait file-db object-storage rabbitmq
 docker compose up file-migrate
+docker compose --profile scan up -d --wait clamav   # ~1 GB RAM; without it uploads stay PROCESSING
 docker compose up -d --build file-service      # optional: the service itself on :8089
 ```
 
@@ -181,7 +231,7 @@ docker compose up -d --build file-service      # optional: the service itself on
 | --- | --- |
 | `npm run lint:check` | ESLint with Prettier |
 | `npm test` | Unit tests, no Docker |
-| `npm run test:int` | The store core and every `/internal/v1/files` route (whole app) on the compose `object-storage` and `file-db` (migrated). Uses a bucket of its own per run and deletes it |
+| `npm run test:int` | The store core, every `/internal/v1/files` route and the scan (EICAR ends FAILED, a clean file READY with one `file.ready`) on the compose `object-storage`, `file-db` (migrated), `clamav` and `rabbitmq`; `scan-pipeline.int-spec.ts` runs the whole app through the broker. Uses a bucket of its own per run and deletes it. Stop a compose `file-service` first, or it takes the scan jobs |
 | `npm run build` | |
 
 In Git Bash on Windows, put `MSYS_NO_PATHCONV=1` in front of a `docker run` that passes container paths such as
@@ -196,7 +246,11 @@ src/application/byte-meter.ts        count + SHA-256 + length enforcement while 
 src/application/ingest-policy.ts     what each entrypoint accepts
 src/application/read-file.use-case   GET; verified-read.ts checks the bytes on the way out
 src/application/confirm-attached.use-case, delete-file.use-case
-src/application/ports/               ObjectStoragePort, FileRepository
+src/application/scan-file.use-case   the scan decision: READY / FAILED + its event
+src/application/file-events.ts       file.uploaded.direct, file.ready, file.failed envelopes
+src/application/ports/               ObjectStoragePort, FileRepository, VirusScannerPort
+src/infrastructure/messaging/        AMQP connection, topology, outbox poller, VirusScanConsumer
+src/infrastructure/scan/             clamd INSTREAM client
 src/infrastructure/http/             the /internal/v1/files routes: guard, headers, error envelope, unread body
 src/infrastructure/storage/          S3 client and adapter, bucket creation on startup
 src/infrastructure/persistence/      mysql2 pool, `file` repository
