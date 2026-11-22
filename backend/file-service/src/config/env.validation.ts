@@ -42,6 +42,22 @@ export interface AppConfig {
   dlqCheckIntervalMs: number;
   /** Period of the lifecycle job (orphans, expiry, pending and stray blobs, #276); 0 = off. */
   lifecycleIntervalMs: number;
+  /**
+   * The email intake bridge (#275): the `intake@...` IMAP mailbox. null =
+   * off, which is the default: it is on only when INTAKE_IMAP_HOST is set
+   * (compose sets it to its GreenMail).
+   */
+  intake: {
+    host: string;
+    port: number;
+    secure: boolean;
+    username: string;
+    password: string;
+    mailbox: string;
+    /** The address mails are sent to; email_intake_failure.source_mailbox. */
+    address: string;
+    pollIntervalMs: number;
+  } | null;
 }
 
 /**
@@ -92,6 +108,19 @@ export function validate(env: Record<string, unknown>): AppConfig {
     return parsed;
   };
 
+  const flag = (name: string, fallback: boolean): boolean => {
+    const value = env[name];
+    if (value === undefined) return fallback;
+    const raw = (typeof value === 'string' ? value : JSON.stringify(value))
+      .trim()
+      .toLowerCase();
+    if (raw !== 'true' && raw !== 'false') {
+      errors.push(`${name} must be true or false, got "${raw}"`);
+      return fallback;
+    }
+    return raw === 'true';
+  };
+
   const endpoint = text('S3_ENDPOINT', 'http://localhost:8333');
   if (!/^https?:\/\/[^\s/]+(:\d+)?\/?$/.test(endpoint)) {
     errors.push(
@@ -136,6 +165,19 @@ export function validate(env: Record<string, unknown>): AppConfig {
     // Every 5 minutes, as notification-service's DlqMonitor.
     dlqCheckIntervalMs: millis('FILE_DLQ_CHECK_INTERVAL_MS', 300_000),
     lifecycleIntervalMs: millis('FILE_LIFECYCLE_INTERVAL_MS', 3_600_000),
+    intake:
+      env.INTAKE_IMAP_HOST === undefined
+        ? null
+        : {
+            host: text('INTAKE_IMAP_HOST', 'localhost'),
+            port: port('INTAKE_IMAP_PORT', 3143),
+            secure: flag('INTAKE_IMAP_SECURE', false),
+            username: text('INTAKE_IMAP_USERNAME', 'intake'),
+            password: text('INTAKE_IMAP_PASSWORD', 'intake-dev-secret'),
+            mailbox: text('INTAKE_IMAP_MAILBOX', 'INBOX'),
+            address: text('INTAKE_ADDRESS', 'intake@agricontract.local'),
+            pollIntervalMs: millis('INTAKE_POLL_INTERVAL_MS', 300_000),
+          },
   };
 
   if (errors.length > 0) {
