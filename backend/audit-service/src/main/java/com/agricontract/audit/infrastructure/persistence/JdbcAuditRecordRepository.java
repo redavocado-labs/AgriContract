@@ -1,6 +1,7 @@
 package com.agricontract.audit.infrastructure.persistence;
 
 import com.agricontract.audit.domain.model.AuditRecord;
+import com.agricontract.audit.domain.model.ChainedAuditRecord;
 import com.agricontract.audit.domain.model.SubjectType;
 import com.agricontract.audit.domain.repository.AuditRecordRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -12,6 +13,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -20,34 +22,51 @@ import java.util.Optional;
 public class JdbcAuditRecordRepository implements AuditRecordRepository {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final TypeReference<Map<String, String>> CONTENT = new TypeReference<>() { };
+    private static final TypeReference<Map<String, Object>> CONTENT = new TypeReference<>() { };
     private static final String SOURCE_EVENT_KEY = "uk_audit_record_source_event";
 
+    private static final String LOCK = "SELECT lock_id FROM audit_chain_lock WHERE lock_id = 1 FOR UPDATE";
+    private static final String LATEST = "SELECT record_hash FROM audit_record ORDER BY global_seq DESC LIMIT 1";
+    private static final String LATEST_SUBJECT = """
+            SELECT record_hash FROM audit_record WHERE subject_type = ? AND subject_id = ?
+            ORDER BY global_seq DESC LIMIT 1
+            """;
     private static final String INSERT = """
             INSERT INTO audit_record (record_id, subject_type, subject_id, source_type, source_event_type,
                                       source_event_id, causation_id, correlation_id, source_hash, occurred_at,
-                                      content, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                      content, created_at, prev_hash_global, prev_hash_subject, record_hash)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
-    private static final String SELECT_BY_SOURCE = """
-            SELECT record_id, subject_type, subject_id, source_type, source_event_type, source_event_id,
-                   causation_id, correlation_id, source_hash, occurred_at, content, created_at
-            FROM audit_record WHERE source_event_id = ?
+    private static final String COLUMNS = """
+            record_id, subject_type, subject_id, source_type, source_event_type, source_event_id,
+            causation_id, correlation_id, source_hash, occurred_at, content, created_at,
+            prev_hash_global, prev_hash_subject, record_hash, global_seq
             """;
+    private static final String SELECT_BY_SOURCE = "SELECT " + COLUMNS + " FROM audit_record WHERE source_event_id = ?";
+    private static final String PAGE = "SELECT " + COLUMNS
+            + " FROM audit_record WHERE global_seq > ? ORDER BY global_seq LIMIT ?";
+    private static final String SUBJECT_PAGE = "SELECT " + COLUMNS
+            + " FROM audit_record WHERE subject_type = ? AND subject_id = ? AND global_seq > ?"
+            + " ORDER BY global_seq LIMIT ?";
 
-    private static final RowMapper<AuditRecord> ROW = (rs, rowNum) -> new AuditRecord(
-            rs.getString("record_id"),
-            SubjectType.valueOf(rs.getString("subject_type")),
-            rs.getString("subject_id"),
-            rs.getString("source_type"),
-            rs.getString("source_event_type"),
-            rs.getString("source_event_id"),
-            rs.getString("causation_id"),
-            rs.getString("correlation_id"),
-            rs.getString("source_hash"),
-            rs.getTimestamp("occurred_at").toInstant(),
-            readContent(rs.getString("content")),
-            rs.getTimestamp("created_at").toInstant());
+    private static final RowMapper<ChainedAuditRecord> ROW = (rs, rowNum) -> new ChainedAuditRecord(
+            new AuditRecord(
+                    rs.getString("record_id"),
+                    SubjectType.valueOf(rs.getString("subject_type")),
+                    rs.getString("subject_id"),
+                    rs.getString("source_type"),
+                    rs.getString("source_event_type"),
+                    rs.getString("source_event_id"),
+                    rs.getString("causation_id"),
+                    rs.getString("correlation_id"),
+                    rs.getString("source_hash"),
+                    rs.getTimestamp("occurred_at").toInstant(),
+                    readContent(rs.getString("content")),
+                    rs.getTimestamp("created_at").toInstant()),
+            rs.getString("prev_hash_global"),
+            rs.getString("prev_hash_subject"),
+            rs.getString("record_hash"),
+            rs.getLong("global_seq"));
 
     private final JdbcTemplate jdbc;
 
@@ -56,7 +75,23 @@ public class JdbcAuditRecordRepository implements AuditRecordRepository {
     }
 
     @Override
-    public boolean insert(AuditRecord record) {
+    public void lockChain() {
+        jdbc.queryForList(LOCK);
+    }
+
+    @Override
+    public Optional<String> latestHash() {
+        return jdbc.queryForList(LATEST, String.class).stream().findFirst();
+    }
+
+    @Override
+    public Optional<String> latestHash(SubjectType subjectType, String subjectId) {
+        return jdbc.queryForList(LATEST_SUBJECT, String.class, subjectType.name(), subjectId).stream().findFirst();
+    }
+
+    @Override
+    public boolean insert(ChainedAuditRecord chained) {
+        AuditRecord record = chained.record();
         try {
             jdbc.update(INSERT,
                     record.recordId(),
@@ -70,7 +105,10 @@ public class JdbcAuditRecordRepository implements AuditRecordRepository {
                     record.sourceHash(),
                     Timestamp.from(record.occurredAt()),
                     writeContent(record.content()),
-                    Timestamp.from(record.createdAt()));
+                    Timestamp.from(record.createdAt()),
+                    chained.prevHashGlobal(),
+                    chained.prevHashSubject(),
+                    chained.recordHash());
             return true;
         } catch (DuplicateKeyException e) {
             // Only a repeated source event is an idempotent replay; any other unique key (record_id) is a real conflict.
@@ -83,10 +121,20 @@ public class JdbcAuditRecordRepository implements AuditRecordRepository {
 
     @Override
     public Optional<AuditRecord> findBySourceEventId(String sourceEventId) {
-        return jdbc.query(SELECT_BY_SOURCE, ROW, sourceEventId).stream().findFirst();
+        return jdbc.query(SELECT_BY_SOURCE, ROW, sourceEventId).stream().findFirst().map(ChainedAuditRecord::record);
     }
 
-    private static String writeContent(Map<String, String> content) {
+    @Override
+    public List<ChainedAuditRecord> findAfter(long afterSeq, int limit) {
+        return jdbc.query(PAGE, ROW, afterSeq, limit);
+    }
+
+    @Override
+    public List<ChainedAuditRecord> findAfter(SubjectType subjectType, String subjectId, long afterSeq, int limit) {
+        return jdbc.query(SUBJECT_PAGE, ROW, subjectType.name(), subjectId, afterSeq, limit);
+    }
+
+    private static String writeContent(Map<String, Object> content) {
         try {
             return JSON.writeValueAsString(content);
         } catch (JsonProcessingException e) {
@@ -94,7 +142,7 @@ public class JdbcAuditRecordRepository implements AuditRecordRepository {
         }
     }
 
-    private static Map<String, String> readContent(String json) {
+    private static Map<String, Object> readContent(String json) {
         try {
             return JSON.readValue(json, CONTENT);
         } catch (JsonProcessingException e) {
