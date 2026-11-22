@@ -107,6 +107,12 @@ Core logic (tính `storageHash`, lưu MinIO, insert `File` metadata) dùng chung
 - **Không có cột `purpose`:** đúng §2, file-service không biết nghiệp vụ. "Owner" là `uploaded_by`; file dùng để làm gì nằm ở tên field của service sở hữu (`sellerEvidenceFileId`, …).
 - **Chia việc:** #116 làm khung service + core lưu dùng chung + endpoint này; #274 làm `store()`, confirm-attached, `GET`, `DELETE`.
 
+**Chốt request `store()` (23/11/2026, D88):** `POST /internal/v1/files/system-generated` (`supplementary-services-api.yaml` `storeSystemGenerated`).
+- Body, `Content-Length`, cap 10 MiB và luật `Idempotency-Key` giống hệt `StoreOnBehalfOf`. Chỉ nhận `application/pdf` (PDF hợp đồng cuối, báo cáo EUDR).
+- `X-Service-Id` (`contract-service` | `audit-service`) ghi vào `uploaded_by`. Idempotency theo cặp (`uploaded_by`, `idempotency_key`) như trên.
+- Không virus-scan: file `READY` ngay, trả `201 {fileId, status: READY, storageHash, fileSize, contentType}`. Không publish `file.ready`/`file.failed` cho file này: service gọi đã biết kết quả trong response.
+- Shared secret không chứng minh được service nào đang gọi, nên `X-Service-Id` được tin giống `X-Acting-User-Id` (§9). Danh sách giá trị cố định chặn việc tự đặt tên tuỳ ý; ranh giới "không dùng `store()` cho file của end-user" vẫn do service gọi giữ (§2.1).
+
 ---
 
 ## 4. Async Processing Pipeline
@@ -128,16 +134,27 @@ file.email.received   → queue: file-service.email-parse  → EmailParseConsume
 
 `status` vẫn ở `PROCESSING` xuyên suốt cả 2 bước (parse rồi scan) — consumer downstream (contract-service/inspection-service) không thấy khác biệt gì, vẫn chỉ chờ đúng 1 event `file.ready`/`file.failed` như §5 đã định nghĩa. Event contract §5 không đổi.
 
-Retry: **3 lần**, backoff cố định qua RabbitMQ dead-letter-exchange + TTL (không cần exponential backoff tự code cho scope này).
+**Sửa (23/11/2026, D88) — bước đọc mail chạy ngay trong job poll, không qua queue `email-parse`:** job poll (§4.1) tự đọc MIME, lưu từng attachment qua core chung (`EMAIL_INTAKE`, `PROCESSING`) rồi ghi job quét `file.email.parsed` (mang `emailMeta`) vào cùng queue `file-service.virus-scan`. Không có `file.email.received`, `EmailParseConsumer` hay `file-service.email-parse.dlq`. Lý do: queue không chở được nguyên mail 20 MiB, tách bước sẽ phải lưu mail gốc vào storage trước chỉ để consumer đọc lại; mail gốc vẫn nằm trong hộp thư (đánh dấu đã đọc) nên không mất bằng chứng. Giữ nguyên 2 điều của fix review pass 2: mọi file từ mail đều qua `VirusScanConsumer` (điểm chốt duy nhất), và job poll là vòng lặp riêng, kẹt bên này không kéo chết phần quét.
+- Lỗi nghiệp vụ (sai loại, quá 20 MiB, rỗng, không phải MIME) → `email_intake_failure`, phần còn lại của mail vẫn đi tiếp.
+- **Mail độc:** cùng 1 mail lỗi kỹ thuật 3 lần (đếm theo message key) → ghi `email_intake_failure`, đánh dấu đã đọc, đi tiếp. Không để 1 mail chặn mọi mail đứng sau nó.
+- `file.uploaded.direct` và `file.email.parsed` là job nội bộ của file-service trên `agricontract.files`, không thuộc `golden-flow-events.yaml`, không service nào khác bind.
+
+Retry: **3 lần** trong consumer (5 s rồi 10 s, `@agricontract/eventing`), sau đó dead-letter. **Sửa 23/11/2026 (D88):** không dùng DLX + TTL. `VirusScanConsumer` không ghi `processed_event`: idempotent theo status (chỉ đổi file đang `PROCESSING`, mỗi file 1 kết quả, 1 event), ngoại lệ có chủ đích của luật dedup theo `eventId`.
 
 **DLQ — 2 hàng đợi riêng, ý nghĩa khác nhau:**
 
 - `file-service.virus-scan.dlq` — lỗi hệ thống tạm thời (MinIO down...), alert kỹ thuật (dev/log), không phải nghiệp vụ. Nhận cả file từ `DIRECT_UPLOAD` lẫn file đã parse xong từ `EMAIL_INTAKE`.
-- `file-service.email-parse.dlq` — nghiệp vụ thật (SGS/Bureau Veritas gửi định dạng lạ hoặc vượt cap 20MB, parser không đọc được) — cần luồng báo **Admin** (VD insert `email_intake_failure`, notify), để Admin chủ động liên hệ bên gửi lại đúng định dạng. Không phải bug cần dev sửa.
+- ~~`file-service.email-parse.dlq`~~ — **bỏ (23/11/2026, D88):** lỗi nghiệp vụ của mail ghi thẳng `email_intake_failure` cho Admin (xem trên), không qua DLQ. Chỉ còn `file-service.virus-scan.dlq`, có `DlqMonitor` log warn khi có message.
 
 ### 4.1 Email intake bridge
 
 **Chốt (05/07/2026):** dùng **IMAP polling định kỳ** (Spring `@Scheduled`, mỗi 5 phút, thư viện Jakarta Mail), không dùng webhook (AWS SES/Mailgun inbound parse) — webhook cần domain thật + verify DNS + public HTTPS endpoint, quá nặng cho scope đồ án. Job poll mailbox `intake@...`, mỗi mail mới → extract MIME attachment → lưu file thô (`ingestChannel = EMAIL_INTAKE`, `status = PROCESSING`) → publish `file.email.received`. **Bổ sung (17/07/2026):** mail **không có attachment** (VD ack/case-ID reply từ org — inspection §3.5) không tạo `File` record — bridge publish event nhẹ `file.email_notice {senderDomain, spfDkimResult, subject, snippet, receivedAt}` cho inspection-service dùng gợi ý match case ID; không lưu bytes, không qua scan.
+
+**Chốt (23/11/2026, D88):**
+- Mỗi mail xử lý đúng 1 lần: message key (SHA-256 của Message-ID, thiếu thì `UIDVALIDITY:UID`) ghi `email_intake_message` cùng transaction với lỗi và notice của mail đó. Mail gặp lại → bỏ qua, có log.
+- **`spfDkimResult` ∈ {`PASS`, `FAIL`, `NONE`}:** `PASS` khi DMARC pass, `FAIL` khi SPF/DKIM/DMARC có fail, `NONE` khi không có kết quả do server nhận của chính nền tảng ghi. Chỉ đọc header `Authentication-Results` mang authserv-id của mình (config), header khác do người gửi tự viết được (RFC 8601 §5). Chỉ là tín hiệu cho Admin, không bao giờ tự từ chối report (inspection §3.3).
+- `senderDomain` = domain của địa chỉ From, không lưu cả địa chỉ. `uploadedBy` của file từ mail = `file-service:email-intake`. Loại nhận giống `DIRECT_UPLOAD` (JPG/PNG/PDF). Ảnh nhúng trong HTML (`cid:`) không tính là attachment.
+- Bộ nhớ giữ cho 1 mail có giới hạn: tổng attachment đang giữ của 1 mail ≤ 40 MiB (hoặc lưu từng attachment xong mới đọc cái sau); vượt → các attachment còn lại thành `email_intake_failure`. Mục tiêu như cap 20 MiB: mailbox bị lạm dụng không làm service hết RAM.
 
 ---
 
@@ -156,6 +173,8 @@ file.email_notice  (senderDomain, spfDkimResult, subject, snippet, receivedAt)
 
 Không đưa `storageHash` vào payload — service khác không cần biết hash, chỉ cần biết fileId dùng được hay không.
 
+**Chốt `emailMeta` (23/11/2026, D88):** `golden-flow-events.yaml` khoá đủ 4 field, `additionalProperties: false`; `spfDkimResult` ∈ {`PASS`, `FAIL`, `NONE`} theo luật §4.1 (vừa cột `spf_dkim_result VARCHAR(20)` của inspection). `file.email_notice` dùng cùng luật, `snippet` tối đa 200 ký tự. File `SYSTEM_GENERATED` (§3 `store()`) không có `file.ready`/`file.failed`.
+
 **Idempotency:** key = `fileId` (unique tuyệt đối theo bản chất business — khác bank-service phải dùng `sourceEventId` vì 1 `contractId` có nhiều entry; ở đây 1 `fileId` chỉ ra đúng 1 `file.ready`/`file.failed`). Consumer bên nhận (VD milestone-service) tự chịu trách nhiệm idempotent-check (kiểm tra state hiện tại trước khi xử lý lại) — không phải việc file-service phải làm thêm.
 
 **Lý do bắt buộc dùng event, không dùng polling:** nếu contract-service/milestone-service coi `fileId` nhận được lúc `UploadFile` trả về là "đã có evidence hợp lệ" ngay lập tức — trong khi file vẫn `PROCESSING` — và vài giây sau file bị `FAILED` (virus/sai định dạng), thì 2 service lệch state, không ai biết cho tới khi có người mở file thủ công. Đúng dạng dual-write đã học ở bank-service, chỉ khác hướng (fire-and-forget không đợi confirm). Event bắt buộc consumer phải nhận `file.ready` mới đổi state tiếp — không có đường tắt để lỡ quên như polling (optional, dễ bị bỏ qua).
@@ -166,7 +185,7 @@ Không đưa `storageHash` vào payload — service khác không cần biết ha
 
 **Chốt (05/07/2026):** file-service **không tự kiểm tra quyền nghiệp vụ** (VD "user X có phải 1 bên của contract Y chứa evidence này không") — đúng nguyên tắc agnostic đã áp xuyên suốt, vì đó là kiến thức nghiệp vụ chỉ service sở hữu `fileId` mới có.
 
-**Pattern: proxy qua service sở hữu, không expose file-service trực tiếp ra ngoài cho end-user.** Service đang giữ `fileId` (VD contract-service) tự expose endpoint riêng của nó (`GET /contracts/{id}/milestones/{id}/evidence`), tự validate quyền theo đúng business logic của nó, sau đó **mới** gọi `file-service.GetFile(fileId)` nội bộ (service-to-service, trusted) để lấy bytes và proxy ngược lại cho end-user. File-service chỉ enforce 1 lớp bảo vệ tối thiểu, chung cho mọi trường hợp: endpoint `GetFile` không public cho end-user gọi thẳng, chỉ nhận service-to-service call (mTLS/service token) hoặc chính `uploadedBy`/role Admin (cho case Admin cần xem trực tiếp qua UI quản trị).
+**Pattern: proxy qua service sở hữu, không expose file-service trực tiếp ra ngoài cho end-user.** Service đang giữ `fileId` (VD contract-service) tự expose endpoint riêng của nó (`GET /contracts/{id}/milestones/{id}/evidence`), tự validate quyền theo đúng business logic của nó, sau đó **mới** gọi `file-service.GetFile(fileId)` nội bộ (service-to-service, trusted) để lấy bytes và proxy ngược lại cho end-user. File-service chỉ enforce 1 lớp bảo vệ tối thiểu, chung cho mọi trường hợp: endpoint `GetFile` không public cho end-user gọi thẳng, chỉ nhận service-to-service call (mTLS/service token) hoặc chính `uploadedBy`/role Admin (cho case Admin cần xem trực tiếp qua UI quản trị). **Sửa 23/11/2026 (D88):** Phase 2 chỉ còn service-to-service. Gateway không route file-service, chỉ service nắm `X-Internal-Secret` gọi được, nên không có 403; Admin xem file qua service sở hữu như mọi end-user. `GetFile` trả 404 chung cho không tồn tại / chưa `READY` / `FAILED` / đã xoá, và kiểm lại size + SHA-256 khi stream: lệch thì cắt response (thiếu byte so với `Content-Length`), không bao giờ trả 1 file sai trông như đầy đủ.
 
 Document API của contract-service cũng theo pattern này: participant gọi endpoint contract document, contract-service kiểm tra ownership/document status rồi proxy bytes theo `fileId`. Response không lộ MinIO bucket/object key. `FINAL_SIGNED_CONTRACT` đã READY là immutable; không có replace/overwrite blob theo cùng `fileId`.
 
@@ -183,6 +202,8 @@ Document API của contract-service cũng theo pattern này: participant gọi e
   - Final contract PDF và document evidence hậu ký dùng retention của hồ sơ hợp đồng (ít nhất theo matrix governance hiện hành) và tự động bật/giữ `legalHold` khi contract có tranh chấp hoặc điều tra. Document owner không được gọi delete/replace để "sửa" bản đã ký.
   - **Owning service** (biết nghiệp vụ) chạy scheduled lifecycle job: xác định file hết retention theo domain của mình → gọi `DeleteFile`; file-service không tự quyết (vẫn agnostic nghiệp vụ). File thuộc nhiều domain (evidence vừa KYC vừa hợp đồng) → **retention dài nhất thắng**.
   - Xoá 2 bước idempotent: (1) DB tombstone `deletedAt`+`deletionReason` trước, (2) xoá blob MinIO sau; lệch giữa 2 bước (blob xoá, DB fail hoặc ngược lại) → job re-run tự lành vì cả 2 bước đều idempotent. Không có TTL/cronjob nào bên trong file-service tự xoá file `READY` đã `attached = TRUE`.
+  - **Bổ sung (23/11/2026, D88, #276):** lifecycle job của file-service chỉ **áp** `retention_until` do bên sở hữu đặt (đã qua và khác NULL → tombstone rồi xoá blob), không tự quyết retention. Bước 2 đánh dấu `blob_deleted_at`; job chạy lại xử lý mọi dòng đã tombstone mà blob chưa xoá. Blob không có dòng nào và cũ hơn 1 ngày → xoá (store hỏng giữa chừng). Mọi bước re-check `legal_hold` trong cùng câu UPDATE. Cách đặt `retention_until`/`legal_hold` (Admin legal hold, retention hồ sơ hợp đồng) là issue riêng, chưa có endpoint.
+  - Mã lỗi `DeleteFile`: 204 (cả khi gửi lại), 404 file không tồn tại, 409 `LEGAL_HOLD_ACTIVE`, 503 khi blob chưa xoá được (gửi lại để hoàn tất). `ConfirmAttached`: 204 (cả khi gửi lại; file `PROCESSING` confirm được), 404 không tồn tại/đã xoá, 409 `FILE_FAILED` (file bị scan từ chối không gắn được).
 - **`DeleteFile(fileId)`** — API tường minh, chỉ được gọi bởi chính service đang sở hữu `fileId` đó, khi service đó (biết rõ retention rule nghiệp vụ của riêng nó) xác định đã an toàn để xoá. File-service không bao giờ tự khởi xướng.
 - **Orphan cleanup — cơ chế `ConfirmAttached(fileId)`, không dùng heuristic đoán:** service nhận `fileId` từ `store()`/`UploadFile` phải tự lưu `fileId` vào entity của mình **trước**, thành công thì mới gọi `ConfirmAttached(fileId)` set `attached = TRUE`. Nếu service kia crash giữa chừng (nhận `fileId` nhưng chưa kịp lưu) → không bao giờ gọi `ConfirmAttached` → file vẫn `attached = FALSE`. Cùng pattern "không set state trước khi có confirmation" đã dùng ở bank-service, áp ngược cho chính file-service. File `attached = FALSE` quá **1 tuần** → coi là mồ côi, tự động xoá — không có compliance nào áp lên file chưa từng có chủ.
 - **File cũ bị ghi đè khi re-import/upload lại** (`cadastralExtractFileId` qua `UploadCadastralExtract`, `originalKmlFileId` qua re-import KML) — **không** rơi vào nhánh orphan, vì đã từng được `ConfirmAttached = TRUE`. Giữ nguyên theo policy "default giữ vĩnh viễn" — đây là **chủ đích**, không phải bug: giữ được lịch sử "trích lục/KML nào từng gắn với entry này trước khi bị thay", có giá trị audit trail.
@@ -206,6 +227,7 @@ CREATE TABLE file (
     legal_hold        BOOLEAN NOT NULL DEFAULT FALSE,
     deleted_at        TIMESTAMP NULL,          -- governance tombstone; blob deletion follows
     deletion_reason   TEXT NULL,
+    blob_deleted_at   TIMESTAMP NULL,          -- D88 (#276, V3): bước 2 đã xoá blob; NULL + deleted_at = job còn phải xoá
     idempotency_key   VARCHAR(255) CHARACTER SET ascii COLLATE ascii_bin NULL,  -- Idempotency-Key của StoreOnBehalfOf (D60); NULL khi entrypoint không có key (VD EMAIL_INTAKE); so từng byte, §3
     created_at        TIMESTAMP NOT NULL DEFAULT now(),
     CONSTRAINT ck_file_deletion_metadata CHECK (
@@ -226,8 +248,16 @@ CREATE TABLE email_intake_failure (
     detected_at     TIMESTAMP NOT NULL DEFAULT now(),
     reviewed_by_admin BOOLEAN NOT NULL DEFAULT FALSE
 );
--- Bảng riêng cho DLQ email-parse (§4) — Admin cần biết để chủ động liên hệ SGS/Bureau Veritas gửi lại,
--- khác bản chất với lỗi kỹ thuật virus-scan (chỉ cần alert dev, không cần bảng riêng).
+-- Lỗi nghiệp vụ của email intake (§4, D88: không còn email-parse.dlq) — Admin cần biết để chủ động liên hệ
+-- SGS/Bureau Veritas gửi lại, khác bản chất với lỗi kỹ thuật virus-scan (chỉ cần alert dev, không cần bảng riêng).
+
+CREATE TABLE email_intake_message (           -- D88 (#275): mỗi mail xử lý đúng 1 lần
+    message_key     CHAR(64) PRIMARY KEY,       -- SHA-256 của Message-ID, thiếu thì UIDVALIDITY:UID
+    source_mailbox  VARCHAR(255) NOT NULL,
+    attachments     INT NOT NULL,
+    failures        INT NOT NULL,
+    processed_at    TIMESTAMP NOT NULL DEFAULT now()
+);
 ```
 
 ---
@@ -237,7 +267,8 @@ CREATE TABLE email_intake_failure (
 - **Orphan-cleanup dựa vào `ConfirmAttached` do service khác tự gọi đúng lúc** — nếu service đó có bug quên gọi `ConfirmAttached` dù đã lưu `fileId` thành công, file hợp lệ có thể bị xoá nhầm sau 1 tuần. Rủi ro chấp nhận được cho scope đồ án, nhưng cần lưu ý khi code các service consumer.
 - **Access control ở §6 dựa vào service sở hữu tự validate đúng** — file-service không double-check lại quyền nghiệp vụ, nên nếu service sở hữu có lỗ hổng auth thì file-service không phải lớp phòng thủ thứ 2.
 - **Không đối chiếu nội dung file với dữ liệu đã khai** (đã nêu ở product-phase2-design §4 cho `cadastralExtractFileId`) — file-service chỉ lưu, không OCR/verify nội dung khớp với business data.
-- **Retry/DLQ dùng cơ chế RabbitMQ built-in (dead-letter-exchange + TTL)**, không tự code retry logic — đủ cho scope 5 tháng, không cần framework retry phức tạp hơn (Resilience4j...).
+- **Retry 3 lần trong consumer rồi dead-letter** (`@agricontract/eventing`, sửa 23/11/2026 D88 — trước ghi DLX + TTL), không cần framework retry phức tạp hơn (Resilience4j...).
+- **`X-Service-Id` của `store()` và `X-Acting-User-Id` của `StoreOnBehalfOf` được tin theo shared secret** — 1 secret chung không chứng minh được service nào đang gọi (D88). Tiến hoá: mTLS/service token riêng từng service.
 
 ---
 
