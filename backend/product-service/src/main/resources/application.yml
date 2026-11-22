@@ -21,10 +21,10 @@ spring:
     # listener retry and no-requeue live in RabbitMQConfig: Boot's listener.simple.retry also retries rejected deliveries
 
 gateway:
-  internal-secret: ${GATEWAY_INTERNAL_SECRET:changeme}
+  internal-secret: ${GATEWAY_INTERNAL_SECRET}
 
 service:
-  internal-secret: ${SERVICE_INTERNAL_SECRET:changeme-internal}
+  internal-secret: ${SERVICE_INTERNAL_SECRET}
 
 reputation-service:
   # listing search reads seller reputation with one internal batch call per page (X-Internal-Secret);

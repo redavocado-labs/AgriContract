@@ -139,7 +139,7 @@ spring:
             - Path=/api/v1/analytics/**, /api/v1/admin/analytics/**
 
 gateway:
-  internal-secret: ${GATEWAY_INTERNAL_SECRET:changeme}
+  internal-secret: ${GATEWAY_INTERNAL_SECRET}
   cors:
     # Comma-separated exact origins; a wildcard is refused at startup (gateway design 5.4).
     allowed-origins: ${GATEWAY_CORS_ALLOWED_ORIGINS:http://localhost:5173}
