@@ -256,7 +256,7 @@ paths:
         - {name: breachCaseId, in: path, required: true, schema: {type: string, format: uuid}}
         - {$ref: '#/components/parameters/IdempotencyKey'}
       requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/BreachCaseResolutionRequest'}}}}
-      responses: {'204': {description: 'AttributionDecision persisted. remedy.finalized is published immediately for no-fault or refund/release-only remedies and for contract-level cases (milestoneId null, never contestable); a milestone-level fault decision with sanctions waits for contestDeadline (milestone-escrow 6.4 and GB-50). Terminal lifecycle waits for reconciliation.'}, '400': {$ref: '#/components/responses/BadRequest'}, '401': {$ref: '#/components/responses/Unauthorized'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}, '409': {$ref: '#/components/responses/Conflict'}}
+      responses: {'204': {description: 'AttributionDecision persisted. remedy.finalized is published immediately for no-fault or refund/release-only remedies and for contract-level cases (milestoneId null, never contestable); a milestone-level fault decision with sanctions waits for contestDeadline (milestone-escrow 6.4 and GB-50). Terminal lifecycle waits for reconciliation. D81 (22/11/2026): when the case carries computedResolution (a contested milestone with a confirmed Level 1.5 report), the request must equal it (finalBreachingRole, decisionSource INSPECTOR_L1_5) and the Arbitrator only approves; a mismatch is 409 RESOLUTION_MISMATCH, a contested milestone whose report is not confirmed yet is 409 INSPECTION_REPORT_PENDING.'}, '400': {$ref: '#/components/responses/BadRequest'}, '401': {$ref: '#/components/responses/Unauthorized'}, '403': {$ref: '#/components/responses/Forbidden'}, '404': {$ref: '#/components/responses/NotFound'}, '409': {$ref: '#/components/responses/Conflict'}}
   /api/v1/contracts/{contractId}/breach-cases/{breachCaseId}/contest:
     x-service-owner: contract-service
     post:
@@ -437,30 +437,86 @@ paths:
         '403': {$ref: '#/components/responses/Forbidden'}
         '404': {$ref: '#/components/responses/NotFound'}
         '409': {description: "MILESTONE_ACTION_NOT_ALLOWED: the contract is not ACTIVE or the milestone is neither IN_PROGRESS nor correctable; WEIGH_CORRECTION_CLOSED: the correction window has passed or the buyer has recorded receipt; EVIDENCE_NOT_READY: a file is still being scanned (retry shortly); EVIDENCE_REJECTED: a file failed the scan (upload another); CONSENT_STATEMENT_OUTDATED; CONSENT_CONTENT_MISMATCH: presentedContentHash does not match the declaration.", content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}}
+  /api/v1/contracts/{contractId}/milestones/{milestoneId}/receive:
+    x-service-owner: contract-service
+    post:
+      operationId: recordBuyerReceipt
+      x-roles: [BUYER]
+      x-domain-ownership-check: true
+      description: >-
+        milestone-escrow design §3.2.2 (D76, 22/11/2026). Step 1 of receipt: the BUYER of an ACTIVE contract records
+        the unloaded weight of a SELLER_WEIGHED milestone. The milestone enters BUYER_RECEIVED, the seller's
+        correction window closes (D75), the buyerConfirmWindowDays clock starts and milestone.buyer_received is
+        published. buyerEvidenceFileId and deliveryCertificateFileId follow the same file rules as weigh: uploaded by
+        this buyer through uploadMilestoneEvidence for this milestone, different from each other, READY. Weight has
+        the D72 bounds. consent is the RECORD_BUYER_RECEIPT statement (authenticated session, no OTP);
+        presentedContentHash is recomputed from the milestone, the weight and the files. No correction: a wrong
+        receipt is disputed through flag. Checks run party (403), milestone of this contract (404), request (400),
+        state and files (409).
+      parameters:
+        - {name: contractId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: milestoneId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {$ref: '#/components/parameters/IdempotencyKey'}
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/BuyerReceivedRequest'}}}}
+      responses:
+        '204': {description: "Milestone is BUYER_RECEIVED and milestone.buyer_received is published; a repeat of the same Idempotency-Key returns 204."}
+        '400': {description: "VALIDATION_ERROR; EVIDENCE_NOT_UPLOADED; EVIDENCE_FILE_REUSED.", content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: "MILESTONE_ACTION_NOT_ALLOWED: the contract is not ACTIVE or the milestone is not SELLER_WEIGHED; EVIDENCE_NOT_READY; EVIDENCE_REJECTED; CONSENT_STATEMENT_OUTDATED; CONSENT_CONTENT_MISMATCH.", content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}}
   /api/v1/contracts/{contractId}/milestones/{milestoneId}/confirm:
     x-service-owner: contract-service
     post:
       operationId: confirmMilestoneClean
       x-roles: [BUYER]
       x-domain-ownership-check: true
+      description: >-
+        milestone-escrow design §3.2.2 (D76-D78). Step 2, clean: the BUYER confirms a BUYER_RECEIVED milestone inside
+        buyerConfirmWindowDays. The milestone becomes SETTLED with actualAmount from §4 (transit loss inside
+        toleranceRate borne by the buyer, the excess split 50/50, capped at lockedAmount, D65 rounding);
+        milestone.settled and milestone.buyer_confirmed (confirmedBy BUYER) are published. consent is the
+        CONFIRM_CLEAN_RECEIPT statement, which states that confirming receipt does not waive inspection or claim rights
+        still open under the contract; presentedContentHash is recomputed from the milestone and both recorded weights.
+        A milestone with MANDATORY_BEFORE_SETTLEMENT and no confirmed report cannot be confirmed.
       parameters:
-        - {name: contractId, in: path, required: true, schema: {type: string}}
-        - {name: milestoneId, in: path, required: true, schema: {type: string}}
+        - {name: contractId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: milestoneId, in: path, required: true, schema: {type: string, format: uuid}}
         - {$ref: '#/components/parameters/IdempotencyKey'}
-      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/BuyerReceivedRequest'}}}}
-      responses: {'204': {description: Buyer records received weight/evidence and performs CONFIRM_CLEAN.}, '409': {$ref: '#/components/responses/Conflict'}}
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/ConsentInput'}}}}
+      responses:
+        '204': {description: "Milestone is SETTLED and milestone.settled is published; a repeat of the same Idempotency-Key returns 204."}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: "MILESTONE_ACTION_NOT_ALLOWED: the contract is not ACTIVE or the milestone is not BUYER_RECEIVED; INSPECTION_REPORT_PENDING: mandatory inspection has no confirmed report; CONSENT_STATEMENT_OUTDATED; CONSENT_CONTENT_MISMATCH.", content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}}
   /api/v1/contracts/{contractId}/milestones/{milestoneId}/flag:
     x-service-owner: contract-service
     post:
       operationId: flagMilestoneIssue
       x-roles: [BUYER]
       x-domain-ownership-check: true
+      description: >-
+        milestone-escrow design §3.2.2 (D76, D82). Step 2, dispute: the BUYER flags a BUYER_RECEIVED milestone inside
+        buyerConfirmWindowDays. issueType QUANTITY disputes the weight only; QUALITY disputes quality (the inspection
+        checks quantity and metrics). The milestone becomes AWAITING_SELLER_RESPONSE and milestone.flagged is
+        published; no money or reputation consequence. consent is the FLAG_MILESTONE_ISSUE statement;
+        presentedContentHash is recomputed from the milestone, both recorded weights and issueType. If the seller
+        does not respond within sellerResponseWindowDays, a QUANTITY flag settles on the buyer's weight and a QUALITY
+        flag is routed to Level 1.5 (D82).
       parameters:
-        - {name: contractId, in: path, required: true, schema: {type: string}}
-        - {name: milestoneId, in: path, required: true, schema: {type: string}}
+        - {name: contractId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: milestoneId, in: path, required: true, schema: {type: string, format: uuid}}
         - {$ref: '#/components/parameters/IdempotencyKey'}
-      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/BuyerReceivedRequest'}}}}
-      responses: {'204': {description: Buyer records received weight/evidence and performs FLAG_ISSUE.}, '409': {$ref: '#/components/responses/Conflict'}}
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/MilestoneFlagRequest'}}}}
+      responses:
+        '204': {description: "Milestone is AWAITING_SELLER_RESPONSE and milestone.flagged is published; a repeat of the same Idempotency-Key returns 204."}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: "MILESTONE_ACTION_NOT_ALLOWED: the contract is not ACTIVE, the milestone is not BUYER_RECEIVED or the confirm window has passed; CONSENT_STATEMENT_OUTDATED; CONSENT_CONTENT_MISMATCH.", content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}}
   /api/v1/contracts/{contractId}/milestones/{milestoneId}/respond:
     x-service-owner: contract-service
     post:
@@ -471,8 +527,20 @@ paths:
         - {name: contractId, in: path, required: true, schema: {type: string}}
         - {name: milestoneId, in: path, required: true, schema: {type: string}}
         - {$ref: '#/components/parameters/IdempotencyKey'}
+      description: >-
+        milestone-escrow design §3.2.2 (D80). The SELLER contests an AWAITING_SELLER_RESPONSE milestone inside
+        sellerResponseWindowDays. The milestone becomes CONTESTED, a BreachCase is opened as an allegation only
+        (requestedBy BUYER, allegedBreachingRole SELLER, SHORTFALL for QUANTITY or QUALITY_BELOW_COMMITTED for QUALITY)
+        and inspection.level1_5_requested is published with reason DISPUTE_ROUTED (straight to Level 1.5). consent is
+        the CONTEST_MILESTONE_FLAG statement. Accepting the buyer's position actively is concede (D57).
       requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/ConsentInput'}}}}
-      responses: {'204': {description: Seller contests the flagged milestone; routing follows DisputeRoutingService.}, '409': {$ref: '#/components/responses/Conflict'}}
+      responses:
+        '204': {description: "Milestone is CONTESTED and Level 1.5 is requested; a repeat of the same Idempotency-Key returns 204."}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: "MILESTONE_ACTION_NOT_ALLOWED: the milestone is not AWAITING_SELLER_RESPONSE or the response window has passed; CONSENT_STATEMENT_OUTDATED; CONSENT_CONTENT_MISMATCH.", content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}}
   /api/v1/contracts/{contractId}/milestones/{milestoneId}/force-majeure:
     x-service-owner: contract-service
     post:
@@ -1289,7 +1357,7 @@ components:
         acceptedAt: {type: string, format: date-time}
     BreachCase:
       type: object
-      required: [breachCaseId, contractId, milestoneId, requestedBy, allegedBreachingRole, breachReasonCode, severity, evidenceFileIds, finalBreachingRole, decisionSource, status, contestStatus, contestDeadline]
+      required: [breachCaseId, contractId, milestoneId, requestedBy, allegedBreachingRole, breachReasonCode, severity, evidenceFileIds, finalBreachingRole, decisionSource, status, contestStatus, contestDeadline, computedResolution]
       additionalProperties: false
       properties:
         breachCaseId: {type: string, format: uuid}
@@ -1313,6 +1381,29 @@ components:
           type: [string, 'null']
           format: date-time
           description: resolvedAt + 2 business days (ICT); null unless contestStatus has been OPEN.
+        computedResolution:
+          oneOf: [{$ref: '#/components/schemas/BreachCaseComputedResolution'}, {type: 'null'}]
+          description: D81. Deterministic result computed from the confirmed Level 1.5 report of a contested milestone; null until the report is confirmed and for cases without a report.
+    BreachCaseComputedResolution:
+      type: object
+      required: [inspectionReportId, issueType, acceptedQuantityKg, qualityDisposition, finalBreachingRole, decisionSource, sellerEntitlementAmount, buyerRefundAmount, prevailingRole]
+      additionalProperties: false
+      properties:
+        inspectionReportId: {type: string, format: uuid}
+        issueType: {enum: [QUANTITY, QUALITY]}
+        acceptedQuantityKg: {type: number, minimum: 0}
+        qualityDisposition:
+          oneOf: [{enum: [CONFORMING, PARTIALLY_CONFORMING, NON_CONFORMING]}, {type: 'null'}]
+          description: null for issueType QUANTITY (D83).
+        finalBreachingRole:
+          oneOf: [{enum: [SELLER]}, {type: 'null'}]
+          description: SELLER only for NON_CONFORMING; null for QUANTITY (D83) and for CONFORMING/PARTIALLY_CONFORMING.
+        decisionSource: {const: INSPECTOR_L1_5}
+        sellerEntitlementAmount: {type: number, minimum: 0, description: "VND, whole dong (D65); sellerEntitlementAmount + buyerRefundAmount = lockedAmount."}
+        buyerRefundAmount: {type: number, minimum: 0}
+        prevailingRole:
+          enum: [BUYER, SELLER]
+          description: "D83 for QUANTITY: the side whose weight is closer to acceptedQuantityKg, SELLER on a tie. For QUALITY: SELLER for CONFORMING, BUYER otherwise. The other side bears the inspection cost (recorded on the RemedyDecision only)."
     ReplacementProposalRequest:
       type: object
       required: [listingId, terms]
@@ -1653,11 +1744,18 @@ components:
       properties:
         fileId: {type: string, format: uuid}
         status: {enum: [PROCESSING, READY, FAILED], description: Scan status known to contract-service from file.ready/file.failed; PROCESSING until one arrives.}
+    MilestoneFlagRequest:
+      type: object
+      required: [issueType, consent]
+      additionalProperties: false
+      properties:
+        issueType: {enum: [QUANTITY, QUALITY], description: "QUANTITY disputes the weight only; QUALITY disputes quality, the inspection checks quantity and metrics (D82)."}
+        consent: {$ref: '#/components/schemas/ConsentInput'}
     BuyerReceivedRequest:
       type: object
       required: [buyerReceivedWeight, buyerEvidenceFileId, consent]
       properties:
-        buyerReceivedWeight: {type: number, exclusiveMinimum: 0, description: Buyer-received unloaded weight in canonical kilograms (kg).}
+        buyerReceivedWeight: {type: number, exclusiveMinimum: 0, maximum: 1000000, multipleOf: 0.001, description: Buyer-received unloaded weight in canonical kilograms (kg); D72 bounds.}
         buyerEvidenceFileId: {type: string, format: uuid}
         deliveryCertificateFileId: {type: string, format: uuid, description: Optional batch certificate used only as delivery/dispute evidence; never parsed as actual quality metrics.}
         consent: {$ref: '#/components/schemas/ConsentInput'}
