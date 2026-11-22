@@ -1,5 +1,5 @@
 import { useRef, useState } from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { useAuthStore } from "@/shared/auth/auth-store"
 import { useFreshLogin } from "@/features/auth/hooks/use-fresh-login"
 import { useOrganizationPermissions } from "@/features/organization/hooks/use-organization-permissions"
@@ -11,7 +11,7 @@ import { Countdown } from "@/shared/ui/countdown"
 import { Stepper } from "@/shared/ui/stepper"
 import { ContentHashDisplay } from "@/shared/ui/content-hash-display"
 import { parseApiError } from "@/shared/api/errors"
-import { contractBlockers, getSigningConsent } from "../api/capabilities"
+import { getSigningConsent } from "../api/capabilities"
 import { validConsent } from "../api/signing"
 import { SigningSession } from "../hooks/signing-session"
 import {
@@ -25,11 +25,8 @@ export function SigningPanel({ contract }: { contract: Contract }) {
   const { userId, roles } = useAuthStore()
   const role = participantRole(contract, userId ?? "", roles)
   const { canCreateOrSign, profile } = useOrganizationPermissions()
-  const consent = useQuery({
-    queryKey: ["contract-consent", userId, contract.id, contract.hash, role],
-    queryFn: getSigningConsent,
-    retry: false,
-  })
+  const consent = getSigningConsent(contract, role)
+  const emailVerified = profile.data?.emailVerified === true
   const fresh = useFreshLogin()
   const cache = useQueryClient()
   const [session] = useState(() =>
@@ -55,7 +52,8 @@ export function SigningPanel({ contract }: { contract: Contract }) {
     profile.data?.role === role &&
     contract.generation === "coffee" &&
     ["OFFERED", "NEGOTIATING"].includes(contract.status) &&
-    validConsent(consent.data ?? null, contract.id, contract.hash, role)
+    emailVerified &&
+    validConsent(consent, contract.id, contract.hash, role)
   async function act(kind: "initiate" | "resend" | "verify") {
     if (lock.current || !allowed || !accepted || !session) return
     lock.current = true
@@ -77,7 +75,7 @@ export function SigningPanel({ contract }: { contract: Contract }) {
       } else {
         setOtp("")
         setExpired(false)
-        await session.initiate(consent.data ?? null, kind === "resend")
+        await session.initiate(consent, kind === "resend")
         setNow(Date.now())
       }
     } catch (failure) {
@@ -97,7 +95,6 @@ export function SigningPanel({ contract }: { contract: Contract }) {
         await cache.invalidateQueries({
           queryKey: ["contract", userId, contract.id],
         })
-        await consent.refetch()
       }
     } finally {
       lock.current = false
@@ -125,8 +122,11 @@ export function SigningPanel({ contract }: { contract: Contract }) {
           Chỉ hồ sơ đã xác minh và đúng vai trò bên tham gia mới được ký.
         </Banner>
       )}
-      {!consent.data && (
-        <Banner variant="warning">{contractBlockers.signing}</Banner>
+      {canCreateOrSign && !emailVerified && (
+        <Banner variant="warning">
+          Email nhận OTP chưa được xác minh. Xác minh email trong Hồ sơ doanh
+          nghiệp trước khi ký.
+        </Banner>
       )}
       {contract.hash && (
         <ContentHashDisplay
@@ -134,22 +134,18 @@ export function SigningPanel({ contract }: { contract: Contract }) {
           hash={contract.hash}
         />
       )}
-      {consent.data ? (
-        <Checkbox
-          label={consent.data.text}
-          checked={accepted}
-          disabled={!allowed || busy}
-          onCheckedChange={setAccepted}
-        />
-      ) : (
-        <Checkbox
-          label="Chờ nội dung cam kết từ máy chủ"
-          disabled
-          checked={false}
-        />
-      )}
-      {consent.data && (
-        <p className="text-xs">Phiên bản cam kết: {consent.data.version}</p>
+      {consent && (
+        <>
+          <Checkbox
+            label={consent.text}
+            checked={accepted}
+            disabled={!allowed || busy}
+            onCheckedChange={setAccepted}
+          />
+          <p className="text-xs text-text-secondary">
+            Phiên bản cam kết: {consent.version}
+          </p>
+        </>
       )}
       {error && (
         <Banner role="alert" variant="danger">

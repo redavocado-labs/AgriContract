@@ -1,28 +1,58 @@
-import type { Consent } from "../types/contract"
+import type { Consent, Contract, ParticipantRole } from "../types/contract"
 
-// TODO(BE): expose active action-specific consent text/version bound to the contract hash.
-// No guessed endpoint and no copy of server-owned statement configuration.
-export async function getSigningConsent(): Promise<Consent | null> {
-  return null
+/**
+ * What the running backend serves today. The UI unlocks an action only when its
+ * capability is on; an off capability renders its reason instead of a dead
+ * button. Flip a flag when the backend ships the endpoint, never by guessing.
+ */
+export const capabilities = {
+  /** POST /api/v1/contracts (#232). */
+  create: { enabled: true },
+  /** PATCH /{id}/terms before the first signature (#93). */
+  negotiate: { enabled: true },
+  /** POST /{id}/withdraw (#233). */
+  withdraw: { enabled: true },
+  /** POST /{id}/sign/initiate + /sign/verify. */
+  sign: { enabled: true },
+  /** document-preview / documents: no controller yet. */
+  documents: {
+    enabled: false,
+    reason:
+      "Tài liệu PDF chưa sẵn sàng: máy chủ chưa cung cấp bản xem trước và hợp đồng PDF đã ký.",
+  },
+} as const
+
+/**
+ * Active SIGN_CONTRACT statements (contract-service consent-statement/*-1.0.txt,
+ * consentStatementVersion "1.0"). Shown word for word; the server rejects any
+ * other version with CONSENT_STATEMENT_OUTDATED, and the page then reloads.
+ */
+const SIGN_STATEMENTS: Record<
+  ParticipantRole,
+  { version: string; text: string }
+> = {
+  BUYER: {
+    version: "1.0",
+    text: "Tôi xác nhận đã đọc toàn bộ hợp đồng có mã vân tay hiển thị bên dưới, hiểu rằng việc ký có hiệu lực ràng buộc tôi với tư cách bên mua, và đồng ý ký bằng mã OTP gửi tới email của tôi.",
+  },
+  SELLER: {
+    version: "1.0",
+    text: "Tôi xác nhận đã đọc toàn bộ hợp đồng có mã vân tay hiển thị bên dưới, hiểu rằng việc ký có hiệu lực ràng buộc tôi với tư cách bên bán, và đồng ý ký bằng mã OTP gửi tới email của tôi.",
+  },
 }
 
-export const contractBlockers = {
-  negotiation:
-    "Chưa thể lưu: máy chủ chưa cung cấp trạng thái chữ ký, quyền sửa và điều kiện kiểm tra phiên bản cũ. Điều khoản có thể đã bị khóa sau chữ ký đầu tiên.",
-  signing:
-    "Chưa thể ký: chưa có nguồn cung cấp nội dung và phiên bản cam kết đang có hiệu lực từ máy chủ.",
-  documents:
-    "Tài liệu chưa sẵn sàng: dịch vụ chưa cung cấp bản xem trước và danh sách PDF đã ký. Chưa thể xác định trạng thái tạo PDF.",
-  create:
-    "Chưa thể tạo hợp đồng cà phê: API tạo mới chưa hỗ trợ phiên bản nguồn hàng và giữ số lượng theo quy trình hiện hành. Nguồn hàng trên giao diện hiện là dữ liệu mẫu.",
+/** The consent bound to this contract's current hash, or null when it cannot be signed. */
+export function getSigningConsent(
+  contract: Pick<Contract, "id" | "hash">,
+  role: ParticipantRole | null
+): Consent | null {
+  if (!role || !contract.hash) return null
+  const statement = SIGN_STATEMENTS[role]
+  return {
+    action: `SIGN_CONTRACT_AS_${role}`,
+    version: statement.version,
+    text: statement.text,
+    contractId: contract.id,
+    contentHash: contract.hash,
+  }
 }
-
-// TODO(BE): #232 Phase 2 create/reservation. Never call the legacy POST as a substitute.
-export async function createCoffeeContract(): Promise<never> {
-  throw new Error(contractBlockers.create)
-}
-// TODO(BE): server-rendered document preview/list/authorized READY download.
-export async function getContractDocuments(): Promise<never> {
-  throw new Error(contractBlockers.documents)
-}
-// TODO(BE): #234 activation cancellation; no simulated refund or cancellation.

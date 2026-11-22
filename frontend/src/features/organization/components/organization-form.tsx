@@ -17,7 +17,7 @@ import { useRegisterOrganization } from "../hooks/use-organization-profile"
 import { OrganizationDocuments } from "./organization-documents"
 
 export function OrganizationForm() {
-  const { roles } = useAuthStore()
+  const { roles, email } = useAuthStore()
   const mutation = useRegisterOrganization()
   const submitting = useRef(false)
   const {
@@ -34,6 +34,7 @@ export function OrganizationForm() {
           ? roles[0]
           : undefined,
       organizationName: "",
+      email: email ?? "",
       phone: "",
       address: "",
     },
@@ -106,6 +107,16 @@ export function OrganizationForm() {
               {errors.organizationName.message}
             </span>
           )}
+          <TextInput
+            id="organization-email"
+            label="Email liên hệ"
+            type="email"
+            required
+            autoComplete="email"
+            hint="Mã OTP ký hợp đồng và thông báo được gửi tới email này sau khi xác minh."
+            {...register("email")}
+            error={errors.email?.message}
+          />
           <TextInput
             id="organization-phone"
             label="Số điện thoại"

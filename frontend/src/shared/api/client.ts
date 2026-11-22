@@ -1,6 +1,5 @@
 import axios from "axios"
 import { keycloak, login, refreshAccessToken } from "../auth/keycloak"
-import { isEnvelope, unwrapApiResponse } from "./errors"
 
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -28,20 +27,9 @@ apiClient.interceptors.request.use(async (config) => {
   return config
 })
 
+// Success bodies are raw DTOs (D32); errors are ErrorEnvelope, read by parseApiError.
 apiClient.interceptors.response.use(
-  (response) => {
-    if (isEnvelope(response.data) && !response.data.success) {
-      throw new axios.AxiosError(
-        "API error",
-        "ERR_BAD_RESPONSE",
-        response.config,
-        response.request,
-        response
-      )
-    }
-    response.data = unwrapApiResponse(response.data)
-    return response
-  },
+  (response) => response,
   async (error) => {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       try {

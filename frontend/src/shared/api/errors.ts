@@ -1,48 +1,54 @@
 import axios from "axios"
 
+/**
+ * ErrorEnvelope of golden-flow-api.yaml: every service answers errors as
+ * {timestamp, status, error, code, message, path, traceId}. Success bodies are
+ * the raw DTO, with no wrapper (D32).
+ */
+export interface ErrorEnvelope {
+  timestamp: string
+  status: number
+  error: string
+  code: string
+  message: string
+  path: string
+  traceId: string
+}
+
 export interface ApiError {
   status: number
   code: string
   message: string
+  traceId?: string
 }
 
-export function isEnvelope(
-  value: unknown
-): value is { success: boolean; data?: unknown; error?: unknown } {
+const CODE = /^[A-Z][A-Z0-9_]*$/
+
+export function isErrorEnvelope(value: unknown): value is ErrorEnvelope {
   return (
     typeof value === "object" &&
     value !== null &&
-    "success" in value &&
-    typeof value.success === "boolean" &&
-    ("data" in value || "error" in value)
+    "code" in value &&
+    typeof value.code === "string" &&
+    CODE.test(value.code) &&
+    "status" in value &&
+    typeof value.status === "number"
   )
 }
 
 export function parseApiError(error: unknown): ApiError {
   const response = axios.isAxiosError(error) ? error.response : undefined
-  const body = response?.data
+  const body: unknown = response?.data
   const status = response?.status ?? 0
-  if (body && typeof body === "object") {
-    const raw =
-      typeof body.error === "string" ? body.error : body.message ?? body.detail
-    if (typeof raw === "string") {
-      const colon = raw.indexOf(":")
-      const prefix = colon < 0 ? "" : raw.slice(0, colon).trim()
-      const code =
-        typeof body.code === "string"
-          ? body.code
-          : /^[A-Z][A-Z0-9_]+$/.test(prefix)
-            ? prefix
-            : `HTTP_${status}`
-      return {
-        status,
-        code,
-        message: code === prefix ? raw.slice(colon + 1).trim() : raw,
-      }
+  if (isErrorEnvelope(body)) {
+    return {
+      status,
+      code: body.code,
+      message: typeof body.message === "string" ? body.message : "",
+      traceId: typeof body.traceId === "string" ? body.traceId : undefined,
     }
-    if (typeof body.code === "string")
-      return { status, code: body.code, message: "Yêu cầu không thành công." }
   }
+  // Gateway HTML, proxy errors and network failures carry no envelope.
   return {
     status,
     code: status ? `HTTP_${status}` : "NETWORK_ERROR",
@@ -50,15 +56,4 @@ export function parseApiError(error: unknown): ApiError {
       ? "Yêu cầu không thành công. Vui lòng thử lại."
       : "Không kết nối được máy chủ. Vui lòng kiểm tra kết nối và thử lại.",
   }
-}
-
-export function unwrapApiResponse<T>(
-  body: T | { success: boolean; data?: T; error?: unknown }
-): T {
-  if (!isEnvelope(body)) return body as T
-  if (!body.success)
-    throw new Error(
-      typeof body.error === "string" ? body.error : "Yêu cầu không thành công."
-    )
-  return body.data as T
 }

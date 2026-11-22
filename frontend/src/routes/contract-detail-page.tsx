@@ -11,7 +11,8 @@ import { ContractTerms } from "@/features/contracts/components/contract-terms"
 import { SigningPanel } from "@/features/contracts/components/signing-panel"
 import { NegotiationForm } from "@/features/contracts/components/negotiation-form"
 import { activationMessage } from "@/features/contracts/types/presentation"
-import { contractBlockers } from "@/features/contracts/api/capabilities"
+import { capabilities } from "@/features/contracts/api/capabilities"
+import { WithdrawOffer } from "@/features/contracts/components/withdraw-offer"
 import { Banner } from "@/shared/ui/banner"
 import { Button } from "@/shared/ui/button"
 import { ContentHashDisplay } from "@/shared/ui/content-hash-display"
@@ -51,13 +52,16 @@ function Detail({ id }: { id: string }) {
             <div className="flex flex-wrap items-center gap-3">
               <span className="break-all font-mono text-sm">{contract.id}</span>
               <ContractBadge status={contract.status} />
-              <Button
-                variant="outline"
-                disabled={query.isFetching}
-                onClick={() => void query.refetch()}
-              >
-                Tải lại trạng thái
-              </Button>
+              <div className="flex flex-wrap gap-3 sm:ml-auto">
+                <Button
+                  variant="outline"
+                  disabled={query.isFetching}
+                  onClick={() => void query.refetch()}
+                >
+                  Tải lại trạng thái
+                </Button>
+                <WithdrawOffer contract={contract} />
+              </div>
             </div>
             {changed && (
               <Banner variant="warning">
@@ -92,12 +96,15 @@ function Detail({ id }: { id: string }) {
                 <p className="mb-2 text-sm">Mã vân tay nội dung từ máy chủ</p>
                 <ContentHashDisplay hash={contract.hash} />
                 <p className="mt-2 text-xs text-text-secondary">
-                  Phiên bản mẫu:{" "}
+                  Mẫu hợp đồng{" "}
                   {String(
-                    contract.terms.contractTemplateVersion ??
-                      "Chưa được cung cấp"
+                    contract.terms.contractTemplateCode ?? "VN_COFFEE_B2B"
+                  )}{" "}
+                  phiên bản{" "}
+                  {String(
+                    contract.terms.contractTemplateVersion ?? "chưa xác định"
                   )}
-                  . Phiên bản sửa điều khoản chưa được API cung cấp.
+                  . Mã vân tay đổi mỗi lần điều khoản được sửa.
                 </p>
               </div>
             ) : (
@@ -121,19 +128,23 @@ function Detail({ id }: { id: string }) {
               )}
             <section className="space-y-3 rounded-md border border-border bg-surface p-4">
               <h2 className="text-lg">Tài liệu & lịch sử</h2>
-              <Banner variant="info">{contractBlockers.documents}</Banner>
+              {!capabilities.documents.enabled && (
+                <Banner variant="info">{capabilities.documents.reason}</Banner>
+              )}
               <div className="flex flex-wrap gap-3">
-                <Button disabled variant="outline">
+                <Button
+                  disabled={!capabilities.documents.enabled}
+                  variant="outline"
+                >
                   Xem PDF nháp
                 </Button>
-                <Button disabled variant="outline">
+                <Button
+                  disabled={!capabilities.documents.enabled}
+                  variant="outline"
+                >
                   Tải PDF đã ký
                 </Button>
               </div>
-              <p className="text-sm text-text-secondary">
-                Chưa có API lịch sử và chi tiết chữ ký. Không suy ra tiến độ PDF
-                từ trạng thái SIGNED hoặc ACTIVE.
-              </p>
             </section>
           </>
         )

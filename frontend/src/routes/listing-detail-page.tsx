@@ -463,7 +463,7 @@ function PriceCtaCard({ listing }: { listing: ListingDetail }) {
 
       {authenticated ? <div className="space-y-3">
         <Button disabled className="w-full" size="lg">Gửi đề nghị</Button>
-        <Link to="/contracts/new" className="block text-sm text-primary underline">Xem bước chuẩn bị hợp đồng cà phê</Link>
+        <Link to="/contracts/new" className="block text-sm text-primary underline">Tạo đề nghị hợp đồng cà phê</Link>
         <p className="text-xs text-text-secondary">Nguồn hàng trên trang này là dữ liệu mẫu; không được dùng để tạo hợp đồng thật.</p>
         <Banner variant={canCreateOrSign ? "info" : "warning"}>
           {profile.isFetching ? "Đang kiểm tra hồ sơ doanh nghiệp…" : canCreateOrSign
