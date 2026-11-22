@@ -50,6 +50,7 @@ import com.agricontract.contract.infrastructure.persistence.consent.JdbcConsentE
 import com.agricontract.contract.infrastructure.persistence.idempotency.JdbcIdempotencyStore;
 import com.agricontract.contract.infrastructure.persistence.mapper.ContractMapper;
 import com.agricontract.contract.infrastructure.persistence.milestone.JdbcMilestoneEvidenceRepository;
+import com.agricontract.contract.infrastructure.persistence.inspection.JdbcInspectionReportRepository;
 import com.agricontract.contract.infrastructure.persistence.milestone.JdbcMilestoneRepository;
 import com.agricontract.contract.infrastructure.persistence.milestone.JdbcSellerWeighDeclarationRepository;
 import com.agricontract.contract.infrastructure.persistence.repository.ContractRepositoryImpl;
@@ -104,7 +105,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ImportAutoConfiguration({JacksonAutoConfiguration.class, EventingAutoConfiguration.class})
 @Import({BusinessCalendarConfiguration.class, SpringTransactionRunner.class, MilestoneFunding.class,
-        JdbcMilestoneRepository.class, OutboxContractEventPublisher.class, ContractRepositoryImpl.class,
+        JdbcMilestoneRepository.class, JdbcInspectionReportRepository.class, OutboxContractEventPublisher.class, ContractRepositoryImpl.class,
         JdbcSignatureRepository.class, ContractMapper.class, JcsTermsCanonicalizer.class,
         ContractTermsConfiguration.class, ConsentConfiguration.class, MilestoneDeliveryConfiguration.class,
         JdbcMilestoneEvidenceRepository.class, JdbcSellerWeighDeclarationRepository.class,

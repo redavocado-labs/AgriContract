@@ -70,7 +70,7 @@ public class AutoConfirmMilestonesUseCase {
                 || milestone.status() != MilestoneStatus.BUYER_RECEIVED || milestone.buyerReceipt() == null) {
             return false;
         }
-        if (MilestoneCleanSettlement.inspectionPending(contract)) {
+        if (settlement.inspectionPending(contract, milestone)) {
             return false;
         }
         int days = contract.getCoffeeTerms().snapshot().negotiated().buyerConfirmWindowDays();

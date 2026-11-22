@@ -51,6 +51,17 @@ public record BreachCase(String breachCaseId, String contractId, String mileston
                 null, ContestStatus.NOT_APPLICABLE, null, null);
     }
 
+    /**
+     * A new REPORTED case opened by the system against the seller (D77): a mandatory inspection report found the
+     * goods PARTIALLY or NON conforming. An allegation only, like any other case.
+     */
+    public static BreachCase openedBySystem(String breachCaseId, String contractId, String milestoneId,
+                                            BreachReasonCode reason, List<String> evidenceFileIds, Instant now) {
+        return new BreachCase(breachCaseId, contractId, milestoneId, BreachRequester.SYSTEM, SignerRole.SELLER, reason,
+                BreachSeverity.MINOR, BreachCaseStatus.REPORTED, evidenceFileIds, now, null, null, List.of(), null,
+                null, ContestStatus.NOT_APPLICABLE, null, null);
+    }
+
     /** An Arbitrator takes the case: REPORTED becomes UNDER_REVIEW. Nothing else changes. */
     public BreachCase review() {
         if (status != BreachCaseStatus.REPORTED) {

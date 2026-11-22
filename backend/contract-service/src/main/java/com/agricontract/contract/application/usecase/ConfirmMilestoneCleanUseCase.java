@@ -84,7 +84,7 @@ public class ConfirmMilestoneCleanUseCase {
             throw new ContractConflictException(ContractConflictException.MILESTONE_ACTION_NOT_ALLOWED,
                     "The receipt can only be confirmed on a BUYER_RECEIVED milestone (" + milestone.status() + ").");
         }
-        MilestoneCleanSettlement.requireNoPendingInspection(contract);
+        settlement.requireNoPendingInspection(contract, milestone);
         Instant now = Instant.now(clock).truncatedTo(ChronoUnit.MICROS);
         ConsentEvidence consent = CleanReceiptConsent.record(milestone, command.actorId(), command.statementVersion(),
                 command.presentedContentHash(), statements, UUID.randomUUID(), now, command.idempotencyKey().toString());
