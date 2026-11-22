@@ -28,6 +28,7 @@ describe('validate (environment)', () => {
       clamav: { host: 'localhost', port: 3410 },
       dlqCheckIntervalMs: 300_000,
       lifecycleIntervalMs: 3_600_000,
+      intake: null,
     });
   });
 
@@ -103,6 +104,29 @@ describe('validate (environment)', () => {
       );
     },
   );
+
+  it('INTAKE_IMAP_HOST turns the email intake on, with the compose GreenMail defaults', () => {
+    expect(validate({ INTAKE_IMAP_HOST: 'greenmail' }).intake).toEqual({
+      host: 'greenmail',
+      port: 3143,
+      secure: false,
+      username: 'intake',
+      password: 'intake-dev-secret',
+      mailbox: 'INBOX',
+      address: 'intake@agricontract.local',
+      pollIntervalMs: 300_000,
+    });
+  });
+
+  it('INTAKE_IMAP_SECURE must be true or false', () => {
+    expect(
+      validate({ INTAKE_IMAP_HOST: 'imap', INTAKE_IMAP_SECURE: 'TRUE' }).intake
+        ?.secure,
+    ).toBe(true);
+    expect(() =>
+      validate({ INTAKE_IMAP_HOST: 'imap', INTAKE_IMAP_SECURE: 'yes' }),
+    ).toThrow('INTAKE_IMAP_SECURE must be true or false');
+  });
 
   it('reports every invalid value together', () => {
     expect(() =>
