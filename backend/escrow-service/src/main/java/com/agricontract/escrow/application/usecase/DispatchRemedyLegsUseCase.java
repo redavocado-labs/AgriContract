@@ -10,8 +10,11 @@ import com.agricontract.escrow.domain.model.RemedyDecision;
 import com.agricontract.escrow.domain.model.RemedyDecisionStatus;
 import com.agricontract.escrow.domain.model.RemedyLeg;
 import com.agricontract.escrow.domain.model.RemedyLegPlanner;
+import com.agricontract.escrow.domain.repository.DepositLegRepository;
+import com.agricontract.escrow.domain.repository.EscrowMilestoneRepository;
 import com.agricontract.escrow.domain.repository.OutstandingCommandRepository;
 import com.agricontract.escrow.domain.repository.RemedyLegRepository;
+import com.agricontract.escrow.domain.repository.SettlementLegRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,8 @@ import org.springframework.stereotype.Service;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
+import java.util.TreeSet;
 import java.util.Optional;
 
 /**
@@ -37,6 +42,9 @@ import java.util.Optional;
 public class DispatchRemedyLegsUseCase {
 
     private final RemedyLegRepository remedyLegs;
+    private final DepositLegRepository depositLegs;
+    private final EscrowMilestoneRepository milestones;
+    private final SettlementLegRepository settlementLegs;
     private final OutstandingCommandRepository outstanding;
     private final BankLedgerReader ledger;
     private final RemedyCommandPublisher bankCommands;
@@ -60,6 +68,9 @@ public class DispatchRemedyLegsUseCase {
         }
 
         if (planned != null && !planned.isEmpty()) {
+            rejectReason = lockPools(command, planned);
+        }
+        if (planned != null && !planned.isEmpty() && rejectReason == null) {
             // The bank read comes first and may throw: nothing is written then, the event is retried.
             try {
                 FundConservation.check(planned, ledger.entriesOf(command.contractId()),
@@ -94,6 +105,25 @@ public class DispatchRemedyLegsUseCase {
             log.info("event=remedy_decision_without_legs remedyDecisionId={} contractId={}",
                     command.remedyDecisionId(), command.contractId());
         }
+    }
+
+    /**
+     * The row locks every other money path of the contract takes, in their order (deposit legs, then milestones by
+     * ascending id with their settlement legs), held until the transaction ends: two dispatches for one pool never
+     * check the same available amount. Bank-service does not check balances, so this check is the only guard.
+     * Returns a reject reason when a pool's milestone is unknown to escrow (nothing is locked for it), else null.
+     */
+    private String lockPools(RemedyFinalizedCommand command, List<PlannedRemedyLeg> planned) {
+        depositLegs.findByContractIdForUpdate(command.contractId());
+        TreeSet<String> milestoneIds = new TreeSet<>();
+        planned.stream().map(PlannedRemedyLeg::milestoneId).filter(Objects::nonNull).forEach(milestoneIds::add);
+        for (String milestoneId : milestoneIds) {
+            if (milestones.findByIdForUpdate(milestoneId).isEmpty()) {
+                return "milestone " + milestoneId + " has no escrow funding: nothing is locked for it";
+            }
+            settlementLegs.findByMilestoneIdForUpdate(milestoneId);
+        }
+        return null;
     }
 
     private void logRepeated(RemedyDecision decision, RemedyFinalizedCommand command,

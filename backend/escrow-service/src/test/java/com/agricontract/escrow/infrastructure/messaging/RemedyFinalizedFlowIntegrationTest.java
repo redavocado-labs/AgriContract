@@ -3,6 +3,9 @@ package com.agricontract.escrow.infrastructure.messaging;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import com.agricontract.escrow.application.dto.RemedyFinalizedCommand;
+import com.agricontract.escrow.application.usecase.DispatchRemedyLegsUseCase;
+import com.agricontract.escrow.domain.model.RemedyLegInput;
 import com.agricontract.escrow.infrastructure.config.RabbitMQConfig;
 import com.agricontract.escrow.infrastructure.contract.FrozenSchemas;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,7 +20,12 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.math.BigDecimal;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +41,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MySQLContainer;
@@ -54,6 +63,7 @@ class RemedyFinalizedFlowIntegrationTest {
     static final ObjectMapper JSON = new ObjectMapper();
 
     static final AtomicInteger LEDGER_STATUS = new AtomicInteger(200);
+    static final AtomicInteger LEDGER_DELAY_MS = new AtomicInteger();
     static final AtomicInteger LEDGER_CALLS = new AtomicInteger();
     static final AtomicReference<String> LEDGER_BODY = new AtomicReference<>("[]");
     static final AtomicReference<String> LEDGER_SECRET = new AtomicReference<>();
@@ -69,6 +79,11 @@ class RemedyFinalizedFlowIntegrationTest {
         }
         BANK.createContext("/internal/v1/bank/ledger", exchange -> {
             LEDGER_CALLS.incrementAndGet();
+            try {
+                Thread.sleep(LEDGER_DELAY_MS.get());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
             LEDGER_SECRET.set(exchange.getRequestHeaders().getFirst("X-Internal-Secret"));
             byte[] body = LEDGER_BODY.get().getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().add("Content-Type", "application/json");
@@ -98,6 +113,8 @@ class RemedyFinalizedFlowIntegrationTest {
     @Autowired RabbitTemplate rabbit;
     @Autowired AmqpAdmin admin;
     @Autowired JdbcTemplate jdbc;
+    @Autowired DispatchRemedyLegsUseCase dispatch;
+    @Autowired TransactionTemplate tx;
 
     @BeforeEach
     void bindTestQueues() {
@@ -108,11 +125,13 @@ class RemedyFinalizedFlowIntegrationTest {
         admin.purgeQueue(REMEDY_DLQ, false);
         LEDGER_STATUS.set(200);
         LEDGER_CALLS.set(0);
+        LEDGER_DELAY_MS.set(0);
     }
 
     @Test
     void normalCompletion_sendsOneRefundAndOneRelease_withTheExactPayloads() throws Exception {
         Contract c = new Contract();
+        seedDepositLeg(c);
         ledger(c, entry("LOCK_BUYER_DEPOSIT", "BUYER_DEPOSIT", null, "10000000.00", c),
                 entry("LOCK_SELLER_DEPOSIT", "SELLER_DEPOSIT", null, "5000000.00", c));
         String refundLeg = id();
@@ -145,6 +164,8 @@ class RemedyFinalizedFlowIntegrationTest {
     @Test
     void forfeitureAndMilestoneLegs_goOutAsSeizeAndRelease() throws Exception {
         Contract c = new Contract();
+        seedDepositLeg(c);
+        seedMilestone(c);
         ledger(c, entry("LOCK_SELLER_DEPOSIT", "SELLER_DEPOSIT", null, "5000000.00", c),
                 entry("LOCK_MILESTONE", "MILESTONE_PAYMENT", c.milestoneId, "100000000.00", c));
         String forfeit = id();
@@ -176,6 +197,7 @@ class RemedyFinalizedFlowIntegrationTest {
     @Test
     void oneCentOverTheLock_rejectsTheDecision_andSendsNothing() throws Exception {
         Contract c = new Contract();
+        seedDepositLeg(c);
         ledger(c, entry("LOCK_BUYER_DEPOSIT", "BUYER_DEPOSIT", null, "10000000.00", c));
         Map<String, Object> event = remedyFinalized(c, List.of(),
                 leg(id(), "PAYMENT_REFUND", "BUYER_DEPOSIT", "BUYER", "10000000.01"));
@@ -252,6 +274,69 @@ class RemedyFinalizedFlowIntegrationTest {
 
         await().atMost(Duration.ofSeconds(10)).until(() -> processed(event) == 1);
         assertThat(rabbit.receive(RabbitMQConfig.SEIZE_COMPLETED_QUEUE + ".dlq", 500)).isNull();
+    }
+
+    @Test
+    void twoDecisionsRacingForOnePool_exactlyOneDispatches_theOtherIsRejected() throws Exception {
+        Contract c = new Contract();
+        seedDepositLeg(c);
+        ledger(c, entry("LOCK_BUYER_DEPOSIT", "BUYER_DEPOSIT", null, "10000000.00", c));
+        LEDGER_DELAY_MS.set(600);                       // widens the window between the check and the write
+        RemedyFinalizedCommand first = command(c, "6000000.00");
+        RemedyFinalizedCommand second = command(c, "6000000.00");
+
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        List<Future<?>> runs = new ArrayList<>();
+        for (RemedyFinalizedCommand command : List.of(first, second)) {
+            runs.add(pool.submit(() -> {
+                start.await();
+                tx.executeWithoutResult(status -> dispatch.execute(command));
+                return null;
+            }));
+        }
+        start.countDown();
+        for (Future<?> run : runs) {
+            run.get();
+        }
+        pool.shutdown();
+
+        List<String> statuses = jdbc.queryForList("SELECT status FROM remedy_decision WHERE contract_id = ?",
+                String.class, c.contractId);
+        assertThat(statuses).containsExactlyInAnyOrder("ACCEPTED", "REJECTED");
+        assertThat(legCount(c)).isEqualTo(1);
+    }
+
+    @Test
+    void milestoneWithoutEscrowFunding_rejectsTheDecision() throws Exception {
+        Contract c = new Contract();
+        seedDepositLeg(c);
+        ledger(c, entry("LOCK_MILESTONE", "MILESTONE_PAYMENT", c.milestoneId, "100.00", c));
+        send(remedyFinalized(c, List.of(c.milestoneId),
+                leg(id(), "PAYMENT_SETTLEMENT", "MILESTONE_PAYMENT", "SELLER", "100.00")), "agricontract.contracts");
+
+        await().atMost(Duration.ofSeconds(10)).until(() -> "REJECTED".equals(decisionStatus(c)));
+        assertThat(legCount(c)).isZero();
+    }
+
+    private RemedyFinalizedCommand command(Contract c, String refund) {
+        return new RemedyFinalizedCommand(id(), id(), id(), c.contractId, c.buyerId, c.sellerId, List.of(),
+                List.of(new RemedyLegInput(id(), "PAYMENT_REFUND", "BUYER_DEPOSIT", "BUYER", new BigDecimal(refund))));
+    }
+
+    /** Escrow knows the contract's deposits from contract.signed: the row the dispatch locks first. */
+    private void seedDepositLeg(Contract c) {
+        jdbc.update("INSERT INTO deposit_leg (leg_id, contract_id, leg, user_id, amount, status, request_event_id,"
+                + " ledger_entry_id, created_at, updated_at) VALUES (?, ?, 'BUYER', ?, 10000000.00, 'LOCKED', ?, ?,"
+                + " NOW(6), NOW(6))", id(), c.contractId, c.buyerId, id(), id());
+    }
+
+    /** A milestone escrow funded: LOCKED. */
+    private void seedMilestone(Contract c) {
+        jdbc.update("INSERT INTO escrow_milestone (milestone_id, contract_id, milestone_index, buyer_id, batch_amount,"
+                + " funding_requested_at, funding_request_event_id, status, request_event_id, ledger_entry_id,"
+                + " locked_at, created_at, updated_at) VALUES (?, ?, 1, ?, 100000000.00, NOW(6), ?, 'LOCKED', ?, ?,"
+                + " NOW(6), NOW(6), NOW(6))", c.milestoneId, c.contractId, c.buyerId, id(), id(), id());
     }
 
     private void assertCommand(JsonNode command, Map<String, Object> source, Contract c, String entryType,
