@@ -10,7 +10,9 @@ import com.agricontract.contract.domain.model.breach.BreachCase;
 import com.agricontract.contract.domain.model.breach.BreachCaseComputedResolution;
 import com.agricontract.contract.domain.model.breach.BreachCaseStatus;
 import com.agricontract.contract.domain.model.consent.SignerRole;
+import com.agricontract.contract.domain.model.breach.ContestStatus;
 import com.agricontract.contract.domain.model.inspection.InspectionReport;
+import com.agricontract.contract.domain.model.inspection.InspectionRequestReason;
 import com.agricontract.contract.domain.model.milestone.FlagIssueType;
 import com.agricontract.contract.domain.model.milestone.Milestone;
 import com.agricontract.contract.domain.model.milestone.MilestoneSettlement;
@@ -20,12 +22,15 @@ import com.agricontract.contract.domain.model.quality.PrevailingRoleRule;
 import com.agricontract.contract.domain.model.quality.QualityAssessment;
 import com.agricontract.contract.domain.model.quality.QualityDisposition;
 import com.agricontract.contract.domain.model.quality.QualityDispositionCalculator;
+import com.agricontract.contract.domain.model.remedy.RemedyDecision;
+import com.agricontract.contract.domain.model.remedy.RemedyStatus;
 import com.agricontract.contract.domain.model.vo.ContractId;
 import com.agricontract.contract.domain.model.vo.ContractStatus;
 import com.agricontract.contract.domain.repository.BreachCaseRepository;
 import com.agricontract.contract.domain.repository.ContractRepository;
 import com.agricontract.contract.domain.repository.InspectionReportRepository;
 import com.agricontract.contract.domain.repository.MilestoneRepository;
+import com.agricontract.contract.domain.repository.RemedyDecisionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -46,8 +51,13 @@ import java.time.temporal.ChronoUnit;
  *   <li>milestone BUYER_RECEIVED of a MANDATORY_BEFORE_SETTLEMENT contract, nobody flagged: CONFORMING settles the
  *       milestone at once (INSPECTED_CONFORMING, milestone.settled); PARTIALLY or NON conforming makes the system open a
  *       BreachCase (milestone CONTESTED, breach.reported) with the computed resolution attached;</li>
- *   <li>INCONCLUSIVE: the report is stored and nothing else happens (the re-request is #241).</li>
+ *   <li>INCONCLUSIVE: the report is stored; a first one asks inspection-service again with the reason of the
+ *       original request (a second INCONCLUSIVE is final: the milestone and its money stay locked, WARN
+ *       inspection_inconclusive_final, an operator handles it).</li>
  * </ul>
+ * Rounds (D85, D91, V24): a milestone takes a second report only after an INCONCLUSIVE first one, or as the result of
+ * a contest (its case is CONTESTED). The second report of a contest replaces the case's computed resolution, the case
+ * goes back to UNDER_REVIEW and the pending RemedyDecision is SUPERSEDED. A third report is ignored.
  */
 @Slf4j
 @Service
@@ -57,10 +67,14 @@ public class ApplyInspectionReportUseCase {
     private final MilestoneRepository milestones;
     private final BreachCaseRepository breachCases;
     private final InspectionReportRepository reports;
+    private final RemedyDecisionRepository remedyDecisions;
     private final MilestoneContestStep contestStep;
     private final ContractEventPublisher events;
     private final TransactionRunner transactions;
     private final Clock clock;
+
+    /** D85, D91: a milestone has at most two reports, the first and one re-run. */
+    static final int MAX_ROUNDS = 2;
 
     public void execute(InspectionReportCommands.ApplyConfirmed command) {
         transactions.requireTransaction();
@@ -88,10 +102,6 @@ public class ApplyInspectionReportUseCase {
             ignore(report, "milestone_" + milestone.status());
             return;
         }
-        if (reports.existsByMilestoneId(milestone.milestoneId())) {
-            ignore(report, "report_already_stored");
-            return;
-        }
         if (!contested && !MilestoneCleanSettlement.requiresInspection(contract)) {
             ignore(report, "inspection_not_requested");
             return;
@@ -110,10 +120,36 @@ public class ApplyInspectionReportUseCase {
                 ignore(report, "breach_case_missing");
                 return;
             }
-            if (breachCase.status() == BreachCaseStatus.RESOLVED || breachCase.computedResolution() != null) {
-                ignore(report, "breach_case_closed");
+        }
+
+        int stored = reports.countByMilestoneId(milestone.milestoneId());
+        if (stored >= MAX_ROUNDS) {
+            ignore(report, "report_round_limit");
+            return;
+        }
+        boolean contestRound = false;
+        if (stored == 1) {
+            contestRound = breachCase != null && breachCase.status() == BreachCaseStatus.RESOLVED
+                    && breachCase.contestStatus() == ContestStatus.CONTESTED;
+            boolean rerun = reports.findByMilestoneId(milestone.milestoneId()).orElseThrow().measurementStatus()
+                    == MeasurementStatus.INCONCLUSIVE;
+            if (!contestRound && !rerun) {
+                ignore(report, "report_already_stored");
                 return;
             }
+        }
+        RemedyDecision pending = null;
+        if (contestRound) {
+            pending = remedyDecisions.findByBreachCaseId(breachCase.breachCaseId())
+                    .flatMap(d -> remedyDecisions.findByIdForUpdate(d.remedyDecisionId())).orElse(null);
+            if (pending == null || pending.status() != RemedyStatus.PENDING_CONTEST) {
+                ignore(report, "decision_not_pending");
+                return;
+            }
+        } else if (breachCase != null
+                && (breachCase.status() == BreachCaseStatus.RESOLVED || breachCase.computedResolution() != null)) {
+            ignore(report, "breach_case_closed");
+            return;
         }
 
         QualityAssessment assessment = QualityDispositionCalculator.assess(
@@ -121,14 +157,15 @@ public class ApplyInspectionReportUseCase {
                 report.actualMetrics(), report.acceptedQuantityKg(), milestone.effectiveUnitPrice(),
                 milestone.batchAmount());
         reports.insert(report, assessment);
+        Instant now = Instant.now(clock).truncatedTo(ChronoUnit.MICROS);
         if (!complete) {
-            log.warn("event=inspection_report_inconclusive reportId={} contractId={} milestoneId={} eventId={}",
-                    report.reportId(), report.contractId(), report.milestoneId(), report.receivedEventId());
+            inconclusive(contract, milestone, report, contested, stored, now);
             return;
         }
 
-        Instant now = Instant.now(clock).truncatedTo(ChronoUnit.MICROS);
-        if (contested) {
+        if (contestRound) {
+            supersede(breachCase, pending, milestone, report, assessment, now);
+        } else if (contested) {
             attach(breachCase, milestone.flag().issueType(), milestone, report, assessment);
         } else if (assessment.disposition() == QualityDisposition.CONFORMING) {
             settle(contract, milestone, report, assessment, now);
@@ -138,22 +175,57 @@ public class ApplyInspectionReportUseCase {
         }
     }
 
+    /**
+     * INCONCLUSIVE: nothing is decided. The first one asks again with the reason of the original request (a dispute
+     * for a contested milestone, a mandatory inspection otherwise); the second is final.
+     */
+    private void inconclusive(Contract contract, Milestone milestone, InspectionReport report, boolean contested,
+                              int stored, Instant now) {
+        if (stored >= 1) {
+            log.warn("event=inspection_inconclusive_final reportId={} contractId={} milestoneId={} eventId={}",
+                    report.reportId(), report.contractId(), report.milestoneId(), report.receivedEventId());
+            return;
+        }
+        log.warn("event=inspection_report_inconclusive reportId={} contractId={} milestoneId={} eventId={}",
+                report.reportId(), report.contractId(), report.milestoneId(), report.receivedEventId());
+        events.inspectionLevel15Requested(contract, milestone, contested
+                ? InspectionRequestReason.DISPUTE_ROUTED : InspectionRequestReason.MANDATORY_INSPECTION, null, now);
+    }
+
+    /** D91: the second report of a contest replaces the computed resolution and supersedes the pending decision. */
+    private void supersede(BreachCase breachCase, RemedyDecision pending, Milestone milestone, InspectionReport report,
+                           QualityAssessment assessment, Instant now) {
+        BreachCaseComputedResolution resolution = resolutionOf(milestone.flag().issueType(), milestone, report,
+                assessment);
+        breachCases.update(breachCase.supersedeByContestResult(resolution));
+        remedyDecisions.markSuperseded(pending.remedyDecisionId(), now);
+        log.info("event=contest_result_attached breachCaseId={} reportId={} supersededRemedyDecisionId={}"
+                        + " disposition={} finalBreachingRole={}", breachCase.breachCaseId(), report.reportId(),
+                pending.remedyDecisionId(), assessment.disposition(), resolution.finalBreachingRole());
+    }
+
     /** issueType is null for nobody-flagged cases; here it is always the case's own flag type. */
     private void attach(BreachCase breachCase, FlagIssueType issueType, Milestone milestone, InspectionReport report,
                         QualityAssessment assessment) {
         QualityDisposition disposition = assessment.disposition();
+        BreachCaseComputedResolution resolution = resolutionOf(issueType, milestone, report, assessment);
+        breachCases.update(breachCase.attachComputedResolution(resolution));
+        log.info("event=computed_resolution_attached breachCaseId={} reportId={} issueType={} disposition={}"
+                        + " prevailingRole={} sellerEntitlement={} buyerRefund={}", breachCase.breachCaseId(),
+                report.reportId(), issueType, disposition, resolution.prevailingRole(),
+                assessment.finalSellerEntitlement().wire(), assessment.buyerRefundAmount().wire());
+    }
+
+    private BreachCaseComputedResolution resolutionOf(FlagIssueType issueType, Milestone milestone,
+                                                      InspectionReport report, QualityAssessment assessment) {
+        QualityDisposition disposition = assessment.disposition();
         SignerRole prevailing = PrevailingRoleRule.prevailing(disposition, issueType, report.acceptedQuantityKg(),
                 milestone.sellerWeighing().declaredWeight(), milestone.buyerReceipt().receivedWeight());
-        BreachCaseComputedResolution resolution = new BreachCaseComputedResolution(report.reportId(), issueType,
+        return new BreachCaseComputedResolution(report.reportId(), issueType,
                 report.acceptedQuantityKg(),
                 com.agricontract.contract.domain.model.breach.QualityDisposition.valueOf(disposition.name()),
                 PrevailingRoleRule.finalBreachingRole(disposition), assessment.finalSellerEntitlement(),
                 assessment.buyerRefundAmount(), prevailing);
-        breachCases.update(breachCase.attachComputedResolution(resolution));
-        log.info("event=computed_resolution_attached breachCaseId={} reportId={} issueType={} disposition={}"
-                        + " prevailingRole={} sellerEntitlement={} buyerRefund={}", breachCase.breachCaseId(),
-                report.reportId(), issueType, disposition, prevailing, assessment.finalSellerEntitlement().wire(),
-                assessment.buyerRefundAmount().wire());
     }
 
     private void settle(Contract contract, Milestone milestone, InspectionReport report, QualityAssessment assessment,
