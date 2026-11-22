@@ -13,9 +13,9 @@ NestJS 11 on Node 22, port **8089**. Internal only: the gateway never routes it.
 request frozen by D60 in `contracts/events/supplementary-services-api.yaml`). #274: `GET`, `DELETE` and
 `confirm-attached` on `/internal/v1/files/{fileId}`, and `store()` for `SYSTEM_GENERATED`
 (`POST /internal/v1/files/system-generated`, D88). #131: the virus scan (ClamAV) and `file.ready` / `file.failed`.
-#276: the lifecycle job (orphans, retention, legal hold, self-healing two-step deletion). Not done yet: email intake
-(#275), and a way to set `retention_until` / `legal_hold` (the contract has none; the owning side's flows decide
-them).
+#276: the lifecycle job (orphans, retention, legal hold, self-healing two-step deletion). #275: the email intake
+bridge (IMAP). Not done yet: a way to set `retention_until` / `legal_hold` (the contract has none; the owning
+side's flows decide them).
 
 ## `POST /internal/v1/files` (storeOnBehalfOf)
 
@@ -149,6 +149,34 @@ OutboxPoller ──> agricontract.files (topic, routing key = eventType)
 `test/contract/file-events.contract.spec.ts` checks `file.ready` / `file.failed` against `fileReady` / `fileFailed`
 of the contract, both directions, so a contract change fails the build until the code follows.
 
+## Email intake (`intake@...`, IMAP)
+
+Design §4.1, §3, inspection §3.3 / §3.6 (#275). `IntakePoller` polls the mailbox every `INTAKE_POLL_INTERVAL_MS`
+(5 minutes), at most 50 unseen mails per poll, oldest first; **off unless `INTAKE_IMAP_HOST` is set** (compose sets
+it to its GreenMail). For each mail, streamed through mailparser:
+
+- **Each attachment** (PDF, JPEG or PNG, at most 20 MiB, checked while the MIME part streams; past the cap its bytes
+  are dropped as they come) becomes an `EMAIL_INTAKE` file through the same store core, so `storage_hash` is
+  computed as it is stored. `uploaded_by` = `file-service:email-intake`. Its scan job `file.email.parsed` goes to the
+  same `file-service.virus-scan` queue and carries the mail's `emailMeta`, so the same scan publishes `file.ready`
+  with `emailMeta` (or `file.failed`: EICAR in a mail ends FAILED like any upload). Images embedded in an HTML body
+  are not attachments.
+- **A mail without attachment** (an ack, a case-ID reply) publishes **`file.email_notice`** `{senderDomain,
+  spfDkimResult, subject, snippet, receivedAt}` and creates no file.
+- **What cannot be taken** (another type, over 20 MiB, empty, not MIME at all) becomes an **`email_intake_failure`**
+  row (V4, design §8) for the Operator; the rest of the mail still goes.
+
+`emailMeta` = `{senderDomain, spfDkimResult, subject, receivedAt}`: the From domain only (never the address),
+`spfDkimResult` from the topmost `Authentication-Results` header (the one our receiving side added), as
+`spf=pass; dkim=pass; dmarc=pass` with the methods present, or `none`; `receivedAt` = the mailbox's INTERNALDATE.
+A signal for the Operator's review, never a reason to reject.
+
+**Once per mail.** The message key (SHA-256 of the Message-ID, else of `UIDVALIDITY:UID`) goes into
+`email_intake_message` in one transaction with the mail's failures and its notice; a mail seen again (the same
+report delivered twice, or polled again after a crash) does nothing. Each attachment's store is idempotent on
+`(file-service:email-intake, messageKey:index)`, so a crash before that record re-stores nothing. A mail is flagged
+`\Seen` once handled; a poll that fails (IMAP, storage or the database down) leaves it unseen for the next poll.
+
 ## Lifecycle job (orphans, retention, legal hold)
 
 Design §7, governance §8, matrix 21d / 21e (#276). `LifecycleScheduler` runs `FileLifecycleUseCase` a minute after
@@ -229,6 +257,11 @@ Environment variables only (no `.env` file). The defaults match the compose serv
 | `CLAMAV_HOST` / `CLAMAV_PORT` | `localhost` / `3410` | compose `clamav` (host port 3410; `clamav:3310` inside compose) |
 | `FILE_DLQ_CHECK_INTERVAL_MS` | `300000` | Period of the DLQ check, whole ms up to 24 h; `0` turns it off |
 | `FILE_LIFECYCLE_INTERVAL_MS` | `3600000` | Period of the lifecycle job, 0 to 86400000; `0` turns it off |
+| `INTAKE_IMAP_HOST` | unset = intake off | The `intake@` IMAP server; compose: `greenmail` |
+| `INTAKE_IMAP_PORT` / `INTAKE_IMAP_SECURE` | `3143` / `false` | GreenMail's plain IMAP |
+| `INTAKE_IMAP_USERNAME` / `INTAKE_IMAP_PASSWORD` | `intake` / `intake-dev-secret` | The compose GreenMail user |
+| `INTAKE_IMAP_MAILBOX` / `INTAKE_ADDRESS` | `INBOX` / `intake@agricontract.local` | The folder polled; the address recorded as `source_mailbox` |
+| `INTAKE_POLL_INTERVAL_MS` | `300000` | Poll period (design: 5 minutes), 0 to 86400000 |
 
 Startup fails when MySQL or the bucket cannot be reached. `GET /actuator/health` answers 200 with
 `components.db` and `components.storage` UP, or 503 with an error code for the one that is down. RabbitMQ and
@@ -242,14 +275,15 @@ defaults, CHECK constraint and indexes, including `idempotency_key` and its uniq
 `idempotency_key` is `ascii` / `ascii_bin`: MySQL's default collation ignores case, so `Key-A` and `key-a` would
 otherwise be one upload. `email_intake_failure` comes with the email intake (#275). `V2__create_event_outbox.sql`
 is the `event_outbox` of `@agricontract/eventing` (additive; its `processed_event` is left out, no consumer here
-dedupes by eventId). `V3__add_blob_deleted_at.sql` marks step 2 of a deletion done (#276). The app does not
+dedupes by eventId). `V3__add_blob_deleted_at.sql` marks step 2 of a deletion done (#276). `V4__create_email_intake.sql` adds
+`email_intake_message` (once per mail) and `email_intake_failure` (design §8) (#275). The app does not
 migrate: compose's `file-migrate` (Flyway 10.10) runs before `file-service`, and CI runs the same image.
 
 ## Run and test
 
 ```bash
 # in backend/
-docker compose up -d --wait file-db object-storage rabbitmq clamav   # clamav: ~1 GB RAM, healthy in ~40 s
+docker compose up -d --wait file-db object-storage rabbitmq clamav greenmail   # clamav: ~1 GB RAM, healthy in ~40 s
 docker compose up file-migrate
 docker compose up -d --build file-service      # optional: the service itself on :8089
 ```
@@ -258,7 +292,7 @@ docker compose up -d --build file-service      # optional: the service itself on
 | --- | --- |
 | `npm run lint:check` | ESLint with Prettier |
 | `npm test` | Unit tests, no Docker |
-| `npm run test:int` | The store core, every `/internal/v1/files` route and the scan (EICAR ends FAILED, a clean file READY with one `file.ready`) on the compose `object-storage`, `file-db` (migrated), `clamav` and `rabbitmq`; `scan-pipeline.int-spec.ts` runs the whole app through the broker. Uses a bucket of its own per run and deletes it. Stop a compose `file-service` first, or it takes the scan jobs |
+| `npm run test:int` | The store core, every `/internal/v1/files` route and the scan (EICAR ends FAILED, a clean file READY with one `file.ready`) on the compose `object-storage`, `file-db` (migrated), `clamav`, `rabbitmq` and `greenmail`; `scan-pipeline.int-spec.ts` runs the whole app through the broker. Uses a bucket of its own per run and deletes it. Stop a compose `file-service` first, or it takes the scan jobs |
 | `npm run build` | |
 
 In Git Bash on Windows, put `MSYS_NO_PATHCONV=1` in front of a `docker run` that passes container paths such as
@@ -279,6 +313,7 @@ src/application/file-lifecycle.use-case  one lifecycle run (§7); infrastructure
 src/application/ports/               ObjectStoragePort, FileRepository, VirusScannerPort
 src/infrastructure/messaging/        AMQP connection, topology, outbox poller, VirusScanConsumer
 src/infrastructure/scan/             clamd INSTREAM client
+src/application/email-intake.use-case  one intake mail; infrastructure/intake/ has IMAP, MIME and the poller
 src/infrastructure/http/             the /internal/v1/files routes: guard, headers, error envelope, unread body
 src/infrastructure/storage/          S3 client and adapter, bucket creation on startup
 src/infrastructure/persistence/      mysql2 pool, `file` repository
