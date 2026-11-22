@@ -1,5 +1,6 @@
 import type { StoredFile } from '../domain/stored-file';
 import {
+  FileFailedError,
   FileMetadataUnavailableError,
   FileNotFoundError,
   failureCode,
@@ -16,6 +17,10 @@ import type { FileRepository } from './ports/file.repository';
  * again. No key needs to be kept for that. A file still PROCESSING can be
  * confirmed: the owner keeps the fileId from the upload on and waits for
  * file.ready on its own side. Unknown or deleted: FileNotFoundError.
+ *
+ * A FAILED file cannot be attached (#131): FileFailedError, 409. The
+ * repository checks it again in the UPDATE, so a scan that fails the file
+ * between the read and the write still wins.
  */
 export class ConfirmAttachedUseCase {
   constructor(private readonly files: FileRepository) {}
@@ -23,11 +28,23 @@ export class ConfirmAttachedUseCase {
   async execute(fileId: string): Promise<void> {
     const file = await this.find(fileId);
     if (!file || file.deletedAt !== null) throw new FileNotFoundError();
+    if (file.status === 'FAILED') throw new FileFailedError();
     if (file.attached) return;
+    let attached: boolean;
     try {
-      await this.files.markAttached(fileId);
+      attached = await this.files.markAttached(fileId);
     } catch (err) {
       throw new FileMetadataUnavailableError(failureCode(err));
+    }
+    if (!attached) {
+      // Changed in between: failed by the scan, deleted, or attached by a
+      // concurrent confirm (MySQL may count that row as unchanged).
+      const now = await this.find(fileId);
+      if (now && now.deletedAt === null) {
+        if (now.status === 'FAILED') throw new FileFailedError();
+        if (now.attached) return;
+      }
+      throw new FileNotFoundError();
     }
   }
 

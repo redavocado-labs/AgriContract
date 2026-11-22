@@ -1,7 +1,18 @@
-import type { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import {
+  MysqlOutboxStore,
+  Outbox,
+  type EventEnvelope,
+} from '@agricontract/eventing';
+import type {
+  Pool,
+  PoolConnection,
+  ResultSetHeader,
+  RowDataPacket,
+} from 'mysql2/promise';
 import {
   IdempotencyKeyTakenError,
   type FileRepository,
+  type ScanOutcome,
 } from '../../application/ports/file.repository';
 import {
   FILE_STATUSES,
@@ -34,32 +45,82 @@ const COLUMNS = `${INSERT_COLUMNS}, legal_hold, deleted_at`;
 /** The unique index of V1 behind D60's one upload per (uploaded_by, idempotency_key). */
 const IDEMPOTENCY_INDEX = 'uq_file_uploader_idempotency';
 
-/** FileRepository on the `file` table of db/migration/V1__create_file.sql. */
+/**
+ * FileRepository on the `file` table of db/migration/V1__create_file.sql and
+ * the `event_outbox` of V2 (published by OutboxPoller, see messaging/).
+ */
 export class FileMysqlRepository implements FileRepository {
+  private readonly outbox = new Outbox(new MysqlOutboxStore());
+
   constructor(private readonly pool: Pool) {}
 
-  async insert(file: StoredFile): Promise<void> {
+  async insert(
+    file: StoredFile,
+    events: readonly EventEnvelope[] = [],
+  ): Promise<void> {
     // created_at, retention, hold and deletion columns take their table defaults.
     try {
-      await this.pool.execute(
-        `INSERT INTO file (${INSERT_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          file.fileId,
-          file.storageHash,
-          file.uploadedBy,
-          file.ingestChannel,
-          file.contentType,
-          file.fileSize,
-          file.status,
-          file.attached,
-          file.idempotencyKey,
-        ],
-      );
+      await this.inTransaction(async (conn) => {
+        await conn.execute(
+          `INSERT INTO file (${INSERT_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            file.fileId,
+            file.storageHash,
+            file.uploadedBy,
+            file.ingestChannel,
+            file.contentType,
+            file.fileSize,
+            file.status,
+            file.attached,
+            file.idempotencyKey,
+          ],
+        );
+        for (const event of events) await this.outbox.enqueue(conn, event);
+      });
     } catch (err) {
       if (isDuplicateOn(err, IDEMPOTENCY_INDEX)) {
         throw new IdempotencyKeyTakenError();
       }
       throw err;
+    }
+  }
+
+  async recordScanOutcome(
+    fileId: string,
+    outcome: ScanOutcome,
+    event: EventEnvelope,
+  ): Promise<boolean> {
+    return this.inTransaction(async (conn) => {
+      const [result] = await conn.execute<ResultSetHeader>(
+        `UPDATE file SET status = ?, failure_reason = ?
+          WHERE file_id = ? AND status = 'PROCESSING' AND deleted_at IS NULL`,
+        [
+          outcome.status,
+          outcome.status === 'FAILED' ? outcome.failureReason : null,
+          fileId,
+        ],
+      );
+      if (result.affectedRows !== 1) return false;
+      await this.outbox.enqueue(conn, event);
+      return true;
+    });
+  }
+
+  /** Commit on success, rollback on throw (the row change and its events together). */
+  private async inTransaction<T>(
+    work: (conn: PoolConnection) => Promise<T>,
+  ): Promise<T> {
+    const conn = await this.pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      const result = await work(conn);
+      await conn.commit();
+      return result;
+    } catch (err) {
+      await conn.rollback().catch(() => undefined);
+      throw err;
+    } finally {
+      conn.release();
     }
   }
 
@@ -83,11 +144,13 @@ export class FileMysqlRepository implements FileRepository {
     return rows.length === 0 ? null : toStoredFile(rows[0]);
   }
 
-  async markAttached(fileId: string): Promise<void> {
-    await this.pool.execute(
-      'UPDATE file SET attached = TRUE WHERE file_id = ? AND deleted_at IS NULL',
+  async markAttached(fileId: string): Promise<boolean> {
+    const [result] = await this.pool.execute<ResultSetHeader>(
+      `UPDATE file SET attached = TRUE
+        WHERE file_id = ? AND deleted_at IS NULL AND status <> 'FAILED'`,
       [fileId],
     );
+    return result.affectedRows === 1;
   }
 
   async tombstone(fileId: string, reason: string): Promise<boolean> {

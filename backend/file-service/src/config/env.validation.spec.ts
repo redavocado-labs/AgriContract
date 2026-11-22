@@ -19,6 +19,13 @@ describe('validate (environment)', () => {
       },
       serverPort: 8089,
       serviceInternalSecret: 'changeme-internal',
+      rabbitmq: {
+        host: 'localhost',
+        port: 5672,
+        username: 'guest',
+        password: 'guest',
+      },
+      clamav: { host: 'localhost', port: 3410 },
     });
   });
 
@@ -33,6 +40,12 @@ describe('validate (environment)', () => {
       S3_REGION: 'eu-west-1',
       SERVER_PORT: '9000',
       SERVICE_INTERNAL_SECRET: 'from-env',
+      RABBITMQ_HOST: 'rabbitmq',
+      RABBITMQ_PORT: '5673',
+      RABBITMQ_USERNAME: 'u',
+      RABBITMQ_PASSWORD: 'p',
+      CLAMAV_HOST: 'clamav',
+      CLAMAV_PORT: '3310',
     });
     expect(config.db).toMatchObject({ host: 'file-db', port: 3306 });
     expect(config.storage).toEqual({
@@ -44,6 +57,13 @@ describe('validate (environment)', () => {
     });
     expect(config.serverPort).toBe(9000);
     expect(config.serviceInternalSecret).toBe('from-env');
+    expect(config.rabbitmq).toEqual({
+      host: 'rabbitmq',
+      port: 5673,
+      username: 'u',
+      password: 'p',
+    });
+    expect(config.clamav).toEqual({ host: 'clamav', port: 3310 });
   });
 
   it('reports every invalid value together', () => {

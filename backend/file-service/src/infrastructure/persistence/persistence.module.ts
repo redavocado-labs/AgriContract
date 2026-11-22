@@ -14,6 +14,6 @@ import { MYSQL_POOL, MysqlService, mysqlPoolProvider } from './mysql.provider';
       useFactory: (pool: Pool) => new FileMysqlRepository(pool),
     },
   ],
-  exports: [MysqlService, FILE_REPOSITORY],
+  exports: [MysqlService, MYSQL_POOL, FILE_REPOSITORY],
 })
 export class PersistenceModule {}

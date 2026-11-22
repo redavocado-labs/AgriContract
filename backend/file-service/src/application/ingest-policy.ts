@@ -8,9 +8,11 @@ export interface IngestPolicy {
   /** Accepted content types (normalized, see normalizeContentType); null = any. */
   contentTypes: readonly string[] | null;
   /**
-   * The stored file waits PROCESSING for the virus scan (§4, #131). Without
-   * it the file is READY as soon as it is stored: only the platform's own
-   * files skip the scan (SYSTEM_GENERATED, never an end-user's).
+   * The stored file waits PROCESSING for the virus scan (§4): the store
+   * writes the scan job (file.uploaded.direct) with the row, in one
+   * transaction, so no file is left unscanned. Without it the file is READY
+   * as soon as it is stored: only the platform's own files skip the scan
+   * (SYSTEM_GENERATED, never an end-user's).
    */
   virusScan: boolean;
 }
@@ -19,7 +21,7 @@ const MiB = 1024 * 1024;
 
 /**
  * DIRECT_UPLOAD (StoreOnBehalfOf, §3): JPG, PNG or PDF, at most 10MB
- * (decided 05/07/2026), read as 10 MiB. Virus scan follows (#131).
+ * (decided 05/07/2026), read as 10 MiB, then the virus scan (#131).
  */
 export const DIRECT_UPLOAD_POLICY: IngestPolicy = {
   channel: 'DIRECT_UPLOAD',

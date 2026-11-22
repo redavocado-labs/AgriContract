@@ -93,6 +93,8 @@ describe('StoreFileUseCase', () => {
       deletedAt: null,
       idempotencyKey: 'pdf-1',
     });
+    // Nothing to scan, so no scan job and no file.ready / file.failed.
+    expect(files.outbox).toEqual([]);
   });
 
   it('gives every store its own fileId, even for the same bytes and uploader', async () => {
@@ -109,7 +111,7 @@ describe('StoreFileUseCase', () => {
       channel: 'EMAIL_INTAKE',
       maxBytes: MiB,
       contentTypes: null,
-      virusScan: true,
+      virusScan: false,
     };
 
     const file = await useCase.execute(
@@ -119,7 +121,41 @@ describe('StoreFileUseCase', () => {
 
     expect(file.ingestChannel).toBe('EMAIL_INTAKE');
     expect(file.contentType).toBe('text/csv');
-    expect(file.status).toBe('PROCESSING');
+    // A policy without a scan writes no scan job.
+    expect(files.outbox).toEqual([]);
+  });
+
+  describe('the scan job (#131)', () => {
+    it('DIRECT_UPLOAD writes one file.uploaded.direct for the fileId, with the row', async () => {
+      const file = await useCase.execute(input(), DIRECT_UPLOAD_POLICY);
+
+      expect(files.outbox).toHaveLength(1);
+      expect(files.outbox[0]).toMatchObject({
+        eventType: 'file.uploaded.direct',
+        eventVersion: 1,
+        producer: 'file-service',
+        aggregateId: file.fileId,
+        payload: { fileId: file.fileId },
+      });
+      expect(files.outbox[0].causationId).toBeUndefined();
+    });
+
+    it('a repeat of the same key writes no second job', async () => {
+      const key = { idempotencyKey: 'scan-once' };
+      await useCase.execute(input(key), DIRECT_UPLOAD_POLICY);
+      await useCase.execute(input(key), DIRECT_UPLOAD_POLICY);
+
+      expect(files.outbox).toHaveLength(1);
+    });
+
+    it('no row, no job: a store whose insert fails leaves nothing to scan', async () => {
+      files.insertError = Object.assign(new Error('x'), { code: 'ECONNRESET' });
+
+      await expect(
+        useCase.execute(input(), DIRECT_UPLOAD_POLICY),
+      ).rejects.toThrow();
+      expect(files.outbox).toEqual([]);
+    });
   });
 
   /*

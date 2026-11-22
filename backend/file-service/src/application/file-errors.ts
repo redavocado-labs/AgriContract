@@ -111,3 +111,13 @@ export class StoredBytesMismatchError extends FileServiceError {
     super(`Stored object ${fileId} does not match its recorded size and hash`);
   }
 }
+
+/**
+ * 409: the virus scan rejected the file (FAILED), so no service may attach
+ * it as evidence (#131); the end-user uploads it again, as a new file.
+ */
+export class FileFailedError extends FileServiceError {
+  constructor() {
+    super('File was rejected by the virus scan and cannot be attached');
+  }
+}

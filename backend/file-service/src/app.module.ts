@@ -8,6 +8,7 @@ import { StorageModule } from './infrastructure/storage/storage.module';
 import { StoreFileModule } from './store-file.module';
 import { StoreOnBehalfOfModule } from './store-on-behalf-of.module';
 import { StoreSystemGeneratedModule } from './store-system-generated.module';
+import { VirusScanModule } from './virus-scan.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { StoreSystemGeneratedModule } from './store-system-generated.module';
     StoreOnBehalfOfModule,
     StoreSystemGeneratedModule,
     FileByIdModule,
+    VirusScanModule,
   ],
 })
 export class AppModule {}

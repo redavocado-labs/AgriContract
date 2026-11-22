@@ -26,6 +26,18 @@ export interface AppConfig {
    * storeOnBehalfOf), the same SERVICE_INTERNAL_SECRET as the other services.
    */
   serviceInternalSecret: string;
+  /** Broker of the outbox (file.uploaded.direct, file.ready, file.failed) and the scan queue. */
+  rabbitmq: {
+    host: string;
+    port: number;
+    username: string;
+    password: string;
+  };
+  /** clamd of the virus scan (compose `clamav`, host port 3410). */
+  clamav: {
+    host: string;
+    port: number;
+  };
 }
 
 /**
@@ -91,6 +103,16 @@ export function validate(env: Record<string, unknown>): AppConfig {
     },
     serverPort: port('SERVER_PORT', 8089),
     serviceInternalSecret: text('SERVICE_INTERNAL_SECRET', 'changeme-internal'),
+    rabbitmq: {
+      host: text('RABBITMQ_HOST', 'localhost'),
+      port: port('RABBITMQ_PORT', 5672),
+      username: text('RABBITMQ_USERNAME', 'guest'),
+      password: text('RABBITMQ_PASSWORD', 'guest'),
+    },
+    clamav: {
+      host: text('CLAMAV_HOST', 'localhost'),
+      port: port('CLAMAV_PORT', 3410),
+    },
   };
 
   if (errors.length > 0) {
