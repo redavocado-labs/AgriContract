@@ -23,6 +23,7 @@ import type { App } from 'supertest/types';
 import { APP_OPTIONS } from '../../app.options';
 import { validate } from '../../config/env.validation';
 import { createS3Client } from '../storage/s3-object-storage';
+import { withoutBroker } from '../../../test/support/without-broker';
 
 const PATH = '/internal/v1/files';
 const SECRET = `int-secret-${randomUUID()}`;
@@ -67,9 +68,9 @@ describe('POST /internal/v1/files on SeaweedFS and MySQL', () => {
     client = createS3Client(config.storage);
 
     const { AppModule } = await import('../../app.module.js');
-    const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    const moduleRef = await withoutBroker(
+      Test.createTestingModule({ imports: [AppModule] }),
+    ).compile();
     app = moduleRef.createNestApplication({
       ...APP_OPTIONS,
       logger: false,

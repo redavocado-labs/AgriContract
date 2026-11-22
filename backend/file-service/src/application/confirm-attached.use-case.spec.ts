@@ -4,7 +4,11 @@ import {
 } from '../../test/support/fakes';
 import { givenStoredFile } from '../../test/support/stored';
 import { ConfirmAttachedUseCase } from './confirm-attached.use-case';
-import { FileMetadataUnavailableError, FileNotFoundError } from './file-errors';
+import {
+  FileFailedError,
+  FileMetadataUnavailableError,
+  FileNotFoundError,
+} from './file-errors';
 
 describe('ConfirmAttachedUseCase', () => {
   let storage: FakeObjectStorage;
@@ -56,6 +60,49 @@ describe('ConfirmAttachedUseCase', () => {
       FileNotFoundError,
     );
     expect(files.rows.get(file.fileId)?.attached).toBe(false);
+  });
+
+  it('a FAILED file cannot be attached (#131): FileFailedError, stays unattached', async () => {
+    const file = givenStoredFile(files, storage, png, { status: 'FAILED' });
+
+    await expect(confirm.execute(file.fileId)).rejects.toBeInstanceOf(
+      FileFailedError,
+    );
+    expect(files.rows.get(file.fileId)?.attached).toBe(false);
+  });
+
+  it('a scan that fails the file between the read and the update still wins', async () => {
+    const file = givenStoredFile(files, storage, png, { status: 'PROCESSING' });
+    files.beforeMarkAttached = (id) => {
+      files.rows.get(id)!.status = 'FAILED';
+    };
+
+    await expect(confirm.execute(file.fileId)).rejects.toBeInstanceOf(
+      FileFailedError,
+    );
+    expect(files.rows.get(file.fileId)?.attached).toBe(false);
+  });
+
+  it('a delete between the read and the update: 404', async () => {
+    const file = givenStoredFile(files, storage, png);
+    files.beforeMarkAttached = (id) => {
+      files.rows.get(id)!.deletedAt = new Date();
+    };
+
+    await expect(confirm.execute(file.fileId)).rejects.toBeInstanceOf(
+      FileNotFoundError,
+    );
+  });
+
+  it('a concurrent confirm that won the update is still a success', async () => {
+    const file = givenStoredFile(files, storage, png);
+    // MySQL may count the row as unchanged once the other confirm set it.
+    jest.spyOn(files, 'markAttached').mockImplementation((id) => {
+      files.rows.get(id)!.attached = true;
+      return Promise.resolve(false);
+    });
+
+    await expect(confirm.execute(file.fileId)).resolves.toBeUndefined();
   });
 
   it('database down on the update: FileMetadataUnavailableError, safe to retry', async () => {

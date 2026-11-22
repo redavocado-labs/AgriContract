@@ -274,6 +274,19 @@ describe('/internal/v1/files/{fileId} (getFile, confirmAttached, deleteFile)', (
       expect(files.rows.get(file.fileId)?.attached).toBe(false);
     });
 
+    it('409 FILE_FAILED for a file the virus scan rejected', async () => {
+      const file = givenStoredFile(files, storage, pdf, { status: 'FAILED' });
+
+      const res = await confirm(file.fileId);
+
+      expect(res.status).toBe(409);
+      expect(res.body as ErrorEnvelope).toMatchObject({
+        status: 409,
+        code: 'FILE_FAILED',
+      });
+      expect(files.rows.get(file.fileId)?.attached).toBe(false);
+    });
+
     it('404 NOT_FOUND for an unknown or deleted file', async () => {
       const deleted = givenStoredFile(files, storage, pdf, {
         deletedAt: new Date(),
