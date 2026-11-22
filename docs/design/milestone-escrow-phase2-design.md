@@ -807,7 +807,7 @@ Luồng thống nhất: `AttributionDecision` → remedy calculator (§6.7) sinh
 | `qualityDisposition` | `CONFORMING\|PARTIALLY_CONFORMING\|NON_CONFORMING`, non-null cho final quality resolution; nullable ngoài quality path. `INCONCLUSIVE` không được tạo `RemedyDecision`. |
 | `decisionSource` | `SYSTEM\|ARBITRATOR\|INSPECTOR_L1_5\|INSPECTOR_L2\|MUTUAL`, non-null |
 | `penaltyEligible` / `reputationEligible` | Boolean, non-null |
-| `remedyLegs` | List of `{remedyLegId, remedyType, fundType, role, amount}`, non-null; `amount` uses canonical money string and zero-value bank commands are omitted |
+| `remedyLegs` | List of `{remedyLegId, remedyType, fundType, role, amount}`, non-null; `amount` uses canonical money string and zero-value bank commands are omitted. `role` = bên **nhận** tiền của leg (D86, 22/11/2026): `PAYMENT_SETTLEMENT` → SELLER, `PAYMENT_REFUND` → BUYER, `DEPOSIT_FORFEITURE` cọc buyer → SELLER / cọc seller → BUYER, `CONTRACTUAL_PENALTY`/`DAMAGES_COMPENSATION` → bên bị thiệt; không bao giờ là bên vi phạm (bên vi phạm đã có ở `finalBreachingRole`) |
 
 #### 6.4.1 `breachReasonCode` taxonomy (tối thiểu)
 
