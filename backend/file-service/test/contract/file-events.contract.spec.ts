@@ -15,6 +15,9 @@ import {
   FILE_READY,
   PRODUCER,
   SCAN_REQUESTED,
+  FILE_EMAIL_NOTICE,
+  fileEmailNotice,
+  scanRequested,
   fileFailed,
   fileReady,
 } from '../../src/application/file-events';
@@ -139,5 +142,45 @@ describe('file.ready / file.failed (golden-flow-events.yaml)', () => {
         payload: { ...event.payload, storageHash: file.storageHash },
       }),
     ).toBe(false);
+  });
+});
+
+describe('EMAIL_INTAKE: file.ready with emailMeta, file.email_notice (#275)', () => {
+  const meta = {
+    senderDomain: 'sgs.example.com',
+    spfDkimResult: 'spf=pass; dkim=pass',
+    subject: 'Report CASE-2026-0042',
+    receivedAt: '2026-11-22T02:00:05.000Z',
+  };
+  const intakeFile = { ...file, ingestChannel: 'EMAIL_INTAKE' as const };
+
+  it('file.ready of an intake file carries the emailMeta of its scan job and is accepted', () => {
+    const event = fileReady(scanRequested(intakeFile, meta), intakeFile);
+
+    expect(accepts('fileReady')(event)).toBe(true);
+    expect(event.payload).toMatchObject({
+      ingestChannel: 'EMAIL_INTAKE',
+      emailMeta: meta,
+    });
+    expect(Object.keys(event.payload).sort()).toEqual(
+      [...own('fileReady').payload.required, 'emailMeta'].sort(),
+    );
+  });
+
+  it('file.email_notice is an event of the contract and is accepted with exactly its fields', () => {
+    const event = fileEmailNotice(
+      'a'.repeat(64),
+      meta,
+      'We confirm case SGS-VN-7781.',
+    );
+    const schema = own('fileEmailNotice');
+
+    expect(events.oneOf).toContainEqual({ $ref: '#/$defs/fileEmailNotice' });
+    expect(ownPart('fileEmailNotice')['x-publisher']).toBe(PRODUCER);
+    expect(schema.eventType.const).toBe(FILE_EMAIL_NOTICE);
+    expect(accepts('fileEmailNotice')(event)).toBe(true);
+    expect(Object.keys(event.payload).sort()).toEqual(
+      [...schema.payload.required].sort(),
+    );
   });
 });
