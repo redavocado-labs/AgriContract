@@ -2,7 +2,11 @@ package com.agricontract.escrow.infrastructure.messaging;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doThrow;
 
+import com.agricontract.escrow.domain.model.SettlementLegType;
 import com.agricontract.escrow.infrastructure.config.RabbitMQConfig;
 import com.agricontract.escrow.infrastructure.contract.FrozenSchemas;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,7 +18,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.mockito.Mockito;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.BindingBuilder;
@@ -26,6 +32,7 @@ import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -71,6 +78,12 @@ class MilestoneSettlementFlowIntegrationTest {
     @Autowired RabbitTemplate rabbit;
     @Autowired AmqpAdmin admin;
     @Autowired JdbcTemplate jdbc;
+    @SpyBean OutboxSettlementCommandPublisher settlementCommands;
+
+    @AfterEach
+    void resetSpy() {
+        Mockito.reset(settlementCommands);
+    }
 
     @BeforeEach
     void bindTestQueues() {
@@ -99,7 +112,11 @@ class MilestoneSettlementFlowIntegrationTest {
 
         send(settled, "agricontract.contracts");                                     // redelivery, same eventId
         send(again(settled, "292500000.00"), "agricontract.contracts");              // repeat, other eventId
-        send(again(settled, "300000000.00"), "agricontract.contracts");              // conflicting amounts
+        Map<String, Object> conflicting = again(settled, "300000000.00");
+        send(conflicting, "agricontract.contracts");                                 // conflicting amounts
+        assertThat(receiveOne(SETTLED_DLQ).get("eventId").asText()).as("a conflict is not acked")
+                .isEqualTo(conflicting.get("eventId"));
+        assertThat(processed(conflicting)).isZero();
         assertThat(rabbit.receive(RELEASE_COMMANDS, 2_500)).as("replay emits no second command").isNull();
         assertThat(rabbit.receive(REFUND_COMMANDS, 500)).isNull();
         assertThat(legCount(funded)).isEqualTo(2);
@@ -137,6 +154,61 @@ class MilestoneSettlementFlowIntegrationTest {
         assertThat(rabbit.receive(RELEASE_COMMANDS, 1_000)).isNull();
         assertThat(rabbit.receive(REFUND_COMMANDS, 500)).isNull();
         assertThat(status(funded)).isEqualTo("LOCKED");
+    }
+
+    @Test
+    void unknownMilestone_goesToTheDlq() throws Exception {
+        Funded unknown = new Funded(UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        Map<String, Object> settled = milestoneSettled(unknown, "150000000.00", "150000000.00");
+        send(settled, "agricontract.contracts");
+
+        assertThat(receiveOne(SETTLED_DLQ).get("eventId").asText()).isEqualTo(settled.get("eventId"));
+        assertThat(processed(settled)).isZero();
+        assertThat(rabbit.receive(RELEASE_COMMANDS, 1_000)).isNull();
+    }
+
+    @Test
+    void unlockedMilestone_goesToTheDlq() throws Exception {
+        Funded pending = request("150000000.00");                      // lock requested, no bank result yet
+        Map<String, Object> settled = milestoneSettled(pending, "150000000.00", "150000000.00");
+        send(settled, "agricontract.contracts");
+
+        assertThat(receiveOne(SETTLED_DLQ).get("eventId").asText()).isEqualTo(settled.get("eventId"));
+        assertThat(status(pending)).isEqualTo("FUNDING_PENDING");
+        assertThat(legCount(pending)).isZero();
+        assertThat(rabbit.receive(RELEASE_COMMANDS, 1_000)).isNull();
+    }
+
+    @Test
+    void buyerOtherThanTheOneLockedFrom_goesToTheDlq() throws Exception {
+        Funded funded = fund("150000000.00");
+        Funded otherBuyer = new Funded(funded.contractId, funded.milestoneId, UUID.randomUUID().toString(),
+                funded.sellerId);
+        Map<String, Object> settled = milestoneSettled(otherBuyer, "150000000.00", "100000000.00");
+        send(settled, "agricontract.contracts");
+
+        assertThat(receiveOne(SETTLED_DLQ).get("eventId").asText()).isEqualTo(settled.get("eventId"));
+        assertThat(status(funded)).isEqualTo("LOCKED");
+        assertThat(legCount(funded)).isZero();
+        assertThat(rabbit.receive(REFUND_COMMANDS, 1_000)).isNull();
+    }
+
+    @Test
+    void outboxFailure_rollsBackTheLegs_andTheProcessedEvent() throws Exception {
+        Funded funded = fund("150000000.00");
+        Map<String, Object> settled = milestoneSettled(funded, "150000000.00", "100000000.00");
+        // The refund command is written after the release leg and command: the whole transaction must roll back.
+        doThrow(new IllegalStateException("outbox down")).when(settlementCommands)
+                .settlementLegRequested(argThat(leg -> leg.getType() == SettlementLegType.REFUND_TO_BUYER),
+                        anyString(), anyString());
+        send(settled, "agricontract.contracts");
+
+        assertThat(receiveOne(SETTLED_DLQ).get("eventId").asText()).isEqualTo(settled.get("eventId"));
+        assertThat(legCount(funded)).isZero();
+        assertThat(processed(settled)).isZero();
+        assertThat(status(funded)).isEqualTo("LOCKED");
+        assertThat(rabbit.receive(RELEASE_COMMANDS, 1_500)).as("no half-sent settlement").isNull();
     }
 
     @Test
@@ -187,6 +259,16 @@ class MilestoneSettlementFlowIntegrationTest {
 
     /** milestone.funding_requested, then bank.lock_completed: the milestone is LOCKED. */
     private Funded fund(String batchAmount) throws Exception {
+        Funded funded = request(batchAmount);
+        JsonNode lock = receiveOne(LOCK_COMMANDS);
+        send(bankResult(lock, true));
+        receiveOne(FUNDED_EVENTS);
+        assertThat(status(funded)).isEqualTo("LOCKED");
+        return funded;
+    }
+
+    /** milestone.funding_requested only: the milestone waits for its lock (FUNDING_PENDING). */
+    private Funded request(String batchAmount) throws Exception {
         Funded funded = new Funded(UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                 UUID.randomUUID().toString(), UUID.randomUUID().toString());
         Map<String, Object> payload = new LinkedHashMap<>();
@@ -197,13 +279,15 @@ class MilestoneSettlementFlowIntegrationTest {
         payload.put("batchAmount", batchAmount);
         payload.put("requestedAt", Instant.now().toString());
         send(envelope("milestone.funding_requested", "contract-service", payload), "agricontract.contracts");
-        JsonNode lock = receiveOne(LOCK_COMMANDS);
-        Map<String, Object> locked = bankResult(lock, true);
-        locked.put("eventType", "bank.lock_completed");
-        send(locked);
-        receiveOne(FUNDED_EVENTS);
-        assertThat(status(funded)).isEqualTo("LOCKED");
+        await().atMost(Duration.ofSeconds(10)).until(() -> jdbc.queryForObject(
+                "SELECT COUNT(*) FROM escrow_milestone WHERE milestone_id = ?", Integer.class,
+                funded.milestoneId) == 1);
         return funded;
+    }
+
+    private int processed(Map<String, Object> event) {
+        return jdbc.queryForObject("SELECT COUNT(*) FROM processed_event WHERE event_id = ?", Integer.class,
+                event.get("eventId"));
     }
 
     private static Map<String, Object> milestoneSettled(Funded funded, String lockedAmount, String actualAmount) {
