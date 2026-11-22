@@ -130,7 +130,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ImportAutoConfiguration({JacksonAutoConfiguration.class, EventingAutoConfiguration.class})
 @Import({BusinessCalendarConfiguration.class, SpringTransactionRunner.class, MilestoneFunding.class,
-        JdbcMilestoneRepository.class, JdbcInspectionReportRepository.class, JdbcBreachCaseRepository.class, ReviewBreachCaseUseCase.class, ResolveBreachCaseUseCase.class,
+        JdbcMilestoneRepository.class, JdbcInspectionReportRepository.class, JdbcBreachCaseRepository.class, ReviewBreachCaseUseCase.class, ResolveBreachCaseUseCase.class, com.agricontract.contract.infrastructure.persistence.remedy.JdbcRemedyDecisionRepository.class, com.agricontract.contract.application.service.RemedySettlement.class,
         GetBreachCaseUseCase.class, ListBreachCasesForArbitrationUseCase.class, FlagMilestoneUseCase.class,
         RespondToMilestoneFlagUseCase.class, SellerSilenceMilestonesUseCase.class, MilestoneContestStep.class,
         OutboxContractEventPublisher.class, ContractRepositoryImpl.class,
@@ -233,6 +233,8 @@ class BreachCaseReviewIntegrationTest {
     /** An ACTIVE contract whose first milestone is funded (IN_PROGRESS); the second is still CREATED. */
     @BeforeEach
     void setUp() {
+        jdbc.update("DELETE FROM remedy_leg");
+        jdbc.update("DELETE FROM remedy_decision");
         jdbc.update("DELETE FROM breach_case");
         fileStore.confirmed.clear();
         fileStore.confirmFails = false;

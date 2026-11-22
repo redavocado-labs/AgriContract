@@ -13,6 +13,9 @@ import com.agricontract.contract.domain.model.milestone.MilestoneSettlement;
 import com.agricontract.contract.domain.model.milestone.MilestoneStatus;
 import com.agricontract.contract.domain.model.milestone.SellerWeighDeclaration;
 import com.agricontract.contract.domain.model.milestone.SellerWeight;
+import com.agricontract.contract.domain.model.remedy.RemedyDecision;
+import com.agricontract.contract.domain.model.remedy.RemedyLeg;
+import com.agricontract.contract.domain.model.remedy.RemedyStatus;
 import com.agricontract.contract.domain.model.terms.ContractTermsSnapshot;
 import com.agricontract.contract.domain.model.vo.ContractStatus;
 import com.agricontract.eventing.EventEnvelope;
@@ -67,6 +70,7 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
     static final String BREACH_REPORTED = "breach.reported";
     static final String INSPECTION_LEVEL1_5_REQUESTED = "inspection.level1_5_requested";
     static final String MILESTONE_DISPUTE_RESOLVED = "milestone.dispute_resolved";
+    static final String REMEDY_FINALIZED = "remedy.finalized";
 
     private static final Pattern UUID_TEXT =
             Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -563,7 +567,7 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
     /** golden-flow-events.yaml milestoneDisputeResolved, to reputation-service: only the silent QUANTITY path, for the buyer. */
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
-    public void milestoneDisputeResolvedForBuyer(Contract contract, Milestone milestone) {
+    public void milestoneDisputeResolved(Contract contract, Milestone milestone, SignerRole resolutionFavors) {
         MilestoneSettlement settlement = requireSettled(contract, milestone, MILESTONE_DISPUTE_RESOLVED);
         String contractId = uuid(contract.getContractId().value(), "contractId");
         String milestoneId = uuid(milestone.milestoneId(), "milestoneId");
@@ -572,10 +576,58 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
         payload.put("milestoneId", milestoneId);
         payload.put("flaggedBy", "BUYER");
         payload.put("flaggedByUserId", uuid(contract.getBuyerId(), "flaggedByUserId"));
-        payload.put("resolutionFavors", "BUYER");
+        payload.put("resolutionFavors", resolutionFavors.name());
 
         outbox.append(new EventEnvelope(UUID.randomUUID(), MILESTONE_DISPUTE_RESOLVED, 1, settlement.settledAt(),
                 PRODUCER, milestoneId, contractId, null, null, payload));
+    }
+
+    /**
+     * golden-flow-events.yaml remedyFinalized (#137): the legs of a FINALIZED RemedyDecision on a milestone dispute.
+     * attributionDecisionId is the BreachCase id (the AttributionDecision is the case's decision).
+     */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void remedyFinalized(Contract contract, RemedyDecision decision, Instant at) {
+        if (decision.status() != RemedyStatus.FINALIZED || decision.breachCaseId() == null
+                || !decision.contractId().equals(contract.getContractId().value())) {
+            throw new IllegalStateException("remedy.finalized for remedy decision " + decision.remedyDecisionId()
+                    + " in status " + decision.status());
+        }
+        String contractId = uuid(contract.getContractId().value(), "contractId");
+        String decisionId = uuid(decision.remedyDecisionId(), "remedyDecisionId");
+        String breachCaseId = uuid(decision.breachCaseId(), "breachCaseId");
+        List<Map<String, Object>> legs = new java.util.ArrayList<>();
+        for (RemedyLeg leg : decision.legs()) {
+            Map<String, Object> l = new LinkedHashMap<>();
+            l.put("remedyLegId", uuid(leg.remedyLegId(), "remedyLegId"));
+            l.put("remedyType", leg.remedyType().name());
+            l.put("fundType", leg.fundType().name());
+            l.put("role", leg.role().name());
+            l.put("amount", leg.amount().wire());
+            legs.add(l);
+        }
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("remedyDecisionId", decisionId);
+        payload.put("attributionDecisionId", breachCaseId);
+        payload.put("breachCaseId", breachCaseId);
+        payload.put("contractId", contractId);
+        payload.put("buyerId", uuid(contract.getBuyerId(), "buyerId"));
+        payload.put("sellerId", uuid(contract.getSellerId(), "sellerId"));
+        payload.put("affectedMilestoneIds", List.of(uuid(decision.milestoneId(), "milestoneId")));
+        payload.put("settledMilestoneCount", decision.settledMilestoneCount());
+        payload.put("finalBreachingRole",
+                decision.finalBreachingRole() == null ? null : decision.finalBreachingRole().name());
+        payload.put("breachReasonCode", decision.breachReasonCode() == null ? null : decision.breachReasonCode().name());
+        payload.put("qualityDisposition",
+                decision.qualityDisposition() == null ? null : decision.qualityDisposition().name());
+        payload.put("decisionSource", decision.decisionSource().name());
+        payload.put("penaltyEligible", decision.penaltyEligible());
+        payload.put("reputationEligible", decision.reputationEligible());
+        payload.put("remedyLegs", legs);
+
+        outbox.append(new EventEnvelope(UUID.randomUUID(), REMEDY_FINALIZED, 1, at, PRODUCER, decisionId, contractId,
+                null, null, payload));
     }
 
     private static MilestoneSettlement requireSettled(Contract contract, Milestone milestone, String eventType) {
