@@ -59,13 +59,18 @@ public class JdbcBreachCaseRepository implements BreachCaseRepository {
     public void update(BreachCase c) {
         int updated = jdbc.update("UPDATE breach_case SET status = ?, final_breaching_role = ?, decision_source = ?,"
                         + " decision_evidence_refs = ?, resolved_at = ?, resolved_by_actor_id = ?, contest_status = ?,"
-                        + " contest_deadline = ?, computed_resolution = ? WHERE breach_case_id = ?",
+                        + " contest_deadline = ?, computed_resolution = ?, contest_reason = ?,"
+                        + " contest_evidence_file_ids = ?, contested_at = ?, contested_by_actor_id = ?"
+                        + " WHERE breach_case_id = ?",
                 c.status().name(), c.finalBreachingRole() == null ? null : c.finalBreachingRole().name(),
                 c.decisionSource() == null ? null : c.decisionSource().name(),
                 c.decisionSource() == null ? null : write(c.decisionEvidenceRefs()),
                 c.resolvedAt() == null ? null : Timestamp.from(c.resolvedAt()), c.resolvedByActorId(),
                 c.contestStatus().name(), c.contestDeadline() == null ? null : Timestamp.from(c.contestDeadline()),
-                c.computedResolution() == null ? null : writeComputed(c.computedResolution()), c.breachCaseId());
+                c.computedResolution() == null ? null : writeComputed(c.computedResolution()), c.contestReason(),
+                c.contestedAt() == null ? null : write(c.contestEvidenceFileIds()),
+                c.contestedAt() == null ? null : Timestamp.from(c.contestedAt()), c.contestedByActorId(),
+                c.breachCaseId());
         if (updated != 1) {
             throw new IllegalStateException("Breach case " + c.breachCaseId() + " does not exist");
         }
@@ -88,6 +93,13 @@ public class JdbcBreachCaseRepository implements BreachCaseRepository {
     public Optional<BreachCase> findByIdForUpdate(String breachCaseId) {
         return jdbc.query("SELECT * FROM breach_case WHERE breach_case_id = ? FOR UPDATE", row(), breachCaseId)
                 .stream().findFirst();
+    }
+
+    @Override
+    public List<String> findIdsWithExpiredContestWindow(Instant now, int limit) {
+        return jdbc.queryForList("SELECT breach_case_id FROM breach_case WHERE contest_status = 'OPEN'"
+                + " AND contest_deadline <= ? ORDER BY contest_deadline, breach_case_id LIMIT ?", String.class,
+                Timestamp.from(now), limit);
     }
 
     @Override
@@ -119,6 +131,8 @@ public class JdbcBreachCaseRepository implements BreachCaseRepository {
             Timestamp resolvedAt = rs.getTimestamp("resolved_at");
             Timestamp deadline = rs.getTimestamp("contest_deadline");
             String computed = rs.getString("computed_resolution");
+            String contestFiles = rs.getString("contest_evidence_file_ids");
+            Timestamp contestedAt = rs.getTimestamp("contested_at");
             return new BreachCase(rs.getString("breach_case_id"), rs.getString("contract_id"),
                     rs.getString("milestone_id"), BreachRequester.valueOf(rs.getString("requested_by")),
                     allegedRole == null ? null : SignerRole.valueOf(allegedRole),
@@ -131,7 +145,9 @@ public class JdbcBreachCaseRepository implements BreachCaseRepository {
                     refs == null ? List.of() : readStrings(refs), resolvedAt == null ? null : resolvedAt.toInstant(),
                     rs.getString("resolved_by_actor_id"), ContestStatus.valueOf(rs.getString("contest_status")),
                     deadline == null ? null : deadline.toInstant(),
-                    computed == null ? null : readComputed(computed));
+                    computed == null ? null : readComputed(computed), rs.getString("contest_reason"),
+                    contestFiles == null ? List.of() : readStrings(contestFiles),
+                    contestedAt == null ? null : contestedAt.toInstant(), rs.getString("contested_by_actor_id"));
         };
     }
 

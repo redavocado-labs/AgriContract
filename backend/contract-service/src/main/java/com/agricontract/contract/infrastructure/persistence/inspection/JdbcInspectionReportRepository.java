@@ -26,7 +26,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
-/** inspection_report and quality_assessment (V22): insert and read only, the rows are immutable. */
+/** inspection_report and quality_assessment (V22, V24): insert and read only, the rows are immutable. */
 @Repository
 @RequiredArgsConstructor
 public class JdbcInspectionReportRepository implements InspectionReportRepository {
@@ -39,11 +39,13 @@ public class JdbcInspectionReportRepository implements InspectionReportRepositor
     public void insert(InspectionReport r, QualityAssessment a) {
         jdbc.update("INSERT INTO inspection_report (report_id, contract_id, milestone_id, tier, measurement_status,"
                         + " measured_quantity_kg, accepted_quantity_kg, actual_metrics, result_hash, report_hash,"
-                        + " confirmed_at, received_event_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        + " confirmed_at, received_event_id, created_at, `round`)"
+                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 r.reportId(), r.contractId(), r.milestoneId(), r.tier(), r.measurementStatus().name(),
                 r.measuredQuantityKg(), r.acceptedQuantityKg(), r.actualMetrics() == null ? null : write(r.actualMetrics()),
                 r.resultHash(), r.reportHash(), Timestamp.from(r.confirmedAt()), r.receivedEventId(),
-                Timestamp.from(Instant.now(clock).truncatedTo(ChronoUnit.MICROS)));
+                Timestamp.from(Instant.now(clock).truncatedTo(ChronoUnit.MICROS)),
+                countByMilestoneId(r.milestoneId()) + 1);
         jdbc.update("INSERT INTO quality_assessment (report_id, disposition, type_outcome, metric_outcomes,"
                         + " quality_discount_rate, quality_discount_amount, quantity_adjusted_entitlement,"
                         + " final_seller_entitlement, buyer_refund_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -55,7 +57,8 @@ public class JdbcInspectionReportRepository implements InspectionReportRepositor
 
     @Override
     public Optional<InspectionReport> findByMilestoneId(String milestoneId) {
-        return jdbc.query("SELECT * FROM inspection_report WHERE milestone_id = ?", (rs, n) -> new InspectionReport(
+        return jdbc.query("SELECT * FROM inspection_report WHERE milestone_id = ? ORDER BY `round` DESC LIMIT 1",
+                (rs, n) -> new InspectionReport(
                 rs.getString("report_id"), rs.getString("contract_id"), rs.getString("milestone_id"),
                 rs.getString("tier"), MeasurementStatus.valueOf(rs.getString("measurement_status")),
                 rs.getBigDecimal("measured_quantity_kg"), rs.getBigDecimal("accepted_quantity_kg"),
@@ -65,10 +68,10 @@ public class JdbcInspectionReportRepository implements InspectionReportRepositor
     }
 
     @Override
-    public boolean existsByMilestoneId(String milestoneId) {
+    public int countByMilestoneId(String milestoneId) {
         Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE milestone_id = ?",
                 Integer.class, milestoneId);
-        return n != null && n > 0;
+        return n == null ? 0 : n;
     }
 
     @Override

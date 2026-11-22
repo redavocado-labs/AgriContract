@@ -26,6 +26,9 @@ public interface BreachCaseRepository {
 
     Optional<BreachCase> findByIdForUpdate(String breachCaseId);
 
+    /** Ids of the cases whose contest window is OPEN and has passed at {@code now}, oldest deadline first (GB-50). */
+    List<String> findIdsWithExpiredContestWindow(java.time.Instant now, int limit);
+
     /**
      * The Arbitrator queue across all contracts, reportedAt newest first then breachCaseId. status may be null;
      * awaitingApproval keeps only cases that are not RESOLVED and carry a computedResolution.

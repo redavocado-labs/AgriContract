@@ -17,13 +17,17 @@ public interface RemedyDecisionRepository {
     /** Reads under the row lock; the caller already holds the contract lock. */
     Optional<RemedyDecision> findByIdForUpdate(String remedyDecisionId);
 
+    /** The latest decision of the case (round 2 once a contest superseded round 1). */
     Optional<RemedyDecision> findByBreachCaseId(String breachCaseId);
 
     /** PENDING_CONTEST becomes FINALIZED with finalizedAt; nothing else of the decision is written. */
     void markFinalized(RemedyDecision finalized);
 
+    /** PENDING_CONTEST becomes SUPERSEDED at {@code at} (a contest's second Level 1.5 result replaced it); no event. */
+    void markSuperseded(String remedyDecisionId, java.time.Instant at);
+
     /**
-     * The SELLER_DEPOSIT legs taken so far by the contract's remedy decisions, FINALIZED or PENDING_CONTEST: what the
+     * The SELLER_DEPOSIT legs taken so far by the contract's remedy decisions, FINALIZED or PENDING_CONTEST, never SUPERSEDED: what the
      * seller deposit has already lost (0.00 when none).
      */
     VndAmount sellerDepositForfeited(String contractId);
