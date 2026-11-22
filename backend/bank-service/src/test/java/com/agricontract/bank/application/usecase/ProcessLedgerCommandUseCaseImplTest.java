@@ -89,6 +89,73 @@ class ProcessLedgerCommandUseCaseImplTest {
         assertThat(results.completed).containsExactly(ledger.raceWinner.getEntryId());
     }
 
+    @Test
+    void seizeRecordsOneEntryAndConfirmsIt() {
+        LedgerCommand command = seize(EntryType.CONTRACTUAL_PENALTY, FundType.MILESTONE_PAYMENT, id(), id());
+        useCase.execute(command);
+
+        assertThat(ledger.entries).hasSize(1);
+        assertThat(results.completed).containsExactly(ledger.entries.get(command.sourceEventId()).getEntryId());
+        assertThat(results.failed).isEmpty();
+    }
+
+    @Test
+    void seizeReplayWithTheSameSourceEventReconfirms() {
+        LedgerCommand command = seize(EntryType.DEPOSIT_FORFEITURE, FundType.BUYER_DEPOSIT, null, id());
+        useCase.execute(command);
+        useCase.execute(command);
+
+        assertThat(ledger.appends).isEqualTo(1);
+        assertThat(results.completed).hasSize(2);
+    }
+
+    @Test
+    void sameRemedyLegUnderAnotherSourceEventWritesAndSendsNothing() {
+        String leg = id();
+        useCase.execute(seize(EntryType.DAMAGES_COMPENSATION, FundType.MILESTONE_PAYMENT, id(), leg));
+        useCase.execute(seize(EntryType.DAMAGES_COMPENSATION, FundType.MILESTONE_PAYMENT, id(), leg));
+
+        assertThat(ledger.appends).isEqualTo(1);
+        assertThat(results.completed).hasSize(1);
+        assertThat(results.failed).isEmpty();
+    }
+
+    @Test
+    void losingTheRemedyLegRaceSendsNothing() {
+        LedgerCommand first = seize(EntryType.CONTRACTUAL_PENALTY, FundType.MILESTONE_PAYMENT, id(), id());
+        LedgerCommand second = seize(EntryType.CONTRACTUAL_PENALTY, FundType.MILESTONE_PAYMENT, id(), first.remedyLegId());
+        ledger.legRaceWinner = LedgerEntry.reconstitute(id(), first.sourceEventId(), first.contractId(),
+                first.milestoneId(), first.userId(), first.entryType(), first.fundType(), first.remedyDecisionId(),
+                first.remedyLegId(), new Money(first.amount()), Instant.now());
+
+        useCase.execute(second);
+
+        assertThat(results.completed).isEmpty();
+        assertThat(results.failed).isEmpty();
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({
+            "CONTRACTUAL_PENALTY, BUYER_DEPOSIT, false",
+            "DAMAGES_COMPENSATION, SELLER_DEPOSIT, false",
+            "DEPOSIT_FORFEITURE, MILESTONE_PAYMENT, true",
+            "CONTRACTUAL_PENALTY, MILESTONE_PAYMENT, false"})
+    void seizeBreakingAFundOrScopeRuleIsAnsweredWithFailed(EntryType type, FundType fund, boolean withMilestone) {
+        // The last row has a milestone-level fund but no milestoneId.
+        LedgerCommand command = seize(type, fund, withMilestone ? id() : null, id());
+        useCase.execute(command);
+
+        assertThat(ledger.entries).isEmpty();
+        assertThat(results.failed).hasSize(1);
+        assertThat(results.completed).isEmpty();
+    }
+
+    private static LedgerCommand seize(EntryType type, FundType fund, String milestoneId, String legId) {
+        String eventId = id();
+        return new LedgerCommand(eventId, id(), id(), milestoneId, id(), type, fund, id(), legId,
+                new BigDecimal("1500000.00"), eventId);
+    }
+
     private static LedgerCommand buyerDeposit(String amount) {
         String eventId = id();
         return new LedgerCommand(eventId, id(), id(), null, id(), EntryType.LOCK_BUYER_DEPOSIT,
@@ -110,12 +177,18 @@ class ProcessLedgerCommandUseCaseImplTest {
         int appends;
         // Set to simulate a concurrent delivery committing between our lookup and our insert.
         LedgerEntry raceWinner;
+        // Same, but the constraint that fires is remedy_leg_id (the winner has another sourceEventId).
+        LedgerEntry legRaceWinner;
 
         @Override
         public void append(LedgerEntry entry) {
             if (raceWinner != null) {
                 entries.put(raceWinner.getSourceEventId(), raceWinner);
                 throw new DuplicateLedgerEntryException(entry.getSourceEventId());
+            }
+            if (legRaceWinner != null) {
+                entries.put(legRaceWinner.getSourceEventId(), legRaceWinner);
+                throw DuplicateLedgerEntryException.forRemedyLeg(entry.getRemedyLegId());
             }
             if (entries.containsKey(entry.getSourceEventId())) {
                 throw new DuplicateLedgerEntryException(entry.getSourceEventId());
@@ -127,6 +200,11 @@ class ProcessLedgerCommandUseCaseImplTest {
         @Override
         public Optional<LedgerEntry> findBySourceEventId(String sourceEventId) {
             return Optional.ofNullable(entries.get(sourceEventId));
+        }
+
+        @Override
+        public Optional<LedgerEntry> findByRemedyLegId(String remedyLegId) {
+            return entries.values().stream().filter(e -> remedyLegId.equals(e.getRemedyLegId())).findFirst();
         }
     }
 

@@ -44,8 +44,10 @@ public class RabbitConfiguration {
     public static final String RELEASE_REQUEST_QUEUE = "bank-svc." + RELEASE_REQUEST_KEY;
     public static final String REFUND_REQUEST_KEY = "bank.refund_requested";
     public static final String REFUND_REQUEST_QUEUE = "bank-svc." + REFUND_REQUEST_KEY;
-    public static final List<String> DLQS =
-            List.of(LOCK_REQUEST_DLQ, RELEASE_REQUEST_QUEUE + ".dlq", REFUND_REQUEST_QUEUE + ".dlq");
+    public static final String SEIZE_REQUEST_KEY = "bank.seize_requested";
+    public static final String SEIZE_REQUEST_QUEUE = "bank-svc." + SEIZE_REQUEST_KEY;
+    public static final List<String> DLQS = List.of(LOCK_REQUEST_DLQ, RELEASE_REQUEST_QUEUE + ".dlq",
+            REFUND_REQUEST_QUEUE + ".dlq", SEIZE_REQUEST_QUEUE + ".dlq");
 
     @Bean
     Declarables bankTopology() {
@@ -56,6 +58,7 @@ public class RabbitConfiguration {
         commandQueue(declarables, LOCK_REQUEST_QUEUE, LOCK_REQUEST_KEY, escrow, dlx);
         commandQueue(declarables, RELEASE_REQUEST_QUEUE, RELEASE_REQUEST_KEY, escrow, dlx);
         commandQueue(declarables, REFUND_REQUEST_QUEUE, REFUND_REQUEST_KEY, escrow, dlx);
+        commandQueue(declarables, SEIZE_REQUEST_QUEUE, SEIZE_REQUEST_KEY, escrow, dlx);
         return new Declarables(declarables);
     }
 

@@ -7,7 +7,8 @@ import java.util.Set;
 
 /**
  * The bank commands escrow sends, by the entry types each may carry (golden-flow-events.yaml bank*Requested). The
- * entry type decides the operation, so a command needs no separate field. Seize/penalty legs (#138) add theirs later.
+ * entry type decides the operation, so a command needs no separate field. SEIZE (#138) carries the remedy legs that
+ * take money for a penalty, a forfeiture or damages; its remedyDecisionId and remedyLegId are never null.
  */
 public enum LedgerOperation {
     LOCK("bank.lock_requested", "bank.lock_completed", "bank.lock_failed",
@@ -15,7 +16,9 @@ public enum LedgerOperation {
     RELEASE("bank.release_requested", "bank.release_completed", "bank.release_failed",
             Set.of(EntryType.RELEASE_TO_SELLER)),
     REFUND("bank.refund_requested", "bank.refund_completed", "bank.refund_failed",
-            Set.of(EntryType.REFUND_TO_BUYER));
+            Set.of(EntryType.REFUND_TO_BUYER)),
+    SEIZE("bank.seize_requested", "bank.seize_completed", "bank.seize_failed",
+            Set.of(EntryType.DEPOSIT_FORFEITURE, EntryType.CONTRACTUAL_PENALTY, EntryType.DAMAGES_COMPENSATION));
 
     private final String requested;
     private final String completed;

@@ -14,9 +14,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
- * A bank command (lock, release or refund) → one ledger entry → its _completed result, or its _failed result when the
+ * A bank command (lock, release, refund or seize) → one ledger entry → its _completed result, or its _failed result when the
  * command breaks a ledger rule (bank design §3, §4). The bank is a "dumb writer": escrow validated conservation before
  * sending a release or refund (bank design §2b.5), so no balance is checked here. sourceEventId is the idempotency key: a repeated command writes nothing and re-sends the
  * confirmation of the entry already recorded, because the repeat may mean the first confirmation was lost.
@@ -37,6 +38,13 @@ public class ProcessLedgerCommandUseCaseImpl implements ProcessLedgerCommandUseC
         if (recorded.isPresent()) {
             replay(command, recorded.get());
             return;
+        }
+        if (command.remedyLegId() != null) {
+            var leg = ledger.findByRemedyLegId(command.remedyLegId());
+            if (leg.isPresent()) {
+                legAlreadyApplied(command, leg.get());
+                return;
+            }
         }
 
         LedgerEntry entry;
@@ -60,8 +68,22 @@ public class ProcessLedgerCommandUseCaseImpl implements ProcessLedgerCommandUseC
                     command.sourceEventId(), command.contractId(), command.entryType(), entry.getEntryId());
         } catch (DuplicateLedgerEntryException e) {
             // A concurrent delivery committed first; its entry is the answer for this one too.
-            replay(command, ledger.findBySourceEventId(command.sourceEventId()).orElseThrow(() -> e));
+            var bySource = ledger.findBySourceEventId(command.sourceEventId());
+            if (bySource.isPresent()) {
+                replay(command, bySource.get());
+                return;
+            }
+            var byLeg = command.remedyLegId() == null ? Optional.<LedgerEntry>empty()
+                    : ledger.findByRemedyLegId(command.remedyLegId());
+            legAlreadyApplied(command, byLeg.orElseThrow(() -> e));
         }
+    }
+
+    // The leg was recorded under another sourceEventId. Answering _failed would say the money did not move when it did,
+    // so nothing is written or sent; escrow's pending-leg monitor alerts on the unanswered leg.
+    private void legAlreadyApplied(LedgerCommand command, LedgerEntry recorded) {
+        log.error("event=bank_remedy_leg_already_applied remedyLegId={} sourceEventId={} ledgerEntryId={}",
+                command.remedyLegId(), command.sourceEventId(), recorded.getEntryId());
     }
 
     private void replay(LedgerCommand command, LedgerEntry recorded) {

@@ -5,7 +5,7 @@ import com.agricontract.bank.domain.model.FundType;
 
 import java.math.BigDecimal;
 
-// One bank command (bank.lock_requested, bank.release_requested, bank.refund_requested), already parsed. requestEventId == sourceEventId (checked by the consumer); both are kept
+// One bank command (bank.lock/release/refund/seize_requested), already parsed. requestEventId == sourceEventId (checked by the consumer); both are kept
 // because the result needs the request eventId as causationId and the payload's sourceEventId echoed back.
 public record LedgerCommand(
         String requestEventId,

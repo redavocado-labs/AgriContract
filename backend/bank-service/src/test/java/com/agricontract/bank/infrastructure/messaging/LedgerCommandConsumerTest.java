@@ -60,6 +60,53 @@ class LedgerCommandConsumerTest {
         assertThat(command.operation()).isEqualTo(operation);
     }
 
+    @ParameterizedTest(name = "{0}")
+    @CsvSource({"CONTRACTUAL_PENALTY, MILESTONE_PAYMENT", "DAMAGES_COMPENSATION, MILESTONE_PAYMENT",
+            "DEPOSIT_FORFEITURE, SELLER_DEPOSIT"})
+    void readsSeizeRequests(String entryType, String fundType) throws Exception {
+        LedgerCommand command = consumer.toCommand(JSON.writeValueAsBytes(seizeRequest(entryType, fundType)),
+                LedgerOperation.SEIZE);
+
+        assertThat(command.operation()).isEqualTo(LedgerOperation.SEIZE);
+        assertThat(command.remedyDecisionId()).isNotNull();
+        assertThat(command.remedyLegId()).isNotNull();
+    }
+
+    @ParameterizedTest(name = "seize without {0}")
+    @CsvSource({"remedyDecisionId", "remedyLegId"})
+    void seizeWithANullRemedyReferenceIsInvalid(String field) throws Exception {
+        Map<String, Object> event = seizeRequest("CONTRACTUAL_PENALTY", "MILESTONE_PAYMENT");
+        payload(event).put(field, null);
+        byte[] body = JSON.writeValueAsBytes(event);
+
+        assertThatThrownBy(() -> consumer.toCommand(body, LedgerOperation.SEIZE))
+                .isInstanceOf(InvalidEventPayloadException.class);
+    }
+
+    @ParameterizedTest(name = "seize amount {0}")
+    @CsvSource({"0.00", "-5.00", "100.5"})
+    void seizeAmountMustBePositiveMoney(String amount) throws Exception {
+        Map<String, Object> event = seizeRequest("CONTRACTUAL_PENALTY", "MILESTONE_PAYMENT");
+        payload(event).put("amount", amount);
+        byte[] body = JSON.writeValueAsBytes(event);
+
+        assertThatThrownBy(() -> consumer.toCommand(body, LedgerOperation.SEIZE))
+                .isInstanceOf(InvalidEventPayloadException.class);
+    }
+
+    @Test
+    void theSeizeQueueRefusesOtherEventsAndEntryTypes() throws Exception {
+        Map<String, Object> wrongEvent = seizeRequest("CONTRACTUAL_PENALTY", "MILESTONE_PAYMENT");
+        wrongEvent.put("eventType", "bank.release_requested");
+        Map<String, Object> refundType = seizeRequest("CONTRACTUAL_PENALTY", "MILESTONE_PAYMENT");
+        payload(refundType).put("entryType", "REFUND_TO_BUYER");
+
+        assertThatThrownBy(() -> consumer.toCommand(JSON.writeValueAsBytes(wrongEvent), LedgerOperation.SEIZE))
+                .isInstanceOf(InvalidEventPayloadException.class);
+        assertThatThrownBy(() -> consumer.toCommand(JSON.writeValueAsBytes(refundType), LedgerOperation.SEIZE))
+                .isInstanceOf(InvalidEventPayloadException.class);
+    }
+
     @Test
     void aQueueRefusesAnotherOperationsEventOrEntryType() throws Exception {
         byte[] release = JSON.writeValueAsBytes(request("bank.release_requested", "RELEASE_TO_SELLER", "SELLER_DEPOSIT"));
@@ -115,6 +162,14 @@ class LedgerCommandConsumerTest {
         if ("MILESTONE_PAYMENT".equals(fundType)) {
             payload(event).put("milestoneId", id());
         }
+        return event;
+    }
+
+    /** bank.seize_requested: a remedy leg, so decision and leg ids are always set. */
+    static Map<String, Object> seizeRequest(String entryType, String fundType) {
+        Map<String, Object> event = request("bank.seize_requested", entryType, fundType);
+        payload(event).put("remedyDecisionId", id());
+        payload(event).put("remedyLegId", id());
         return event;
     }
 

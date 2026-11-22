@@ -28,6 +28,12 @@ public class JdbcLedgerEntryRepository implements LedgerEntryRepository {
                    remedy_decision_id, remedy_leg_id, amount, created_at
             FROM ledger_entry WHERE source_event_id = ?
             """;
+    private static final String SELECT_BY_REMEDY_LEG = """
+            SELECT entry_id, source_event_id, contract_id, milestone_id, user_id, entry_type, fund_type,
+                   remedy_decision_id, remedy_leg_id, amount, created_at
+            FROM ledger_entry WHERE remedy_leg_id = ?
+            """;
+    private static final String REMEDY_LEG_KEY = "uk_ledger_remedy_leg";
     private static final String SOURCE_EVENT_KEY = "uk_ledger_source_event";
 
     private static final RowMapper<LedgerEntry> ROW = (rs, rowNum) -> LedgerEntry.reconstitute(
@@ -69,6 +75,9 @@ public class JdbcLedgerEntryRepository implements LedgerEntryRepository {
             if (e.getMessage() != null && e.getMessage().contains(SOURCE_EVENT_KEY)) {
                 throw new DuplicateLedgerEntryException(entry.getSourceEventId());
             }
+            if (e.getMessage() != null && e.getMessage().contains(REMEDY_LEG_KEY)) {
+                throw DuplicateLedgerEntryException.forRemedyLeg(entry.getRemedyLegId());
+            }
             throw e;
         }
     }
@@ -76,5 +85,10 @@ public class JdbcLedgerEntryRepository implements LedgerEntryRepository {
     @Override
     public Optional<LedgerEntry> findBySourceEventId(String sourceEventId) {
         return jdbc.query(SELECT_BY_SOURCE, ROW, sourceEventId).stream().findFirst();
+    }
+
+    @Override
+    public Optional<LedgerEntry> findByRemedyLegId(String remedyLegId) {
+        return jdbc.query(SELECT_BY_REMEDY_LEG, ROW, remedyLegId).stream().findFirst();
     }
 }
