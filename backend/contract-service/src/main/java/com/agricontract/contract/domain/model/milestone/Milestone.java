@@ -372,6 +372,34 @@ public final class Milestone {
         this.status = MilestoneStatus.CONTESTED;
     }
 
+    /**
+     * #137: the RemedyDecision of a contested milestone is final. CONTESTED becomes SETTLED on the money of its
+     * MILESTONE_PAYMENT legs; sellerAmount + buyerRefund must equal the locked batch. billableQuantityKg is the
+     * accepted quantity of the report (0 when the goods were NON_CONFORMING and nothing is paid).
+     */
+    public MilestoneSettlement settleDisputeResolved(BigDecimal billableQuantityKg, VndAmount sellerAmount,
+                                                     VndAmount buyerRefund, Instant settledAt) {
+        Objects.requireNonNull(billableQuantityKg, "billableQuantityKg");
+        Objects.requireNonNull(sellerAmount, "sellerAmount");
+        Objects.requireNonNull(buyerRefund, "buyerRefund");
+        Objects.requireNonNull(settledAt, "settledAt");
+        if (status != MilestoneStatus.CONTESTED || flag == null) {
+            throw new ContractConflictException(ContractConflictException.MILESTONE_ACTION_NOT_ALLOWED,
+                    "Only a CONTESTED milestone can be settled by its remedy (" + status + ").");
+        }
+        if (batchAmount == null || effectiveUnitPrice == null) {
+            throw new InvalidMilestoneTransitionException("Milestone " + milestoneId + " has no locked batch");
+        }
+        if (sellerAmount.value().add(buyerRefund.value()).compareTo(batchAmount.value()) != 0) {
+            throw new InvalidMilestoneTransitionException("Settlement of milestone " + milestoneId
+                    + " does not add up to the locked batch");
+        }
+        this.settlement = new MilestoneSettlement(SettlementPath.DISPUTE_RESOLVED,
+                billableQuantityKg.stripTrailingZeros(), sellerAmount, buyerRefund, settledAt);
+        this.status = MilestoneStatus.SETTLED;
+        return settlement;
+    }
+
     private void requireAwaitingSellerResponse(String action) {
         if (status != MilestoneStatus.AWAITING_SELLER_RESPONSE || flag == null || buyerReceipt == null
                 || sellerWeighing == null) {

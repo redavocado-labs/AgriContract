@@ -1,0 +1,86 @@
+package com.agricontract.contract.domain.model.remedy;
+
+import com.agricontract.contract.domain.model.breach.BreachReasonCode;
+import com.agricontract.contract.domain.model.breach.DecisionSource;
+import com.agricontract.contract.domain.model.breach.QualityDisposition;
+import com.agricontract.contract.domain.model.consent.SignerRole;
+import com.agricontract.contract.domain.model.terms.VndAmount;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * The money consequence of an AttributionDecision on a milestone dispute (#137). Immutable once built: the only
+ * change is PENDING_CONTEST becoming FINALIZED. A no-fault decision is FINALIZED at once; a decision with fault waits
+ * for the contest window (#241). penaltyAmount and penaltyDebtAmount are evidence of the contractual penalty: the part
+ * the seller deposit could not cover is a debt that is not collected, and has no leg.
+ *
+ * @param breachCaseId          null only for a system-decided remedy (#240, not built yet)
+ * @param settledMilestoneCount milestones of the contract already SETTLED when the decision was made (D55)
+ */
+public record RemedyDecision(String remedyDecisionId, String contractId, String breachCaseId, String milestoneId,
+                             RemedyStatus status, SignerRole finalBreachingRole, BreachReasonCode breachReasonCode,
+                             QualityDisposition qualityDisposition, DecisionSource decisionSource,
+                             VndAmount penaltyAmount, VndAmount penaltyDebtAmount, int settledMilestoneCount,
+                             List<RemedyLeg> legs, Instant createdAt, Instant finalizedAt) {
+    public RemedyDecision {
+        Objects.requireNonNull(remedyDecisionId, "remedyDecisionId");
+        Objects.requireNonNull(contractId, "contractId");
+        Objects.requireNonNull(milestoneId, "milestoneId");
+        Objects.requireNonNull(status, "status");
+        Objects.requireNonNull(decisionSource, "decisionSource");
+        Objects.requireNonNull(penaltyAmount, "penaltyAmount");
+        Objects.requireNonNull(penaltyDebtAmount, "penaltyDebtAmount");
+        Objects.requireNonNull(createdAt, "createdAt");
+        legs = List.copyOf(legs);
+        if ((status == RemedyStatus.FINALIZED) != (finalizedAt != null)) {
+            throw new IllegalArgumentException("a remedy decision is FINALIZED exactly when it has finalizedAt");
+        }
+        if (settledMilestoneCount < 0) {
+            throw new IllegalArgumentException("settledMilestoneCount must not be negative");
+        }
+    }
+
+    /** penaltyEligible of remedy.finalized: only a decision with fault carries a penalty. */
+    public boolean penaltyEligible() {
+        return finalBreachingRole != null;
+    }
+
+    /** reputationEligible of remedy.finalized: only a decision with fault locks reputation. */
+    public boolean reputationEligible() {
+        return finalBreachingRole != null;
+    }
+
+    /** PENDING_CONTEST becomes FINALIZED, once; the caller checks the status first. */
+    public RemedyDecision finalizedAt(Instant at) {
+        Objects.requireNonNull(at, "at");
+        if (status == RemedyStatus.FINALIZED) {
+            throw new IllegalStateException("Remedy decision " + remedyDecisionId + " is already FINALIZED");
+        }
+        return new RemedyDecision(remedyDecisionId, contractId, breachCaseId, milestoneId, RemedyStatus.FINALIZED,
+                finalBreachingRole, breachReasonCode, qualityDisposition, decisionSource, penaltyAmount,
+                penaltyDebtAmount, settledMilestoneCount, legs, createdAt, at);
+    }
+
+    /** What the seller is paid from the milestone, 0.00 when there is no PAYMENT_SETTLEMENT leg. */
+    public VndAmount sellerPayment() {
+        return legAmount(RemedyType.PAYMENT_SETTLEMENT);
+    }
+
+    /** What goes back to the buyer from the milestone, 0.00 when there is no PAYMENT_REFUND leg. */
+    public VndAmount buyerRefund() {
+        return legAmount(RemedyType.PAYMENT_REFUND);
+    }
+
+    /** What the buyer takes from the seller deposit, 0.00 when there is no forfeiture leg. */
+    public VndAmount sellerDepositForfeited() {
+        return legAmount(RemedyType.DEPOSIT_FORFEITURE);
+    }
+
+    private VndAmount legAmount(RemedyType type) {
+        return legs.stream().filter(l -> l.remedyType() == type).map(RemedyLeg::amount).findFirst()
+                .orElse(new VndAmount(BigDecimal.ZERO));
+    }
+}
