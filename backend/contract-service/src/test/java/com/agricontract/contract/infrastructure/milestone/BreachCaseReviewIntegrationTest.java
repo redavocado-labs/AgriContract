@@ -285,8 +285,8 @@ class BreachCaseReviewIntegrationTest {
         assertThat(resolved.decisionEvidenceRefs()).containsExactly("report-1");
         assertThat(resolved.resolvedAt()).isNotNull();
         assertThat(resolved.resolvedByActorId()).isEqualTo(ARBITRATOR);
-        assertThat(resolved.contestStatus().name()).isEqualTo("NOT_APPLICABLE");
-        assertThat(resolved.contestDeadline()).isNull();
+        assertThat(resolved.contestStatus().name()).isEqualTo("OPEN");
+        assertThat(resolved.contestDeadline()).isAfter(resolved.resolvedAt());
         // The allegation is untouched and the milestone does not move (settlement after resolution is #137).
         assertThat(resolved.requestedBy().name()).isEqualTo("BUYER");
         assertThat(resolved.allegedBreachingRole()).isEqualTo(SignerRole.SELLER);
