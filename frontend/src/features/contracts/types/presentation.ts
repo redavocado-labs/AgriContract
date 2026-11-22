@@ -114,6 +114,25 @@ const errorMessages: Record<string, string> = {
     "Tổng khối lượng các đợt khác số lượng đã giữ hàng. Hai bên cần sửa lịch giao trước khi ký.",
   DELIVERY_SCHEDULE_TOO_SOON:
     "Có đợt giao quá sát ngày để kịp khoá tiền. Hai bên sửa lịch giao rồi ký lại.",
+  MILESTONE_ACTION_NOT_ALLOWED:
+    "Đợt giao đã chuyển sang bước khác hoặc đã hết hạn thao tác. Tải lại để xem trạng thái mới.",
+  WEIGH_CORRECTION_CLOSED:
+    "Đã hết thời gian sửa số cân, hoặc bên mua đã ghi nhận cân nhận hàng.",
+  EVIDENCE_NOT_READY:
+    "Ảnh đang được kiểm tra an toàn. Vui lòng chờ vài giây rồi gửi lại.",
+  EVIDENCE_REJECTED:
+    "Ảnh không qua được bước kiểm tra an toàn. Vui lòng tải ảnh khác.",
+  EVIDENCE_NOT_UPLOADED:
+    "Ảnh chưa được tải lên cho đúng đợt giao này. Vui lòng tải lại ảnh.",
+  EVIDENCE_FILE_REUSED:
+    "Ảnh cân và phiếu giao hàng phải là hai tệp khác nhau.",
+  FILE_TOO_LARGE: "Tệp vượt quá 10 MB. Vui lòng chọn tệp nhỏ hơn.",
+  CONSENT_CONTENT_MISMATCH:
+    "Số liệu vừa thay đổi so với nội dung bạn xác nhận. Tải lại rồi xác nhận lại.",
+  INSPECTION_REPORT_PENDING:
+    "Chưa có báo cáo giám định được xác nhận cho đợt này.",
+  RESOLUTION_MISMATCH:
+    "Kết quả gửi lên khác kết quả hệ thống đã tính. Tải lại hồ sơ rồi duyệt lại.",
   VALIDATION_ERROR: "Dữ liệu chưa hợp lệ. Vui lòng kiểm tra lại các trường.",
   VALIDATION_FAILED: "Dữ liệu chưa hợp lệ. Vui lòng kiểm tra lại các trường.",
   PRESENTED_CONTENT_HASH_MISMATCH:

@@ -6,7 +6,11 @@ export const apiClient = axios.create({
   timeout: 15_000,
 })
 
+const MOCK = import.meta.env.DEV && import.meta.env.VITE_MOCK_API === "bf04"
+
 apiClient.interceptors.request.use(async (config) => {
+  // Dev-only mocked backend (src/mocks): no Keycloak, no Gateway.
+  if (MOCK) return config
   // Never attach a bearer token to an arbitrary absolute URL passed by a caller.
   if (!import.meta.env.VITE_API_BASE_URL)
     throw new Error("Chưa cấu hình API Gateway.")
