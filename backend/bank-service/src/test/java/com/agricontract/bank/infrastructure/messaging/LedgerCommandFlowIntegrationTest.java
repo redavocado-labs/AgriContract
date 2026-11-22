@@ -91,6 +91,7 @@ class LedgerCommandFlowIntegrationTest {
         registry.add("spring.rabbitmq.password", RABBIT::getAdminPassword);
         registry.add("agricontract.eventing.outbox.poll-interval", () -> "PT0.2S");
         registry.add("bank.dlq-monitor.enabled", () -> "false");
+        registry.add("service.internal-secret", () -> "test-only-internal-secret");
     }
 
     @Autowired RabbitTemplate rabbit;

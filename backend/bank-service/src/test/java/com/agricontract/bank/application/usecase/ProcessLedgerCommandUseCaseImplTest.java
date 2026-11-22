@@ -198,6 +198,11 @@ class ProcessLedgerCommandUseCaseImplTest {
         }
 
         @Override
+        public List<LedgerEntry> search(com.agricontract.bank.domain.repository.LedgerEntryFilter filter) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public Optional<LedgerEntry> findBySourceEventId(String sourceEventId) {
             return Optional.ofNullable(entries.get(sourceEventId));
         }

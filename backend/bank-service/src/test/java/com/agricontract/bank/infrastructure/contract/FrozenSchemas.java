@@ -37,6 +37,14 @@ public final class FrozenSchemas {
         assertThat(FACTORY.getSchema(schema, CONFIG).validate(instance)).as(definition).isEmpty();
     }
 
+    /** Validates an instance against components.schemas.{component} of the frozen REST contract. */
+    public static void assertApiSchema(String component, JsonNode instance) throws IOException {
+        ObjectNode api = read("openapi/golden-flow-api.yaml");
+        ObjectNode schema = api.deepCopy();
+        schema.put("$ref", "#/components/schemas/" + component);
+        assertThat(FACTORY.getSchema(schema, CONFIG).validate(instance)).as(component).isEmpty();
+    }
+
     private static ObjectNode read(String file) throws IOException {
         return (ObjectNode) YAML.readTree(Path.of(System.getProperty("contracts.directory"), file).toFile());
     }
