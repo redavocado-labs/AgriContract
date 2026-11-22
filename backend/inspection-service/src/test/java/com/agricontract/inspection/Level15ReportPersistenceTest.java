@@ -4,6 +4,11 @@ import com.agricontract.calendar.VietnamBusinessDays;
 import com.agricontract.inspection.application.exception.*;
 import com.agricontract.inspection.application.port.InspectorEligibilityPort;
 import com.agricontract.inspection.application.usecase.Level15ReportPersistence;
+import com.agricontract.inspection.application.usecase.ConfirmLevel15Report;
+import com.agricontract.inspection.application.usecase.ManageLevel15Assignments;
+import com.agricontract.inspection.application.port.TransactionRunner;
+import com.agricontract.inspection.domain.repository.AssignmentLifecycleRepository;
+import com.agricontract.inspection.domain.service.InspectionCanonicalizer;
 import com.agricontract.inspection.domain.model.*;
 import com.agricontract.inspection.domain.repository.Level15ReportRepository;
 import com.agricontract.inspection.infrastructure.persistence.JdbcLevel15ReportRepository;
@@ -55,6 +60,11 @@ class Level15ReportPersistenceTest {
     @Autowired JdbcTemplate jdbc;
     @Autowired PlatformTransactionManager transactions;
     @Autowired VietnamBusinessDays businessDays;
+    @Autowired AssignmentLifecycleRepository lifecycleRepository;
+    @Autowired ManageLevel15Assignments lifecycle;
+    @Autowired TransactionRunner runner;
+    @Autowired InspectionCanonicalizer canonicalizer;
+    @Autowired ConfirmLevel15Report.ConfirmationWrites confirmationWrites;
     @MockBean InspectorEligibilityPort users;
     @MockBean Clock clock;
     String actor,contract,milestone,commission;
@@ -97,6 +107,116 @@ class Level15ReportPersistenceTest {
         new TransactionTemplate(transactions).executeWithoutResult(s -> service.persist(identity,evidence()));
     }
 
+    InspectionSettlementResultV1 result() {
+        return new InspectionSettlementResultV1("1.0", new java.math.BigDecimal("10.000"),
+                new java.math.BigDecimal("9.500"), MeasurementStatus.COMPLETE,
+                new CoffeeActualMetrics("COFFEE", CoffeeType.ROBUSTA, new java.math.BigDecimal("12.50"),
+                        java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO), null, "2026-10-25T02:59:00.000Z");
+    }
+
+    ConfirmLevel15Report confirmation(Instant auth, ConfirmLevel15Report.ConfirmationWrites writes) {
+        return new ConfirmLevel15Report(service, lifecycleRepository, lifecycle, runner, canonicalizer,
+                () -> auth, (assignment, file) -> {
+                    assertThat(assignment).isEqualTo(commission);
+                    return "verified file fixture".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                }, writes, clock, Duration.ofMinutes(30));
+    }
+
+    @Test void confirmationPersistsSignatureClosesAssignmentAndWritesOneEvent() throws Exception {
+        var core = confirmation(NOW.minusSeconds(60), confirmationWrites);
+        String report = core.confirm(contract, milestone, id(), "{}", result());
+        assertThat(jdbc.queryForObject("SELECT report_hash FROM inspector_signature WHERE report_id=?", String.class, report))
+                .isEqualTo(jdbc.queryForObject("SELECT report_hash FROM inspection_report WHERE report_id=?", String.class, report));
+        assertThat(jdbc.queryForObject("SELECT ended_at FROM level1_5_inspection_assignment WHERE commission_id=?", Timestamp.class, commission).toInstant()).isEqualTo(NOW);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM event_outbox WHERE aggregate_id=? AND event_type='inspection.report_confirmed'", Integer.class, report)).isEqualTo(1);
+        String envelope = jdbc.queryForObject("SELECT envelope FROM event_outbox WHERE aggregate_id=?", String.class, report);
+        var json = new com.fasterxml.jackson.databind.ObjectMapper();
+        var yaml = new com.fasterxml.jackson.databind.ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory());
+        var root = yaml.readTree(java.nio.file.Path.of(System.getProperty("contracts.directory"), "events", "golden-flow-events.yaml").toFile());
+        var schema = (com.fasterxml.jackson.databind.node.ObjectNode) root.path("$defs").path("inspectionReportConfirmed")
+                .path("allOf").get(1).path("properties").path("payload").deepCopy();
+        schema.set("$defs", root.path("$defs"));
+        var factory = com.networknt.schema.JsonSchemaFactory.getInstance(com.networknt.schema.SpecVersion.VersionFlag.V202012);
+        var config = com.networknt.schema.SchemaValidatorsConfig.builder().formatAssertionsEnabled(true).build();
+        var envelopeSchema = yaml.readTree(java.nio.file.Path.of(System.getProperty("contracts.directory"), "events", "event-envelope.yaml").toFile());
+        assertThat(factory.getSchema(envelopeSchema, config).validate(json.readTree(envelope))).isEmpty();
+        var payload = json.readTree(envelope).path("payload");
+        assertThat(json.readTree(envelope).path("correlationId").asText()).isNotBlank();
+        assertThat(factory.getSchema(schema, config).validate(payload)).isEmpty();
+        var hashes = new com.agricontract.inspection.domain.service.InspectionHashes(canonicalizer);
+        assertThat(payload.path("resultHash").asText()).isEqualTo(hashes.calculateResultHash(result()));
+        assertThat(payload.path("reportHash").asText()).isEqualTo(hashes.calculateReportHash(new ReportCommitment(
+                report, contract, milestone, InspectionTier.LEVEL_1_5, payload.path("reportFileHash").asText(),
+                payload.path("resultHash").asText(), payload.path("confirmedAt").asText(), actor)));
+        assertThatThrownBy(() -> core.confirm(contract, milestone, id(), "{}", result())).isInstanceOf(RuntimeException.class);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE l15_commission_id=?", Integer.class, commission)).isEqualTo(1);
+    }
+
+    @Test void outboxFailureRollsBackReportSignatureAndClosure() {
+        var failing = new ConfirmLevel15Report.ConfirmationWrites() {
+            public void insertSignature(ReportIdentity i, Instant a, Instant s, String h) { confirmationWrites.insertSignature(i, a, s, h); }
+            public void appendConfirmed(ReportIdentity i, InspectionSettlementResultV1 r, ReportEvidence e) {
+                confirmationWrites.appendConfirmed(i, r, e);
+                throw new IllegalStateException("simulated outbox failure");
+            }
+        };
+        assertThatThrownBy(() -> confirmation(NOW.minusSeconds(60), failing).confirm(contract, milestone, id(), "{}", result())).isInstanceOf(IllegalStateException.class);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE l15_commission_id=?", Integer.class, commission)).isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspector_signature WHERE contract_id=?", Integer.class, contract)).isZero();
+        assertThat(jdbc.queryForObject("SELECT ended_at IS NULL FROM level1_5_inspection_assignment WHERE commission_id=?", Boolean.class, commission)).isTrue();
+    }
+
+    @Test void confirmationRejectsStaleAuthenticationAndForeignInspector() {
+        assertThatThrownBy(() -> confirmation(NOW.minusSeconds(1801), confirmationWrites).confirm(contract, milestone, id(), "{}", result())).isInstanceOf(IllegalStateException.class);
+        String other = id(); authenticate(other, "INSPECTOR");
+        when(users.load(other)).thenReturn(new InspectorEligibility(other, "INSPECTOR", "VERIFIED", null));
+        assertThatThrownBy(() -> confirmation(NOW.minusSeconds(60), confirmationWrites).confirm(contract, milestone, id(), "{}", result())).isInstanceOf(InspectionAssignmentAccessDeniedException.class);
+    }
+
+    @Test void confirmationRejectsEndedAssignment() {
+        jdbc.update("UPDATE level1_5_inspection_assignment SET ended_at=? WHERE commission_id=?", Timestamp.from(NOW.minusSeconds(1)), commission);
+        assertThatThrownBy(() -> confirmation(NOW.minusSeconds(60), confirmationWrites).confirm(contract, milestone, id(), "{}", result()))
+                .isInstanceOf(InspectionAssignmentAccessDeniedException.class);
+    }
+
+    @Test void missingSessionOrUnavailableVerifiedFileCannotPersist() {
+        assertThatThrownBy(() -> confirmation(null, confirmationWrites).confirm(contract, milestone, id(), "{}", result()))
+                .isInstanceOf(IllegalStateException.class);
+        var unavailable = new ConfirmLevel15Report(service, lifecycleRepository, lifecycle, runner, canonicalizer,
+                () -> NOW.minusSeconds(10), (assignment, file) -> { throw new IllegalStateException("file unavailable"); },
+                confirmationWrites, clock, Duration.ofMinutes(30));
+        assertThatThrownBy(() -> unavailable.confirm(contract, milestone, id(), "{}", result()))
+                .hasMessage("file unavailable");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE l15_commission_id=?", Integer.class, commission)).isZero();
+        assertThat(jdbc.queryForObject("SELECT ended_at IS NULL FROM level1_5_inspection_assignment WHERE commission_id=?", Boolean.class, commission)).isTrue();
+    }
+
+    @Test void concurrentConfirmationsCannotCreateTwoReportsOrEvents() throws Exception {
+        var barrier = new CountDownLatch(2);
+        var core = new ConfirmLevel15Report(service, lifecycleRepository, lifecycle, runner, canonicalizer,
+                () -> NOW.minusSeconds(60), (assignment, file) -> {
+                    barrier.countDown();
+                    try { if (!barrier.await(10, TimeUnit.SECONDS)) throw new IllegalStateException("barrier timeout"); }
+                    catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); throw new IllegalStateException(interrupted); }
+                    return new byte[]{1, 2, 3};
+                }, confirmationWrites, clock, Duration.ofMinutes(30));
+        var pool = Executors.newFixedThreadPool(2);
+        try {
+            Callable<Boolean> submit = () -> {
+                authenticate(actor, "INSPECTOR");
+                try { core.confirm(contract, milestone, id(), "{}", result()); return true; }
+                catch (RuntimeException rejected) { return false; }
+                finally { SecurityContextHolder.clearContext(); }
+            };
+            var first = pool.submit(submit);
+            var second = pool.submit(submit);
+            assertThat(List.of(first.get(30, TimeUnit.SECONDS), second.get(30, TimeUnit.SECONDS)))
+                    .containsExactlyInAnyOrder(true, false);
+            String report = jdbc.queryForObject("SELECT report_id FROM inspection_report WHERE l15_commission_id=?", String.class, commission);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM event_outbox WHERE aggregate_id=? AND event_type='inspection.report_confirmed'", Integer.class, report)).isEqualTo(1);
+        } finally { pool.shutdownNow(); }
+    }
+
     @Test void authorizedIdentityIsServerGeneratedAndSurvivesRepositoryRecreation() {
         var identity=allocate(); assertThat(UUID.fromString(identity.reportId())).isNotNull();
         store(identity);
@@ -109,6 +229,24 @@ class Level15ReportPersistenceTest {
         assertThat(service.load(identity.reportId())).isEqualTo(reloaded);
         assertThat(service.pending()).isEmpty();
         assertThat(jdbc.queryForObject("SELECT ended_at IS NULL FROM level1_5_inspection_assignment WHERE commission_id=?",Boolean.class,commission)).isTrue();
+    }
+
+    @Test void signatureRequiresExistingReportAndIsUniquePerReport() {
+        var identity = allocate();
+        store(identity);
+        String insert = """
+                INSERT INTO inspector_signature
+                (signature_id,report_id,contract_id,signer_user_id,auth_time,signed_at,report_hash,ip_address)
+                VALUES (?,?,?,?,?,?,?,?)
+                """;
+        jdbc.update(insert, id(), identity.reportId(), contract, actor, Timestamp.from(NOW.minusSeconds(60)),
+                Timestamp.from(NOW), "c".repeat(64), "127.0.0.1");
+        assertThatThrownBy(() -> jdbc.update(insert, id(), identity.reportId(), contract, actor,
+                Timestamp.from(NOW), Timestamp.from(NOW), "c".repeat(64), null))
+                .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
+        assertThatThrownBy(() -> jdbc.update(insert, id(), id(), contract, actor,
+                Timestamp.from(NOW), Timestamp.from(NOW), "c".repeat(64), null))
+                .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
     }
 
     @ParameterizedTest @ValueSource(strings={"ADMIN","OPERATOR","ARBITRATOR","BUYER","SELLER"})
@@ -188,9 +326,9 @@ class Level15ReportPersistenceTest {
                 s -> reports.insert(second,evidence(),NOW)), 1062, "uk_report_l15_commission");
     }
 
-    @Test void freshDatabaseHasAllFiveMigrationsAndCompleteReportSchema() {
+    @Test void freshDatabaseHasAllSixMigrationsAndCompleteReportSchema() {
         assertThat(jdbc.queryForList("SELECT version FROM flyway_schema_history WHERE success=1 ORDER BY installed_rank",
-                String.class)).containsExactly("1", "2", "3", "4", "5");
+                String.class)).containsExactly("1", "2", "3", "4", "5", "6");
         var expected = """
                 report_id|char(36)|NO
                 l15_commission_id|char(36)|YES

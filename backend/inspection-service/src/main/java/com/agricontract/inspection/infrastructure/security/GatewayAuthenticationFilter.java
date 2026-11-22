@@ -54,7 +54,9 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
         var authorities = Arrays.stream(roles.split(",")).map(String::trim)
                 .filter(ROLES::contains).distinct().map(role -> new SimpleGrantedAuthority("ROLE_" + role)).toList();
         var context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(new UsernamePasswordAuthenticationToken(actor, null, authorities));
+        var authentication = new UsernamePasswordAuthenticationToken(actor, null, authorities);
+        authentication.setDetails(new GatewaySession(parseAuthTime(singleHeader(request, "X-User-Auth-Time"))));
+        context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
         try {
             chain.doFilter(request, response);
@@ -66,5 +68,11 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
     private String singleHeader(HttpServletRequest request, String name) {
         var values = Collections.list(request.getHeaders(name));
         return values.size() == 1 ? values.getFirst() : null;
+    }
+
+    private static java.time.Instant parseAuthTime(String value) {
+        if (value == null || !value.matches("[0-9]{1,12}")) return null;
+        try { return java.time.Instant.ofEpochSecond(Long.parseLong(value)); }
+        catch (java.time.DateTimeException | NumberFormatException invalid) { return null; }
     }
 }
