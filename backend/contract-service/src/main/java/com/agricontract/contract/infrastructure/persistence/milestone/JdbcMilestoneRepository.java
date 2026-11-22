@@ -3,6 +3,7 @@ package com.agricontract.contract.infrastructure.persistence.milestone;
 import com.agricontract.contract.domain.model.milestone.FundingStatus;
 import com.agricontract.contract.domain.model.milestone.Milestone;
 import com.agricontract.contract.domain.model.milestone.MilestoneStatus;
+import com.agricontract.contract.domain.model.milestone.SellerWeighing;
 import com.agricontract.contract.domain.model.terms.VndAmount;
 import com.agricontract.contract.domain.repository.MilestoneRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.Instant;
@@ -41,7 +44,8 @@ public class JdbcMilestoneRepository implements MilestoneRepository {
             instant(rs.getTimestamp("funding_requested_at")),
             instant(rs.getTimestamp("funding_locked_at")),
             rs.getInt("funding_delay_business_days"),
-            rs.getString("last_funding_failure_reason"));
+            rs.getString("last_funding_failure_reason"),
+            sellerWeighing(rs));
 
     private final JdbcTemplate jdbc;
     private final Clock clock;
@@ -67,12 +71,19 @@ public class JdbcMilestoneRepository implements MilestoneRepository {
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public void update(Milestone m) {
+        SellerWeighing w = m.sellerWeighing();
         int updated = jdbc.update("UPDATE milestone SET status = ?, funding_status = ?, effective_unit_price = ?,"
                         + " batch_amount = ?, funding_requested_at = ?, funding_locked_at = ?,"
-                        + " funding_delay_business_days = ?, last_funding_failure_reason = ? WHERE milestone_id = ?",
+                        + " funding_delay_business_days = ?, last_funding_failure_reason = ?,"
+                        + " seller_declared_weight = ?, seller_evidence_file_id = ?,"
+                        + " seller_delivery_certificate_file_id = ?, seller_first_declared_at = ?,"
+                        + " seller_declaration_count = ? WHERE milestone_id = ?",
                 m.status().name(), m.fundingStatus().name(), value(m.effectiveUnitPrice()), value(m.batchAmount()),
                 timestamp(m.fundingRequestedAt()), timestamp(m.fundingLockedAt()), m.fundingDelayBusinessDays(),
-                m.lastFundingFailureReason(), m.milestoneId());
+                m.lastFundingFailureReason(), w == null ? null : w.declaredWeight(),
+                w == null ? null : w.evidenceFileId(), w == null ? null : w.deliveryCertificateFileId(),
+                w == null ? null : timestamp(w.firstDeclaredAt()), w == null ? 0 : w.declarationCount(),
+                m.milestoneId());
         if (updated != 1) {
             throw new IllegalStateException("Milestone " + m.milestoneId() + " does not exist");
         }
@@ -83,6 +94,11 @@ public class JdbcMilestoneRepository implements MilestoneRepository {
     public Optional<Milestone> findByIdForUpdate(String milestoneId) {
         return jdbc.query("SELECT * FROM milestone WHERE milestone_id = ? FOR UPDATE", ROW, milestoneId).stream()
                 .findFirst();
+    }
+
+    @Override
+    public Optional<Milestone> findById(String milestoneId) {
+        return jdbc.query("SELECT * FROM milestone WHERE milestone_id = ?", ROW, milestoneId).stream().findFirst();
     }
 
     @Override
@@ -103,6 +119,15 @@ public class JdbcMilestoneRepository implements MilestoneRepository {
                         + " AND c.status = 'ACTIVE' ORDER BY m.funding_scheduled_date, m.contract_id,"
                         + " m.milestone_index LIMIT ?",
                 String.class, today, limit);
+    }
+
+    private static SellerWeighing sellerWeighing(ResultSet rs) throws SQLException {
+        if (rs.getInt("seller_declaration_count") == 0) {
+            return null;
+        }
+        return new SellerWeighing(rs.getBigDecimal("seller_declared_weight").stripTrailingZeros(),
+                rs.getString("seller_evidence_file_id"), rs.getString("seller_delivery_certificate_file_id"),
+                instant(rs.getTimestamp("seller_first_declared_at")), rs.getInt("seller_declaration_count"));
     }
 
     private static VndAmount money(BigDecimal value) {

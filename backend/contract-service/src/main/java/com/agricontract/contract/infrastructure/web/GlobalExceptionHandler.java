@@ -1,6 +1,11 @@
 package com.agricontract.contract.infrastructure.web;
 
 import com.agricontract.contract.application.exception.ContractNotFoundException;
+import com.agricontract.contract.application.exception.EvidenceFileNotFoundException;
+import com.agricontract.contract.application.exception.FileRejectedException;
+import com.agricontract.contract.application.exception.FileServiceUnavailableException;
+import com.agricontract.contract.application.exception.MilestoneNotFoundException;
+import com.agricontract.contract.domain.exception.MilestoneRequestInvalidException;
 import com.agricontract.contract.application.exception.IdempotencyKeyReusedException;
 import com.agricontract.contract.application.exception.InvalidEventPayloadException;
 import com.agricontract.contract.application.exception.ListingDataInvalidException;
@@ -36,6 +41,44 @@ public class GlobalExceptionHandler extends ErrorEnvelopeExceptionHandler {
     public ResponseEntity<ErrorEnvelope> handleNotFound(ContractNotFoundException ex, HttpServletRequest request) {
         log.warn("404 CONTRACT_NOT_FOUND {}", ex.getMessage());
         return envelope(HttpStatus.NOT_FOUND, "CONTRACT_NOT_FOUND", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(MilestoneNotFoundException.class)
+    public ResponseEntity<ErrorEnvelope> handleMilestoneNotFound(MilestoneNotFoundException ex,
+                                                                 HttpServletRequest request) {
+        log.warn("404 MILESTONE_NOT_FOUND {}", ex.getMessage());
+        return envelope(HttpStatus.NOT_FOUND, "MILESTONE_NOT_FOUND", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(EvidenceFileNotFoundException.class)
+    public ResponseEntity<ErrorEnvelope> handleEvidenceNotFound(EvidenceFileNotFoundException ex,
+                                                                HttpServletRequest request) {
+        log.warn("404 EVIDENCE_NOT_FOUND {}", ex.getMessage());
+        return envelope(HttpStatus.NOT_FOUND, "EVIDENCE_NOT_FOUND", ex.getMessage(), request);
+    }
+
+    /** D71: EVIDENCE_NOT_UPLOADED, EVIDENCE_FILE_REUSED. */
+    @ExceptionHandler(MilestoneRequestInvalidException.class)
+    public ResponseEntity<ErrorEnvelope> handleMilestoneRequestInvalid(MilestoneRequestInvalidException ex,
+                                                                       HttpServletRequest request) {
+        log.warn("400 {} {}", ex.getCode(), ex.getMessage());
+        return envelope(HttpStatus.BAD_REQUEST, ex.getCode(), ex.getMessage(), request);
+    }
+
+    /** The uploaded file itself: 400 VALIDATION_ERROR (type, length) or 413 FILE_TOO_LARGE. */
+    @ExceptionHandler(FileRejectedException.class)
+    public ResponseEntity<ErrorEnvelope> handleFileRejected(FileRejectedException ex, HttpServletRequest request) {
+        log.warn("{} {} {}", ex.getStatus(), ex.getCode(), ex.getMessage());
+        return envelope(HttpStatus.valueOf(ex.getStatus()), ex.getCode(), ex.getMessage(), request);
+    }
+
+    /** Nothing was recorded; the same Idempotency-Key can be sent again. */
+    @ExceptionHandler(FileServiceUnavailableException.class)
+    public ResponseEntity<ErrorEnvelope> handleFileServiceUnavailable(FileServiceUnavailableException ex,
+                                                                      HttpServletRequest request) {
+        log.warn("503 FILE_SERVICE_UNAVAILABLE {}", ex.getMessage());
+        return envelope(HttpStatus.SERVICE_UNAVAILABLE, "FILE_SERVICE_UNAVAILABLE",
+                "The file could not be stored right now; try again shortly with the same Idempotency-Key.", request);
     }
 
     @ExceptionHandler({UnauthorizedContractActionException.class, UnauthorizedContractAccessException.class})

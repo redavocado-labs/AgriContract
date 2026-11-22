@@ -4,6 +4,7 @@ import com.agricontract.contract.domain.model.Contract;
 import com.agricontract.contract.domain.model.activation.ActivationRecovery;
 import com.agricontract.contract.domain.model.consent.SignerRole;
 import com.agricontract.contract.domain.model.milestone.Milestone;
+import com.agricontract.contract.domain.model.milestone.SellerWeighDeclaration;
 
 import java.time.Instant;
 import java.util.List;
@@ -73,4 +74,10 @@ public interface ContractEventPublisher {
      * per milestone, by the activation or by the daily schedule (D64).
      */
     void milestoneFundingRequested(Contract contract, Milestone milestone, String correlationId, String causationId);
+
+    /**
+     * milestone.seller_weighed (D71-D75): written for every declaration, the first and each correction, with its
+     * declarationNumber. The highest number is the declaration in force.
+     */
+    void milestoneSellerWeighed(Contract contract, Milestone milestone, SellerWeighDeclaration declaration);
 }

@@ -29,6 +29,8 @@ import org.springframework.context.annotation.Configuration;
  *   <li>escrow-service, until #385 merges: {@code escrow-svc.contract.activation_refund_requested}, DLX
  *       {@code agricontract.contracts.dlx} (its RabbitMQConfig);</li>
  *   <li>escrow-service, until #120 merges: {@code escrow-svc.milestone.funding_requested}, same DLX (D63).</li>
+ *   <li>audit-service: {@code audit-svc.milestone.seller_weighed} (#121, D75), same DLX as its other queues: every
+ *       weigh declaration reaches the audit chain once audit exists.</li>
  * </ul>
  * Remove a pair once its consumer declares it. Plain Queue/Binding beans, not a Declarables: DlqMonitor watches
  * contract-service's own DLQs only.
@@ -68,6 +70,8 @@ public class ConsumerQueuesDeclaredAhead {
     static final String AUDIT_SIGNED_QUEUE = "audit-svc." + SIGNED_KEY;
     static final String AUDIT_TERMINATED_QUEUE = "audit-svc." + TERMINATED_KEY;
     static final String AUDIT_DLX = "agricontract.audit.dlx";
+    static final String SELLER_WEIGHED_KEY = "milestone.seller_weighed";
+    static final String AUDIT_SELLER_WEIGHED_QUEUE = "audit-svc." + SELLER_WEIGHED_KEY;
 
     private static final TopicExchange CONTRACTS = new TopicExchange("agricontract.contracts", true, false);
 
@@ -342,5 +346,25 @@ public class ConsumerQueuesDeclaredAhead {
     @Bean
     Binding auditTerminatedDlqBinding() {
         return BindingBuilder.bind(auditTerminatedDlq()).to(auditDlx()).with(TERMINATED_KEY);
+    }
+
+    @Bean
+    Queue auditSellerWeighedQueue() {
+        return QueueBuilder.durable(AUDIT_SELLER_WEIGHED_QUEUE).deadLetterExchange(AUDIT_DLX).build();
+    }
+
+    @Bean
+    Queue auditSellerWeighedDlq() {
+        return QueueBuilder.durable(AUDIT_SELLER_WEIGHED_QUEUE + ".dlq").build();
+    }
+
+    @Bean
+    Binding auditSellerWeighedBinding() {
+        return BindingBuilder.bind(auditSellerWeighedQueue()).to(CONTRACTS).with(SELLER_WEIGHED_KEY);
+    }
+
+    @Bean
+    Binding auditSellerWeighedDlqBinding() {
+        return BindingBuilder.bind(auditSellerWeighedDlq()).to(auditDlx()).with(SELLER_WEIGHED_KEY);
     }
 }

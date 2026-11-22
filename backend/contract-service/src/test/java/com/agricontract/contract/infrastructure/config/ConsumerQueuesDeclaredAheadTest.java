@@ -99,6 +99,12 @@ class ConsumerQueuesDeclaredAheadTest {
                 "contract.terminated");
         assertBinding(config.auditTerminatedDlqBinding(), "agricontract.audit.dlx",
                 "audit-svc.contract.terminated.dlq", "contract.terminated");
+        assertDurableWithDlx(config.auditSellerWeighedQueue(), "audit-svc.milestone.seller_weighed",
+                "agricontract.audit.dlx");
+        assertBinding(config.auditSellerWeighedBinding(), "agricontract.contracts",
+                "audit-svc.milestone.seller_weighed", "milestone.seller_weighed");
+        assertBinding(config.auditSellerWeighedDlqBinding(), "agricontract.audit.dlx",
+                "audit-svc.milestone.seller_weighed.dlq", "milestone.seller_weighed");
         assertThat(config.auditDlx().getType()).isEqualTo("direct");
     }
 

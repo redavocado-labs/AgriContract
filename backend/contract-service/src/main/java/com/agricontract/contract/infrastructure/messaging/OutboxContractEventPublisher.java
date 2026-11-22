@@ -6,6 +6,9 @@ import com.agricontract.contract.domain.model.activation.ActivationRecovery;
 import com.agricontract.contract.domain.model.consent.SignerRole;
 import com.agricontract.contract.domain.model.milestone.FundingStatus;
 import com.agricontract.contract.domain.model.milestone.Milestone;
+import com.agricontract.contract.domain.model.milestone.MilestoneStatus;
+import com.agricontract.contract.domain.model.milestone.SellerWeighDeclaration;
+import com.agricontract.contract.domain.model.milestone.SellerWeight;
 import com.agricontract.contract.domain.model.terms.ContractTermsSnapshot;
 import com.agricontract.contract.domain.model.vo.ContractStatus;
 import com.agricontract.eventing.EventEnvelope;
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -51,6 +55,7 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
     static final String CONTRACT_TERMINATED_REQUESTED = "notification.contract_terminated_requested";
     static final String WITHDRAW_OFFER = "WITHDRAW_OFFER";
     static final String MILESTONE_FUNDING_REQUESTED = "milestone.funding_requested";
+    static final String MILESTONE_SELLER_WEIGHED = "milestone.seller_weighed";
 
     private static final Pattern UUID_TEXT =
             Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -374,5 +379,36 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
         outbox.append(new EventEnvelope(UUID.randomUUID(), MILESTONE_FUNDING_REQUESTED, 1,
                 milestone.fundingRequestedAt(), PRODUCER, contractId,
                 correlationId != null ? correlationId : contractId, causationId, null, payload));
+    }
+
+    /**
+     * golden-flow-events.yaml milestoneSellerWeighed, on agricontract.contracts. The weight is a JSON number with no
+     * trailing zeros; deliveryCertificateFileId is left out when the seller attached none (the schema has no null).
+     * aggregateId is the milestone, the aggregate that changed; correlationId keeps the contract's chain.
+     */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void milestoneSellerWeighed(Contract contract, Milestone milestone, SellerWeighDeclaration declaration) {
+        if (milestone.status() != MilestoneStatus.SELLER_WEIGHED
+                || !milestone.contractId().equals(contract.getContractId().value())
+                || !declaration.milestoneId().equals(milestone.milestoneId())) {
+            throw new IllegalStateException("milestone.seller_weighed for milestone " + milestone.milestoneId()
+                    + " in status " + milestone.status());
+        }
+        String contractId = uuid(contract.getContractId().value(), "contractId");
+        String milestoneId = uuid(milestone.milestoneId(), "milestoneId");
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("contractId", contractId);
+        payload.put("milestoneId", milestoneId);
+        payload.put("declarationNumber", declaration.declarationNumber());
+        payload.put("sellerDeclaredWeight", new BigDecimal(SellerWeight.plain(declaration.declaredWeight())));
+        payload.put("sellerEvidenceFileId", uuid(declaration.evidenceFileId(), "sellerEvidenceFileId"));
+        if (declaration.deliveryCertificateFileId() != null) {
+            payload.put("deliveryCertificateFileId",
+                    uuid(declaration.deliveryCertificateFileId(), "deliveryCertificateFileId"));
+        }
+
+        outbox.append(new EventEnvelope(UUID.randomUUID(), MILESTONE_SELLER_WEIGHED, 1, declaration.declaredAt(),
+                PRODUCER, milestoneId, contractId, null, null, payload));
     }
 }
