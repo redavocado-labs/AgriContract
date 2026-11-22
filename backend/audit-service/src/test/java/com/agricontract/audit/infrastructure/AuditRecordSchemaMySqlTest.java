@@ -69,7 +69,7 @@ class AuditRecordSchemaMySqlTest {
         AuditRecord written = record(eventId, Map.of("contractId", "c-1", "reservedQuantity", "1250.50"));
         assertThat(repository.insert(chain(written))).isTrue();
 
-        AuditRecord read = repository.findBySourceEventId(eventId).orElseThrow();
+        AuditRecord read = repository.findBySourceEventId(eventId).orElseThrow().record();
         assertThat(read).isEqualTo(written);
         assertThat(runtime.queryForObject("SELECT source_type FROM audit_record WHERE source_event_id = ?",
                 String.class, eventId)).isEqualTo("CONTRACT_SIGNED");
@@ -83,7 +83,7 @@ class AuditRecordSchemaMySqlTest {
                 eventId, null, null, null, Instant.parse("2026-10-27T03:00:00.123456Z"), Map.of("k", "v"),
                 Instant.parse("2026-10-27T04:00:00.654321Z"));
         repository.insert(chain(written));
-        assertThat(repository.findBySourceEventId(eventId).orElseThrow()).isEqualTo(written);
+        assertThat(repository.findBySourceEventId(eventId).orElseThrow().record()).isEqualTo(written);
     }
 
     @Test
@@ -94,7 +94,7 @@ class AuditRecordSchemaMySqlTest {
 
         assertThat(runtime.queryForObject("SELECT COUNT(*) FROM audit_record WHERE source_event_id = ?",
                 Integer.class, eventId)).isEqualTo(1);
-        assertThat(repository.findBySourceEventId(eventId).orElseThrow().content()).containsEntry("a", "1");
+        assertThat(repository.findBySourceEventId(eventId).orElseThrow().record().content()).containsEntry("a", "1");
     }
 
     @Test

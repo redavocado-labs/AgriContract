@@ -2,6 +2,7 @@ package com.agricontract.audit.infrastructure.persistence;
 
 import com.agricontract.audit.domain.model.AuditRecord;
 import com.agricontract.audit.domain.model.ChainedAuditRecord;
+import com.agricontract.audit.domain.model.StoredAuditRecord;
 import com.agricontract.audit.domain.model.SubjectType;
 import com.agricontract.audit.domain.repository.AuditRecordRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -49,24 +50,34 @@ public class JdbcAuditRecordRepository implements AuditRecordRepository {
             + " FROM audit_record WHERE subject_type = ? AND subject_id = ? AND global_seq > ?"
             + " ORDER BY global_seq LIMIT ?";
 
-    private static final RowMapper<ChainedAuditRecord> ROW = (rs, rowNum) -> new ChainedAuditRecord(
-            new AuditRecord(
-                    rs.getString("record_id"),
-                    SubjectType.valueOf(rs.getString("subject_type")),
-                    rs.getString("subject_id"),
-                    rs.getString("source_type"),
-                    rs.getString("source_event_type"),
-                    rs.getString("source_event_id"),
-                    rs.getString("causation_id"),
-                    rs.getString("correlation_id"),
-                    rs.getString("source_hash"),
-                    rs.getTimestamp("occurred_at").toInstant(),
-                    readContent(rs.getString("content")),
-                    rs.getTimestamp("created_at").toInstant()),
-            rs.getString("prev_hash_global"),
-            rs.getString("prev_hash_subject"),
-            rs.getString("record_hash"),
-            rs.getLong("global_seq"));
+    private static final RowMapper<StoredAuditRecord> ROW = (rs, rowNum) -> {
+        String recordHash = rs.getString("record_hash");
+        String prevGlobal = rs.getString("prev_hash_global");
+        String prevSubject = rs.getString("prev_hash_subject");
+        ChainedAuditRecord chained;
+        try {
+            chained = new ChainedAuditRecord(
+                    new AuditRecord(
+                            rs.getString("record_id"),
+                            SubjectType.valueOf(rs.getString("subject_type")),
+                            rs.getString("subject_id"),
+                            rs.getString("source_type"),
+                            rs.getString("source_event_type"),
+                            rs.getString("source_event_id"),
+                            rs.getString("causation_id"),
+                            rs.getString("correlation_id"),
+                            rs.getString("source_hash"),
+                            rs.getTimestamp("occurred_at").toInstant(),
+                            readContent(rs.getString("content")),
+                            rs.getTimestamp("created_at").toInstant()),
+                    prevGlobal, prevSubject, recordHash, rs.getLong("global_seq"));
+        } catch (RuntimeException e) {
+            // Tampered or corrupt row: never throw here, verification has to be able to report it.
+            chained = null;
+        }
+        return new StoredAuditRecord(rs.getString("record_id"), rs.getLong("global_seq"), recordHash, prevGlobal,
+                prevSubject, chained);
+    };
 
     private final JdbcTemplate jdbc;
 
@@ -120,17 +131,17 @@ public class JdbcAuditRecordRepository implements AuditRecordRepository {
     }
 
     @Override
-    public Optional<AuditRecord> findBySourceEventId(String sourceEventId) {
-        return jdbc.query(SELECT_BY_SOURCE, ROW, sourceEventId).stream().findFirst().map(ChainedAuditRecord::record);
+    public Optional<StoredAuditRecord> findBySourceEventId(String sourceEventId) {
+        return jdbc.query(SELECT_BY_SOURCE, ROW, sourceEventId).stream().findFirst();
     }
 
     @Override
-    public List<ChainedAuditRecord> findAfter(long afterSeq, int limit) {
+    public List<StoredAuditRecord> findAfter(long afterSeq, int limit) {
         return jdbc.query(PAGE, ROW, afterSeq, limit);
     }
 
     @Override
-    public List<ChainedAuditRecord> findAfter(SubjectType subjectType, String subjectId, long afterSeq, int limit) {
+    public List<StoredAuditRecord> findAfter(SubjectType subjectType, String subjectId, long afterSeq, int limit) {
         return jdbc.query(SUBJECT_PAGE, ROW, subjectType.name(), subjectId, afterSeq, limit);
     }
 
