@@ -40,6 +40,13 @@ escrow:
     retry-backoff: [PT5M, PT30M, PT2H]
     retry-poll-interval: PT30S
 
+# bank-service ledger read for the remedy conservation check (#249); X-Internal-Secret is service.internal-secret.
+bank-service:
+  url: ${BANK_SERVICE_URL:http://localhost:8086}
+
+service:
+  internal-secret: ${SERVICE_INTERNAL_SECRET:changeme-internal}
+
 gateway:
   internal-secret: ${GATEWAY_INTERNAL_SECRET:changeme}
 

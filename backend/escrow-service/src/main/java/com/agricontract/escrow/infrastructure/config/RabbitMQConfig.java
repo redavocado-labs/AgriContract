@@ -35,6 +35,10 @@ public class RabbitMQConfig {
     public static final String RELEASE_FAILED_QUEUE = "escrow-svc.bank.release_failed";
     public static final String MILESTONE_FUNDING_REQUESTED_QUEUE = "escrow-svc.milestone.funding_requested";
     public static final String MILESTONE_SETTLED_QUEUE = "escrow-svc.milestone.settled";
+    // Remedy legs (#249). The seize result queues have the name and DLX bank-service declared ahead for them.
+    public static final String REMEDY_FINALIZED_QUEUE = "escrow-service.remedy-finalized";
+    public static final String SEIZE_COMPLETED_QUEUE = "escrow-svc.bank.seize_completed";
+    public static final String SEIZE_FAILED_QUEUE = "escrow-svc.bank.seize_failed";
 
     // One Declarables bean on purpose: DlqMonitor reads the .dlq queues from it.
     // The bank.lock_* queues are read by BankLockResultConsumer (#102). They must always exist: bank's outbox poller
@@ -63,6 +67,10 @@ public class RabbitMQConfig {
         bindWithDlq(declarables, MILESTONE_FUNDING_REQUESTED_QUEUE, contracts, "milestone.funding_requested", dlx);
         // Clean-path settlement (#248): release / refund commands; their results come back on the bank queues above.
         bindWithDlq(declarables, MILESTONE_SETTLED_QUEUE, contracts, "milestone.settled", dlx);
+        // remedy.finalized (#249): sole trigger of remedy money; the commands go out as release / refund / seize.
+        bindWithDlq(declarables, REMEDY_FINALIZED_QUEUE, contracts, "remedy.finalized", dlx);
+        bindWithDlq(declarables, SEIZE_COMPLETED_QUEUE, bank, "bank.seize_completed", dlx);
+        bindWithDlq(declarables, SEIZE_FAILED_QUEUE, bank, "bank.seize_failed", dlx);
         return new Declarables(declarables);
     }
 
