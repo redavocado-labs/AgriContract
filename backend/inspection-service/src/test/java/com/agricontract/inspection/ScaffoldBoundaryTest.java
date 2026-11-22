@@ -234,6 +234,40 @@ class ScaffoldBoundaryTest {
                     .header("X-User-Auth-Time", Long.toString(now.getEpochSecond()))
                     .header("Idempotency-Key", "same-key").contentType("application/json").content(body))
                     .andExpect(status().isCreated());
+            String correlation = UUID.randomUUID().toString();
+            mvc.perform(post(path).header("X-User-Id", INSPECTOR_A).header("X-User-Role", "INSPECTOR")
+                    .header("X-Gateway-Secret", "test-gateway-secret").header("X-User-Auth-Time", Long.toString(now.getEpochSecond()))
+                    .header("X-Correlation-Id", correlation).header("Idempotency-Key", "new-key")
+                    .contentType("application/json").content(body))
+                    .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("REPORT_ALREADY_SIGNED"))
+                    .andExpect(jsonPath("$.traceId").value(correlation));
+            mvc.perform(post(path).header("X-User-Id", INSPECTOR_B).header("X-User-Role", "INSPECTOR")
+                    .header("X-Gateway-Secret", "test-gateway-secret").header("X-User-Auth-Time", Long.toString(now.getEpochSecond()))
+                    .header("X-Correlation-Id", correlation).header("Idempotency-Key", "foreign-key")
+                    .contentType("application/json").content(body))
+                    .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("FORBIDDEN"))
+                    .andExpect(jsonPath("$.traceId").value(correlation));
+            when(users.load(INSPECTOR_A)).thenReturn(new InspectorEligibility(INSPECTOR_A, "INSPECTOR", "REJECTED", null));
+            mvc.perform(post(path).header("X-User-Id", INSPECTOR_A).header("X-User-Role", "INSPECTOR")
+                    .header("X-Gateway-Secret", "test-gateway-secret").header("X-User-Auth-Time", Long.toString(now.getEpochSecond()))
+                    .header("Idempotency-Key", "ineligible").contentType("application/json").content(body))
+                    .andExpect(status().isForbidden());
+            when(users.load(INSPECTOR_A)).thenReturn(new InspectorEligibility(INSPECTOR_A, "INSPECTOR", "VERIFIED", null));
+            mvc.perform(post(path).header("X-User-Id", INSPECTOR_A).header("X-User-Role", "INSPECTOR")
+                    .header("X-Gateway-Secret", "test-gateway-secret").header("X-User-Auth-Time", Long.toString(now.getEpochSecond()))
+                    .header("Idempotency-Key", "same-key").contentType("application/json")
+                    .content(body.replace(file, UUID.randomUUID().toString())))
+                    .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("REPORT_STATE_CONFLICT"));
+            String later = UUID.randomUUID().toString();
+            jdbc.update("INSERT INTO level1_5_inspection_assignment (commission_id,contract_id,milestone_id,inspector_id,assigned_at,ended_at,assigned_by_service,report_due_business_days,report_due_at) VALUES (?,?,?,?,?,?,'test-fixture',1,?)",
+                    later, CONTRACT, MILESTONE, INSPECTOR_A, Timestamp.from(now.plusSeconds(1)),
+                    Timestamp.from(now.plusSeconds(2)), Timestamp.from(now.plusSeconds(86400)));
+            try {
+                mvc.perform(post(path).header("X-User-Id", INSPECTOR_A).header("X-User-Role", "INSPECTOR")
+                        .header("X-Gateway-Secret", "test-gateway-secret").header("X-User-Auth-Time", Long.toString(now.getEpochSecond()))
+                        .header("Idempotency-Key", "later-ended").contentType("application/json").content(body))
+                        .andExpect(status().isForbidden());
+            } finally { jdbc.update("DELETE FROM level1_5_inspection_assignment WHERE commission_id=?", later); }
             verify(files, times(1)).getReady(file);
             assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE l15_commission_id=?", Integer.class, commission)).isEqualTo(1);
         } finally {
@@ -270,14 +304,21 @@ class ScaffoldBoundaryTest {
             var request = post(path).header("X-User-Id", INSPECTOR_A).header("X-User-Role", "INSPECTOR")
                     .header("X-Gateway-Secret", "test-gateway-secret").header("X-User-Auth-Time", Long.toString(now.getEpochSecond()))
                     .header("Idempotency-Key", "file-check").contentType("application/json").content(body);
-            mvc.perform(request).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("REPORT_FILE_NOT_UPLOADED"));
+            String correlation = UUID.randomUUID().toString();
+            request.header("X-Correlation-Id", correlation);
+            mvc.perform(request).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("REPORT_FILE_NOT_UPLOADED"))
+                    .andExpect(jsonPath("$.traceId").value(correlation));
             verify(files, never()).getReady(anyString());
             jdbc.update("INSERT INTO level1_5_report_file(file_id,commission_id,uploaded_at) VALUES (?,?,?)", file, commission, Timestamp.from(now));
             when(files.getReady(file)).thenThrow(new FileServiceClient.NotReady());
-            mvc.perform(request).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("REPORT_FILE_NOT_READY"));
+            mvc.perform(request).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("REPORT_FILE_NOT_READY"))
+                    .andExpect(jsonPath("$.traceId").value(correlation));
             doThrow(new FileServiceClient.Unavailable("offline")).when(files).getReady(file);
-            mvc.perform(request).andExpect(status().isServiceUnavailable());
+            mvc.perform(request).andExpect(status().isServiceUnavailable()).andExpect(jsonPath("$.code").value("DEPENDENCY_UNAVAILABLE"))
+                    .andExpect(jsonPath("$.traceId").value(correlation)).andExpect(jsonPath("$.message").value("DEPENDENCY_UNAVAILABLE"));
             assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE l15_commission_id=?", Integer.class, commission)).isZero();
+            jdbc.update("UPDATE level1_5_inspection_assignment SET ended_at=? WHERE commission_id=?", Timestamp.from(now), commission);
+            mvc.perform(request).andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("FORBIDDEN"));
         } finally {
             jdbc.update("DELETE FROM level1_5_report_file WHERE file_id=?", file);
             jdbc.update("DELETE FROM level1_5_inspection_assignment WHERE commission_id=?", commission);

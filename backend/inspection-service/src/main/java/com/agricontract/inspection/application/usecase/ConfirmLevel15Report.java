@@ -18,7 +18,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HexFormat;
 import java.util.Objects;
 
-/** Internal confirmation core. No HTTP entry point until trusted session and D62 file adapters exist. */
+/** Confirms an authorized report and its receipt atomically after verified file retrieval. */
 public final class ConfirmLevel15Report {
     public static class FreshAuthenticationRequired extends IllegalStateException {
         public FreshAuthenticationRequired() { super("Fresh authentication required"); }
@@ -26,6 +26,7 @@ public final class ConfirmLevel15Report {
     public static class IdempotencyConflict extends IllegalStateException {
         public IdempotencyConflict() { super("Idempotency key was used for a different request"); }
     }
+    public static class AlreadySigned extends IllegalStateException { }
     /** Implementations must obtain auth time from the verified session, never the request body. */
     public interface Session { Instant authenticatedAt(); }
     /** The implementation must enforce the file-to-commission binding and retrieve READY bytes. */
@@ -65,11 +66,6 @@ public final class ConfirmLevel15Report {
         if (maxAge.isNegative() || maxAge.isZero()) throw new IllegalArgumentException("Positive session age required");
     }
 
-    public String confirm(String contractId, String milestoneId, String fileId, String content,
-                          InspectionSettlementResultV1 result) {
-        return confirmInternal(contractId, milestoneId, fileId, content, result, null, null, null);
-    }
-
     public String confirmIdempotent(String contractId, String milestoneId, String fileId, String content,
             InspectionSettlementResultV1 result, String key, InspectorEligibilityGate eligibility,
             ReportSubmissionIdempotency receipts) {
@@ -86,20 +82,17 @@ public final class ConfirmLevel15Report {
         Instant authTime = session.authenticatedAt();
         requireFresh(authTime, clock.instant());
         String resultHash = hashes.calculateResultHash(result);
-        String actor = eligibility == null ? null : eligibility.requireEligibleInspector();
-        String requestHash = receipts == null ? null : sha256((contractId + "|" + milestoneId + "|" + fileId + "|" + resultHash)
+        String actor = eligibility.requireEligibleInspector();
+        String requestHash = sha256((contractId + "|" + milestoneId + "|" + fileId + "|" + resultHash)
                 .getBytes(StandardCharsets.UTF_8));
-        if (receipts != null) {
-            var previous = receipts.find(actor, key);
-            if (previous.isPresent()) return replay(previous.get(), requestHash);
-        }
+        var previous = receipts.find(actor, key);
+        if (previous.isPresent()) return replay(previous.get(), requestHash);
         ReportIdentity identity;
         try { identity = persistence.allocateIdentity(contractId, milestoneId); }
         catch (com.agricontract.inspection.application.exception.InspectionAssignmentAccessDeniedException denied) {
-            if (receipts != null) {
-                var previous = receipts.find(actor, key);
-                if (previous.isPresent()) return replay(previous.get(), requestHash);
-            }
+            var racedReceipt = receipts.find(actor, key);
+            if (racedReceipt.isPresent()) return replay(racedReceipt.get(), requestHash);
+            if (persistence.alreadyConfirmedForInspector(contractId, milestoneId, actor)) throw new AlreadySigned();
             throw denied;
         }
         // Do not hold database locks over the remote file operation.
@@ -111,10 +104,8 @@ public final class ConfirmLevel15Report {
             assignments.lock(contractId, milestoneId);
             Instant confirmedAt = clock.instant().truncatedTo(ChronoUnit.MILLIS);
             requireFresh(authTime, confirmedAt);
-            if (receipts != null) {
-                var previous = receipts.find(actor, key);
-                if (previous.isPresent()) { outcome.set(replay(previous.get(), requestHash)); return; }
-            }
+            var racedReceipt = receipts.find(actor, key);
+            if (racedReceipt.isPresent()) { outcome.set(replay(racedReceipt.get(), requestHash)); return; }
             String timestamp = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
                     .withZone(java.time.ZoneOffset.UTC).format(confirmedAt);
             var commitment = new ReportCommitment(identity.reportId(), contractId, milestoneId,
@@ -126,10 +117,15 @@ public final class ConfirmLevel15Report {
             lifecycle.closeConfirmed(contractId, milestoneId, identity.assignment().commissionId(),
                     identity.assignment().inspectorId(), confirmedAt);
             writes.appendConfirmed(identity, result, evidence);
-            if (receipts != null) receipts.insert(actor, key, requestHash, identity.reportId());
+            receipts.insert(actor, key, requestHash, identity.reportId());
         }); } catch (ReportSubmissionIdempotency.ConcurrentKey race) {
-            var previous = receipts.find(actor, key).orElseThrow(() -> race);
-            return replay(previous, requestHash);
+            var racedReceipt = receipts.find(actor, key).orElseThrow(() -> race);
+            return replay(racedReceipt, requestHash);
+        } catch (com.agricontract.inspection.application.exception.InspectionAssignmentAccessDeniedException denied) {
+            var racedReceipt = receipts.find(actor, key);
+            if (racedReceipt.isPresent()) return replay(racedReceipt.get(), requestHash);
+            if (persistence.alreadyConfirmedForInspector(contractId, milestoneId, actor)) throw new AlreadySigned();
+            throw denied;
         }
         return outcome.get();
     }
