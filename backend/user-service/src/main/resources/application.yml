@@ -54,10 +54,10 @@ keycloak:
   client-secret: ${KEYCLOAK_USER_SERVICE_SECRET:}
 
 gateway:
-  internal-secret: ${GATEWAY_INTERNAL_SECRET:changeme}
+  internal-secret: ${GATEWAY_INTERNAL_SECRET}
 
 service:
-  internal-secret: ${SERVICE_INTERNAL_SECRET:changeme-internal}
+  internal-secret: ${SERVICE_INTERNAL_SECRET}
 
 server:
   port: ${SERVER_PORT:8081}
