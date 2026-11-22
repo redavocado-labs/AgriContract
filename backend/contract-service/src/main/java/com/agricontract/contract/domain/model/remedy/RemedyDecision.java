@@ -13,8 +13,9 @@ import java.util.Objects;
 
 /**
  * The money consequence of an AttributionDecision on a milestone dispute (#137). Immutable once built: the only
- * change is PENDING_CONTEST becoming FINALIZED. A no-fault decision is FINALIZED at once; a decision with fault waits
- * for the contest window (#241). penaltyAmount and penaltyDebtAmount are evidence of the contractual penalty: the part
+ * change is PENDING_CONTEST becoming FINALIZED, or SUPERSEDED when a contest's second Level 1.5 report replaced it. A
+ * no-fault decision is FINALIZED at once, and so is the decision of that second report; any other decision with fault
+ * waits for the contest window (#241). penaltyAmount and penaltyDebtAmount are evidence of the contractual penalty: the part
  * the seller deposit could not cover is a debt that is not collected, and has no leg.
  *
  * @param breachCaseId          null only for a system-decided remedy (#240, not built yet)
@@ -56,8 +57,8 @@ public record RemedyDecision(String remedyDecisionId, String contractId, String 
     /** PENDING_CONTEST becomes FINALIZED, once; the caller checks the status first. */
     public RemedyDecision finalizedAt(Instant at) {
         Objects.requireNonNull(at, "at");
-        if (status == RemedyStatus.FINALIZED) {
-            throw new IllegalStateException("Remedy decision " + remedyDecisionId + " is already FINALIZED");
+        if (status != RemedyStatus.PENDING_CONTEST) {
+            throw new IllegalStateException("Remedy decision " + remedyDecisionId + " is " + status);
         }
         return new RemedyDecision(remedyDecisionId, contractId, breachCaseId, milestoneId, RemedyStatus.FINALIZED,
                 finalBreachingRole, breachReasonCode, qualityDisposition, decisionSource, penaltyAmount,

@@ -22,9 +22,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 /**
- * PENDING_CONTEST becomes FINALIZED (#137): the contest window closed with no contest (#241 calls this). Lock order
- * contract, case, milestone. The milestone is settled and remedy.finalized and milestone.dispute_resolved are written
- * in the same transaction. A decision that is already FINALIZED is a no-op, so a repeated call writes nothing.
+ * PENDING_CONTEST becomes FINALIZED (#137): the contest window closed with no contest
+ * ({@link ExpireContestWindowsUseCase} calls this). Lock order contract, case, milestone. The milestone is settled and
+ * remedy.finalized and milestone.dispute_resolved are written in the same transaction. A decision that is not
+ * PENDING_CONTEST (FINALIZED already, or SUPERSEDED) is a no-op, so a repeated call writes nothing.
  */
 @Slf4j
 @Service
@@ -45,7 +46,7 @@ public class FinalizeRemedyDecisionUseCase {
     private void finalizeDecision(String remedyDecisionId) {
         RemedyDecision peek = remedyDecisions.findById(remedyDecisionId)
                 .orElseThrow(() -> new IllegalArgumentException("Remedy decision " + remedyDecisionId + " not found"));
-        if (peek.status() == RemedyStatus.FINALIZED) {
+        if (peek.status() != RemedyStatus.PENDING_CONTEST) {
             return;
         }
         Contract contract = contracts.findByIdForUpdate(new ContractId(peek.contractId()))
@@ -55,7 +56,7 @@ public class FinalizeRemedyDecisionUseCase {
         Milestone milestone = milestones.findByIdForUpdate(peek.milestoneId())
                 .orElseThrow(() -> new IllegalStateException("Milestone " + peek.milestoneId() + " not found"));
         RemedyDecision decision = remedyDecisions.findByIdForUpdate(remedyDecisionId).orElseThrow();
-        if (decision.status() == RemedyStatus.FINALIZED) {
+        if (decision.status() != RemedyStatus.PENDING_CONTEST) {
             return;
         }
         if (breachCase.computedResolution() == null) {

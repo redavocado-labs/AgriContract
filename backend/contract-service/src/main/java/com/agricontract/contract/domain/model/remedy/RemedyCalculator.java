@@ -4,6 +4,7 @@ import com.agricontract.contract.domain.model.breach.BreachCase;
 import com.agricontract.contract.domain.model.breach.BreachCaseComputedResolution;
 import com.agricontract.contract.domain.model.breach.BreachCaseStatus;
 import com.agricontract.contract.domain.model.breach.BreachReasonCode;
+import com.agricontract.contract.domain.model.breach.ContestStatus;
 import com.agricontract.contract.domain.model.breach.QualityDisposition;
 import com.agricontract.contract.domain.model.consent.SignerRole;
 import com.agricontract.contract.domain.model.milestone.Milestone;
@@ -18,7 +19,8 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
- * Builds the RemedyDecision of a resolved milestone dispute from the case's computed resolution (#137, D81). Pure:
+ * Builds the RemedyDecision of a resolved milestone dispute from the case's computed resolution (#137, D81). A
+ * decision with fault waits as PENDING_CONTEST (#241), unless the case is already CONTESTED (D91). Pure:
  * no clock, no repository; ids come from the supplier.
  *
  * <p>CONFORMING, PARTIALLY_CONFORMING and QUANTITY: PAYMENT_SETTLEMENT to the seller and PAYMENT_REFUND to the buyer,
@@ -93,11 +95,13 @@ public final class RemedyCalculator {
             throw new IllegalStateException("MILESTONE_PAYMENT legs " + paid + " differ from the locked batch " + locked);
         }
         boolean fault = computed.finalBreachingRole() != null;
+        // D91: the decision of a contest's second Level 1.5 report is final, with fault too: no new window.
+        boolean pending = fault && breachCase.contestStatus() != ContestStatus.CONTESTED;
         return new RemedyDecision(ids.get(), breachCase.contractId(), breachCase.breachCaseId(),
-                milestone.milestoneId(), fault ? RemedyStatus.PENDING_CONTEST : RemedyStatus.FINALIZED,
+                milestone.milestoneId(), pending ? RemedyStatus.PENDING_CONTEST : RemedyStatus.FINALIZED,
                 computed.finalBreachingRole(), fault ? BreachReasonCode.QUALITY_BELOW_COMMITTED : null,
                 computed.qualityDisposition(), breachCase.decisionSource(), penalty, debt, settledMilestoneCount, legs,
-                now, fault ? null : now);
+                now, pending ? null : now);
     }
 
     /** sellerPenaltyRate x effectiveUnitPrice x committedQuantity of the milestone, whole dong, HALF_UP once. */
