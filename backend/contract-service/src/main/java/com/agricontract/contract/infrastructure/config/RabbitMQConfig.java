@@ -33,6 +33,9 @@ public class RabbitMQConfig {
     public static final String MILESTONE_FUNDING_FAILED_QUEUE = "contract-svc.escrow.milestone_funding_failed";
     public static final String FILE_READY_QUEUE = "contract-svc.file.ready";
     public static final String FILE_FAILED_QUEUE = "contract-svc.file.failed";
+    public static final String INSPECTION_REPORT_CONFIRMED_QUEUE = "contract-svc.inspection.report_confirmed";
+    /** inspection-service's exchange (it declares the same durable topic exchange); #246 consumes its report_confirmed. */
+    public static final String INSPECTION_EXCHANGE = "agricontract.inspection";
     /** file-service's own exchange for file.ready / file.failed (golden-flow-events.yaml fileReady, fileFailed). */
     public static final String FILES_EXCHANGE = "agricontract.files";
 
@@ -64,8 +67,16 @@ public class RabbitMQConfig {
         Queue fileReadyDlq = QueueBuilder.durable(FILE_READY_QUEUE + ".dlq").build();
         Queue fileFailed = QueueBuilder.durable(FILE_FAILED_QUEUE).deadLetterExchange(dlx.getName()).build();
         Queue fileFailedDlq = QueueBuilder.durable(FILE_FAILED_QUEUE + ".dlq").build();
+        // #246: inspection.report_confirmed. Same exchange arguments as inspection-service's declaration.
+        TopicExchange inspection = new TopicExchange(INSPECTION_EXCHANGE, true, false);
+        Queue reportConfirmed = QueueBuilder.durable(INSPECTION_REPORT_CONFIRMED_QUEUE)
+                .deadLetterExchange(dlx.getName()).build();
+        Queue reportConfirmedDlq = QueueBuilder.durable(INSPECTION_REPORT_CONFIRMED_QUEUE + ".dlq").build();
         return new Declarables(List.of(
-                new TopicExchange("agricontract.contracts", true, false), escrow, dlx,
+                new TopicExchange("agricontract.contracts", true, false), escrow, dlx, inspection,
+                reportConfirmed, reportConfirmedDlq,
+                BindingBuilder.bind(reportConfirmed).to(inspection).with("inspection.report_confirmed"),
+                BindingBuilder.bind(reportConfirmedDlq).to(dlx).with("inspection.report_confirmed"),
                 fileReady, fileReadyDlq,
                 BindingBuilder.bind(fileReadyDlq).to(dlx).with("file.ready"),
                 fileFailed, fileFailedDlq,

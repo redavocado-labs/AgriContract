@@ -64,6 +64,7 @@ import com.agricontract.contract.infrastructure.persistence.consent.JdbcConsentE
 import com.agricontract.contract.infrastructure.persistence.idempotency.JdbcIdempotencyStore;
 import com.agricontract.contract.infrastructure.persistence.mapper.ContractMapper;
 import com.agricontract.contract.infrastructure.persistence.milestone.JdbcMilestoneEvidenceRepository;
+import com.agricontract.contract.infrastructure.persistence.inspection.JdbcInspectionReportRepository;
 import com.agricontract.contract.infrastructure.persistence.milestone.JdbcMilestoneRepository;
 import com.agricontract.contract.infrastructure.persistence.milestone.JdbcSellerWeighDeclarationRepository;
 import com.agricontract.contract.infrastructure.persistence.repository.ContractRepositoryImpl;
@@ -118,7 +119,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ImportAutoConfiguration({JacksonAutoConfiguration.class, EventingAutoConfiguration.class})
 @Import({BusinessCalendarConfiguration.class, SpringTransactionRunner.class, MilestoneFunding.class,
-        JdbcMilestoneRepository.class, JdbcBreachCaseRepository.class, FlagMilestoneUseCase.class,
+        JdbcMilestoneRepository.class, JdbcInspectionReportRepository.class, JdbcBreachCaseRepository.class, FlagMilestoneUseCase.class,
         RespondToMilestoneFlagUseCase.class, SellerSilenceMilestonesUseCase.class, MilestoneContestStep.class,
         OutboxContractEventPublisher.class, ContractRepositoryImpl.class,
         JdbcSignatureRepository.class, ContractMapper.class, JcsTermsCanonicalizer.class,
@@ -634,7 +635,7 @@ class FlagAndRespondIntegrationTest {
     private MilestoneEvidenceCommands.Flag flagCommandWithHash(Milestone milestone, String actor, UUID key,
                                                                FlagIssueType type, String hash) {
         return new MilestoneEvidenceCommands.Flag(milestone.contractId(), milestone.milestoneId(), actor, key, type,
-                "1.0", hash);
+                "1.1", hash);
     }
 
     private String flagHash(Milestone milestone, FlagIssueType type) {

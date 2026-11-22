@@ -4,6 +4,7 @@ import com.agricontract.contract.domain.model.Contract;
 import com.agricontract.contract.domain.model.activation.ActivationRecovery;
 import com.agricontract.contract.domain.model.breach.BreachCase;
 import com.agricontract.contract.domain.model.consent.SignerRole;
+import com.agricontract.contract.domain.model.inspection.InspectionRequestReason;
 import com.agricontract.contract.domain.model.milestone.Milestone;
 import com.agricontract.contract.domain.model.milestone.SellerWeighDeclaration;
 
@@ -101,10 +102,11 @@ public interface ContractEventPublisher {
     void breachReported(BreachCase breachCase);
 
     /**
-     * inspection.level1_5_requested with reason DISPUTE_ROUTED (D80, D82). initiatedByActorId is the seller who
-     * contested, or null when the system contested a silent QUALITY flag.
+     * inspection.level1_5_requested (D80, D82; D77 for MANDATORY_INSPECTION). initiatedByActorId is the seller who
+     * contested, or null when the system asks (a silent QUALITY flag, a mandatory inspection).
      */
-    void inspectionLevel15Requested(Contract contract, Milestone milestone, String initiatedByActorId, Instant at);
+    void inspectionLevel15Requested(Contract contract, Milestone milestone, InspectionRequestReason reason,
+                                    String initiatedByActorId, Instant at);
 
     /**
      * milestone.dispute_resolved (D82): the QUANTITY flag settled on the buyer's weight because the seller was silent;

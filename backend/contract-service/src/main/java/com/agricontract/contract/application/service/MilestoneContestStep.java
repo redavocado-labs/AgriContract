@@ -5,6 +5,7 @@ import com.agricontract.contract.application.port.TransactionRunner;
 import com.agricontract.contract.domain.model.Contract;
 import com.agricontract.contract.domain.model.breach.BreachCase;
 import com.agricontract.contract.domain.model.breach.BreachReasonCode;
+import com.agricontract.contract.domain.model.inspection.InspectionRequestReason;
 import com.agricontract.contract.domain.model.milestone.BuyerReceipt;
 import com.agricontract.contract.domain.model.milestone.ContestedBy;
 import com.agricontract.contract.domain.model.milestone.FlagIssueType;
@@ -47,9 +48,28 @@ public class MilestoneContestStep {
         breachCases.insert(breachCase);
         milestones.update(milestone);
         events.breachReported(breachCase);
-        events.inspectionLevel15Requested(contract, milestone, actorId, now);
+        events.inspectionLevel15Requested(contract, milestone, InspectionRequestReason.DISPUTE_ROUTED, actorId, now);
         log.info("event=milestone_contested contractId={} milestoneId={} by={} breachCaseId={}",
                 contract.getContractId().value(), milestone.milestoneId(), by, breachCase.breachCaseId());
+        return breachCase;
+    }
+
+    /**
+     * D77: a mandatory inspection report found the goods PARTIALLY or NON conforming on a milestone nobody flagged. The
+     * system opens the BreachCase (allegation, QUALITY_BELOW_COMMITTED) and the milestone becomes CONTESTED;
+     * breach.reported is written. The inspection is already done, so level1_5_requested is not written again.
+     */
+    public BreachCase openByInspection(Contract contract, Milestone milestone, Instant now) {
+        transactions.requireTransaction();
+        BreachCase breachCase = BreachCase.openedBySystem(UUID.randomUUID().toString(),
+                contract.getContractId().value(), milestone.milestoneId(), BreachReasonCode.QUALITY_BELOW_COMMITTED,
+                evidenceOf(milestone), now);
+        milestone.contestByInspection(breachCase.breachCaseId(), now);
+        breachCases.insert(breachCase);
+        milestones.update(milestone);
+        events.breachReported(breachCase);
+        log.info("event=milestone_contested contractId={} milestoneId={} by=INSPECTION breachCaseId={}",
+                contract.getContractId().value(), milestone.milestoneId(), breachCase.breachCaseId());
         return breachCase;
     }
 

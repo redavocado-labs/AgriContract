@@ -329,6 +329,49 @@ public final class Milestone {
         return settlement;
     }
 
+    /**
+     * Mandatory inspection (D77): the confirmed report found the goods CONFORMING. BUYER_RECEIVED becomes SETTLED on
+     * the money the report computed; sellerAmount + buyerRefund must equal the locked batch.
+     */
+    public MilestoneSettlement settleInspectedConforming(BigDecimal acceptedQuantityKg, VndAmount sellerAmount,
+                                                         VndAmount buyerRefund, Instant settledAt) {
+        Objects.requireNonNull(acceptedQuantityKg, "acceptedQuantityKg");
+        Objects.requireNonNull(sellerAmount, "sellerAmount");
+        Objects.requireNonNull(buyerRefund, "buyerRefund");
+        Objects.requireNonNull(settledAt, "settledAt");
+        if (status != MilestoneStatus.BUYER_RECEIVED || buyerReceipt == null || sellerWeighing == null) {
+            throw new ContractConflictException(ContractConflictException.MILESTONE_ACTION_NOT_ALLOWED,
+                    "Only a BUYER_RECEIVED milestone can be settled (" + status + ").");
+        }
+        if (batchAmount == null || effectiveUnitPrice == null) {
+            throw new InvalidMilestoneTransitionException("Milestone " + milestoneId + " has no locked batch");
+        }
+        if (sellerAmount.value().add(buyerRefund.value()).compareTo(batchAmount.value()) != 0) {
+            throw new InvalidMilestoneTransitionException("Settlement of milestone " + milestoneId
+                    + " does not add up to the locked batch");
+        }
+        this.settlement = new MilestoneSettlement(SettlementPath.INSPECTED_CONFORMING,
+                acceptedQuantityKg.stripTrailingZeros(), sellerAmount, buyerRefund, settledAt);
+        this.status = MilestoneStatus.SETTLED;
+        return settlement;
+    }
+
+    /**
+     * Mandatory inspection (D77): the confirmed report found the goods PARTIALLY or NON conforming and nobody flagged.
+     * BUYER_RECEIVED becomes CONTESTED by the system with the BreachCase it opened, as a QUALITY dispute.
+     */
+    public void contestByInspection(String breachCaseId, Instant contestedAt) {
+        Objects.requireNonNull(breachCaseId, "breachCaseId");
+        Objects.requireNonNull(contestedAt, "contestedAt");
+        if (status != MilestoneStatus.BUYER_RECEIVED || buyerReceipt == null || sellerWeighing == null) {
+            throw new ContractConflictException(ContractConflictException.MILESTONE_ACTION_NOT_ALLOWED,
+                    "Only a BUYER_RECEIVED milestone can be contested by its inspection (" + status + ").");
+        }
+        this.flag = new MilestoneFlag(FlagIssueType.QUALITY, contestedAt, contestedAt, ContestedBy.SYSTEM,
+                breachCaseId);
+        this.status = MilestoneStatus.CONTESTED;
+    }
+
     private void requireAwaitingSellerResponse(String action) {
         if (status != MilestoneStatus.AWAITING_SELLER_RESPONSE || flag == null || buyerReceipt == null
                 || sellerWeighing == null) {

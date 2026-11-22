@@ -7,5 +7,7 @@ public enum SettlementPath {
     /** The confirm window passed without a buyer action (confirmedBy SYSTEM_TIMEOUT). */
     CLEAN_AUTO_CONFIRMED,
     /** A QUANTITY flag the seller left unanswered: settled on the buyer's weight (D82). */
-    SELLER_SILENT_QUANTITY
+    SELLER_SILENT_QUANTITY,
+    /** Mandatory inspection (D77): the confirmed Level 1.5 report found the goods CONFORMING. */
+    INSPECTED_CONFORMING
 }

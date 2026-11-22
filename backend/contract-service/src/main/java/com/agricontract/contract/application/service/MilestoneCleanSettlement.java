@@ -8,6 +8,7 @@ import com.agricontract.contract.domain.model.milestone.Milestone;
 import com.agricontract.contract.domain.model.milestone.MilestoneSettlement;
 import com.agricontract.contract.domain.model.milestone.SettlementPath;
 import com.agricontract.contract.domain.model.terms.InspectionRequirement;
+import com.agricontract.contract.domain.repository.InspectionReportRepository;
 import com.agricontract.contract.domain.repository.MilestoneRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,19 +27,24 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class MilestoneCleanSettlement {
     private final MilestoneRepository milestones;
+    private final InspectionReportRepository inspectionReports;
     private final ContractEventPublisher events;
     private final TransactionRunner transactions;
 
-    /** True when the contract requires an inspection report before settlement (no report is stored yet). */
-    public static boolean inspectionPending(Contract contract) {
-        // TODO(#135): allow once a confirmed inspection report exists for this milestone
+    /** True when the contract requires an inspection report before the milestones settle (D77). */
+    public static boolean requiresInspection(Contract contract) {
         return contract.getCoffeeTerms().snapshot().negotiated().inspectionTerms().requirement()
                 == InspectionRequirement.MANDATORY_BEFORE_SETTLEMENT;
     }
 
+    /** True when the contract requires an inspection report and none is confirmed for this milestone. */
+    public boolean inspectionPending(Contract contract, Milestone milestone) {
+        return requiresInspection(contract) && !inspectionReports.existsCompleteByMilestoneId(milestone.milestoneId());
+    }
+
     /** 409 INSPECTION_REPORT_PENDING when {@link #inspectionPending}. */
-    public static void requireNoPendingInspection(Contract contract) {
-        if (inspectionPending(contract)) {
+    public void requireNoPendingInspection(Contract contract, Milestone milestone) {
+        if (inspectionPending(contract, milestone)) {
             throw new ContractConflictException(ContractConflictException.INSPECTION_REPORT_PENDING,
                     "This contract requires an inspection report before settlement; none is confirmed yet.");
         }

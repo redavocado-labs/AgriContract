@@ -8,12 +8,14 @@ import com.agricontract.contract.application.port.ContractEventPublisher;
 import com.agricontract.contract.application.port.IdempotencyStore;
 import com.agricontract.contract.application.port.TransactionRunner;
 import com.agricontract.contract.application.service.EvidenceAttachment;
+import com.agricontract.contract.application.service.MilestoneCleanSettlement;
 import com.agricontract.contract.domain.exception.ContractConflictException;
 import com.agricontract.contract.domain.exception.UnauthorizedContractAccessException;
 import com.agricontract.contract.domain.model.Contract;
 import com.agricontract.contract.domain.model.consent.ConsentEvidence;
 import com.agricontract.contract.domain.model.consent.OperationalConsentStatements;
 import com.agricontract.contract.domain.model.consent.SignerRole;
+import com.agricontract.contract.domain.model.inspection.InspectionRequestReason;
 import com.agricontract.contract.domain.model.milestone.Milestone;
 import com.agricontract.contract.domain.model.milestone.MilestoneEvidenceFile;
 import com.agricontract.contract.domain.model.milestone.BuyerReceiptConsent;
@@ -117,6 +119,11 @@ public class RecordBuyerReceiptUseCase {
         milestones.update(milestone);
         evidence.markNamed(fileIds, now);
         events.milestoneBuyerReceived(contract, milestone);
+        if (MilestoneCleanSettlement.requiresInspection(contract)) {
+            // D77: the report is required before settlement, so Level 1.5 is asked for as soon as the goods are received.
+            events.inspectionLevel15Requested(contract, milestone, InspectionRequestReason.MANDATORY_INSPECTION, null,
+                    now);
+        }
         idempotencyStore.recordResult(command.actorId(), OPERATION, command.idempotencyKey(),
                 consent.consentId().toString());
         log.info("event=milestone_buyer_received contractId={} milestoneId={} weightKg={}",

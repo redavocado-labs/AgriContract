@@ -5,6 +5,7 @@ import com.agricontract.contract.domain.model.Contract;
 import com.agricontract.contract.domain.model.activation.ActivationRecovery;
 import com.agricontract.contract.domain.model.breach.BreachCase;
 import com.agricontract.contract.domain.model.consent.SignerRole;
+import com.agricontract.contract.domain.model.inspection.InspectionRequestReason;
 import com.agricontract.contract.domain.model.milestone.BuyerReceipt;
 import com.agricontract.contract.domain.model.milestone.FundingStatus;
 import com.agricontract.contract.domain.model.milestone.Milestone;
@@ -534,11 +535,11 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
                 breachCaseId, contractId, null, null, payload));
     }
 
-    /** golden-flow-events.yaml inspectionLevel15Requested, a command to inspection-service (DISPUTE_ROUTED). */
+    /** golden-flow-events.yaml inspectionLevel15Requested, a command to inspection-service (DISPUTE_ROUTED or MANDATORY_INSPECTION). */
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
-    public void inspectionLevel15Requested(Contract contract, Milestone milestone, String initiatedByActorId,
-                                           Instant at) {
+    public void inspectionLevel15Requested(Contract contract, Milestone milestone, InspectionRequestReason reason,
+                                           String initiatedByActorId, Instant at) {
         if (!milestone.contractId().equals(contract.getContractId().value())) {
             throw new IllegalStateException("inspection.level1_5_requested for milestone " + milestone.milestoneId()
                     + " of another contract");
@@ -548,7 +549,7 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("contractId", contractId);
         payload.put("milestoneId", milestoneId);
-        payload.put("reason", "DISPUTE_ROUTED");
+        payload.put("reason", reason.name());
         payload.put("reportDueBusinessDays", contract.getCoffeeTerms().snapshot().negotiated().inspectionTerms()
                 .reportDueBusinessDays());
         payload.put("initiatedByActorId",
