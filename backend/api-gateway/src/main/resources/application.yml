@@ -95,7 +95,7 @@ spring:
           uri: ${CONTRACT_SERVICE_URL:http://localhost:8083}
           order: 1
           predicates:
-            - Path=/api/v1/contracts/**
+            - Path=/api/v1/contracts/**, /api/v1/arbitration/**
         - id: escrow-service
           uri: ${ESCROW_SERVICE_URL:http://localhost:8084}
           order: 1

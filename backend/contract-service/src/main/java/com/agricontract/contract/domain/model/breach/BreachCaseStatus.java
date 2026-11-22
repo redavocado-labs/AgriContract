@@ -1,6 +1,8 @@
 package com.agricontract.contract.domain.model.breach;
 
-/** REPORTED is the only state until the review and resolution of #135. */
+/** REPORTED, then UNDER_REVIEW by an Arbitrator, then RESOLVED by an AttributionDecision (D80, D81). */
 public enum BreachCaseStatus {
-    REPORTED
+    REPORTED,
+    UNDER_REVIEW,
+    RESOLVED
 }
