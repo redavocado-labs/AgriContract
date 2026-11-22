@@ -27,12 +27,13 @@ public class JdbcEscrowMilestoneRepository implements EscrowMilestoneRepository 
     private static final String SELECT_FOR_UPDATE = """
             SELECT milestone_id, contract_id, milestone_index, buyer_id, batch_amount, funding_requested_at,
                    funding_request_event_id, status, request_event_id, ledger_entry_id, locked_at, failed_attempts,
-                   next_attempt_at, last_failure_reason, created_at, updated_at
+                   next_attempt_at, last_failure_reason, settlement_event_id, settled_at, created_at, updated_at
             FROM escrow_milestone WHERE milestone_id = ? FOR UPDATE
             """;
     private static final String UPDATE_RESULT = """
             UPDATE escrow_milestone SET status = ?, ledger_entry_id = ?, locked_at = ?, failed_attempts = ?,
-                                        next_attempt_at = ?, last_failure_reason = ?, updated_at = ?
+                                        next_attempt_at = ?, last_failure_reason = ?, settlement_event_id = ?,
+                                        settled_at = ?, updated_at = ?
             WHERE milestone_id = ?
             """;
 
@@ -51,6 +52,8 @@ public class JdbcEscrowMilestoneRepository implements EscrowMilestoneRepository 
             rs.getInt("failed_attempts"),
             instant(rs.getTimestamp("next_attempt_at")),
             rs.getString("last_failure_reason"),
+            rs.getString("settlement_event_id"),
+            instant(rs.getTimestamp("settled_at")),
             rs.getTimestamp("created_at").toInstant(),
             rs.getTimestamp("updated_at").toInstant());
 
@@ -93,6 +96,8 @@ public class JdbcEscrowMilestoneRepository implements EscrowMilestoneRepository 
                 milestone.getFailedAttempts(),
                 timestamp(milestone.getNextAttemptAt()),
                 milestone.getLastFailureReason(),
+                milestone.getSettlementEventId(),
+                timestamp(milestone.getSettledAt()),
                 Timestamp.from(milestone.getUpdatedAt()),
                 milestone.getMilestoneId());
         if (updated != 1) {
