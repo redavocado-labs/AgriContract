@@ -15,15 +15,19 @@ export interface StoreOnBehalfOfRequest {
   contentLength: number;
 }
 
-/** 400 VALIDATION_ERROR: one fixed text per bad header, never its value. */
-export class StoreOnBehalfOfRequestInvalidError extends Error {
+/**
+ * 400 VALIDATION_ERROR on any /internal/v1/files route: one fixed text per
+ * bad header, never its value.
+ */
+export class InvalidRequestHeadersError extends Error {
   constructor(readonly problems: readonly string[]) {
-    super(`Invalid upload request: ${problems.join('; ')}`);
-    this.name = StoreOnBehalfOfRequestInvalidError.name;
+    super(`Invalid request: ${problems.join('; ')}`);
+    this.name = InvalidRequestHeadersError.name;
   }
 }
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Printable ASCII, 1 to 255 characters (the contract's maxLength and the
@@ -31,6 +35,15 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * sent. Node already strips the spaces around a header value.
  */
 const IDEMPOTENCY_KEY = /^[\x20-\x7e]{1,255}$/;
+
+export const IDEMPOTENCY_KEY_PROBLEM =
+  'Idempotency-Key must be 1 to 255 printable ASCII characters';
+
+/** The Idempotency-Key header when it is a valid one, else null. */
+export function idempotencyKeyOf(headers: IncomingHttpHeaders): string | null {
+  const key = headers['idempotency-key'];
+  return typeof key === 'string' && IDEMPOTENCY_KEY.test(key) ? key : null;
+}
 
 const DIGITS = /^\d+$/;
 
@@ -44,15 +57,8 @@ export function parseStoreOnBehalfOfRequest(
     problems.push('X-Acting-User-Id must be a UUID');
   }
 
-  const idempotencyKey = headers['idempotency-key'];
-  if (
-    typeof idempotencyKey !== 'string' ||
-    !IDEMPOTENCY_KEY.test(idempotencyKey)
-  ) {
-    problems.push(
-      'Idempotency-Key must be 1 to 255 printable ASCII characters',
-    );
-  }
+  const idempotencyKey = idempotencyKeyOf(headers);
+  if (idempotencyKey === null) problems.push(IDEMPOTENCY_KEY_PROBLEM);
 
   const contentLength = declaredLength(headers);
   if (contentLength === null) {
@@ -60,7 +66,7 @@ export function parseStoreOnBehalfOfRequest(
   }
 
   if (problems.length > 0) {
-    throw new StoreOnBehalfOfRequestInvalidError(problems);
+    throw new InvalidRequestHeadersError(problems);
   }
   return {
     actingUserId: (actingUserId as string).toLowerCase(),

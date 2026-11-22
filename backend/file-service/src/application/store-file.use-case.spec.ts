@@ -63,6 +63,8 @@ describe('StoreFileUseCase', () => {
       fileSize: pdf.length,
       status: 'PROCESSING',
       attached: false,
+      legalHold: false,
+      deletedAt: null,
       idempotencyKey: null,
     });
     expect(file).toEqual(files.rows.get(file.fileId));

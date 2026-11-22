@@ -182,6 +182,8 @@ describe('POST /internal/v1/files (storeOnBehalfOf)', () => {
         fileSize: pdf.length,
         status: 'PROCESSING',
         attached: false,
+        legalHold: false,
+        deletedAt: null,
         idempotencyKey: KEY,
       });
     });

@@ -1,13 +1,17 @@
-import type { Readable } from 'node:stream';
+import { Readable } from 'node:stream';
 import {
   CreateBucketCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
   HeadBucketCommand,
   PutObjectCommand,
   S3Client,
   S3ServiceException,
 } from '@aws-sdk/client-s3';
-import type { ObjectStoragePort } from '../../application/ports/object-storage.port';
+import {
+  ObjectNotFoundError,
+  type ObjectStoragePort,
+} from '../../application/ports/object-storage.port';
 import type { AppConfig } from '../../config/env.validation';
 
 /** Connect and socket-inactivity limits: a dead store fails a request, never hangs it. */
@@ -91,6 +95,23 @@ export class S3ObjectStorage implements ObjectStoragePort {
     }
   }
 
+  async get(key: string): Promise<Readable> {
+    let output;
+    try {
+      output = await this.client.send(
+        new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+      );
+    } catch (err) {
+      if (isNotFound(err)) throw new ObjectNotFoundError();
+      throw err;
+    }
+    // In Node the SDK's Body is the response stream itself (an IncomingMessage).
+    if (!(output.Body instanceof Readable)) {
+      throw new Error('GetObject returned no readable body');
+    }
+    return output.Body;
+  }
+
   async delete(key: string): Promise<void> {
     // S3 DeleteObject succeeds for a key that does not exist.
     await this.client.send(
@@ -140,6 +161,7 @@ function isNotFound(err: unknown): boolean {
     err instanceof S3ServiceException &&
     (err.name === 'NotFound' ||
       err.name === 'NoSuchBucket' ||
+      err.name === 'NoSuchKey' ||
       err.$metadata?.httpStatusCode === 404)
   );
 }

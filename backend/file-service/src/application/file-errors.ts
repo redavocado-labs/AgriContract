@@ -83,3 +83,31 @@ export class FileMetadataUnavailableError extends FileServiceError {
     super(`File metadata could not be recorded (${code})`);
   }
 }
+
+/**
+ * 404: no such file for this operation: unknown, deleted, or (for a read)
+ * not READY. Never says which, as getFile's contract has one 404 for all.
+ */
+export class FileNotFoundError extends FileServiceError {
+  constructor() {
+    super('File not found');
+  }
+}
+
+/** 409: the file is under legal hold, so it cannot be deleted (§7). */
+export class LegalHoldActiveError extends FileServiceError {
+  constructor() {
+    super('File is under legal hold; deletion denied');
+  }
+}
+
+/**
+ * A read of a stored object did not give back the bytes the row recorded:
+ * another length or another SHA-256 (§2: tampering or corruption in object
+ * storage). Raised at the end of the stream, once every byte was seen.
+ */
+export class StoredBytesMismatchError extends FileServiceError {
+  constructor(readonly fileId: string) {
+    super(`Stored object ${fileId} does not match its recorded size and hash`);
+  }
+}

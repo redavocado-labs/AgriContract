@@ -3,7 +3,10 @@ import {
   IdempotencyKeyTakenError,
   type FileRepository,
 } from '../../src/application/ports/file.repository';
-import type { ObjectStoragePort } from '../../src/application/ports/object-storage.port';
+import {
+  ObjectNotFoundError,
+  type ObjectStoragePort,
+} from '../../src/application/ports/object-storage.port';
 import type { StoredFile } from '../../src/domain/stored-file';
 
 /** In-memory bucket. Reads the body like S3 would and keeps what it received. */
@@ -45,6 +48,35 @@ export class FakeObjectStorage implements ObjectStoragePort {
     }
     if (this.putError) throw this.putError;
     this.objects.set(key, { bytes: Buffer.concat(chunks), ...meta });
+  }
+
+  /** Fails `get` with this error before any byte. */
+  getError: Error | null = null;
+  /** Fails the stream `get` returns with this error after the first chunk. */
+  getStreamError: Error | null = null;
+
+  get(key: string): Promise<Readable> {
+    if (this.getError) return Promise.reject(this.getError);
+    const object = this.objects.get(key);
+    if (!object) return Promise.reject(new ObjectNotFoundError());
+    const streamError = this.getStreamError;
+    const half = Math.ceil(object.bytes.length / 2);
+    const chunks = [
+      object.bytes.subarray(0, half),
+      object.bytes.subarray(half),
+    ];
+    let index = 0;
+    return Promise.resolve(
+      new Readable({
+        read() {
+          if (index === 1 && streamError) {
+            this.destroy(streamError);
+            return;
+          }
+          this.push(index < chunks.length ? chunks[index++] : null);
+        },
+      }),
+    );
   }
 
   delete(key: string): Promise<void> {
@@ -91,6 +123,36 @@ export class InMemoryFileRepository implements FileRepository {
     if (this.findError) return Promise.reject(this.findError);
     const row = this.byKey(uploadedBy, idempotencyKey);
     return Promise.resolve(row ? { ...row } : null);
+  }
+
+  updateError: Error | null = null;
+  /** Runs just before tombstone checks the row, to let a hold or a delete win. */
+  beforeTombstone: (fileId: string) => void = () => undefined;
+  readonly tombstones: { fileId: string; reason: string }[] = [];
+
+  markAttached(fileId: string): Promise<void> {
+    if (this.updateError) return Promise.reject(this.updateError);
+    const row = this.rows.get(fileId);
+    if (row && row.deletedAt === null) row.attached = true;
+    return Promise.resolve();
+  }
+
+  tombstone(fileId: string, reason: string): Promise<boolean> {
+    this.beforeTombstone(fileId);
+    if (this.updateError) return Promise.reject(this.updateError);
+    const row = this.rows.get(fileId);
+    if (!row || row.deletedAt !== null || row.legalHold) {
+      return Promise.resolve(false);
+    }
+    row.deletedAt = new Date();
+    this.tombstones.push({ fileId, reason });
+    return Promise.resolve(true);
+  }
+
+  /** A stored row as the scan would leave it, for the read and delete paths. */
+  put(file: StoredFile): StoredFile {
+    this.rows.set(file.fileId, { ...file });
+    return this.rows.get(file.fileId)!;
   }
 
   private byKey(uploadedBy: string, key: string): StoredFile | undefined {

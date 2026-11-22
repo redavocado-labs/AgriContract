@@ -26,4 +26,13 @@ export interface FileRepository {
     uploadedBy: string,
     idempotencyKey: string,
   ): Promise<StoredFile | null>;
+  /** Sets attached on a row that is not deleted (§7); a no-op when it already is. */
+  markAttached(fileId: string): Promise<void>;
+  /**
+   * Step 1 of a deletion (§7): stamps deleted_at and deletion_reason, only on
+   * a row that is neither deleted nor under legal hold, in one statement so a
+   * hold set meanwhile still wins. Returns false when no row was changed: the
+   * caller reads the row again to learn why.
+   */
+  tombstone(fileId: string, reason: string): Promise<boolean>;
 }
