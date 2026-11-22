@@ -18,6 +18,7 @@ import com.agricontract.contract.application.usecase.GetBreachCaseUseCase;
 import com.agricontract.contract.application.usecase.ListBreachCasesForArbitrationUseCase;
 import com.agricontract.contract.application.usecase.ResolveBreachCaseUseCase;
 import com.agricontract.contract.application.usecase.ReviewBreachCaseUseCase;
+import com.agricontract.contract.domain.exception.UnauthorizedContractAccessException;
 import com.agricontract.contract.domain.model.breach.DecisionSource;
 import com.agricontract.contract.domain.model.consent.SignerRole;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,7 +34,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-/** reviewBreachCase, resolveBreachCase, listBreachCasesForArbitration: roles, check order and the body. */
+/** reviewBreachCase, resolveBreachCase, the contest endpoints, listBreachCasesForArbitration: roles, check order and the body. */
 class BreachCaseEndpointTest {
     private static final UUID CONTRACT = UUID.randomUUID();
     private static final UUID CASE = UUID.randomUUID();
@@ -103,6 +104,60 @@ class BreachCaseEndpointTest {
     }
 
     @Test
+    void contest_isForBuyerAndSeller_checksCaseAndPartyThenTheBody_andReachesTheUseCase() throws Exception {
+        String file = UUID.randomUUID().toString();
+        for (String role : List.of("ARBITRATOR", "ADMIN", "OPERATOR", "INSPECTOR")) {
+            mvc.perform(contestRequest(role, "{\"reason\":\"why\"}")).andExpect(status().isForbidden());
+        }
+        doThrow(new BreachCaseNotFoundException(CONTRACT.toString(), CASE.toString()))
+                .doThrow(new UnauthorizedContractAccessException("not the party at fault")).doNothing()
+                .when(contest).requireContester(CONTRACT.toString(), CASE.toString(), "user-1");
+
+        mvc.perform(contestRequest("SELLER", "{not json")).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("BREACH_CASE_NOT_FOUND"));
+        mvc.perform(contestRequest("BUYER", "{not json")).andExpect(status().isForbidden());
+        for (String bad : List.of("{not json", "[]", "{}", "{\"reason\":\"\"}", "{\"reason\":1}",
+                "{\"reason\":\"" + "x".repeat(1001) + "\"}", "{\"reason\":\"why\",\"extra\":1}",
+                "{\"reason\":\"why\",\"evidenceFileIds\":[\"not-a-uuid\"]}",
+                "{\"reason\":\"why\",\"evidenceFileIds\":[\"" + file + "\",\"" + file + "\"]}",
+                "{\"reason\":\"why\",\"evidenceFileIds\":[" + (("\"" + UUID.randomUUID() + "\",").repeat(11)
+                        .replaceAll(",$", "")) + "]}")) {
+            mvc.perform(contestRequest("SELLER", bad)).andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        }
+        verify(contest, never()).contest(any());
+
+        mvc.perform(contestRequest("SELLER", "{\"reason\":\"why\"}")).andExpect(status().isNoContent());
+        mvc.perform(contestRequest("BUYER", "{\"reason\":\"" + "x".repeat(1000) + "\",\"evidenceFileIds\":[\""
+                + file + "\"]}")).andExpect(status().isNoContent());
+        ArgumentCaptor<BreachCaseCommands.Contest> command = ArgumentCaptor.forClass(BreachCaseCommands.Contest.class);
+        verify(contest, org.mockito.Mockito.times(2)).contest(command.capture());
+        assertThat(command.getAllValues().get(0).reason()).isEqualTo("why");
+        assertThat(command.getAllValues().get(0).evidenceFileIds()).isEmpty();
+        assertThat(command.getAllValues().get(1).evidenceFileIds()).containsExactly(file);
+        assertThat(command.getAllValues().get(1).actorId()).isEqualTo("user-1");
+    }
+
+    @Test
+    void contestEvidence_needsOneToTenFiles_andReachesTheUseCase() throws Exception {
+        String file = UUID.randomUUID().toString();
+        mvc.perform(evidenceRequest("ARBITRATOR", "{\"fileIds\":[\"" + file + "\"]}"))
+                .andExpect(status().isForbidden());
+        for (String bad : List.of("{not json", "{}", "{\"fileIds\":[]}", "{\"fileIds\":\"x\"}",
+                "{\"fileIds\":[\"x\"]}", "{\"fileIds\":[\"" + file + "\"],\"extra\":1}")) {
+            mvc.perform(evidenceRequest("SELLER", bad)).andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        }
+        verify(contest, never()).addEvidence(any());
+
+        mvc.perform(evidenceRequest("SELLER", "{\"fileIds\":[\"" + file + "\"]}")).andExpect(status().isNoContent());
+        ArgumentCaptor<BreachCaseCommands.AddContestEvidence> command =
+                ArgumentCaptor.forClass(BreachCaseCommands.AddContestEvidence.class);
+        verify(contest).addEvidence(command.capture());
+        assertThat(command.getValue().fileIds()).containsExactly(file);
+    }
+
+    @Test
     void theQueue_isArbitratorOnly_andValidatesItsParameters() throws Exception {
         for (String role : List.of("BUYER", "SELLER", "ADMIN", "OPERATOR", "INSPECTOR")) {
             mvc.perform(get("/api/v1/arbitration/breach-cases").principal(auth(role))).andExpect(status().isForbidden());
@@ -122,6 +177,18 @@ class BreachCaseEndpointTest {
 
     private static MockHttpServletRequestBuilder resolveRequest(String role, String body) {
         return post("/api/v1/contracts/{c}/breach-cases/{b}/resolve", CONTRACT, CASE).principal(auth(role))
+                .header("Idempotency-Key", UUID.randomUUID().toString())
+                .contentType(MediaType.APPLICATION_JSON).content(body);
+    }
+
+    private static MockHttpServletRequestBuilder contestRequest(String role, String body) {
+        return post("/api/v1/contracts/{c}/breach-cases/{b}/contest", CONTRACT, CASE).principal(auth(role))
+                .header("Idempotency-Key", UUID.randomUUID().toString())
+                .contentType(MediaType.APPLICATION_JSON).content(body);
+    }
+
+    private static MockHttpServletRequestBuilder evidenceRequest(String role, String body) {
+        return post("/api/v1/contracts/{c}/breach-cases/{b}/contest/evidence", CONTRACT, CASE).principal(auth(role))
                 .header("Idempotency-Key", UUID.randomUUID().toString())
                 .contentType(MediaType.APPLICATION_JSON).content(body);
     }

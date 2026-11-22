@@ -20,10 +20,17 @@ import com.agricontract.contract.application.usecase.ConfirmMilestoneCleanUseCas
 import com.agricontract.contract.application.usecase.GetMilestoneDetailUseCase;
 import com.agricontract.contract.application.dto.BreachCaseCommands;
 import com.agricontract.contract.application.usecase.GetBreachCaseUseCase;
+import com.agricontract.contract.application.usecase.ContestBreachDecisionUseCase;
+import com.agricontract.contract.application.usecase.ExpireContestWindowsUseCase;
 import com.agricontract.contract.application.usecase.FinalizeRemedyDecisionUseCase;
 import com.agricontract.contract.application.usecase.ListBreachCasesForArbitrationUseCase;
 import com.agricontract.contract.application.usecase.ResolveBreachCaseUseCase;
 import com.agricontract.contract.application.usecase.ReviewBreachCaseUseCase;
+import com.agricontract.contract.domain.exception.ContractConflictException;
+import com.agricontract.contract.domain.exception.MilestoneRequestInvalidException;
+import com.agricontract.contract.domain.exception.UnauthorizedContractAccessException;
+import com.agricontract.contract.domain.model.breach.BreachCase;
+import com.agricontract.contract.domain.model.breach.ContestStatus;
 import com.agricontract.contract.domain.model.breach.DecisionSource;
 import com.agricontract.contract.domain.model.consent.SignerRole;
 import com.agricontract.contract.application.usecase.FlagMilestoneUseCase;
@@ -126,7 +133,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
         RecordSellerWeighedUseCase.class, RecordBuyerReceiptUseCase.class, ConfirmMilestoneCleanUseCase.class,
         AutoConfirmMilestonesUseCase.class, MilestoneCleanSettlement.class, EvidenceAttachment.class, RecordFileScanResultUseCase.class,
         MilestoneReadAccess.class, GetMilestoneDetailUseCase.class, ReadMilestoneEvidenceUseCase.class,
-        FileScanResultConsumer.class, ApplyInspectionReportUseCase.class, FinalizeRemedyDecisionUseCase.class, InspectionReportConfirmedConsumer.class, RemedyFinalizedIntegrationTest.Fakes.class})
+        FileScanResultConsumer.class, ApplyInspectionReportUseCase.class, FinalizeRemedyDecisionUseCase.class, InspectionReportConfirmedConsumer.class,
+        ContestBreachDecisionUseCase.class, ExpireContestWindowsUseCase.class, RemedyFinalizedIntegrationTest.Fakes.class})
 @Testcontainers
 class RemedyFinalizedIntegrationTest {
     private static final String BUYER = "0b7e3b7a-1c1e-4c5e-9f0a-3d2b1a0c9e8f";
@@ -194,6 +202,8 @@ class RemedyFinalizedIntegrationTest {
     @Autowired ReviewBreachCaseUseCase reviewCase;
     @Autowired ResolveBreachCaseUseCase resolveCase;
     @Autowired FinalizeRemedyDecisionUseCase finalizeRemedy;
+    @Autowired ContestBreachDecisionUseCase contestUc;
+    @Autowired ExpireContestWindowsUseCase expireWindows;
     @Autowired GetBreachCaseUseCase getCase;
     @Autowired ListBreachCasesForArbitrationUseCase listCases;
     @Autowired com.agricontract.calendar.VietnamBusinessDays calendar;
@@ -614,6 +624,258 @@ class RemedyFinalizedIntegrationTest {
         String caseId = disputed(first, FlagIssueType.QUALITY, "10000", "9800", "9800.000", NON_CONFORMING);
         resolveCase.execute(resolve(caseId, SignerRole.SELLER, DecisionSource.INSPECTOR_L1_5));
         return caseId;
+    }
+
+    // ---- #241: the contest window, the contest, the second Level 1.5 report ----
+
+    private List<Map<String, Object>> decisionsOf(String caseId) {
+        return jdbc.queryForList("SELECT * FROM remedy_decision WHERE breach_case_id = ? ORDER BY `round`", caseId);
+    }
+
+    private BreachCase caseOf(String caseId) {
+        return breachCases.findById(caseId).orElseThrow();
+    }
+
+    private BreachCaseCommands.Contest contest(String caseId, String actor, List<String> files) {
+        return new BreachCaseCommands.Contest(id(), caseId, actor, UUID.randomUUID(), "the sample was not mine", files);
+    }
+
+    private void windowPassed(String caseId) {
+        jdbc.update("UPDATE breach_case SET contest_deadline = ? WHERE breach_case_id = ?",
+                Timestamp.from(Instant.now().minusSeconds(60)), caseId);
+    }
+
+    private void secondReport(Milestone milestone, String accepted, String metrics) {
+        deliver(reportPayload(milestone.milestoneId(), "COMPLETE", accepted, accepted, metrics));
+    }
+
+    private static void assertConflict(org.assertj.core.api.ThrowableAssert.ThrowingCallable call) {
+        assertThatThrownBy(call).isInstanceOfSatisfying(ContractConflictException.class,
+                e -> assertThat(e.getCode()).isEqualTo(ContractConflictException.BREACH_CASE_ACTION_NOT_ALLOWED));
+    }
+
+    @Test
+    void aNonConformingDecision_opensTheWindow_andTheSchedulerFinalizesItOncePassed() {
+        activate(false);
+        String caseId = disputedQuietly();
+        BreachCase open = caseOf(caseId);
+
+        assertThat(open.contestStatus()).isEqualTo(ContestStatus.OPEN);
+        assertThat(open.contestDeadline()).isEqualTo(calendar.deadline(open.resolvedAt(), 2));
+        assertThat(expireWindows.execute()).isZero();
+        assertThat(decisionOf(caseId)).containsEntry("status", "PENDING_CONTEST");
+
+        windowPassed(caseId);
+        assertThat(expireWindows.execute()).isEqualTo(1);
+
+        assertThat(caseOf(caseId).contestStatus()).isEqualTo(ContestStatus.EXPIRED);
+        assertThat(decisionOf(caseId)).containsEntry("status", "FINALIZED");
+        assertThat(reload(first).status()).isEqualTo(MilestoneStatus.SETTLED);
+        List<JsonNode> finalized = events("remedy.finalized");
+        assertThat(finalized).hasSize(1);
+        assertThat(finalized.get(0).at("/payload/remedyLegs").findValuesAsText("amount"))
+                .containsExactly("150000000.00", "12000000.00");
+        assertThat(expireWindows.execute()).isZero();
+        assertThat(events("remedy.finalized")).hasSize(1);
+    }
+
+    @Test
+    void aContest_holdsTheDecision_andASecondConformingReportSettlesForTheSeller() throws Exception {
+        activate(false);
+        String caseId = disputedQuietly();
+        String firstDecision = (String) decisionOf(caseId).get("remedy_decision_id");
+
+        contestUc.contest(contest(caseId, SELLER, List.of()));
+
+        BreachCase contested = caseOf(caseId);
+        assertThat(contested.contestStatus()).isEqualTo(ContestStatus.CONTESTED);
+        assertThat(contested.contestReason()).isEqualTo("the sample was not mine");
+        assertThat(contested.contestedByActorId()).isEqualTo(SELLER);
+        assertThat(contested.contestedAt()).isNotNull();
+        assertThat(decisionOf(caseId)).containsEntry("status", "PENDING_CONTEST");
+        assertThat(reload(first).status()).isEqualTo(MilestoneStatus.CONTESTED);
+        List<JsonNode> requested = events("inspection.level1_5_requested");
+        assertThat(requested).extracting(e -> e.at("/payload/reason").asText())
+                .containsExactly("DISPUTE_ROUTED", "DECISION_CONTESTED");
+        FrozenSchemas.assertEvent("inspectionLevel15Requested", requested.get(1));
+        assertThat(requested.get(1).at("/payload/initiatedByActorId").asText()).isEqualTo(SELLER);
+
+        // The scheduler loses the race: the contest came first.
+        windowPassed(caseId);
+        assertThat(expireWindows.execute()).isZero();
+        assertThat(caseOf(caseId).contestStatus()).isEqualTo(ContestStatus.CONTESTED);
+        assertConflict(() -> contestUc.contest(contest(caseId, SELLER, List.of())));
+
+        secondReport(first, "10000.000", CONFORMING);
+
+        BreachCase underReview = caseOf(caseId);
+        assertThat(underReview.status().name()).isEqualTo("UNDER_REVIEW");
+        assertThat(underReview.contestStatus()).isEqualTo(ContestStatus.CONTESTED);
+        assertThat(underReview.finalBreachingRole()).isNull();
+        assertThat(underReview.computedResolution().qualityDisposition().name()).isEqualTo("CONFORMING");
+        assertThat(decisionOf(caseId)).containsEntry("status", "SUPERSEDED");
+        assertThat(decisionOf(caseId).get("superseded_at")).isNotNull();
+        assertThat(jdbc.queryForList("SELECT `round` FROM inspection_report WHERE milestone_id = ? ORDER BY `round`",
+                Integer.class, first.milestoneId())).containsExactly(1, 2);
+        assertThat(outboxFor("remedy.finalized")).isZero();
+
+        resolveCase.execute(resolve(caseId, null, DecisionSource.INSPECTOR_L1_5));
+
+        List<Map<String, Object>> decisions = decisionsOf(caseId);
+        assertThat(decisions).extracting(d -> d.get("status"), d -> d.get("round"))
+                .containsExactly(org.assertj.core.groups.Tuple.tuple("SUPERSEDED", 1),
+                        org.assertj.core.groups.Tuple.tuple("FINALIZED", 2));
+        assertThat(decisions.get(1).get("remedy_decision_id")).isNotEqualTo(firstDecision);
+        assertThat(legsOf((String) decisions.get(1).get("remedy_decision_id"))).extracting(l -> l.get("remedy_type"),
+                l -> ((BigDecimal) l.get("amount")).toPlainString()).containsExactly(
+                org.assertj.core.groups.Tuple.tuple("PAYMENT_SETTLEMENT", "150000000.00"));
+        assertThat(reload(first).status()).isEqualTo(MilestoneStatus.SETTLED);
+        assertThat(reload(first).settlement().sellerAmount().wire()).isEqualTo("150000000.00");
+        assertThat(caseOf(caseId).contestStatus()).isEqualTo(ContestStatus.CONTESTED);
+        List<JsonNode> finalized = events("remedy.finalized");
+        assertThat(finalized).hasSize(1);
+        assertThat(finalized.get(0).at("/payload/remedyDecisionId").asText()).isEqualTo(decisions.get(1).get("remedy_decision_id"));
+        assertThat(finalized.get(0).at("/payload/penaltyEligible").asBoolean()).isFalse();
+        assertThat(events("milestone.dispute_resolved").get(0).at("/payload/resolutionFavors").asText())
+                .isEqualTo("SELLER");
+        assertThat(expireWindows.execute()).isZero();
+    }
+
+    @Test
+    void aSecondNonConformingReport_isFinalAtOnce_withNoNewWindow_andTheForfeitureIsTakenOnce() {
+        activate(false);
+        String caseId = disputedQuietly();
+        contestUc.contest(contest(caseId, SELLER, List.of()));
+        secondReport(first, "9800.000", NON_CONFORMING);
+
+        resolveCase.execute(resolve(caseId, SignerRole.SELLER, DecisionSource.INSPECTOR_L1_5));
+
+        List<Map<String, Object>> decisions = decisionsOf(caseId);
+        assertThat(decisions).extracting(d -> d.get("status")).containsExactly("SUPERSEDED", "FINALIZED");
+        assertThat(legsOf((String) decisions.get(1).get("remedy_decision_id"))).extracting(l -> l.get("remedy_type"),
+                l -> ((BigDecimal) l.get("amount")).toPlainString()).containsExactly(
+                org.assertj.core.groups.Tuple.tuple("PAYMENT_REFUND", "150000000.00"),
+                org.assertj.core.groups.Tuple.tuple("DEPOSIT_FORFEITURE", "12000000.00"));
+        assertThat(reload(first).status()).isEqualTo(MilestoneStatus.SETTLED);
+        assertThat(caseOf(caseId).contestStatus()).isEqualTo(ContestStatus.CONTESTED);
+        assertThat(events("remedy.finalized")).hasSize(1);
+        assertThat(events("remedy.finalized").get(0).at("/payload/penaltyEligible").asBoolean()).isTrue();
+        assertThat(jdbc.queryForObject("SELECT COALESCE(SUM(l.amount), 0) FROM remedy_leg l JOIN remedy_decision d"
+                + " ON d.remedy_decision_id = l.remedy_decision_id WHERE d.contract_id = ? AND l.fund_type ="
+                + " 'SELLER_DEPOSIT' AND d.status <> 'SUPERSEDED'", BigDecimal.class, id()))
+                .isEqualByComparingTo("12000000");
+        assertThat(expireWindows.execute()).isZero();
+    }
+
+    @Test
+    void contest_isRefusedForTheWrongParty_afterTheDeadline_twice_andOnAContractLevelCase() {
+        activate(false);
+        String caseId = disputedQuietly();
+
+        assertThatThrownBy(() -> contestUc.requireContester(id(), caseId, BUYER))
+                .isInstanceOf(UnauthorizedContractAccessException.class);
+        assertThatThrownBy(() -> contestUc.contest(contest(caseId, BUYER, List.of())))
+                .isInstanceOf(UnauthorizedContractAccessException.class);
+        assertThatThrownBy(() -> contestUc.contest(contest(caseId, SELLER, List.of(UUID.randomUUID().toString()))))
+                .isInstanceOfSatisfying(MilestoneRequestInvalidException.class,
+                        e -> assertThat(e.getCode()).isEqualTo(MilestoneRequestInvalidException.EVIDENCE_NOT_UPLOADED));
+        windowPassed(caseId);
+        assertConflict(() -> contestUc.contest(contest(caseId, SELLER, List.of())));
+        assertThat(caseOf(caseId).contestStatus()).isEqualTo(ContestStatus.OPEN);
+        assertThat(outboxFor("inspection.level1_5_requested")).isEqualTo(1);
+
+        String contractLevel = contractLevelCase("2036-01-01 00:00:00.000000", "RESOLVED", false);
+        jdbc.update("UPDATE breach_case SET final_breaching_role = 'SELLER' WHERE breach_case_id = ?", contractLevel);
+        assertThat(caseOf(contractLevel).contestStatus()).isEqualTo(ContestStatus.NOT_APPLICABLE);
+        assertConflict(() -> contestUc.contest(contest(contractLevel, SELLER, List.of())));
+    }
+
+    @Test
+    void contestEvidence_isTheContestersOwn_dedupes_andClosesWithTheSecondReport() {
+        activate(false);
+        String fileA = uploadReady(SELLER, first);
+        String fileB = uploadReady(SELLER, first);
+        String caseId = disputedQuietly();
+        BreachCaseCommands.AddContestEvidence early = new BreachCaseCommands.AddContestEvidence(id(), caseId, SELLER,
+                UUID.randomUUID(), List.of(fileA));
+        assertConflict(() -> contestUc.addEvidence(early));
+
+        contestUc.contest(contest(caseId, SELLER, List.of(fileA)));
+        assertThat(caseOf(caseId).contestEvidenceFileIds()).containsExactly(fileA);
+        assertThat(fileStore.confirmed).contains(fileA);
+
+        contestUc.addEvidence(new BreachCaseCommands.AddContestEvidence(id(), caseId, SELLER, UUID.randomUUID(),
+                List.of(fileA, fileB)));
+        contestUc.addEvidence(new BreachCaseCommands.AddContestEvidence(id(), caseId, SELLER, UUID.randomUUID(),
+                List.of(fileB)));
+        assertThat(caseOf(caseId).contestEvidenceFileIds()).containsExactly(fileA, fileB);
+        assertThatThrownBy(() -> contestUc.requireContestOwner(id(), caseId, BUYER))
+                .isInstanceOf(UnauthorizedContractAccessException.class);
+        assertThatThrownBy(() -> contestUc.addEvidence(new BreachCaseCommands.AddContestEvidence(id(), caseId, BUYER,
+                UUID.randomUUID(), List.of(fileA)))).isInstanceOf(UnauthorizedContractAccessException.class);
+        assertThatThrownBy(() -> contestUc.addEvidence(new BreachCaseCommands.AddContestEvidence(id(), caseId, SELLER,
+                UUID.randomUUID(), List.of(UUID.randomUUID().toString()))))
+                .isInstanceOf(MilestoneRequestInvalidException.class);
+
+        secondReport(first, "10000.000", CONFORMING);
+
+        assertConflict(() -> contestUc.addEvidence(new BreachCaseCommands.AddContestEvidence(id(), caseId, SELLER,
+                UUID.randomUUID(), List.of(fileA))));
+        assertThat(caseOf(caseId).contestEvidenceFileIds()).containsExactly(fileA, fileB);
+    }
+
+    @Test
+    void anInconclusiveFirstReport_asksAgainWithTheSameReason_andASecondOneIsFinal_withNoMoney() {
+        activate(false);
+        delivered(first, "10000", "9800");
+        flag.execute(flagCommand(first, BUYER, UUID.randomUUID(), FlagIssueType.QUALITY));
+        respond.execute(respondCommand(first, SELLER, UUID.randomUUID()));
+        String caseId = reload(first).flag().breachCaseId();
+
+        deliver(reportPayload(first.milestoneId(), "INCONCLUSIVE", "0.000", "0.000", CONFORMING));
+
+        assertThat(events("inspection.level1_5_requested")).extracting(e -> e.at("/payload/reason").asText())
+                .containsExactly("DISPUTE_ROUTED", "DISPUTE_ROUTED");
+        assertThat(caseOf(caseId).computedResolution()).isNull();
+
+        deliver(reportPayload(first.milestoneId(), "INCONCLUSIVE", "0.000", "0.000", CONFORMING));
+        deliver(reportPayload(first.milestoneId(), "COMPLETE", "9800.000", "9800.000", NON_CONFORMING));
+
+        assertThat(events("inspection.level1_5_requested")).hasSize(2);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE milestone_id = ?", Integer.class,
+                first.milestoneId())).isEqualTo(2);
+        assertThat(caseOf(caseId).computedResolution()).isNull();
+        assertThat(reload(first).status()).isEqualTo(MilestoneStatus.CONTESTED);
+        assertThat(outboxFor("remedy.finalized")).isZero();
+    }
+
+    @Test
+    void mandatory_anInconclusiveFirstReport_asksAgainAsAMandatoryInspection_andARerunSettles() {
+        activate(true);
+        delivered(first, "10000", "9800");
+        assertThat(events("inspection.level1_5_requested")).hasSize(1);
+
+        deliver(reportPayload(first.milestoneId(), "INCONCLUSIVE", "0.000", "0.000", CONFORMING));
+
+        assertThat(events("inspection.level1_5_requested")).extracting(e -> e.at("/payload/reason").asText())
+                .containsExactly("MANDATORY_INSPECTION", "MANDATORY_INSPECTION");
+        assertThat(reload(first).status()).isEqualTo(MilestoneStatus.BUYER_RECEIVED);
+
+        secondReport(first, "9800.000", CONFORMING);
+
+        assertThat(reload(first).status()).isEqualTo(MilestoneStatus.SETTLED);
+    }
+
+    @Test
+    void aSecondReport_isIgnored_whenTheFirstDecidedAndNobodyContested() {
+        activate(false);
+        String caseId = disputed(first, FlagIssueType.QUALITY, "10000", "9800", "9800.000", PARTIALLY);
+
+        secondReport(first, "9800.000", NON_CONFORMING);
+
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE milestone_id = ?", Integer.class,
+                first.milestoneId())).isEqualTo(1);
+        assertThat(caseOf(caseId).computedResolution().qualityDisposition().name()).isEqualTo("PARTIALLY_CONFORMING");
     }
 
     // ---- what is ignored, what is refused ----
