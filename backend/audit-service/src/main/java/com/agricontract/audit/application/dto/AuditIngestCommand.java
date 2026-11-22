@@ -16,5 +16,5 @@ public record AuditIngestCommand(
         String correlationId,
         String sourceHash,
         Instant occurredAt,
-        Map<String, String> content) {
+        Map<String, Object> content) {
 }

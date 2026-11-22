@@ -3,8 +3,7 @@ package com.agricontract.audit.domain.model;
 import com.agricontract.audit.domain.exception.InvalidAuditRecordException;
 
 import java.time.Instant;
-import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -23,7 +22,7 @@ public record AuditRecord(
         String correlationId,
         String sourceHash,
         Instant occurredAt,
-        Map<String, String> content,
+        Map<String, Object> content,
         Instant createdAt) {
 
     private static final Pattern UUID =
@@ -50,10 +49,12 @@ public record AuditRecord(
         if (createdAt == null) {
             throw new InvalidAuditRecordException("createdAt is required");
         }
+        occurredAt = occurredAt.truncatedTo(ChronoUnit.MILLIS); // what is hashed is what TIMESTAMP(6) hands back
+        createdAt = createdAt.truncatedTo(ChronoUnit.MILLIS);
         if (content == null || content.isEmpty()) {
             throw new InvalidAuditRecordException("content is required");
         }
-        content = Collections.unmodifiableMap(new LinkedHashMap<>(content));
+        content = CanonicalJson.normalizeObject(content);
     }
 
     private static String uuid(String value, String field) {

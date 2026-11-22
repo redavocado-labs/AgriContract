@@ -101,7 +101,7 @@ public class ContractSignedConsumer {
 
         return new AuditIngestCommand(SubjectType.CONTRACT, contractId, SOURCE_TYPE, envelope.eventType(),
                 envelope.eventId().toString(), envelope.causationId(), envelope.correlationId(), hash,
-                envelope.occurredAt(), content);
+                envelope.occurredAt(), new LinkedHashMap<String, Object>(content));
     }
 
     private static JsonNode exactPayload(byte[] body) {
