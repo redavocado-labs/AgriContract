@@ -4,12 +4,14 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadBucketCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
   S3ServiceException,
 } from '@aws-sdk/client-s3';
 import {
   ObjectNotFoundError,
+  type StoredObjectInfo,
   type ObjectStoragePort,
 } from '../../application/ports/object-storage.port';
 import type { AppConfig } from '../../config/env.validation';
@@ -110,6 +112,24 @@ export class S3ObjectStorage implements ObjectStoragePort {
       throw new Error('GetObject returned no readable body');
     }
     return output.Body;
+  }
+
+  async *list(): AsyncIterable<StoredObjectInfo> {
+    let token: string | undefined;
+    do {
+      const page = await this.client.send(
+        new ListObjectsV2Command({
+          Bucket: this.bucket,
+          ContinuationToken: token,
+        }),
+      );
+      for (const object of page.Contents ?? []) {
+        if (object.Key && object.LastModified) {
+          yield { key: object.Key, lastModified: object.LastModified };
+        }
+      }
+      token = page.IsTruncated ? page.NextContinuationToken : undefined;
+    } while (token);
   }
 
   async delete(key: string): Promise<void> {

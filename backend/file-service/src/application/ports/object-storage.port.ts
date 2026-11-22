@@ -38,4 +38,12 @@ export interface ObjectStoragePort {
 
   /** Removes `key`; succeeds when it does not exist. */
   delete(key: string): Promise<void>;
+
+  /** Every object of the bucket, page by page (the lifecycle sweep, #276). */
+  list(): AsyncIterable<StoredObjectInfo>;
+}
+
+export interface StoredObjectInfo {
+  key: string;
+  lastModified: Date;
 }

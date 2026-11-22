@@ -27,6 +27,7 @@ describe('validate (environment)', () => {
       },
       clamav: { host: 'localhost', port: 3410 },
       dlqCheckIntervalMs: 300_000,
+      lifecycleIntervalMs: 3_600_000,
     });
   });
 
@@ -81,6 +82,24 @@ describe('validate (environment)', () => {
     (raw) => {
       expect(() => validate({ FILE_DLQ_CHECK_INTERVAL_MS: raw })).toThrow(
         'FILE_DLQ_CHECK_INTERVAL_MS must be whole milliseconds',
+      );
+    },
+  );
+
+  it.each([
+    ['0', 0],
+    ['60000', 60_000],
+  ])('FILE_LIFECYCLE_INTERVAL_MS=%s', (raw, ms) => {
+    expect(
+      validate({ FILE_LIFECYCLE_INTERVAL_MS: raw }).lifecycleIntervalMs,
+    ).toBe(ms);
+  });
+
+  it.each(['-1', '1.5', 'hourly', '86400001'])(
+    'FILE_LIFECYCLE_INTERVAL_MS=%s is refused',
+    (raw) => {
+      expect(() => validate({ FILE_LIFECYCLE_INTERVAL_MS: raw })).toThrow(
+        'FILE_LIFECYCLE_INTERVAL_MS must be whole milliseconds',
       );
     },
   );

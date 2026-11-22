@@ -55,9 +55,9 @@ export interface StoreLogger {
  * Order: blob first, row second, because the row needs the hash of the bytes
  * actually stored (storage_hash is NOT NULL). A failure in between removes
  * the blob, so a row never points at a missing blob. If that removal fails
- * too, or the process dies in between, a blob without a row is left: §7's
- * orphan cleanup works from rows and cannot see it, so the warning names the
- * fileId (= object key) for a manual delete. After a failed put the delete is
+ * too, or the process dies in between, a blob without a row is left: the
+ * lifecycle job's sweep (#276) removes it once it is a day old, and the
+ * warning names the fileId (= object key). After a failed put the delete is
  * still tried (the PUT may have committed), but a failure there is not
  * reported as a known orphan.
  *
@@ -202,7 +202,7 @@ export class StoreFileUseCase {
       const code = failureCode(err);
       this.logger.warn(
         put === 'stored'
-          ? `File ${fileId}: could not remove the blob of a failed store (${code}); object ${fileId} has no row and must be deleted by hand`
+          ? `File ${fileId}: could not remove the blob of a failed store (${code}); object ${fileId} has no row; the lifecycle sweep removes it after a day`
           : `File ${fileId}: could not confirm that object ${fileId} was not stored (${code})`,
       );
     }

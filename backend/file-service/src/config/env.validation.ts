@@ -40,6 +40,8 @@ export interface AppConfig {
   };
   /** Period of the check that warns while file-service.virus-scan.dlq holds messages; 0 = off. */
   dlqCheckIntervalMs: number;
+  /** Period of the lifecycle job (orphans, expiry, pending and stray blobs, #276); 0 = off. */
+  lifecycleIntervalMs: number;
 }
 
 /**
@@ -133,6 +135,7 @@ export function validate(env: Record<string, unknown>): AppConfig {
     },
     // Every 5 minutes, as notification-service's DlqMonitor.
     dlqCheckIntervalMs: millis('FILE_DLQ_CHECK_INTERVAL_MS', 300_000),
+    lifecycleIntervalMs: millis('FILE_LIFECYCLE_INTERVAL_MS', 3_600_000),
   };
 
   if (errors.length > 0) {
