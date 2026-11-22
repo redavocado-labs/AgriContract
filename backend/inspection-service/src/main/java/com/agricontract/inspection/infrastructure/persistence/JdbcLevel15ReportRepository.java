@@ -42,11 +42,11 @@ public class JdbcLevel15ReportRepository implements Level15ReportRepository {
         jdbc.update("""
                 INSERT INTO inspection_report
                   (report_id,l15_commission_id,contract_id,milestone_id,inspector_id,tier,status,
-                   content,normalized_result,report_file_hash,result_hash,report_hash,confirmed_at,created_at)
-                VALUES (?,?,?,?,?,'LEVEL_1_5','CONFIRMED',?,?,?,?,?,?,?)
+                   content,normalized_result,report_file_hash,result_hash,report_hash,confirmed_at,created_at,report_file_id)
+                VALUES (?,?,?,?,?,'LEVEL_1_5','CONFIRMED',?,?,?,?,?,?,?,?)
                 """, identity.reportId(), assignment.commissionId(), assignment.contractId(), assignment.milestoneId(),
                 assignment.inspectorId(), evidence.content(), evidence.normalizedResult(), evidence.reportFileHash(),
-                evidence.resultHash(), evidence.reportHash(), Timestamp.from(evidence.confirmedAt()), Timestamp.from(createdAt));
+                evidence.resultHash(), evidence.reportHash(), Timestamp.from(evidence.confirmedAt()), Timestamp.from(createdAt), evidence.reportFileId());
     }
 
     @Override
@@ -56,7 +56,7 @@ public class JdbcLevel15ReportRepository implements Level15ReportRepository {
                 rs.getString("milestone_id"), rs.getString("inspector_id"),
                 new ReportEvidence(rs.getString("content"), rs.getString("normalized_result"),
                         rs.getString("report_file_hash"), rs.getString("result_hash"), rs.getString("report_hash"),
-                        rs.getTimestamp("confirmed_at").toInstant()), rs.getTimestamp("created_at").toInstant()),
+                        rs.getTimestamp("confirmed_at").toInstant(), rs.getString("report_file_id")), rs.getTimestamp("created_at").toInstant()),
                 reportId).stream().findFirst();
     }
 

@@ -8,6 +8,7 @@ import com.agricontract.inspection.application.usecase.InspectionAuthorization;
 import com.agricontract.inspection.domain.model.InspectorEligibility;
 import com.agricontract.inspection.domain.repository.InspectionAssignmentRepository;
 import com.agricontract.inspection.infrastructure.security.GatewayAuthenticationFilter;
+import com.agricontract.inspection.infrastructure.files.FileServiceClient;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +52,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(properties = {"SERVICE_INTERNAL_SECRET=test-service-secret", "GATEWAY_INTERNAL_SECRET=test-gateway-secret",
+        "inspection.file-service.download-enabled=true",
         "spring.rabbitmq.listener.simple.auto-startup=false", "management.health.rabbit.enabled=false",
         "inspection.assignment.scheduler-enabled=false", "VIETNAM_HOLIDAYS=2026-01-01"})
 @AutoConfigureMockMvc
@@ -80,6 +82,7 @@ class ScaffoldBoundaryTest {
     @Autowired InspectionAuthorization authorization;
     @Autowired PlatformTransactionManager transactions;
     @MockBean InspectorEligibilityPort users;
+    @MockBean FileServiceClient files;
 
     @BeforeEach
     void fixtures() {
@@ -164,17 +167,170 @@ class ScaffoldBoundaryTest {
     }
 
     @Test
-    void scaffoldDoesNotExposeSpeculativeBusinessEndpoints() {
+    void onlyApprovedReportControllersAreExposed() {
         assertThat(mappings.getHandlerMethods().values())
-                .noneMatch(handler -> handler.getBeanType().getPackageName().startsWith("com.agricontract.inspection"));
+                .filteredOn(handler -> handler.getBeanType().getPackageName().startsWith("com.agricontract.inspection"))
+                .extracting(handler -> handler.getBeanType().getSimpleName())
+                .containsExactlyInAnyOrder("ReportFileUploadController", "ReportSubmissionController");
     }
 
     @Test
-    void evenAuthenticatedInspectorCannotInvokeDeferredReportEndpoint() throws Exception {
-        mvc.perform(post("/api/v1/inspections/contract/milestones/milestone/reports")
+    void authenticatedInspectorWithoutFreshnessCannotSubmit() throws Exception {
+        String body = """
+                {"reportFileId":"00000000-0000-4000-8000-000000000011","normalizedResult":{"resultSchemaVersion":"1.0",
+                "measuredQuantityKg":10,"acceptedQuantityKg":9,"measurementStatus":"COMPLETE",
+                "actualQualityMetrics":{"commodity":"COFFEE","type":"ROBUSTA","moisturePercent":12,
+                "foreignMatterPercent":0,"blackBrokenBeansPercent":0},"determinedAt":"2026-10-25T02:59:00.000Z"}}
+                """;
+        mvc.perform(post("/api/v1/inspections/" + CONTRACT + "/milestones/" + MILESTONE + "/reports")
                         .header("X-User-Id", INSPECTOR_A).header("X-User-Role", "INSPECTOR")
-                        .header("X-Gateway-Secret", "test-gateway-secret"))
+                        .header("X-Gateway-Secret", "test-gateway-secret").header("Idempotency-Key", "test")
+                        .contentType("application/json").content(body))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void staleAndDuplicateAuthTimeAreRejectedThroughSecurityChain() throws Exception {
+        String body = """
+                {"reportFileId":"00000000-0000-4000-8000-000000000011","normalizedResult":{"resultSchemaVersion":"1.0",
+                "measuredQuantityKg":10,"acceptedQuantityKg":9,"measurementStatus":"COMPLETE",
+                "actualQualityMetrics":{"commodity":"COFFEE","type":"ROBUSTA","moisturePercent":12,
+                "foreignMatterPercent":0,"blackBrokenBeansPercent":0},"determinedAt":"2026-10-25T02:59:00.000Z"}}
+                """;
+        String path = "/api/v1/inspections/" + CONTRACT + "/milestones/" + MILESTONE + "/reports";
+        var base = post(path).header("X-User-Id", INSPECTOR_A).header("X-User-Role", "INSPECTOR")
+                .header("X-Gateway-Secret", "test-gateway-secret").header("Idempotency-Key", "key")
+                .contentType("application/json").content(body);
+        mvc.perform(base.header("X-User-Auth-Time", Long.toString(Instant.now().minusSeconds(1801).getEpochSecond())))
+                .andExpect(status().isForbidden());
+        mvc.perform(post(path).header("X-User-Id", INSPECTOR_A).header("X-User-Role", "INSPECTOR")
+                .header("X-Gateway-Secret", "test-gateway-secret").header("Idempotency-Key", "key")
+                .header("X-User-Auth-Time", Long.toString(Instant.now().getEpochSecond()), Long.toString(Instant.now().getEpochSecond()))
+                .contentType("application/json").content(body)).andExpect(status().isForbidden());
+        verifyNoInteractions(files);
+    }
+
+    @Test
+    void trustedFreshInspectorCanSubmitAndReplayThroughSecurityChain() throws Exception {
+        String commission = UUID.randomUUID().toString();
+        String file = UUID.randomUUID().toString();
+        Instant now = Instant.now();
+        jdbc.update("INSERT INTO level1_5_inspection_assignment (commission_id,contract_id,milestone_id,inspector_id,assigned_at,assigned_by_service,report_due_business_days,report_due_at) VALUES (?,?,?,?,?,'test-fixture',1,?)",
+                commission, CONTRACT, MILESTONE, INSPECTOR_A, Timestamp.from(now.minusSeconds(60)), Timestamp.from(now.plusSeconds(86400)));
+        jdbc.update("INSERT INTO level1_5_report_file(file_id,commission_id,uploaded_at) VALUES (?,?,?)", file, commission, Timestamp.from(now));
+        when(files.getReady(file)).thenReturn(new byte[]{1, 2, 3});
+        String body = """
+                {"reportFileId":"%s","normalizedResult":{"resultSchemaVersion":"1.0",
+                "measuredQuantityKg":10,"acceptedQuantityKg":9,"measurementStatus":"COMPLETE",
+                "actualQualityMetrics":{"commodity":"COFFEE","type":"ROBUSTA","moisturePercent":12,
+                "foreignMatterPercent":0,"blackBrokenBeansPercent":0},"determinedAt":"2026-10-25T02:59:00.000Z"}}
+                """.formatted(file);
+        String path = "/api/v1/inspections/" + CONTRACT + "/milestones/" + MILESTONE + "/reports";
+        try {
+            for (int i = 0; i < 2; i++) mvc.perform(post(path).header("X-User-Id", INSPECTOR_A)
+                    .header("X-User-Role", "INSPECTOR").header("X-Gateway-Secret", "test-gateway-secret")
+                    .header("X-User-Auth-Time", Long.toString(now.getEpochSecond()))
+                    .header("Idempotency-Key", "same-key").contentType("application/json").content(body))
+                    .andExpect(status().isCreated());
+            verify(files, times(1)).getReady(file);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE l15_commission_id=?", Integer.class, commission)).isEqualTo(1);
+        } finally {
+            var reports = jdbc.queryForList("SELECT report_id FROM inspection_report WHERE l15_commission_id=?", String.class, commission);
+            for (String report : reports) {
+                jdbc.update("DELETE FROM event_outbox WHERE aggregate_id=?", report);
+                jdbc.update("DELETE FROM level1_5_report_submission_receipt WHERE report_id=?", report);
+                jdbc.update("DELETE FROM inspector_signature WHERE report_id=?", report);
+                jdbc.update("DELETE FROM inspection_report WHERE report_id=?", report);
+            }
+            jdbc.update("DELETE FROM level1_5_report_file WHERE file_id=?", file);
+            jdbc.update("DELETE FROM level1_5_inspection_assignment WHERE commission_id=?", commission);
+        }
+    }
+
+    @Test
+    void unassociatedAndNotReadyFilesFailClosedThroughSecurityChain() throws Exception {
+        String commission = UUID.randomUUID().toString(); String file = UUID.randomUUID().toString();
+        Instant now = Instant.now();
+        jdbc.update("INSERT INTO level1_5_inspection_assignment (commission_id,contract_id,milestone_id,inspector_id,assigned_at,assigned_by_service,report_due_business_days,report_due_at) VALUES (?,?,?,?,?,'test-fixture',1,?)",
+                commission, CONTRACT, MILESTONE, INSPECTOR_A, Timestamp.from(now.minusSeconds(60)), Timestamp.from(now.plusSeconds(86400)));
+        String body = """
+                {"reportFileId":"%s","normalizedResult":{"resultSchemaVersion":"1.0",
+                "measuredQuantityKg":10,"acceptedQuantityKg":9,"measurementStatus":"COMPLETE",
+                "actualQualityMetrics":{"commodity":"COFFEE","type":"ROBUSTA","moisturePercent":12,
+                "foreignMatterPercent":0,"blackBrokenBeansPercent":0},"determinedAt":"2026-10-25T02:59:00.000Z"}}
+                """.formatted(file);
+        String path = "/api/v1/inspections/" + CONTRACT + "/milestones/" + MILESTONE + "/reports";
+        try {
+            mvc.perform(post(path).header("X-User-Id", INSPECTOR_B).header("X-User-Role", "INSPECTOR")
+                    .header("X-Gateway-Secret", "test-gateway-secret").header("X-User-Auth-Time", Long.toString(now.getEpochSecond()))
+                    .header("Idempotency-Key", "foreign").contentType("application/json").content(body))
+                    .andExpect(status().isForbidden());
+            var request = post(path).header("X-User-Id", INSPECTOR_A).header("X-User-Role", "INSPECTOR")
+                    .header("X-Gateway-Secret", "test-gateway-secret").header("X-User-Auth-Time", Long.toString(now.getEpochSecond()))
+                    .header("Idempotency-Key", "file-check").contentType("application/json").content(body);
+            mvc.perform(request).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("REPORT_FILE_NOT_UPLOADED"));
+            verify(files, never()).getReady(anyString());
+            jdbc.update("INSERT INTO level1_5_report_file(file_id,commission_id,uploaded_at) VALUES (?,?,?)", file, commission, Timestamp.from(now));
+            when(files.getReady(file)).thenThrow(new FileServiceClient.NotReady());
+            mvc.perform(request).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("REPORT_FILE_NOT_READY"));
+            doThrow(new FileServiceClient.Unavailable("offline")).when(files).getReady(file);
+            mvc.perform(request).andExpect(status().isServiceUnavailable());
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE l15_commission_id=?", Integer.class, commission)).isZero();
+        } finally {
+            jdbc.update("DELETE FROM level1_5_report_file WHERE file_id=?", file);
+            jdbc.update("DELETE FROM level1_5_inspection_assignment WHERE commission_id=?", commission);
+        }
+    }
+
+    @Test
+    void authorizedUploadBindsFileAndReplaysThroughGatewaySecurityContext() throws Exception {
+        String commission = UUID.randomUUID().toString(); String file = UUID.randomUUID().toString();
+        Instant now = Instant.now();
+        jdbc.update("INSERT INTO level1_5_inspection_assignment (commission_id,contract_id,milestone_id,inspector_id,assigned_at,assigned_by_service,report_due_business_days,report_due_at) VALUES (?,?,?,?,?,'test-fixture',1,?)",
+                commission, CONTRACT, MILESTONE, INSPECTOR_A, Timestamp.from(now.minusSeconds(60)), Timestamp.from(now.plusSeconds(86400)));
+        when(files.storeOnBehalfOf(eq(INSPECTOR_A), eq("upload-key"), eq("application/pdf"), eq(3L), any()))
+                .thenReturn(new com.agricontract.inspection.application.port.ReportFileStore.StoredFile(file, "PROCESSING"));
+        String path = "/api/v1/inspections/" + CONTRACT + "/milestones/" + MILESTONE + "/report-files";
+        try {
+            for (int i = 0; i < 2; i++) mvc.perform(post(path).header("X-User-Id", INSPECTOR_A)
+                    .header("X-User-Role", "INSPECTOR").header("X-Gateway-Secret", "test-gateway-secret")
+                    .header("X-Acting-User-Id", INSPECTOR_B).header("Idempotency-Key", "upload-key")
+                    .header("Content-Length", "3").contentType("application/pdf").content(new byte[]{1, 2, 3}))
+                    .andExpect(status().isAccepted()).andExpect(jsonPath("$.fileId").value(file));
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM level1_5_report_file WHERE file_id=? AND commission_id=?", Integer.class, file, commission)).isEqualTo(1);
+            verify(files, times(2)).storeOnBehalfOf(eq(INSPECTOR_A), eq("upload-key"), eq("application/pdf"), eq(3L), any());
+        } finally {
+            jdbc.update("DELETE FROM level1_5_report_file WHERE file_id=?", file);
+            jdbc.update("DELETE FROM level1_5_inspection_assignment WHERE commission_id=?", commission);
+        }
+    }
+
+    @Test
+    void concurrentUploadReplaysBindOneFileToTheSameAssignment() throws Exception {
+        String commission = UUID.randomUUID().toString(); String file = UUID.randomUUID().toString();
+        Instant now = Instant.now(); var rendezvous = new CountDownLatch(2);
+        jdbc.update("INSERT INTO level1_5_inspection_assignment (commission_id,contract_id,milestone_id,inspector_id,assigned_at,assigned_by_service,report_due_business_days,report_due_at) VALUES (?,?,?,?,?,'test-fixture',1,?)",
+                commission, CONTRACT, MILESTONE, INSPECTOR_A, Timestamp.from(now.minusSeconds(60)), Timestamp.from(now.plusSeconds(86400)));
+        when(files.storeOnBehalfOf(eq(INSPECTOR_A), eq("concurrent-key"), eq("application/pdf"), eq(3L), any()))
+                .thenAnswer(call -> {
+                    rendezvous.countDown();
+                    if (!rendezvous.await(10, TimeUnit.SECONDS)) throw new IllegalStateException("upload rendezvous timeout");
+                    return new com.agricontract.inspection.application.port.ReportFileStore.StoredFile(file, "PROCESSING");
+                });
+        String path = "/api/v1/inspections/" + CONTRACT + "/milestones/" + MILESTONE + "/report-files";
+        try (var pool = Executors.newFixedThreadPool(2)) {
+            java.util.concurrent.Callable<Integer> request = () -> mvc.perform(post(path).header("X-User-Id", INSPECTOR_A)
+                    .header("X-User-Role", "INSPECTOR").header("X-Gateway-Secret", "test-gateway-secret")
+                    .header("Idempotency-Key", "concurrent-key").header("Content-Length", "3")
+                    .contentType("application/pdf").content(new byte[]{1, 2, 3})).andReturn().getResponse().getStatus();
+            var one = pool.submit(request); var two = pool.submit(request);
+            assertThat(one.get(30, TimeUnit.SECONDS)).isEqualTo(202);
+            assertThat(two.get(30, TimeUnit.SECONDS)).isEqualTo(202);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM level1_5_report_file WHERE file_id=? AND commission_id=?", Integer.class, file, commission)).isEqualTo(1);
+        } finally {
+            jdbc.update("DELETE FROM level1_5_report_file WHERE file_id=?", file);
+            jdbc.update("DELETE FROM level1_5_inspection_assignment WHERE commission_id=?", commission);
+        }
     }
 
     @Test

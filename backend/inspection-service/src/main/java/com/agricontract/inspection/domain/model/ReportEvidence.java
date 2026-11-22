@@ -7,7 +7,12 @@ import java.util.Objects;
  * This persistence boundary does not calculate or verify cryptographic commitments.
  */
 public record ReportEvidence(String content, String normalizedResult, String reportFileHash,
-                             String resultHash, String reportHash, Instant confirmedAt) {
+                             String resultHash, String reportHash, Instant confirmedAt, String reportFileId) {
+    /** V4 callers can still read and write historical rows without D62 file references. */
+    public ReportEvidence(String content, String normalizedResult, String reportFileHash,
+                          String resultHash, String reportHash, Instant confirmedAt) {
+        this(content, normalizedResult, reportFileHash, resultHash, reportHash, confirmedAt, null);
+    }
     public ReportEvidence {
         if (content == null || content.isBlank() || normalizedResult == null || normalizedResult.isBlank()) {
             throw new IllegalArgumentException("Report content and normalized result are required");
@@ -18,5 +23,6 @@ public record ReportEvidence(String content, String normalizedResult, String rep
             }
         }
         Objects.requireNonNull(confirmedAt, "confirmedAt");
+        if (reportFileId != null) java.util.UUID.fromString(reportFileId);
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AndRequestMatcher;
@@ -26,7 +27,6 @@ public class InspectionConfiguration {
     @Bean
     SecurityFilterChain inspectionSecurity(HttpSecurity http,
             @Value("${gateway.internal-secret}") String gatewaySecret) throws Exception {
-        // Report submission and assignment creation transports are outside issue #112.
         return http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
@@ -34,6 +34,8 @@ public class InspectionConfiguration {
                         .requestMatchers(new AndRequestMatcher(new DispatcherTypeRequestMatcher(DispatcherType.ERROR),
                                 new AntPathRequestMatcher("/error"))).permitAll()
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/inspections/*/milestones/*/report-files",
+                                "/api/v1/inspections/*/milestones/*/reports").hasRole("INSPECTOR")
                         .anyRequest().denyAll())
                 .addFilterBefore(new GatewayAuthenticationFilter(gatewaySecret), AnonymousAuthenticationFilter.class)
                 .build();

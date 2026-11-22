@@ -30,6 +30,9 @@ management:
         include: health
 
 inspection:
+  auth-max-age-seconds: ${INSPECTION_AUTH_MAX_AGE_SECONDS:1800}
+  file-service:
+    download-enabled: ${INSPECTION_FILE_DOWNLOAD_ENABLED:false}
   dlq-monitor:
     enabled: true
     interval-ms: 300000
