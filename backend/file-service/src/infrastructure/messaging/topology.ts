@@ -1,5 +1,5 @@
 import type { Channel } from 'amqplib';
-import { FILES_EXCHANGE, SCAN_REQUESTED } from '../../application/file-events';
+import { FILES_EXCHANGE, SCAN_JOB_TYPES } from '../../application/file-events';
 
 /** file-service's own dead-letter exchange (direct: a DLQ binds the routing key it keeps). */
 export const FILES_DLX = 'agricontract.files.dlx';
@@ -17,8 +17,8 @@ export const VIRUS_SCAN_DLQ = `${VIRUS_SCAN_QUEUE}.dlq`;
  *   file.ready and file.failed (contract-service binds
  *   contract-svc.file.ready / .failed here, with the same arguments);
  * - direct `agricontract.files.dlx`;
- * - `file-service.virus-scan` ← file.uploaded.direct, dead-lettering to the
- *   DLX, and its `.dlq` ← the DLX with the same key.
+ * - `file-service.virus-scan` ← file.uploaded.direct and file.email.parsed,
+ *   dead-lettering to the DLX, and its `.dlq` ← the DLX with the same keys.
  *
  * No TTL or length limit on the queue (node-eventing README): retries are
  * in-process (3 attempts), then dead-lettering.
@@ -37,6 +37,9 @@ export async function declareTopology(channel: Channel): Promise<void> {
     arguments: { 'x-dead-letter-exchange': FILES_DLX },
   });
   await channel.assertQueue(VIRUS_SCAN_DLQ, { durable: true });
-  await channel.bindQueue(VIRUS_SCAN_QUEUE, FILES_EXCHANGE, SCAN_REQUESTED);
-  await channel.bindQueue(VIRUS_SCAN_DLQ, FILES_DLX, SCAN_REQUESTED);
+  // Both scan jobs (DIRECT_UPLOAD and EMAIL_INTAKE) into the one queue (§4).
+  for (const key of SCAN_JOB_TYPES) {
+    await channel.bindQueue(VIRUS_SCAN_QUEUE, FILES_EXCHANGE, key);
+    await channel.bindQueue(VIRUS_SCAN_DLQ, FILES_DLX, key);
+  }
 }

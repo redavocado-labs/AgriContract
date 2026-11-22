@@ -4,7 +4,7 @@ import {
   type DeliveryOutcome,
   type MessageConsumer,
 } from '@agricontract/eventing';
-import { PRODUCER, SCAN_REQUESTED } from '../../application/file-events';
+import { PRODUCER, SCAN_JOB_TYPES } from '../../application/file-events';
 import type { ScanFileUseCase } from '../../application/scan-file.use-case';
 import { VIRUS_SCAN_QUEUE } from './topology';
 
@@ -27,7 +27,7 @@ export class VirusScanConsumer implements MessageConsumer {
 
   async handleMessage(body: Buffer): Promise<DeliveryOutcome> {
     const job = parseEnvelope(body);
-    if (job.eventType !== SCAN_REQUESTED || job.producer !== PRODUCER) {
+    if (!SCAN_JOB_TYPES.includes(job.eventType) || job.producer !== PRODUCER) {
       throw new NonRetryableError(
         `Not a scan job: ${job.eventType} from ${job.producer}`,
       );

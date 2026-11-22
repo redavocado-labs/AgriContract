@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { Readable } from 'node:stream';
 import { newStoredFile, type StoredFile } from '../domain/stored-file';
 import { ByteMeter } from './byte-meter';
-import { scanRequested } from './file-events';
+import { scanRequested, type EmailMeta } from './file-events';
 import {
   FileLengthMismatchError,
   FileMetadataUnavailableError,
@@ -38,6 +38,8 @@ export interface StoreFileInput {
    * (uploadedBy, idempotencyKey) identifies one upload.
    */
   idempotencyKey?: string | null;
+  /** EMAIL_INTAKE: the mail's metadata, carried by the scan job on to file.ready. */
+  emailMeta?: EmailMeta;
 }
 
 export interface StoreLogger {
@@ -151,7 +153,7 @@ export class StoreFileUseCase {
     try {
       await this.files.insert(
         file,
-        policy.virusScan ? [scanRequested(file)] : [],
+        policy.virusScan ? [scanRequested(file, input.emailMeta)] : [],
       );
     } catch (err) {
       await this.removeBlob(fileId, 'stored');

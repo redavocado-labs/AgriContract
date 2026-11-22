@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from './config/env.validation';
 import { FileByIdModule } from './file-by-id.module';
+import { EmailIntakeModule } from './email-intake.module';
 import { FileLifecycleModule } from './file-lifecycle.module';
 import { HealthModule } from './infrastructure/health/health';
 import { PersistenceModule } from './infrastructure/persistence/persistence.module';
@@ -24,6 +25,7 @@ import { VirusScanModule } from './virus-scan.module';
     FileByIdModule,
     VirusScanModule,
     FileLifecycleModule,
+    EmailIntakeModule,
   ],
 })
 export class AppModule {}

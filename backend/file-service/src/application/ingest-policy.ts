@@ -43,6 +43,20 @@ export const SYSTEM_GENERATED_POLICY: IngestPolicy = {
 };
 
 /**
+ * EMAIL_INTAKE (the IMAP bridge, §3, §4.1): at most 20MB (decided
+ * 05/07/2026, review pass 2), read as 20 MiB, checked while the MIME part
+ * streams. The design gives no whitelist; the bridge takes the same three
+ * types as DIRECT_UPLOAD (reports are PDF, sometimes scans). Then the same
+ * virus scan (§4 fix of review pass 2).
+ */
+export const EMAIL_INTAKE_POLICY: IngestPolicy = {
+  channel: 'EMAIL_INTAKE',
+  maxBytes: 20 * MiB,
+  contentTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+  virusScan: true,
+};
+
+/**
  * `Image/JPEG; charset=x` -> `image/jpeg`: parameters dropped, lower case.
  * Returns null for anything that is not a `type/subtype` token pair.
  */
