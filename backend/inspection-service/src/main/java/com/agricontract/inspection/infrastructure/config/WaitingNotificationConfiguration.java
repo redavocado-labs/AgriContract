@@ -20,6 +20,8 @@ public class WaitingNotificationConfiguration {
     public static final String EXCHANGE = "agricontract.inspection";
     public static final String QUEUE = "notification-svc." + OutboxAssignmentAlerts.EVENT_TYPE;
     public static final String DLX = "notification-svc.inspection.dlx";
+    public static final String INSPECTOR_KEY = "notification.level1_5_inspector_assignment_requested";
+    public static final String INSPECTOR_QUEUE = "notification-svc." + INSPECTOR_KEY;
 
     @Bean TopicExchange inspectionEventsExchange() { return new TopicExchange(EXCHANGE, true, false); }
     @Bean DirectExchange waitingNotificationDlx() { return new DirectExchange(DLX, true, false); }
@@ -30,5 +32,13 @@ public class WaitingNotificationConfiguration {
     }
     @Bean Binding waitingNotificationDlqBinding() {
         return BindingBuilder.bind(waitingNotificationDlq()).to(waitingNotificationDlx()).with(OutboxAssignmentAlerts.EVENT_TYPE);
+    }
+    @Bean Queue inspectorNotificationQueue() { return QueueBuilder.durable(INSPECTOR_QUEUE).deadLetterExchange(DLX).build(); }
+    @Bean Queue inspectorNotificationDlq() { return QueueBuilder.durable(INSPECTOR_QUEUE + ".dlq").build(); }
+    @Bean Binding inspectorNotificationBinding() {
+        return BindingBuilder.bind(inspectorNotificationQueue()).to(inspectionEventsExchange()).with(INSPECTOR_KEY);
+    }
+    @Bean Binding inspectorNotificationDlqBinding() {
+        return BindingBuilder.bind(inspectorNotificationDlq()).to(waitingNotificationDlx()).with(INSPECTOR_KEY);
     }
 }

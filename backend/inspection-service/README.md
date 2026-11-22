@@ -21,8 +21,10 @@ The internal user-service profile is checked for INSPECTOR role, verified KYC,
 and a valid or explicitly unlimited authorization expiry. The client fails
 closed on dependency errors. It uses `X-Internal-Secret`, matching the frozen
 `serviceAuth` header.
-Connection and response-header waits are bounded; a stalled response body after
-headers is not bounded by the current client transport.
+User-service requests have a total response deadline covering connection,
+headers and body. Profile responses are limited to 64 KiB and eligible pools to
+1 MiB; timeout and oversized or invalid responses fail closed. The HTTP executor
+has a bounded task queue.
 
 The assignment and report tables belong to inspection-service. Report binding
 uses a same-database foreign key to the assignment; cross-service identifiers
@@ -70,6 +72,14 @@ requires an explicit owner migration decision; do not run Flyway repair or clean
 automatically.
 
 ## Level 1.5 assignment lifecycle
+
+The contract-facing `inspection.level1_5_assigned` event uses exchange
+`agricontract.inspection` and that event type as routing key. Current main does
+not declare a durable contract-service queue bound to this key. Contract-service
+owns its consumer, queue and binding and needs separate implementation; until a
+matching production binding exists, mandatory outbox publication is returned as
+unroutable, the row remains pending, and later outbox rows are held back. A test
+queue does not establish production delivery.
 
 Consume `inspection.level1_5_requested` with shared `EventEnvelopeCodec` and
 `ProcessedEventStore`. The processed-event claim and assignment changes share a

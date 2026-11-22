@@ -6,4 +6,5 @@ import com.agricontract.inspection.domain.model.InspectorEligibility;
 public interface InspectorEligibilityPort {
     InspectorEligibility load(String authenticatedUserId);
     List<String> loadEligibleInspectors();
+    String loadInspectorEmail(String userId);
 }

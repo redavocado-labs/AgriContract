@@ -113,6 +113,7 @@ class AssignmentLifecycleIntegrationTest {
         jdbc.update("DELETE FROM level1_5_assignment_lock");
         when(clock.instant()).thenReturn(NOW);
         when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a,b,c));
+        when(inspectors.loadInspectorEmail(any())).thenReturn("inspector@example.com");
     }
     EventEnvelope event() {
         var payload = new LinkedHashMap<String,Object>();

@@ -39,6 +39,7 @@ inspection:
     interval-ms: 300000
     timeout-ms: 3000
   assignment:
+    free-cancel-hours: ${INSPECTION_FREE_CANCEL_HOURS:4}
     waiting-retry-interval-ms: ${INSPECTION_WAITING_RETRY_INTERVAL_MS:3600000}
     scan-interval-ms: ${INSPECTION_ASSIGNMENT_SCAN_INTERVAL_MS:60000}
     scheduler-enabled: true
