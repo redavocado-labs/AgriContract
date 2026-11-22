@@ -10,7 +10,6 @@ import com.agricontract.contract.domain.model.consent.SignerRole;
 import com.agricontract.contract.domain.model.terms.CanonicalTerms;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -31,7 +30,7 @@ public final class SellerWeighConsent {
     public static String contentHash(String milestoneId, BigDecimal weight, String evidenceFileId,
                                       String certificateFileId) {
         return CanonicalTerms.sha256(String.join("|", ConsentActionType.DECLARE_SELLER_WEIGHT.name(),
-                lower(milestoneId), kg(SellerWeight.requireValid(weight)), lower(evidenceFileId),
+                lower(milestoneId), SellerWeight.kg(weight), lower(evidenceFileId),
                 lower(certificateFileId)));
     }
 
@@ -54,11 +53,6 @@ public final class SellerWeighConsent {
                 milestone.milestoneId(), sellerId, SignerRole.SELLER, statement.statementCode(),
                 statement.statementVersion(), statement.statementHash(), presentedContentHash, consentedAt,
                 correlationId);
-    }
-
-    /** D84: kilograms with exactly three decimals. */
-    static String kg(BigDecimal weight) {
-        return weight.setScale(3, RoundingMode.UNNECESSARY).toPlainString();
     }
 
     private static String lower(String id) {

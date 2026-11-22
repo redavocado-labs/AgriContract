@@ -92,6 +92,8 @@ public class MilestoneDeliveryController {
             @RequestBody String body,
             Authentication auth) {
         requireRole(auth, Set.of("ROLE_SELLER"), "Only the SELLER can declare the weight.");
+        // API order: party (403), milestone (404), then the body (400).
+        weigh.requireSellerOfMilestone(contractId.toString(), milestoneId.toString(), auth.getName());
         SellerWeighedRequest request = read(body);
         weigh.execute(new MilestoneEvidenceCommands.Weigh(contractId.toString(), milestoneId.toString(),
                 auth.getName(), idempotencyKey, request.sellerDeclaredWeight(),

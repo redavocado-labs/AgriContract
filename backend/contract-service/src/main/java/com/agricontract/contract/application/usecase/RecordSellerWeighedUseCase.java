@@ -81,6 +81,8 @@ public class RecordSellerWeighedUseCase {
         Milestone milestone = milestones.findByIdForUpdate(command.milestoneId())
                 .filter(m -> m.contractId().equals(command.contractId()))
                 .orElseThrow(() -> new MilestoneNotFoundException(command.contractId(), command.milestoneId()));
+        // 400 before the key: an invalid request never succeeded, so it has nothing to replay.
+        SellerWeight.requireValid(command.sellerDeclaredWeight());
         IdempotencyStore.Outcome outcome = idempotencyStore.claim(command.actorId(), OPERATION,
                 command.idempotencyKey(), requestHash(command));
         if (outcome == IdempotencyStore.Outcome.CONFLICT) {
@@ -90,8 +92,7 @@ public class RecordSellerWeighedUseCase {
             return List.of();
         }
 
-        // 400: the request itself.
-        SellerWeight.requireValid(command.sellerDeclaredWeight());
+        // 400: the files.
         List<String> fileIds = new ArrayList<>();
         fileIds.add(command.sellerEvidenceFileId());
         if (command.deliveryCertificateFileId() != null) {
@@ -132,10 +133,29 @@ public class RecordSellerWeighedUseCase {
         return fileIds;
     }
 
+    /**
+     * The 403 and 404 of weigh, checked before the body is read (API order: party, milestone, request, state). The
+     * transaction checks them again under the locks.
+     */
+    public void requireSellerOfMilestone(String contractId, String milestoneId, String actorId) {
+        transactions.inTransaction(() -> {
+            Contract contract = contracts.findById(new ContractId(contractId))
+                    .orElseThrow(() -> new ContractNotFoundException(contractId));
+            if (contract.roleOf(actorId).filter(role -> role == SignerRole.SELLER).isEmpty()) {
+                throw new UnauthorizedContractAccessException(
+                        "Only the seller of this contract can declare the weight.");
+            }
+            milestones.findById(milestoneId)
+                    .filter(m -> m.contractId().equals(contractId))
+                    .orElseThrow(() -> new MilestoneNotFoundException(contractId, milestoneId));
+        });
+    }
+
+    /** The weight in its canonical three-decimal form, so 9500 and 9500.000 are the same request. */
     private static String requestHash(MilestoneEvidenceCommands.Weigh command) {
         return CanonicalTerms.sha256(String.join("\n", command.contractId(), command.milestoneId(),
-                command.sellerDeclaredWeight() == null ? "" : command.sellerDeclaredWeight().toPlainString(),
-                command.sellerEvidenceFileId(), String.valueOf(command.deliveryCertificateFileId()),
-                command.statementVersion(), command.presentedContentHash()));
+                SellerWeight.kg(command.sellerDeclaredWeight()), command.sellerEvidenceFileId(),
+                String.valueOf(command.deliveryCertificateFileId()), command.statementVersion(),
+                command.presentedContentHash()));
     }
 }
