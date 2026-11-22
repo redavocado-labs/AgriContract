@@ -4,6 +4,7 @@ import com.agricontract.contract.application.port.ContractEventPublisher;
 import com.agricontract.contract.domain.model.Contract;
 import com.agricontract.contract.domain.model.activation.ActivationRecovery;
 import com.agricontract.contract.domain.model.consent.SignerRole;
+import com.agricontract.contract.domain.model.milestone.BuyerReceipt;
 import com.agricontract.contract.domain.model.milestone.FundingStatus;
 import com.agricontract.contract.domain.model.milestone.Milestone;
 import com.agricontract.contract.domain.model.milestone.MilestoneStatus;
@@ -56,6 +57,7 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
     static final String WITHDRAW_OFFER = "WITHDRAW_OFFER";
     static final String MILESTONE_FUNDING_REQUESTED = "milestone.funding_requested";
     static final String MILESTONE_SELLER_WEIGHED = "milestone.seller_weighed";
+    static final String MILESTONE_BUYER_RECEIVED = "milestone.buyer_received";
 
     private static final Pattern UUID_TEXT =
             Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -409,6 +411,35 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
         }
 
         outbox.append(new EventEnvelope(UUID.randomUUID(), MILESTONE_SELLER_WEIGHED, 1, declaration.declaredAt(),
+                PRODUCER, milestoneId, contractId, null, null, payload));
+    }
+
+    /**
+     * golden-flow-events.yaml milestoneBuyerReceived, on agricontract.contracts. Same shape rules as seller_weighed:
+     * the weight is a JSON number with no trailing zeros, deliveryCertificateFileId is left out when none was attached.
+     */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void milestoneBuyerReceived(Contract contract, Milestone milestone) {
+        BuyerReceipt receipt = milestone.buyerReceipt();
+        if (milestone.status() != MilestoneStatus.BUYER_RECEIVED || receipt == null
+                || !milestone.contractId().equals(contract.getContractId().value())) {
+            throw new IllegalStateException("milestone.buyer_received for milestone " + milestone.milestoneId()
+                    + " in status " + milestone.status());
+        }
+        String contractId = uuid(contract.getContractId().value(), "contractId");
+        String milestoneId = uuid(milestone.milestoneId(), "milestoneId");
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("contractId", contractId);
+        payload.put("milestoneId", milestoneId);
+        payload.put("buyerReceivedWeight", new BigDecimal(SellerWeight.plain(receipt.receivedWeight())));
+        payload.put("buyerEvidenceFileId", uuid(receipt.evidenceFileId(), "buyerEvidenceFileId"));
+        if (receipt.certificateFileId() != null) {
+            payload.put("deliveryCertificateFileId", uuid(receipt.certificateFileId(), "deliveryCertificateFileId"));
+        }
+        payload.put("receivedAt", receipt.receivedAt().toString());
+
+        outbox.append(new EventEnvelope(UUID.randomUUID(), MILESTONE_BUYER_RECEIVED, 1, receipt.receivedAt(),
                 PRODUCER, milestoneId, contractId, null, null, payload));
     }
 }

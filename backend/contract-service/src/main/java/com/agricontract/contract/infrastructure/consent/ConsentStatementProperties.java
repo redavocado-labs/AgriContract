@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * Which version of each checkbox statement is in force. The text lives in
  * classpath:consent-statement/{code}-{version}.txt; the hash is computed from that file at startup.
- * milestoneActionVersions: the operational-tier milestone statements (D74), by action, e.g. DECLARE_SELLER_WEIGHT.
+ * milestoneActionVersions: the operational-tier milestone statements (D74), by action, e.g. DECLARE_SELLER_WEIGHT, RECORD_BUYER_RECEIPT.
  */
 @ConfigurationProperties(prefix = "contract.consent")
 public record ConsentStatementProperties(String signContractVersion, String cancelActivationVersion,

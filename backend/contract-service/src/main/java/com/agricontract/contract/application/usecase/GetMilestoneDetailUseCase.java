@@ -5,6 +5,8 @@ import com.agricontract.contract.application.dto.MilestoneDetailView;
 import com.agricontract.contract.application.port.MilestoneDeliverySettings;
 import com.agricontract.contract.application.port.TransactionRunner;
 import com.agricontract.contract.application.service.MilestoneReadAccess;
+import com.agricontract.contract.domain.model.Contract;
+import com.agricontract.contract.domain.model.milestone.BuyerReceipt;
 import com.agricontract.contract.domain.model.milestone.Milestone;
 import com.agricontract.contract.domain.model.milestone.SellerWeighDeclaration;
 import com.agricontract.contract.domain.model.milestone.SellerWeighing;
@@ -41,7 +43,8 @@ public class GetMilestoneDetailUseCase {
             VndAmount price = milestone.effectiveUnitPrice() != null ? milestone.effectiveUnitPrice()
                     : readable.contract().getCoffeeTerms().snapshot().negotiated().agreedPrice();
             return new MilestoneDetailView(contractId, milestone, price, effectiveDeliveryDeadline(milestone),
-                    sellerDeclaration(milestone), evidence.findByMilestoneId(milestoneId));
+                    sellerDeclaration(milestone), buyerReceipt(milestone, readable.contract()),
+                    evidence.findByMilestoneId(milestoneId));
         });
     }
 
@@ -54,6 +57,15 @@ public class GetMilestoneDetailUseCase {
         SellerWeighDeclaration inForce = history.get(history.size() - 1);
         return new MilestoneDetailView.SellerDeclaration(inForce,
                 weighing.firstDeclaredAt().plus(settings.weighCorrectionWindow()));
+    }
+
+    private MilestoneDetailView.BuyerReceiptBlock buyerReceipt(Milestone milestone, Contract contract) {
+        BuyerReceipt receipt = milestone.buyerReceipt();
+        if (receipt == null) {
+            return null;
+        }
+        int days = contract.getCoffeeTerms().snapshot().negotiated().buyerConfirmWindowDays();
+        return new MilestoneDetailView.BuyerReceiptBlock(receipt, calendar.deadline(receipt.receivedAt(), days));
     }
 
     /**

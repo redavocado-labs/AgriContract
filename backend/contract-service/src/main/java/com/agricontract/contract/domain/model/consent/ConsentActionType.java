@@ -6,5 +6,7 @@ public enum ConsentActionType {
     /** D42: a party asks to stop a SIGNED contract whose deposit lock failed. Same high-risk tier as signing. */
     CANCEL_ACTIVATION,
     /** D74: the seller declares (or corrects, D75) the loaded weight of a milestone. Operational tier, no OTP. */
-    DECLARE_SELLER_WEIGHT
+    DECLARE_SELLER_WEIGHT,
+    /** D76: the buyer records the unloaded weight of a SELLER_WEIGHED milestone. Operational tier, no OTP. */
+    RECORD_BUYER_RECEIPT
 }

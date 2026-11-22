@@ -5,8 +5,10 @@ import com.agricontract.contract.application.exception.UnauthorizedContractActio
 import com.agricontract.contract.application.port.EvidenceFileStore;
 import com.agricontract.contract.application.usecase.GetMilestoneDetailUseCase;
 import com.agricontract.contract.application.usecase.ReadMilestoneEvidenceUseCase;
+import com.agricontract.contract.application.usecase.RecordBuyerReceiptUseCase;
 import com.agricontract.contract.application.usecase.RecordSellerWeighedUseCase;
 import com.agricontract.contract.application.usecase.UploadMilestoneEvidenceUseCase;
+import com.agricontract.contract.infrastructure.web.dto.BuyerReceivedRequest;
 import com.agricontract.contract.infrastructure.web.dto.MilestoneDetailResponse;
 import com.agricontract.contract.infrastructure.web.dto.MilestoneEvidenceAccepted;
 import com.agricontract.contract.infrastructure.web.dto.SellerWeighedRequest;
@@ -38,8 +40,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Milestone delivery actions of the parties (milestone-escrow design §3.2.1): evidence upload (D71) and the seller's
- * weigh (D72-D75); and the BF-04 reads (D84): the milestone detail and the evidence bytes. The gateway's role is checked here coarsely; the use cases check the party on the contract.
+ * Milestone delivery actions of the parties (milestone-escrow design §3.2.1): evidence upload (D71), the seller's
+ * weigh (D72-D75) and the buyer's receipt (D76); and the BF-04 reads (D84): the milestone detail and the evidence bytes. The gateway's role is checked here coarsely; the use cases check the party on the contract.
  */
 @RestController
 @RequestMapping("/api/v1/contracts/{contractId}/milestones/{milestoneId}")
@@ -47,18 +49,24 @@ public class MilestoneDeliveryController {
 
     private final UploadMilestoneEvidenceUseCase upload;
     private final RecordSellerWeighedUseCase weigh;
+    private final RecordBuyerReceiptUseCase receive;
     private final GetMilestoneDetailUseCase detail;
     private final ReadMilestoneEvidenceUseCase readEvidence;
     private final ObjectReader weighReader;
+    private final ObjectReader receiveReader;
 
     public MilestoneDeliveryController(UploadMilestoneEvidenceUseCase upload, RecordSellerWeighedUseCase weigh,
-                                       GetMilestoneDetailUseCase detail, ReadMilestoneEvidenceUseCase readEvidence,
+                                       RecordBuyerReceiptUseCase receive, GetMilestoneDetailUseCase detail, ReadMilestoneEvidenceUseCase readEvidence,
                                        ObjectMapper objectMapper) {
         this.upload = upload;
         this.weigh = weigh;
+        this.receive = receive;
         this.detail = detail;
         this.readEvidence = readEvidence;
         this.weighReader = objectMapper.readerFor(SellerWeighedRequest.class)
+                .with(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .with(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
+        this.receiveReader = objectMapper.readerFor(BuyerReceivedRequest.class)
                 .with(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .with(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
     }
@@ -94,10 +102,31 @@ public class MilestoneDeliveryController {
         requireRole(auth, Set.of("ROLE_SELLER"), "Only the SELLER can declare the weight.");
         // API order: party (403), milestone (404), then the body (400).
         weigh.requireSellerOfMilestone(contractId.toString(), milestoneId.toString(), auth.getName());
-        SellerWeighedRequest request = read(body);
+        SellerWeighedRequest request = read(weighReader, body, SellerWeighedRequest.class);
         weigh.execute(new MilestoneEvidenceCommands.Weigh(contractId.toString(), milestoneId.toString(),
                 auth.getName(), idempotencyKey, request.sellerDeclaredWeight(),
                 request.sellerEvidenceFileId().toString(),
+                request.deliveryCertificateFileId() == null ? null : request.deliveryCertificateFileId().toString(),
+                request.consent().statementVersion(), request.consent().presentedContentHash()));
+        return ResponseEntity.noContent().build();
+    }
+
+    /** The buyer records the unloaded weight (D76 step 1); no correction. 204. */
+    @PostMapping(path = "/receive", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "BUYER: record the received weight of this milestone (closes the seller's correction window)")
+    public ResponseEntity<Void> receive(
+            @PathVariable UUID contractId,
+            @PathVariable UUID milestoneId,
+            @RequestHeader("Idempotency-Key") UUID idempotencyKey,
+            @RequestBody String body,
+            Authentication auth) {
+        requireRole(auth, Set.of("ROLE_BUYER"), "Only the BUYER can record the receipt.");
+        // API order: party (403), milestone (404), then the body (400).
+        receive.requireBuyerOfMilestone(contractId.toString(), milestoneId.toString(), auth.getName());
+        BuyerReceivedRequest request = read(receiveReader, body, BuyerReceivedRequest.class);
+        receive.execute(new MilestoneEvidenceCommands.Receive(contractId.toString(), milestoneId.toString(),
+                auth.getName(), idempotencyKey, request.buyerReceivedWeight(),
+                request.buyerEvidenceFileId().toString(),
                 request.deliveryCertificateFileId() == null ? null : request.deliveryCertificateFileId().toString(),
                 request.consent().statementVersion(), request.consent().presentedContentHash()));
         return ResponseEntity.noContent().build();
@@ -145,14 +174,14 @@ public class MilestoneDeliveryController {
         }
     }
 
-    private SellerWeighedRequest read(String body) {
+    private static <T> T read(ObjectReader reader, String body, Class<T> type) {
         try {
-            return weighReader.readValue(body);
+            return reader.readValue(body);
         } catch (JsonProcessingException unreadable) {
             if (unreadable.getCause() instanceof IllegalArgumentException invalid) {
                 throw invalid;
             }
-            throw new IllegalArgumentException("Body is not a valid SellerWeighedRequest: "
+            throw new IllegalArgumentException("Body is not a valid " + type.getSimpleName() + ": "
                     + unreadable.getOriginalMessage(), unreadable);
         }
     }

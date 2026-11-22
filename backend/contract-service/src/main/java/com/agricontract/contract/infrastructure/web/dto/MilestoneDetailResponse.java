@@ -12,12 +12,11 @@ import java.util.List;
 
 /**
  * MilestoneDetailResponse (golden-flow-api.yaml, D84). Every key is always present; a block is null until its step
- * has happened. buyerReceipt, flag, settlement and breachCaseId are filled by the issues that produce them (#122
- * onward); until then they are null, which is also their true value before those steps.
+ * has happened. flag, settlement and breachCaseId are filled by the issues that produce them (#123 onward); until then they are null, which is also their true value before those steps.
  */
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public record MilestoneDetailResponse(String contractId, MilestoneResponse milestone,
-                                      SellerDeclarationView sellerDeclaration, Object buyerReceipt, Object flag,
+                                      SellerDeclarationView sellerDeclaration, BuyerReceiptView buyerReceipt, Object flag,
                                       List<EvidenceView> evidence, Object settlement, String breachCaseId) {
 
     public static MilestoneDetailResponse from(MilestoneDetailView view) {
@@ -34,8 +33,14 @@ public record MilestoneDetailResponse(String contractId, MilestoneResponse miles
                     d.deliveryCertificateFileId(), d.declaredAt().toString(),
                     view.sellerDeclaration().correctionWindowClosesAt().toString());
         }
+        BuyerReceiptView receipt = null;
+        if (view.buyerReceipt() != null) {
+            var r = view.buyerReceipt().receipt();
+            receipt = new BuyerReceiptView(kg(r.receivedWeight()), r.evidenceFileId(), r.certificateFileId(),
+                    r.receivedAt().toString(), view.buyerReceipt().confirmWindowClosesAt().toString());
+        }
         List<EvidenceView> evidence = view.evidence().stream().map(MilestoneDetailResponse::evidence).toList();
-        return new MilestoneDetailResponse(view.contractId(), summary, declaration, null, null, evidence, null, null);
+        return new MilestoneDetailResponse(view.contractId(), summary, declaration, receipt, null, evidence, null, null);
     }
 
     private static EvidenceView evidence(MilestoneEvidenceFile f) {
@@ -60,6 +65,12 @@ public record MilestoneDetailResponse(String contractId, MilestoneResponse miles
     public record SellerDeclarationView(int declarationNumber, BigDecimal sellerDeclaredWeight,
                                         String sellerEvidenceFileId, String deliveryCertificateFileId,
                                         String declaredAt, String correctionWindowClosesAt) {
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record BuyerReceiptView(BigDecimal buyerReceivedWeight, String buyerEvidenceFileId,
+                                   String deliveryCertificateFileId, String receivedAt,
+                                   String confirmWindowClosesAt) {
     }
 
     public record EvidenceView(String fileId, String uploadedByRole, String status, String uploadedAt) {

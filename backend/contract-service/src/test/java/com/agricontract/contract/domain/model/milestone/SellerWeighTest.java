@@ -76,7 +76,8 @@ class SellerWeighTest {
         Milestone m = Milestone.reconstitute(MILESTONE, "c-1", 1, new BigDecimal("10000"),
                 LocalDate.parse("2036-12-15"), 2, LocalDate.parse("2036-12-04"), MilestoneStatus.BUYER_RECEIVED,
                 FundingStatus.LOCKED, VndAmount.parse("95000.00"), VndAmount.parse("950000000.00"), AT, AT, 0, null,
-                new SellerWeighing(new BigDecimal("9500"), PHOTO, null, AT, 1));
+                new SellerWeighing(new BigDecimal("9500"), PHOTO, null, AT, 1),
+                new BuyerReceipt(new BigDecimal("9400"), PHOTO, null, AT.plusSeconds(30)));
 
         assertConflict(() -> m.declareSellerWeight(new BigDecimal("9400"), PHOTO, null, AT.plusSeconds(60), WINDOW),
                 ContractConflictException.WEIGH_CORRECTION_CLOSED);

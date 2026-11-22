@@ -89,6 +89,7 @@ contract:
     # Operational tier (consent design §4): checkbox + authenticated session, no OTP.
     milestone-action-versions:
       DECLARE_SELLER_WEIGHT: "1.0"
+      RECORD_BUYER_RECEIPT: "1.0"
   milestone:
     # D75: the seller may correct the declared weight for this long after the first declaration (never extended),
     # while the buyer has not recorded receipt. Lower it on the demo (e.g. PT5M).

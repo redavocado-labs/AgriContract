@@ -80,4 +80,7 @@ public interface ContractEventPublisher {
      * declarationNumber. The highest number is the declaration in force.
      */
     void milestoneSellerWeighed(Contract contract, Milestone milestone, SellerWeighDeclaration declaration);
+
+    /** milestone.buyer_received (D76): the milestone is BUYER_RECEIVED and holds the receipt; starts the confirm window. */
+    void milestoneBuyerReceived(Contract contract, Milestone milestone);
 }

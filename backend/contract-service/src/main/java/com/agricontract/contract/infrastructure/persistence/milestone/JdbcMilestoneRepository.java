@@ -1,5 +1,6 @@
 package com.agricontract.contract.infrastructure.persistence.milestone;
 
+import com.agricontract.contract.domain.model.milestone.BuyerReceipt;
 import com.agricontract.contract.domain.model.milestone.FundingStatus;
 import com.agricontract.contract.domain.model.milestone.Milestone;
 import com.agricontract.contract.domain.model.milestone.MilestoneStatus;
@@ -24,7 +25,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
-/** milestone (V16). Inserted once per contract on activation; later changes update one row under its lock. */
+/** milestone (V16, V17 seller declaration, V18 buyer receipt). Inserted once per contract on activation; later changes update one row under its lock. */
 @Repository
 @RequiredArgsConstructor
 public class JdbcMilestoneRepository implements MilestoneRepository {
@@ -45,7 +46,8 @@ public class JdbcMilestoneRepository implements MilestoneRepository {
             instant(rs.getTimestamp("funding_locked_at")),
             rs.getInt("funding_delay_business_days"),
             rs.getString("last_funding_failure_reason"),
-            sellerWeighing(rs));
+            sellerWeighing(rs),
+            buyerReceipt(rs));
 
     private final JdbcTemplate jdbc;
     private final Clock clock;
@@ -72,17 +74,21 @@ public class JdbcMilestoneRepository implements MilestoneRepository {
     @Transactional(propagation = Propagation.MANDATORY)
     public void update(Milestone m) {
         SellerWeighing w = m.sellerWeighing();
+        BuyerReceipt r = m.buyerReceipt();
         int updated = jdbc.update("UPDATE milestone SET status = ?, funding_status = ?, effective_unit_price = ?,"
                         + " batch_amount = ?, funding_requested_at = ?, funding_locked_at = ?,"
                         + " funding_delay_business_days = ?, last_funding_failure_reason = ?,"
                         + " seller_declared_weight = ?, seller_evidence_file_id = ?,"
                         + " seller_delivery_certificate_file_id = ?, seller_first_declared_at = ?,"
-                        + " seller_declaration_count = ? WHERE milestone_id = ?",
+                        + " seller_declaration_count = ?, buyer_received_weight = ?, buyer_evidence_file_id = ?,"
+                        + " buyer_certificate_file_id = ?, buyer_received_at = ? WHERE milestone_id = ?",
                 m.status().name(), m.fundingStatus().name(), value(m.effectiveUnitPrice()), value(m.batchAmount()),
                 timestamp(m.fundingRequestedAt()), timestamp(m.fundingLockedAt()), m.fundingDelayBusinessDays(),
                 m.lastFundingFailureReason(), w == null ? null : w.declaredWeight(),
                 w == null ? null : w.evidenceFileId(), w == null ? null : w.deliveryCertificateFileId(),
                 w == null ? null : timestamp(w.firstDeclaredAt()), w == null ? 0 : w.declarationCount(),
+                r == null ? null : r.receivedWeight(), r == null ? null : r.evidenceFileId(),
+                r == null ? null : r.certificateFileId(), r == null ? null : timestamp(r.receivedAt()),
                 m.milestoneId());
         if (updated != 1) {
             throw new IllegalStateException("Milestone " + m.milestoneId() + " does not exist");
@@ -128,6 +134,15 @@ public class JdbcMilestoneRepository implements MilestoneRepository {
         return new SellerWeighing(rs.getBigDecimal("seller_declared_weight").stripTrailingZeros(),
                 rs.getString("seller_evidence_file_id"), rs.getString("seller_delivery_certificate_file_id"),
                 instant(rs.getTimestamp("seller_first_declared_at")), rs.getInt("seller_declaration_count"));
+    }
+
+    private static BuyerReceipt buyerReceipt(ResultSet rs) throws SQLException {
+        BigDecimal weight = rs.getBigDecimal("buyer_received_weight");
+        if (weight == null) {
+            return null;
+        }
+        return new BuyerReceipt(weight.stripTrailingZeros(), rs.getString("buyer_evidence_file_id"),
+                rs.getString("buyer_certificate_file_id"), instant(rs.getTimestamp("buyer_received_at")));
     }
 
     private static VndAmount money(BigDecimal value) {

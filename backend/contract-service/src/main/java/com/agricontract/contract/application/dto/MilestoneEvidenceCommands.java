@@ -25,6 +25,12 @@ public final class MilestoneEvidenceCommands {
                         String deliveryCertificateFileId, String statementVersion, String presentedContentHash) {
     }
 
+    /** recordBuyerReceipt (D76); deliveryCertificateFileId may be null. */
+    public record Receive(String contractId, String milestoneId, String actorId, UUID idempotencyKey,
+                          BigDecimal buyerReceivedWeight, String buyerEvidenceFileId,
+                          String deliveryCertificateFileId, String statementVersion, String presentedContentHash) {
+    }
+
     /** file.ready / file.failed; failureReason only for FAILED. */
     public record ScanResult(String eventId, String fileId, EvidenceScanStatus status, String failureReason) {
     }
