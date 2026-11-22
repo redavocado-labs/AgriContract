@@ -44,6 +44,25 @@ describe('DeleteFileUseCase', () => {
     ]);
     expect(files.rows.get(file.fileId)?.deletedAt).toBeInstanceOf(Date);
     expect(storage.objects.has(file.fileId)).toBe(false);
+    // Step 2 is marked done, so the lifecycle job never redoes it (#276).
+    expect(files.metaOf(file.fileId).blobDeletedAt).toBeInstanceOf(Date);
+  });
+
+  it('the blob went but its mark failed: 503; the repeat marks it', async () => {
+    const file = givenStoredFile(files, storage, pdf);
+    files.markBlobDeletedError = Object.assign(new Error('x'), {
+      code: 'ECONNRESET',
+    });
+
+    await expect(deleteFile.execute(file.fileId)).rejects.toBeInstanceOf(
+      FileMetadataUnavailableError,
+    );
+    expect(storage.objects.has(file.fileId)).toBe(false);
+    expect(files.metaOf(file.fileId).blobDeletedAt).toBeNull();
+
+    files.markBlobDeletedError = null;
+    await deleteFile.execute(file.fileId);
+    expect(files.metaOf(file.fileId).blobDeletedAt).toBeInstanceOf(Date);
   });
 
   it('legal hold: 409, nothing tombstoned, blob kept', async () => {
