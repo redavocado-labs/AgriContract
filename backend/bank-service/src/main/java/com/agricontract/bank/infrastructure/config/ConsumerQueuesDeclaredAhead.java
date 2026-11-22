@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Queues of escrow-service consumers not built yet, for the release and refund results bank-service now writes.
+ * Queues of escrow-service consumers not built yet, for the release, refund and seize results bank-service now writes.
  *
  * <p>The outbox poller publishes with mandatory=true and stops its whole batch on an event no queue receives (D23):
  * an unbound bank.release_completed would block every later result, the bank.lock_completed of other contracts
@@ -29,7 +29,8 @@ public class ConsumerQueuesDeclaredAhead {
 
     static final String ESCROW_DLX = "agricontract.contracts.dlx";
     static final List<String> RESULT_KEYS = List.of(
-            "bank.release_completed", "bank.release_failed", "bank.refund_completed", "bank.refund_failed");
+            "bank.release_completed", "bank.release_failed", "bank.refund_completed", "bank.refund_failed",
+            "bank.seize_completed", "bank.seize_failed");
 
     @Bean
     Declarables escrowResultQueues() {

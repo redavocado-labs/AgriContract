@@ -20,7 +20,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Reads bank.lock_requested exactly as golden-flow-events.yaml freezes it and hands a LedgerCommand to the use
+ * Reads bank.{lock,release,refund,seize}_requested exactly as golden-flow-events.yaml freezes it and hands a LedgerCommand to the use
  * case. Anything that does not match the schema is an InvalidEventPayloadException (DLQ, no retry). A payload that
  * matches the schema but breaks a ledger rule is not rejected here: the use case answers it with bank.lock_failed.
  */
@@ -60,6 +60,12 @@ public class LedgerCommandConsumer {
         processLedgerCommand.execute(toCommand(message.getBody(), LedgerOperation.REFUND));
     }
 
+    /** Remedy legs that take money: penalty, forfeiture, damages (#138). Always tied to a decision and a leg. */
+    @RabbitListener(queues = RabbitConfiguration.SEIZE_REQUEST_QUEUE)
+    public void onSeizeRequested(Message message) {
+        processLedgerCommand.execute(toCommand(message.getBody(), LedgerOperation.SEIZE));
+    }
+
     /** The command of one queue: its eventType and entryType must be that queue's operation. */
     LedgerCommand toCommand(byte[] body, LedgerOperation operation) {
         EventEnvelope envelope;
@@ -90,6 +96,13 @@ public class LedgerCommandConsumer {
             throw new InvalidEventPayloadException("entryType " + entryType + " is not allowed in " + operation.requested());
         }
 
+        String remedyDecisionId = nullableUuid(payload, "remedyDecisionId");
+        String remedyLegId = nullableUuid(payload, "remedyLegId");
+        if (operation == LedgerOperation.SEIZE && (remedyDecisionId == null || remedyLegId == null)) {
+            // Unlike release and refund, a seize leg is never without its decision (schema $defs/uuid, not nullable).
+            throw new InvalidEventPayloadException("remedyDecisionId and remedyLegId are required for seize");
+        }
+
         return new LedgerCommand(
                 envelope.eventId().toString(),
                 envelope.correlationId(),
@@ -98,8 +111,8 @@ public class LedgerCommandConsumer {
                 uuid(payload, "userId"),
                 entryType,
                 enumValue(FundType.class, payload, "fundType"),
-                nullableUuid(payload, "remedyDecisionId"),
-                nullableUuid(payload, "remedyLegId"),
+                remedyDecisionId,
+                remedyLegId,
                 money(payload, "amount"),
                 sourceEventId);
     }

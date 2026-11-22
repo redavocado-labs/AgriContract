@@ -107,6 +107,7 @@ class LedgerCommandFlowIntegrationTest {
                 .to(new TopicExchange(RabbitConfiguration.BANK_EXCHANGE)).with("bank.#"));
         admin.purgeQueue(RESULTS, false);
         admin.purgeQueue(RabbitConfiguration.LOCK_REQUEST_DLQ, false);
+        admin.purgeQueue(RabbitConfiguration.SEIZE_REQUEST_QUEUE + ".dlq", false);
     }
 
     @Test
@@ -189,6 +190,45 @@ class LedgerCommandFlowIntegrationTest {
 
         JsonNode result = receive(1).get(0);
         FrozenSchemas.assertEvent("bankRefundFailed", result);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM ledger_entry WHERE source_event_id = ?",
+                Integer.class, request.get("eventId"))).isZero();
+    }
+
+    /** #138: a penalty leg → one entry, bank.seize_completed; the same leg under a new eventId gets no answer. */
+    @Test
+    void seizeRequestWritesOneEntryAndAppliesTheLegOnce() throws Exception {
+        Map<String, Object> request =
+                LedgerCommandConsumerTest.seizeRequest("CONTRACTUAL_PENALTY", "MILESTONE_PAYMENT");
+        send(request);
+        send(request);
+
+        for (JsonNode result : receive(2)) {
+            FrozenSchemas.assertEvent("bankSeizeCompleted", result);
+            assertThat(result.get("eventType").asText()).isEqualTo("bank.seize_completed");
+        }
+
+        @SuppressWarnings("unchecked") Map<String, Object> payload = (Map<String, Object>) request.get("payload");
+        Map<String, Object> again = LedgerCommandConsumerTest.seizeRequest("CONTRACTUAL_PENALTY", "MILESTONE_PAYMENT");
+        @SuppressWarnings("unchecked") Map<String, Object> againPayload = (Map<String, Object>) again.get("payload");
+        againPayload.put("remedyLegId", payload.get("remedyLegId"));
+        send(again);
+
+        assertThat(rabbit.receive(RESULTS, 2_000)).isNull();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM ledger_entry WHERE remedy_leg_id = ?",
+                Integer.class, payload.get("remedyLegId"))).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM ledger_entry WHERE source_event_id = ?",
+                Integer.class, again.get("eventId"))).isZero();
+    }
+
+    /** A forfeiture of a milestone payment breaks the fund rule → bank.seize_failed, no entry, no DLQ. */
+    @Test
+    void seizeBreakingAFundRuleIsAnsweredWithSeizeFailed() throws Exception {
+        Map<String, Object> request =
+                LedgerCommandConsumerTest.seizeRequest("DEPOSIT_FORFEITURE", "MILESTONE_PAYMENT");
+        send(request);
+
+        JsonNode result = receive(1).get(0);
+        FrozenSchemas.assertEvent("bankSeizeFailed", result);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM ledger_entry WHERE source_event_id = ?",
                 Integer.class, request.get("eventId"))).isZero();
     }
