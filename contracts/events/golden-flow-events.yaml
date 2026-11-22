@@ -1026,6 +1026,27 @@ $defs:
         x-publisher: contract-service
         x-consumers: [file-service, audit-service]
         x-source: milestone-escrow-phase2-design.md sections 2.2, 3.2 and 7.1
+  milestoneBuyerReceived:
+    allOf:
+      - $ref: "./event-envelope.yaml"
+      - type: object
+        properties:
+          eventType: {const: milestone.buyer_received}
+          producer: {const: contract-service}
+          payload:
+            type: object
+            required: [contractId, milestoneId, buyerReceivedWeight, buyerEvidenceFileId, receivedAt]
+            additionalProperties: false
+            properties:
+              contractId: {$ref: "#/$defs/uuid"}
+              milestoneId: {$ref: "#/$defs/uuid"}
+              buyerReceivedWeight: {type: number, exclusiveMinimum: 0, maximum: 1000000, multipleOf: 0.001, description: Buyer-received unloaded weight in canonical kilograms (kg).}
+              buyerEvidenceFileId: {$ref: "#/$defs/uuid"}
+              deliveryCertificateFileId: {$ref: "#/$defs/uuid"}
+              receivedAt: {type: string, format: date-time, description: Start of the buyerConfirmWindowDays clock.}
+        x-publisher: contract-service
+        x-consumers: [file-service, audit-service]
+        x-source: milestone-escrow-phase2-design.md section 3.2.2 (D76)
   milestoneBuyerConfirmed:
     allOf:
       - $ref: "./event-envelope.yaml"
@@ -1035,17 +1056,16 @@ $defs:
           producer: {const: contract-service}
           payload:
             type: object
-            required: [contractId, milestoneId, buyerReceivedWeight, buyerEvidenceFileId]
+            required: [contractId, milestoneId, confirmedBy]
             additionalProperties: false
             properties:
               contractId: {$ref: "#/$defs/uuid"}
               milestoneId: {$ref: "#/$defs/uuid"}
-              buyerReceivedWeight: {type: number, exclusiveMinimum: 0, description: Buyer-received unloaded weight in canonical kilograms (kg).}
-              buyerEvidenceFileId: {$ref: "#/$defs/uuid"}
-              deliveryCertificateFileId: {$ref: "#/$defs/uuid"}
+              confirmedBy: {enum: [BUYER, SYSTEM_TIMEOUT], description: "SYSTEM_TIMEOUT when buyerConfirmWindowDays passed with no flag and no pending inspection (D76)."}
         x-publisher: contract-service
         x-consumers: [audit-service]
-        x-source: milestone-escrow-phase2-design.md sections 2.2, 3.2 and 7.1
+        x-source: milestone-escrow-phase2-design.md sections 3.2.2 and 7.1
+        x-note: The weight and evidence are carried by milestone.buyer_received (D76).
   milestoneFlagged:
     allOf:
       - $ref: "./event-envelope.yaml"
@@ -1055,16 +1075,17 @@ $defs:
           producer: {const: contract-service}
           payload:
             type: object
-            required: [contractId, milestoneId, flaggedBy]
+            required: [contractId, milestoneId, flaggedBy, issueType]
             additionalProperties: false
             properties:
               contractId: {$ref: "#/$defs/uuid"}
               milestoneId: {$ref: "#/$defs/uuid"}
               flaggedBy: {const: BUYER}
+              issueType: {enum: [QUANTITY, QUALITY], description: D82.}
         x-publisher: contract-service
         x-consumers: []
         x-source: milestone-escrow-phase2-design.md sections 3.2 and 7.1
-        x-note: No mandatory domain consumer. Notification is requested through notification.milestone_status_requested; the actual evidence is already carried by milestone.buyer_confirmed.
+        x-note: No mandatory domain consumer. Notification is requested through notification.milestone_status_requested; the actual evidence is already carried by milestone.buyer_received.
   milestoneForceMajeureClaimed:
     allOf:
       - $ref: "./event-envelope.yaml"
@@ -1574,6 +1595,7 @@ oneOf:
   - $ref: "#/$defs/inspectionLevel15Assigned"
   - $ref: "#/$defs/inspectionLevel15Cancelled"
   - $ref: "#/$defs/milestoneSellerWeighed"
+  - $ref: "#/$defs/milestoneBuyerReceived"
   - $ref: "#/$defs/milestoneBuyerConfirmed"
   - $ref: "#/$defs/milestoneFlagged"
   - $ref: "#/$defs/milestoneForceMajeureClaimed"
