@@ -710,6 +710,12 @@ services:
       S3_SECRET_KEY: ${S3_SECRET_KEY:-agricontract-dev-secret}
       S3_BUCKET: ${S3_BUCKET:-agricontract-files}
       SERVICE_INTERNAL_SECRET: ${SERVICE_INTERNAL_SECRET:?SERVICE_INTERNAL_SECRET must be set in .env}
+      # Outbox (file.uploaded.direct, file.ready, file.failed on agricontract.files) and the scan queue (#131).
+      RABBITMQ_HOST: rabbitmq
+      # The virus scan. clamav is in the "scan" profile: without it every upload stays PROCESSING and its
+      # scan job ends in file-service.virus-scan.dlq after 3 attempts (replay it once clamav runs).
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: 3310
     # Local only, for manual tests; the gateway never routes file-service.
     ports:
       - "8089:8089"
@@ -717,6 +723,8 @@ services:
       file-db:
         condition: service_healthy
       object-storage:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
       file-migrate:
         condition: service_completed_successfully

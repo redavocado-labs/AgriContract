@@ -1,4 +1,10 @@
 FROM node:22-alpine AS builder
+WORKDIR /app/shared/node-eventing
+COPY shared/node-eventing/package.json shared/node-eventing/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY shared/node-eventing/ ./
+RUN npm run build
+
 WORKDIR /app/file-service
 COPY file-service/package.json file-service/package-lock.json ./
 RUN npm ci --no-audit --no-fund
@@ -7,7 +13,11 @@ RUN npm run build && npm prune --omit=dev --no-audit --no-fund
 
 FROM node:22-alpine AS runtime
 ENV NODE_ENV=production
+# Same layout as the builder: node_modules/@agricontract/eventing is a relative
+# symlink to ../shared/node-eventing, which has no runtime dependencies of its own.
 WORKDIR /app/file-service
+COPY --from=builder /app/shared/node-eventing/package.json /app/shared/node-eventing/package.json
+COPY --from=builder /app/shared/node-eventing/dist /app/shared/node-eventing/dist
 COPY --from=builder /app/file-service/package.json ./package.json
 COPY --from=builder /app/file-service/node_modules ./node_modules
 COPY --from=builder /app/file-service/dist ./dist

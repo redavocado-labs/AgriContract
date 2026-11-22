@@ -56,7 +56,12 @@ jobs:
             analytics:
               - 'backend/shared/node-eventing/**'
               - 'backend/analytics-service/**'
-            file: 'backend/file-service/**'
+            file:
+              - 'backend/shared/node-eventing/**'
+              - 'backend/file-service/**'
+              # Read by test/contract/file-events.contract.spec.ts
+              - 'contracts/events/golden-flow-events.yaml'
+              - 'contracts/events/event-envelope.yaml'
             frontend: 'frontend/**'
             contracts:
               - 'contracts/**'
@@ -342,6 +347,28 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
+      # For the scan pipeline's test:int (#131): the compose rabbitmq image, default guest/guest.
+      rabbitmq:
+        image: rabbitmq:3.13-management-alpine
+        ports:
+          - 5672:5672
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+      # The compose clamav (scan profile) on the same host port. The image ships its signatures, so
+      # clamd starts even if freshclam cannot update them; the first start takes about a minute.
+      clamav:
+        image: clamav/clamav:1.4
+        ports:
+          - 3410:3310
+        options: >-
+          --health-cmd "clamdcheck.sh"
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 20
+          --health-start-period 60s
 
     steps:
       - uses: actions/checkout@v4
@@ -351,7 +378,16 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: backend/file-service/package-lock.json
+          cache-dependency-path: |
+            backend/shared/node-eventing/package-lock.json
+            backend/file-service/package-lock.json
+
+      # file-service imports it (file: dependency), and nest build reads its dist.
+      - name: Build node-eventing
+        working-directory: backend/shared/node-eventing
+        run: |
+          npm ci
+          npm run build
 
       - name: Lint, test and build file-service
         working-directory: backend/file-service
@@ -388,7 +424,7 @@ jobs:
           docker logs object-storage
           exit 1
 
-      # The store core on real object storage and MySQL.
+      # The store core, the routes and the scan pipeline on real object storage, MySQL, RabbitMQ and clamd.
       - name: Integration tests (test:int)
         working-directory: backend/file-service
         env:
