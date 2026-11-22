@@ -6,7 +6,7 @@ import {
   needsFreshLogin,
   readIntent,
 } from "../src/shared/auth/step-up"
-import { parseApiError, unwrapApiResponse } from "../src/shared/api/errors"
+import { parseApiError } from "../src/shared/api/errors"
 
 describe("identity and freshness", () => {
   it("takes identity from JWT, filters roles, never fabricates auth_time", () => {
@@ -88,39 +88,39 @@ function httpError(status: number, data: unknown) {
     config,
   })
 }
+const envelope = (status: number, code: string, message: string) => ({
+  timestamp: "2026-11-22T03:00:00Z",
+  status,
+  error: "Conflict",
+  code,
+  message,
+  path: "/api/v1/contracts/c/sign/initiate",
+  traceId: "trace-1",
+})
 describe("API formats", () => {
-  it("unwraps legacy success and preserves direct objects and 204", () => {
-    expect(unwrapApiResponse({ success: true, data: { userId: "1" } })).toEqual(
-      { userId: "1" }
-    )
-    expect(unwrapApiResponse({ contractId: "1", terms: {} })).toEqual({
-      contractId: "1",
-      terms: {},
-    })
-    expect(unwrapApiResponse(undefined)).toBeUndefined()
-    expect(() =>
-      unwrapApiResponse({ success: false, error: "FAILED: lỗi" })
-    ).toThrow()
-  })
-  it("splits only the first error-code colon", () => {
+  it("reads the ErrorEnvelope code, message and traceId", () => {
     expect(
       parseApiError(
-        httpError(403, {
-          success: false,
-          error: "STEP_UP_REQUIRED: Xác thực: đã hết hạn",
-        })
+        httpError(403, envelope(403, "STEP_UP_REQUIRED", "Xác thực: hết hạn"))
       )
     ).toEqual({
       status: 403,
       code: "STEP_UP_REQUIRED",
-      message: "Xác thực: đã hết hạn",
+      message: "Xác thực: hết hạn",
+      traceId: "trace-1",
     })
   })
-  it("supports direct errors and network failures", () => {
+  it("does not read codes out of non-envelope bodies", () => {
     expect(
-      parseApiError(httpError(409, { code: "OTP_EXPIRED", message: "Hết hạn" }))
+      parseApiError(httpError(409, { success: false, error: "OTP_EXPIRED: x" }))
         .code
-    ).toBe("OTP_EXPIRED")
-    expect(parseApiError(new Error("network")).status).toBe(0)
+    ).toBe("HTTP_409")
+    expect(parseApiError(httpError(502, "<html>Bad gateway</html>")).code).toBe(
+      "HTTP_502"
+    )
+    expect(parseApiError(new Error("network"))).toMatchObject({
+      status: 0,
+      code: "NETWORK_ERROR",
+    })
   })
 })

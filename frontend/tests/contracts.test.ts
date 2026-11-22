@@ -18,6 +18,7 @@ import {
   patchTerms,
   termsInput,
   inputKeys,
+  withdrawOffer,
 } from "../src/features/contracts/api/contracts"
 import {
   initiateSigning,
@@ -25,15 +26,15 @@ import {
   verifySigning,
 } from "../src/features/contracts/api/signing"
 import {
+  capabilities,
   getSigningConsent,
-  createCoffeeContract,
-  getContractDocuments,
 } from "../src/features/contracts/api/capabilities"
 import { SigningSession } from "../src/features/contracts/hooks/signing-session"
 import {
   activationMessage,
   canDownloadDocument,
   canNegotiate,
+  canWithdraw,
   contractError,
   decimalMoney,
   documentMessage,
@@ -77,10 +78,10 @@ const challenge = {
   otpId: "20000000-0000-4000-8000-000000000002",
   expiresAt: "2099-01-01T00:00:00Z",
 }
-const envelope = (data: unknown) => ({ success: true, data })
 const page = (content: unknown[]) => ({
   content,
   page: 0,
+  size: 20,
   totalPages: content.length ? 1 : 0,
   totalElements: content.length,
 })
@@ -91,7 +92,15 @@ function failure(status: number, code = "TEST_ERROR") {
     statusText: "",
     config,
     headers: {},
-    data: { success: false, error: `${code}: test message` },
+    data: {
+      timestamp: "2026-11-22T03:00:00Z",
+      status,
+      error: "Error",
+      code,
+      message: "test message",
+      path: "/api/v1/contracts",
+      traceId: "trace",
+    },
   })
 }
 beforeEach(() => {
@@ -100,8 +109,8 @@ beforeEach(() => {
 })
 
 describe("contract read adapters (mock HTTP)", () => {
-  it("maps legacy envelope and Phase 2 direct object without inventing fields", () => {
-    const old = mapContract(envelope(legacy), "buyer-test")
+  it("maps the raw legacy body and the coffee ContractResponse without inventing fields", () => {
+    const old = mapContract(legacy, "buyer-test")
     const current = mapContract(coffee, "buyer-test")
     expect(old.generation).toBe("legacy")
     expect(old.hash).toBeNull()
@@ -109,7 +118,49 @@ describe("contract read adapters (mock HTTP)", () => {
     expect(current.hash).toBe(hash)
     expect(current.terms.totalContractValue).toBe("9999999999999999.99")
     expect(current.sellerName).toBeUndefined()
-    expect(current.editability).toBe("unknown")
+    expect(current.milestones).toEqual([])
+  })
+  it("rejects the retired success/data wrapper instead of unwrapping it", () => {
+    expect(() =>
+      mapContract({ success: true, data: coffee }, "buyer-test")
+    ).toThrow()
+  })
+  it("parses MilestoneResponse and activationRecovery", () => {
+    const milestone = {
+      milestoneId: "30000000-0000-4000-8000-000000000003",
+      milestoneIndex: 1,
+      status: "IN_PROGRESS",
+      fundingStatus: "LOCKED",
+      fundingScheduledDate: "2026-12-04",
+      committedQuantity: 1000,
+      batchAmount: "95000000.00",
+      effectiveUnitPrice: "95000.00",
+      acceptedPriceAdjustment: null,
+      expectedDeliveryDate: "2026-12-15",
+      graceDays: 2,
+      fundingDelayBusinessDays: 0,
+      effectiveDeliveryDeadline: "2026-12-17",
+    }
+    const mapped = mapContract(
+      {
+        ...coffee,
+        milestones: [milestone],
+        activationRecovery: {
+          depositLockFailedAt: "2026-11-20T03:00:00Z",
+          oneSidedCancelAllowedFrom: "2026-11-27T03:00:00Z",
+          cancelRequestedBy: ["BUYER"],
+        },
+      },
+      "buyer-test"
+    )
+    expect(mapped.milestones[0].status).toBe("IN_PROGRESS")
+    expect(mapped.activationRecovery?.cancelRequestedBy).toEqual(["BUYER"])
+    expect(() =>
+      mapContract(
+        { ...coffee, milestones: [{ ...milestone, status: "DELIVERED" }] },
+        "buyer-test"
+      )
+    ).toThrow()
   })
   it("recognizes a null hash as Phase 2 without granting signing or editing", () => {
     expect(
@@ -119,7 +170,7 @@ describe("contract read adapters (mock HTTP)", () => {
     expect(validConsent(consent, id, null, "BUYER")).toBe(false)
   })
   it("lists only actor-owned data for selected role with server pagination", async () => {
-    http.get.mockResolvedValueOnce({ data: envelope(page([legacy])) })
+    http.get.mockResolvedValueOnce({ data: page([legacy]) })
     const result = await listContracts("buyer-test", "BUYER", "SIGNED", 2)
     expect(result.content).toHaveLength(1)
     expect(http.get.mock.calls[0][1].params).toEqual({
@@ -130,9 +181,7 @@ describe("contract read adapters (mock HTTP)", () => {
     })
   })
   it("handles an empty list without a manufactured contract", () => {
-    expect(
-      mapContractPage(envelope(page([])), "buyer-test", "BUYER").content
-    ).toEqual([])
+    expect(mapContractPage(page([]), "buyer-test", "BUYER").content).toEqual([])
   })
   it("rejects unrelated user and wrong role list instead of leaking rows", () => {
     expect(() => mapContract(coffee, "stranger")).toThrow()
@@ -171,6 +220,7 @@ describe("negotiation and capability boundaries", () => {
     const input = termsInput(
       {
         ...snapshot,
+        fundingLeadBusinessDays: 7,
         goodsTerms: {},
         totalContractValue: "999.00",
         reservedQuantity: 50,
@@ -202,9 +252,33 @@ describe("negotiation and capability boundaries", () => {
     ).rejects.toThrow()
     expect(http.patch).not.toHaveBeenCalled()
   })
-  it("blocks save even for VERIFIED when current API cannot expose freeze/staleness", () => {
-    expect(canNegotiate(mapContract(coffee, "buyer-test"), true)).toBe(false)
-    expect(canNegotiate(mapContract(coffee, "buyer-test"), false)).toBe(false)
+  it("unlocks negotiation and withdraw for a verified party before signature", () => {
+    const offered = mapContract(coffee, "buyer-test")
+    expect(canNegotiate(offered, true)).toBe(true)
+    expect(canNegotiate(offered, false)).toBe(false)
+    expect(canNegotiate(mapContract(legacy, "buyer-test"), true)).toBe(false)
+    expect(canNegotiate({ ...offered, status: "SIGNED" }, true)).toBe(false)
+    expect(canWithdraw(offered, true)).toBe(true)
+    expect(canWithdraw({ ...offered, status: "SIGNED" }, true)).toBe(false)
+  })
+  it("withdraws with an Idempotency-Key and accepts only 204", async () => {
+    http.post.mockResolvedValueOnce({ status: 204 })
+    await withdrawOffer(id, "key")
+    expect(http.post).toHaveBeenCalledWith(
+      `/api/v1/contracts/${id}/withdraw`,
+      undefined,
+      { headers: { "Idempotency-Key": "key" } }
+    )
+    http.post.mockResolvedValueOnce({ status: 200 })
+    await expect(withdrawOffer(id, "key")).rejects.toThrow()
+  })
+  it("maps ErrorEnvelope codes to Vietnamese and never shows the raw server message", () => {
+    expect(contractError(failure(409, "CONTRACT_TERMS_FROZEN"))).toContain(
+      "khóa"
+    )
+    expect(contractError(failure(409, "UNKNOWN_CODE"))).not.toContain(
+      "test message"
+    )
   })
   it("validates exact price text without parseFloat", () => {
     expect(
@@ -215,12 +289,19 @@ describe("negotiation and capability boundaries", () => {
         false
       )
   })
-  it("does not call absent consent/create/document endpoints", async () => {
-    expect(await getSigningConsent()).toBeNull()
-    await expect(createCoffeeContract()).rejects.toThrow()
-    await expect(getContractDocuments()).rejects.toThrow()
-    expect(http.get).not.toHaveBeenCalled()
-    expect(http.post).not.toHaveBeenCalled()
+  it("binds the word-for-word 1.0 statement to the contract hash and role", () => {
+    const bound = getSigningConsent({ id, hash }, "SELLER")
+    expect(bound).toMatchObject({
+      action: "SIGN_CONTRACT_AS_SELLER",
+      version: "1.0",
+      contractId: id,
+      contentHash: hash,
+    })
+    expect(bound?.text).toContain("với tư cách bên bán")
+    expect(validConsent(bound, id, hash, "SELLER")).toBe(true)
+    expect(getSigningConsent({ id, hash: null }, "BUYER")).toBeNull()
+    expect(getSigningConsent({ id, hash }, null)).toBeNull()
+    expect(capabilities.documents.enabled).toBe(false)
   })
 })
 
@@ -378,7 +459,7 @@ describe("lifecycle, permissions and precision", () => {
   it("SIGNED stays waiting; only ACTIVE reports activation", () => {
     expect(activationMessage("SIGNED")).toContain("chưa được kích hoạt")
     expect(activationMessage("ACTIVE")).toContain("Đã kích hoạt")
-    expect(activationMessage("OFFERED")).toContain("Chưa thể xác định")
+    expect(activationMessage("OFFERED")).toContain("chưa có hiệu lực")
   })
   it("PENDING PDF never has a download permission", () => {
     expect(canDownloadDocument("PENDING")).toBe(false)

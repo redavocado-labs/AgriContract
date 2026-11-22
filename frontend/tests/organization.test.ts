@@ -28,9 +28,19 @@ const data = {
 const values = {
   organizationName: "  Doanh nghiệp kiểm thử  ",
   role: "BUYER" as const,
+  email: " lien-he@example.test ",
   phone: "",
   address: "  Địa chỉ thử  ",
 }
+const envelope = (status: number, code: string) => ({
+  timestamp: "2026-11-22T03:00:00Z",
+  status,
+  error: "Error",
+  code,
+  message: "detail",
+  path: "/api/v1/users/me",
+  traceId: "trace",
+})
 function failure(status: number, body: unknown, url = "/api/v1/users/me") {
   const config = { url, method: "get", headers: new AxiosHeaders() }
   return new AxiosError("failed", "ERR_BAD_RESPONSE", config, undefined, {
@@ -45,25 +55,17 @@ beforeEach(() => vi.clearAllMocks())
 
 describe("organization profile API", () => {
   it("accepts only the current actor's exact missing-profile response", async () => {
-    const error = failure(404, {
-      success: false,
-      data: null,
-      error: `User not found: ${userId}`,
-    })
-    expect(isMissingProfile(error, userId)).toBe(true)
+    const error = failure(404, envelope(404, "USER_NOT_FOUND"))
+    expect(isMissingProfile(error)).toBe(true)
     http.get.mockRejectedValue(error)
     expect(await getOrganizationProfile(userId)).toBeNull()
   })
   it.each([
     failure(404, "Not Found"),
     failure(404, { success: false, error: "Not Found" }),
-    failure(404, { success: false, error: "User not found: another-user" }),
-    failure(
-      404,
-      { success: false, error: `User not found: ${userId}` },
-      "/wrong-endpoint"
-    ),
-    failure(403, { success: false, error: `User not found: ${userId}` }),
+    failure(404, envelope(404, "NOT_FOUND")),
+    failure(404, envelope(404, "USER_NOT_FOUND"), "/wrong-endpoint"),
+    failure(403, envelope(403, "USER_NOT_FOUND")),
   ])("does not mistake an unknown failure for onboarding", async (error) => {
     http.get.mockRejectedValue(error)
     await expect(getOrganizationProfile(userId)).rejects.toBe(error)
@@ -83,14 +85,41 @@ describe("organization profile API", () => {
     expect(http.get).toHaveBeenCalledWith("/api/v1/users/me", { signal })
   })
   it("sends only the actual DTO fields and accepts the server's status", async () => {
-    http.post.mockResolvedValue({ data })
+    http.post.mockResolvedValue({
+      data: {
+        ...data,
+        email: "lien-he@example.test",
+        emailVerified: false,
+        verificationEmailSent: true,
+        verificationCodeExpiresAt: "2026-11-22T03:10:00Z",
+      },
+    })
     const result = await registerOrganization(values, userId, ["BUYER"])
     expect(http.post).toHaveBeenCalledWith("/api/v1/users/register", {
       organizationName: "Doanh nghiệp kiểm thử",
+      email: "lien-he@example.test",
       phone: null,
       address: "Địa chỉ thử",
     })
-    expect(result.verificationStatus).toBe("PENDING")
+    expect(result.profile.verificationStatus).toBe("PENDING")
+    expect(result.profile.emailVerified).toBe(false)
+    expect(result.verificationEmailSent).toBe(true)
+  })
+  it("requires a well-formed contact email", () => {
+    expect(
+      organizationFormSchema.safeParse({ ...values, email: "" }).success
+    ).toBe(false)
+    expect(
+      organizationFormSchema.safeParse({ ...values, email: "khong-hop-le" })
+        .success
+    ).toBe(false)
+  })
+  it("maps user-service ErrorEnvelope codes to Vietnamese messages", () => {
+    expect(
+      organizationErrorMessage(
+        failure(409, envelope(409, "EMAIL_ALREADY_CLAIMED"))
+      )
+    ).toContain("đã được một tài khoản khác")
   })
   it("validates a nonblank organization name without inventing phone policy", () => {
     expect(
