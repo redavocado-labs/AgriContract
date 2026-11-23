@@ -4,11 +4,12 @@
  * from event_outbox, as the poller would publish them). Run with
  *   npm run test:int
  * after, in backend/:
- *   docker compose up -d --wait file-db object-storage greenmail
+ *   docker compose up -d --wait file-db object-storage greenmail clamav
  *   docker compose up file-migrate
- *   docker compose --profile scan up -d --wait clamav
- * INTAKE_IMAP_HOST / _PORT default to localhost:3143. Each run uses an IMAP
- * folder, an intake address and a bucket of its own.
+ * INTAKE_IMAP_HOST / _PORT default to localhost:3143, and the login to the
+ * compose GreenMail user unless INTAKE_IMAP_USERNAME / _PASSWORD are set
+ * (the app has no default for them; this test sets its own). Each run uses
+ * an IMAP folder, an intake address and a bucket of its own.
  */
 import { randomUUID } from 'node:crypto';
 import {
@@ -40,8 +41,13 @@ const run = randomUUID().slice(0, 8);
 const bucket = `file-intake-int-${run}`;
 const folder = `int-${run}`;
 const address = `intake-int-${run}@agricontract.local`;
+/** INTAKE_AUTHSERV_ID of this test: GreenMail writes no header, the test mails do. */
+const OUR_SERVER = 'mx.agricontract.local';
 
 describe('email intake on GreenMail, SeaweedFS, MySQL and clamd', () => {
+  // IMAP sessions and clamd take seconds each; three polls in a row pass Jest's 5 s default.
+  jest.setTimeout(60_000);
+
   let config: AppConfig;
   let intakeConfig: NonNullable<AppConfig['intake']>;
   let pool: Pool;
@@ -84,6 +90,9 @@ describe('email intake on GreenMail, SeaweedFS, MySQL and clamd', () => {
     config = validate({
       ...process.env,
       INTAKE_IMAP_HOST: process.env.INTAKE_IMAP_HOST ?? 'localhost',
+      INTAKE_IMAP_USERNAME: process.env.INTAKE_IMAP_USERNAME ?? 'intake',
+      INTAKE_IMAP_PASSWORD:
+        process.env.INTAKE_IMAP_PASSWORD ?? 'intake-dev-secret',
     });
     intakeConfig = { ...config.intake!, mailbox: folder, address };
     pool = createPool({
@@ -115,6 +124,7 @@ describe('email intake on GreenMail, SeaweedFS, MySQL and clamd', () => {
       new StoreFileUseCase(storage, fileRepo, quiet),
       new IntakeMysqlRepository(pool),
       quiet,
+      { authservId: OUR_SERVER },
     );
     scan = new ScanFileUseCase(
       storage,
@@ -163,7 +173,7 @@ describe('email intake on GreenMail, SeaweedFS, MySQL and clamd', () => {
 
   it('one poll: attachments stored and scanned, a notice published, a bad type recorded; all once', async () => {
     const auth = [
-      'mx.agricontract.local; spf=pass smtp.mailfrom=sgs.example.com; dkim=pass header.d=sgs.example.com',
+      `${OUR_SERVER}; spf=pass smtp.mailfrom=sgs.example.com; dkim=pass header.d=sgs.example.com; dmarc=pass`,
     ];
     const reportMail = buildMail({
       subject: 'Inspection report CASE-2026-0042',
@@ -241,7 +251,7 @@ describe('email intake on GreenMail, SeaweedFS, MySQL and clamd', () => {
       uploadedBy: 'file-service:email-intake',
       emailMeta: {
         senderDomain: 'sgs.example.com',
-        spfDkimResult: 'spf=pass; dkim=pass',
+        spfDkimResult: 'PASS',
         subject: 'Inspection report CASE-2026-0042',
       },
     });
@@ -279,5 +289,60 @@ describe('email intake on GreenMail, SeaweedFS, MySQL and clamd', () => {
     expect(await messages()).toHaveLength(4);
     expect(await files()).toHaveLength(2);
     expect(await outbox(ids)).toHaveLength(after.length);
+  });
+
+  it('a mail that fails every time is given up on its 3rd poll: flagged \\Seen, one failure row, and the mail behind it goes', async () => {
+    // Storage that refuses every PUT: a technical failure, the same each time.
+    const broken = new StoreFileUseCase(
+      {
+        put: () =>
+          Promise.reject(
+            Object.assign(new Error('refused'), { code: 'ECONNREFUSED' }),
+          ),
+        delete: () => Promise.resolve(),
+      } as unknown as S3ObjectStorage,
+      new FileMysqlRepository(pool),
+      quiet,
+    );
+    const failing = new EmailIntakeUseCase(
+      new ImapIntakeMailbox(intakeConfig),
+      readMail,
+      broken,
+      new IntakeMysqlRepository(pool),
+      quiet,
+      { authservId: OUR_SERVER },
+    );
+    const before = (await messages()).length;
+    const appended = await append(
+      buildMail({
+        subject: 'Report that cannot be stored',
+        attachments: [
+          { filename: 'r.pdf', contentType: 'application/pdf', bytes: PDF },
+        ],
+      }),
+    );
+    await append(buildMail({ subject: 'Case ID SGS-VN-9001' }));
+    const poison = appended ? appended.uid : undefined;
+    expect(poison).toBeDefined();
+    await imap.mailboxOpen(folder);
+    const unseen = async () =>
+      (await imap.search({ seen: false }, { uid: true })) || [];
+
+    await expect(failing.poll(50)).rejects.toThrow();
+    await expect(failing.poll(50)).rejects.toThrow();
+    expect(await unseen()).toHaveLength(2);
+
+    await expect(failing.poll(50)).resolves.toBe(2);
+
+    expect(await unseen()).toEqual([]);
+    const failures = await rows(
+      'SELECT failure_reason FROM email_intake_failure WHERE source_mailbox = ? AND failure_reason LIKE ?',
+      [address, '%could not be processed%'],
+    );
+    expect(failures.map((f) => f.failure_reason as string)).toEqual([
+      `mail uid ${poison}: could not be processed: ECONNREFUSED (3 attempts)`,
+    ]);
+    // Only the mail behind it is recorded as processed.
+    expect(await messages()).toHaveLength(before + 1);
   });
 });

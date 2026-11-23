@@ -3,8 +3,17 @@ import { PDF, buildMail } from '../../../test/support/mail';
 import { readMail } from './mime-reader';
 
 const MiB = 1024 * 1024;
-const read = (raw: Buffer, cap = 20 * MiB) =>
-  readMail(Readable.from([raw]), cap);
+const read = (raw: Buffer, cap = 20 * MiB, mailCap = 40 * MiB) =>
+  readMail(Readable.from([raw]), {
+    attachmentBytes: cap,
+    mailBytes: mailCap,
+  });
+
+const PDF_PART = {
+  filename: 'report.pdf',
+  contentType: 'application/pdf',
+  bytes: PDF,
+};
 
 describe('readMail (MIME, streaming)', () => {
   it('reads the headers, the text and each attachment in order', async () => {
@@ -77,6 +86,58 @@ describe('readMail (MIME, streaming)', () => {
     expect(mail.attachments[0]).toMatchObject({ bytes });
   });
 
+  it('the attachments of one mail are held up to the mail limit in all; past it the rest are only marked overMailLimit', async () => {
+    const part = (name: string) => ({
+      filename: name,
+      contentType: 'application/pdf',
+      bytes: Buffer.alloc(400, name.charCodeAt(0)),
+    });
+    const mail = await read(
+      buildMail({
+        attachments: [part('a.pdf'), part('b.pdf'), part('c.pdf'), PDF_PART],
+      }),
+      500, // each attachment fits its own cap
+      1000, // but not three of them together
+    );
+
+    expect(mail.attachments).toEqual([
+      part('a.pdf'),
+      part('b.pdf'),
+      {
+        filename: 'c.pdf',
+        contentType: 'application/pdf',
+        overMailLimit: true,
+      },
+      // A small one after it still fits in what is left.
+      PDF_PART,
+    ]);
+  });
+
+  it('an attachment over its own cap is tooLarge and takes nothing from the mail limit', async () => {
+    const mail = await read(
+      buildMail({
+        attachments: [
+          {
+            filename: 'big.pdf',
+            contentType: 'application/pdf',
+            bytes: Buffer.alloc(3000, 1),
+          },
+          {
+            filename: 'ok.pdf',
+            contentType: 'application/pdf',
+            bytes: Buffer.alloc(900, 2),
+          },
+        ],
+      }),
+      1000,
+      1000,
+    );
+
+    expect(mail.attachments[0]).toMatchObject({ tooLarge: true });
+    expect(mail.attachments[1]).toMatchObject({ filename: 'ok.pdf' });
+    expect('bytes' in mail.attachments[1]).toBe(true);
+  });
+
   it('an image embedded in the HTML body is not an attachment', async () => {
     const mail = await read(
       buildMail({ inlineImage: Buffer.from([0x89, 0x50, 0x4e, 0x47]) }),
@@ -107,6 +168,8 @@ describe('readMail (MIME, streaming)', () => {
       },
     });
 
-    await expect(readMail(source, MiB)).rejects.toBe(broken);
+    await expect(
+      readMail(source, { attachmentBytes: MiB, mailBytes: MiB }),
+    ).rejects.toBe(broken);
   });
 });

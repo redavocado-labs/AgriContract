@@ -105,26 +105,89 @@ describe('validate (environment)', () => {
     },
   );
 
+  const IMAP_LOGIN = {
+    INTAKE_IMAP_USERNAME: 'intake-user',
+    INTAKE_IMAP_PASSWORD: 'intake-pass',
+  };
+
   it('INTAKE_IMAP_HOST turns the email intake on, with the compose GreenMail defaults', () => {
-    expect(validate({ INTAKE_IMAP_HOST: 'greenmail' }).intake).toEqual({
+    expect(
+      validate({ INTAKE_IMAP_HOST: 'greenmail', ...IMAP_LOGIN }).intake,
+    ).toEqual({
       host: 'greenmail',
       port: 3143,
       secure: false,
-      username: 'intake',
-      password: 'intake-dev-secret',
+      username: 'intake-user',
+      password: 'intake-pass',
       mailbox: 'INBOX',
       address: 'intake@agricontract.local',
       pollIntervalMs: 300_000,
+      authservId: null,
     });
+  });
+
+  it('INTAKE_IMAP_USERNAME and INTAKE_IMAP_PASSWORD have no default: required once the intake is on', () => {
+    expect(() => validate({ INTAKE_IMAP_HOST: 'greenmail' })).toThrow(
+      /INTAKE_IMAP_USERNAME must be set\n.*INTAKE_IMAP_PASSWORD must be set/,
+    );
+    expect(() =>
+      validate({
+        INTAKE_IMAP_HOST: 'greenmail',
+        INTAKE_IMAP_USERNAME: 'intake',
+        INTAKE_IMAP_PASSWORD: ' ',
+      }),
+    ).toThrow('INTAKE_IMAP_PASSWORD must be set');
+    // Off, nothing is required.
+    expect(validate({}).intake).toBeNull();
+  });
+
+  it('never prints the IMAP password in an error', () => {
+    let message = '';
+    try {
+      validate({
+        INTAKE_IMAP_HOST: 'greenmail',
+        ...IMAP_LOGIN,
+        INTAKE_IMAP_PORT: 'x',
+      });
+    } catch (err) {
+      message = (err as Error).message;
+    }
+
+    expect(message).toContain('INTAKE_IMAP_PORT');
+    expect(message).not.toContain('intake-pass');
+  });
+
+  it('INTAKE_AUTHSERV_ID names the receiving server whose Authentication-Results are read', () => {
+    expect(
+      validate({
+        INTAKE_IMAP_HOST: 'greenmail',
+        ...IMAP_LOGIN,
+        INTAKE_AUTHSERV_ID: 'mx.agricontract.example',
+      }).intake?.authservId,
+    ).toBe('mx.agricontract.example');
+    expect(() =>
+      validate({
+        INTAKE_IMAP_HOST: 'greenmail',
+        ...IMAP_LOGIN,
+        INTAKE_AUTHSERV_ID: '',
+      }),
+    ).toThrow('INTAKE_AUTHSERV_ID must not be empty');
   });
 
   it('INTAKE_IMAP_SECURE must be true or false', () => {
     expect(
-      validate({ INTAKE_IMAP_HOST: 'imap', INTAKE_IMAP_SECURE: 'TRUE' }).intake
-        ?.secure,
+      validate({
+        INTAKE_IMAP_HOST: 'imap',
+        ...IMAP_LOGIN,
+        INTAKE_IMAP_SECURE: 'TRUE',
+      }).intake?.secure,
     ).toBe(true);
     expect(() =>
-      validate({ INTAKE_IMAP_HOST: 'imap', INTAKE_IMAP_SECURE: 'yes' }),
+      validate({
+        INTAKE_IMAP_HOST: 'imap',
+        ...IMAP_LOGIN,
+        INTAKE_IMAP_SECURE: 'yes',
+      }),
     ).toThrow('INTAKE_IMAP_SECURE must be true or false');
   });
 
