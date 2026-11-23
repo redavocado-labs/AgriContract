@@ -13,7 +13,11 @@ import {
   ObjectStorageUnavailableError,
   UnsupportedContentTypeError,
 } from './file-errors';
-import { DIRECT_UPLOAD_POLICY, type IngestPolicy } from './ingest-policy';
+import {
+  DIRECT_UPLOAD_POLICY,
+  SYSTEM_GENERATED_POLICY,
+  type IngestPolicy,
+} from './ingest-policy';
 import { StoreFileUseCase, type StoreFileInput } from './store-file.use-case';
 
 const UUID =
@@ -70,6 +74,27 @@ describe('StoreFileUseCase', () => {
     expect(file).toEqual(files.rows.get(file.fileId));
   });
 
+  it('records a file of a policy that does not scan READY at once (SYSTEM_GENERATED)', async () => {
+    const file = await useCase.execute(
+      input({ uploadedBy: 'contract-service', idempotencyKey: 'pdf-1' }),
+      SYSTEM_GENERATED_POLICY,
+    );
+
+    expect(files.rows.get(file.fileId)).toEqual({
+      fileId: file.fileId,
+      storageHash: sha256(pdf),
+      uploadedBy: 'contract-service',
+      ingestChannel: 'SYSTEM_GENERATED',
+      contentType: 'application/pdf',
+      fileSize: pdf.length,
+      status: 'READY',
+      attached: false,
+      legalHold: false,
+      deletedAt: null,
+      idempotencyKey: 'pdf-1',
+    });
+  });
+
   it('gives every store its own fileId, even for the same bytes and uploader', async () => {
     const first = await useCase.execute(input(), DIRECT_UPLOAD_POLICY);
     const second = await useCase.execute(input(), DIRECT_UPLOAD_POLICY);
@@ -81,9 +106,10 @@ describe('StoreFileUseCase', () => {
 
   it('takes the channel from the policy of the entrypoint, never from the input', async () => {
     const policy: IngestPolicy = {
-      channel: 'SYSTEM_GENERATED',
+      channel: 'EMAIL_INTAKE',
       maxBytes: MiB,
       contentTypes: null,
+      virusScan: true,
     };
 
     const file = await useCase.execute(
@@ -91,8 +117,9 @@ describe('StoreFileUseCase', () => {
       policy,
     );
 
-    expect(file.ingestChannel).toBe('SYSTEM_GENERATED');
+    expect(file.ingestChannel).toBe('EMAIL_INTAKE');
     expect(file.contentType).toBe('text/csv');
+    expect(file.status).toBe('PROCESSING');
   });
 
   /*
