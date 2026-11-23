@@ -75,6 +75,8 @@ describe('upload → virus scan → file.ready / file.failed on RabbitMQ', () =>
   beforeAll(async () => {
     process.env.S3_BUCKET = bucket;
     process.env.SERVICE_INTERNAL_SECRET = SECRET;
+    // Off in tests: no periodic DLQ check behind the test's back.
+    process.env.FILE_DLQ_CHECK_INTERVAL_MS = '0';
     const config = validate(process.env);
     pool = createPool({
       host: config.db.host,

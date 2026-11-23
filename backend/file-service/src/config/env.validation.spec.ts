@@ -26,6 +26,7 @@ describe('validate (environment)', () => {
         password: 'guest',
       },
       clamav: { host: 'localhost', port: 3410 },
+      dlqCheckIntervalMs: 300_000,
     });
   });
 
@@ -65,6 +66,24 @@ describe('validate (environment)', () => {
     });
     expect(config.clamav).toEqual({ host: 'clamav', port: 3310 });
   });
+
+  it.each([
+    ['0', 0],
+    ['60000', 60_000],
+  ])('FILE_DLQ_CHECK_INTERVAL_MS=%s', (raw, ms) => {
+    expect(
+      validate({ FILE_DLQ_CHECK_INTERVAL_MS: raw }).dlqCheckIntervalMs,
+    ).toBe(ms);
+  });
+
+  it.each(['-1', '1.5', 'often', '86400001'])(
+    'FILE_DLQ_CHECK_INTERVAL_MS=%s is refused',
+    (raw) => {
+      expect(() => validate({ FILE_DLQ_CHECK_INTERVAL_MS: raw })).toThrow(
+        'FILE_DLQ_CHECK_INTERVAL_MS must be whole milliseconds',
+      );
+    },
+  );
 
   it('reports every invalid value together', () => {
     expect(() =>
