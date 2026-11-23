@@ -5,6 +5,7 @@ import com.agricontract.contract.domain.model.breach.BreachCaseComputedResolutio
 import com.agricontract.contract.domain.model.breach.BreachCaseStatus;
 import com.agricontract.contract.domain.model.breach.BreachReasonCode;
 import com.agricontract.contract.domain.model.breach.ContestStatus;
+import com.agricontract.contract.domain.model.breach.DecisionSource;
 import com.agricontract.contract.domain.model.breach.QualityDisposition;
 import com.agricontract.contract.domain.model.consent.SignerRole;
 import com.agricontract.contract.domain.model.milestone.Milestone;
@@ -43,6 +44,37 @@ public final class RemedyCalculator {
      */
     public RemedyDecision calculate(BreachCase breachCase, Milestone milestone, ContractTermsSnapshot terms,
                                     VndAmount remainingSellerDeposit, int settledMilestoneCount, Instant now) {
+        BreachCaseComputedResolution computed = breachCase.computedResolution();
+        if (computed == null || computed.isAgreed()) {
+            throw new IllegalStateException("Case " + breachCase.breachCaseId()
+                    + " has no computed resolution from a Level 1.5 report");
+        }
+        // D92: the report-based decision puts the inspection fee on the party the report did not side with.
+        InspectionFeeParty fee = InspectionFeeParty.of(computed.prevailingRole() == SignerRole.BUYER
+                ? SignerRole.SELLER : SignerRole.BUYER);
+        return build(breachCase, milestone, terms, remainingSellerDeposit, settledMilestoneCount, fee, now);
+    }
+
+    /**
+     * D57, D92: the decision of a dispute the parties ended themselves (decisionSource MUTUAL, agreed computed
+     * resolution). Always FINALIZED at once, with fault too: a concession or a settlement has no contest window.
+     *
+     * @param inspectionFeeParty who bears the inspection fee, null for none (the caller applies the D92 rule)
+     */
+    public RemedyDecision calculateAgreed(BreachCase breachCase, Milestone milestone, ContractTermsSnapshot terms,
+                                          VndAmount remainingSellerDeposit, int settledMilestoneCount,
+                                          InspectionFeeParty inspectionFeeParty, Instant now) {
+        BreachCaseComputedResolution computed = breachCase.computedResolution();
+        if (computed == null || !computed.isAgreed() || breachCase.decisionSource() != DecisionSource.MUTUAL) {
+            throw new IllegalStateException("Case " + breachCase.breachCaseId() + " was not ended by agreement");
+        }
+        return build(breachCase, milestone, terms, remainingSellerDeposit, settledMilestoneCount, inspectionFeeParty,
+                now);
+    }
+
+    private RemedyDecision build(BreachCase breachCase, Milestone milestone, ContractTermsSnapshot terms,
+                                 VndAmount remainingSellerDeposit, int settledMilestoneCount,
+                                 InspectionFeeParty inspectionFeeParty, Instant now) {
         Objects.requireNonNull(now, "now");
         BreachCaseComputedResolution computed = breachCase.computedResolution();
         if (breachCase.status() != BreachCaseStatus.RESOLVED || computed == null || breachCase.milestoneId() == null
@@ -95,13 +127,15 @@ public final class RemedyCalculator {
             throw new IllegalStateException("MILESTONE_PAYMENT legs " + paid + " differ from the locked batch " + locked);
         }
         boolean fault = computed.finalBreachingRole() != null;
-        // D91: the decision of a contest's second Level 1.5 report is final, with fault too: no new window.
-        boolean pending = fault && breachCase.contestStatus() != ContestStatus.CONTESTED;
+        // D91: the decision of a contest's second Level 1.5 report is final, with fault too: no new window. D92: so is
+        // a decision the parties reached themselves (MUTUAL).
+        boolean pending = fault && breachCase.contestStatus() != ContestStatus.CONTESTED
+                && breachCase.decisionSource() != DecisionSource.MUTUAL;
         return new RemedyDecision(ids.get(), breachCase.contractId(), breachCase.breachCaseId(),
                 milestone.milestoneId(), pending ? RemedyStatus.PENDING_CONTEST : RemedyStatus.FINALIZED,
                 computed.finalBreachingRole(), fault ? BreachReasonCode.QUALITY_BELOW_COMMITTED : null,
                 computed.qualityDisposition(), breachCase.decisionSource(), penalty, debt, settledMilestoneCount, legs,
-                now, pending ? null : now);
+                now, pending ? null : now, inspectionFeeParty);
     }
 
     /** sellerPenaltyRate x effectiveUnitPrice x committedQuantity of the milestone, whole dong, HALF_UP once. */

@@ -145,6 +145,9 @@ public record BreachCase(String breachCaseId, String contractId, String mileston
      */
     public BreachCase attachComputedResolution(BreachCaseComputedResolution resolution) {
         Objects.requireNonNull(resolution, "resolution");
+        if (resolution.isAgreed()) {
+            throw new IllegalArgumentException("an agreed position is attached by endByAgreement only");
+        }
         if (status == BreachCaseStatus.RESOLVED) {
             throw notAllowed("A resolved breach case cannot take a computed resolution.");
         }
@@ -171,6 +174,41 @@ public record BreachCase(String breachCaseId, String contractId, String mileston
                 breachReasonCode, severity, BreachCaseStatus.UNDER_REVIEW, evidenceFileIds, reportedAt, null, null,
                 List.of(), null, null, contestStatus, contestDeadline, resolution, contestReason,
                 contestEvidenceFileIds, contestedAt, contestedByActorId);
+    }
+
+    /**
+     * D57, D92: the parties ended the dispute themselves, by a concession or an agreed settlement. The case is RESOLVED
+     * at once with decisionSource MUTUAL and the agreed position as its computed resolution (finalBreachingRole taken
+     * from it, null for no fault). Allowed while nothing decides the case yet: REPORTED or UNDER_REVIEW without a
+     * computed resolution, or a decision under contest (RESOLVED and CONTESTED, before the contest's report replaced
+     * it). Never for a case the system opened (mandatory inspection). No contest window: contestStatus stays CONTESTED
+     * for a contested decision and is NOT_APPLICABLE otherwise.
+     */
+    public BreachCase endByAgreement(BreachCaseComputedResolution agreed, Instant now, String actorId) {
+        Objects.requireNonNull(agreed, "agreed");
+        Objects.requireNonNull(now, "now");
+        Objects.requireNonNull(actorId, "actorId");
+        if (!agreed.isAgreed()) {
+            throw new IllegalArgumentException("an agreed exit takes an agreed resolution, not a report's");
+        }
+        if (requestedBy == BreachRequester.SYSTEM || milestoneId == null) {
+            throw exitNotAllowed("A case opened by the system, or one without a milestone, cannot end by agreement.");
+        }
+        boolean contestedDecision = status == BreachCaseStatus.RESOLVED && contestStatus == ContestStatus.CONTESTED;
+        if (!contestedDecision && (status == BreachCaseStatus.RESOLVED || computedResolution != null)) {
+            throw exitNotAllowed("The dispute is already decided or waits for the Arbitrator (" + status + ").");
+        }
+        return new BreachCase(breachCaseId, contractId, milestoneId, requestedBy, allegedBreachingRole,
+                breachReasonCode, severity, BreachCaseStatus.RESOLVED, evidenceFileIds, reportedAt,
+                agreed.finalBreachingRole(), DecisionSource.MUTUAL, List.of(), now, actorId,
+                contestedDecision ? ContestStatus.CONTESTED : ContestStatus.NOT_APPLICABLE,
+                contestedDecision ? contestDeadline : null, agreed, contestReason, contestEvidenceFileIds,
+                contestedAt, contestedByActorId);
+    }
+
+    /** True when the case was opened by the system (a mandatory inspection, D77), not by a party's flag. */
+    public boolean openedBySystem() {
+        return requestedBy == BreachRequester.SYSTEM;
     }
 
     /**
@@ -268,6 +306,10 @@ public record BreachCase(String breachCaseId, String contractId, String mileston
                 breachReasonCode, severity, status, evidenceFileIds, reportedAt, finalBreachingRole, decisionSource,
                 decisionEvidenceRefs, resolvedAt, resolvedByActorId, ContestStatus.EXPIRED, contestDeadline,
                 computedResolution, contestReason, contestEvidenceFileIds, contestedAt, contestedByActorId);
+    }
+
+    private static ContractConflictException exitNotAllowed(String message) {
+        return new ContractConflictException(ContractConflictException.DISPUTE_EXIT_NOT_ALLOWED, message);
     }
 
     private static ContractConflictException notAllowed(String message) {

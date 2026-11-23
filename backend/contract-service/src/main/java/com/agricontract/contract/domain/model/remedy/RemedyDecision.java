@@ -13,19 +13,22 @@ import java.util.Objects;
 
 /**
  * The money consequence of an AttributionDecision on a milestone dispute (#137). Immutable once built: the only
- * change is PENDING_CONTEST becoming FINALIZED, or SUPERSEDED when a contest's second Level 1.5 report replaced it. A
- * no-fault decision is FINALIZED at once, and so is the decision of that second report; any other decision with fault
- * waits for the contest window (#241). penaltyAmount and penaltyDebtAmount are evidence of the contractual penalty: the part
- * the seller deposit could not cover is a debt that is not collected, and has no leg.
+ * change is PENDING_CONTEST becoming FINALIZED, or SUPERSEDED when a contest's second Level 1.5 report (or an agreed
+ * exit, D92) replaced it. A no-fault decision is FINALIZED at once, and so is the decision of that second report and
+ * any MUTUAL decision; any other decision with fault waits for the contest window (#241). penaltyAmount and
+ * penaltyDebtAmount are evidence of the contractual penalty: the part the seller deposit could not cover is a debt that
+ * is not collected, and has no leg.
  *
  * @param breachCaseId          null only for a system-decided remedy (#240, not built yet)
  * @param settledMilestoneCount milestones of the contract already SETTLED when the decision was made (D55)
+ * @param inspectionFeeParty    who bears the Level 1.5 inspection fee (D92), null for no fee
  */
 public record RemedyDecision(String remedyDecisionId, String contractId, String breachCaseId, String milestoneId,
                              RemedyStatus status, SignerRole finalBreachingRole, BreachReasonCode breachReasonCode,
                              QualityDisposition qualityDisposition, DecisionSource decisionSource,
                              VndAmount penaltyAmount, VndAmount penaltyDebtAmount, int settledMilestoneCount,
-                             List<RemedyLeg> legs, Instant createdAt, Instant finalizedAt) {
+                             List<RemedyLeg> legs, Instant createdAt, Instant finalizedAt,
+                             InspectionFeeParty inspectionFeeParty) {
     public RemedyDecision {
         Objects.requireNonNull(remedyDecisionId, "remedyDecisionId");
         Objects.requireNonNull(contractId, "contractId");
@@ -42,6 +45,17 @@ public record RemedyDecision(String remedyDecisionId, String contractId, String 
         if (settledMilestoneCount < 0) {
             throw new IllegalArgumentException("settledMilestoneCount must not be negative");
         }
+    }
+
+    /** A decision with no inspection fee party (the shape before D92). */
+    public RemedyDecision(String remedyDecisionId, String contractId, String breachCaseId, String milestoneId,
+                          RemedyStatus status, SignerRole finalBreachingRole, BreachReasonCode breachReasonCode,
+                          QualityDisposition qualityDisposition, DecisionSource decisionSource,
+                          VndAmount penaltyAmount, VndAmount penaltyDebtAmount, int settledMilestoneCount,
+                          List<RemedyLeg> legs, Instant createdAt, Instant finalizedAt) {
+        this(remedyDecisionId, contractId, breachCaseId, milestoneId, status, finalBreachingRole, breachReasonCode,
+                qualityDisposition, decisionSource, penaltyAmount, penaltyDebtAmount, settledMilestoneCount, legs,
+                createdAt, finalizedAt, null);
     }
 
     /** penaltyEligible of remedy.finalized: only a decision with fault carries a penalty. */
@@ -62,7 +76,7 @@ public record RemedyDecision(String remedyDecisionId, String contractId, String 
         }
         return new RemedyDecision(remedyDecisionId, contractId, breachCaseId, milestoneId, RemedyStatus.FINALIZED,
                 finalBreachingRole, breachReasonCode, qualityDisposition, decisionSource, penaltyAmount,
-                penaltyDebtAmount, settledMilestoneCount, legs, createdAt, at);
+                penaltyDebtAmount, settledMilestoneCount, legs, createdAt, at, inspectionFeeParty);
     }
 
     /** What the seller is paid from the milestone, 0.00 when there is no PAYMENT_SETTLEMENT leg. */

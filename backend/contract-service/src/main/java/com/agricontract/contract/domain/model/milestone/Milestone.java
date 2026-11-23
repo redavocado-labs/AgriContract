@@ -400,6 +400,25 @@ public final class Milestone {
         return settlement;
     }
 
+    /**
+     * D57, D92: the parties ended the dispute themselves (a concession or an agreed settlement). From
+     * AWAITING_SELLER_RESPONSE (the case opened for the exit is remembered on the flag, which stays uncontested) or from
+     * CONTESTED, the milestone becomes SETTLED on the money of the MUTUAL RemedyDecision (DISPUTE_RESOLVED path);
+     * sellerAmount + buyerRefund must equal the locked batch.
+     */
+    public MilestoneSettlement settleByAgreement(String breachCaseId, BigDecimal billableQuantityKg,
+                                                 VndAmount sellerAmount, VndAmount buyerRefund, Instant settledAt) {
+        Objects.requireNonNull(breachCaseId, "breachCaseId");
+        if (status == MilestoneStatus.AWAITING_SELLER_RESPONSE && flag != null) {
+            this.flag = new MilestoneFlag(flag.issueType(), flag.flaggedAt(), null, null, breachCaseId);
+            this.status = MilestoneStatus.CONTESTED;
+        } else if (status != MilestoneStatus.CONTESTED || flag == null || !breachCaseId.equals(flag.breachCaseId())) {
+            throw new ContractConflictException(ContractConflictException.DISPUTE_EXIT_NOT_ALLOWED,
+                    "Only a flagged or contested milestone can end its dispute by agreement (" + status + ").");
+        }
+        return settleDisputeResolved(billableQuantityKg, sellerAmount, buyerRefund, settledAt);
+    }
+
     private void requireAwaitingSellerResponse(String action) {
         if (status != MilestoneStatus.AWAITING_SELLER_RESPONSE || flag == null || buyerReceipt == null
                 || sellerWeighing == null) {

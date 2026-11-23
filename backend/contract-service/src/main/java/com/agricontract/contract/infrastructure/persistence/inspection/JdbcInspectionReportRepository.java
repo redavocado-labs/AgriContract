@@ -89,6 +89,18 @@ public class JdbcInspectionReportRepository implements InspectionReportRepositor
         return n != null && n > 0;
     }
 
+    @Override
+    public java.util.Map<InspectionReportPurpose, MeasurementStatus> statusesByPurpose(String milestoneId) {
+        java.util.Map<InspectionReportPurpose, MeasurementStatus> statuses =
+                new java.util.EnumMap<>(InspectionReportPurpose.class);
+        jdbc.query("SELECT purpose, measurement_status FROM inspection_report WHERE milestone_id = ?",
+                rs -> {
+                    statuses.put(InspectionReportPurpose.valueOf(rs.getString("purpose")),
+                            MeasurementStatus.valueOf(rs.getString("measurement_status")));
+                }, milestoneId);
+        return statuses;
+    }
+
     private static BigDecimal value(VndAmount amount) {
         return amount == null ? null : amount.value();
     }
