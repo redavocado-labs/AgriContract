@@ -4,6 +4,7 @@ import com.agricontract.contract.domain.model.breach.BreachReasonCode;
 import com.agricontract.contract.domain.model.breach.DecisionSource;
 import com.agricontract.contract.domain.model.breach.QualityDisposition;
 import com.agricontract.contract.domain.model.consent.SignerRole;
+import com.agricontract.contract.domain.model.remedy.InspectionFeeParty;
 import com.agricontract.contract.domain.model.remedy.RemedyDecision;
 import com.agricontract.contract.domain.model.remedy.RemedyFundType;
 import com.agricontract.contract.domain.model.remedy.RemedyLeg;
@@ -35,12 +36,13 @@ public class JdbcRemedyDecisionRepository implements RemedyDecisionRepository {
         jdbc.update("INSERT INTO remedy_decision (remedy_decision_id, contract_id, breach_case_id, milestone_id,"
                         + " status, final_breaching_role, breach_reason_code, quality_disposition, decision_source,"
                         + " penalty_amount, penalty_debt_amount, settled_milestone_count, created_at, finalized_at,"
-                        + " `round`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        + " `round`, inspection_fee_party) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 d.remedyDecisionId(), d.contractId(), d.breachCaseId(), d.milestoneId(), d.status().name(),
                 name(d.finalBreachingRole()), name(d.breachReasonCode()), name(d.qualityDisposition()),
                 d.decisionSource().name(), d.penaltyAmount().value(), d.penaltyDebtAmount().value(),
                 d.settledMilestoneCount(), Timestamp.from(d.createdAt()),
-                d.finalizedAt() == null ? null : Timestamp.from(d.finalizedAt()), nextRound(d.breachCaseId()));
+                d.finalizedAt() == null ? null : Timestamp.from(d.finalizedAt()), nextRound(d.breachCaseId()),
+                name(d.inspectionFeeParty()));
         int seq = 0;
         for (RemedyLeg leg : d.legs()) {
             jdbc.update("INSERT INTO remedy_leg (remedy_leg_id, remedy_decision_id, seq, remedy_type, fund_type,"
@@ -116,7 +118,9 @@ public class JdbcRemedyDecisionRepository implements RemedyDecisionRepository {
                     new VndAmount(rs.getBigDecimal("penalty_amount")),
                     new VndAmount(rs.getBigDecimal("penalty_debt_amount")), rs.getInt("settled_milestone_count"),
                     legs(decisionId), rs.getTimestamp("created_at").toInstant(),
-                    finalizedAt == null ? null : finalizedAt.toInstant());
+                    finalizedAt == null ? null : finalizedAt.toInstant(),
+                    rs.getString("inspection_fee_party") == null ? null
+                            : InspectionFeeParty.valueOf(rs.getString("inspection_fee_party")));
         }, id).stream().findFirst();
     }
 

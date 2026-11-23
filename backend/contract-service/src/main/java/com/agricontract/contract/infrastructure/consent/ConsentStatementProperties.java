@@ -9,11 +9,14 @@ import java.util.Map;
  * Which version of each checkbox statement is in force. The text lives in
  * classpath:consent-statement/{code}-{version}.txt; the hash is computed from that file at startup.
  * milestoneActionVersions: the operational-tier milestone statements (D74), by action, e.g. DECLARE_SELLER_WEIGHT, RECORD_BUYER_RECEIPT.
+ * disputeExitVersions: the high-risk dispute exit statements (D57, D92), CONCEDE_DISPUTE and SETTLE_DISPUTE.
  */
 @ConfigurationProperties(prefix = "contract.consent")
 public record ConsentStatementProperties(String signContractVersion, String cancelActivationVersion,
-                                         Map<ConsentActionType, String> milestoneActionVersions) {
+                                         Map<ConsentActionType, String> milestoneActionVersions,
+                                         Map<ConsentActionType, String> disputeExitVersions) {
     public ConsentStatementProperties {
         milestoneActionVersions = milestoneActionVersions == null ? Map.of() : Map.copyOf(milestoneActionVersions);
+        disputeExitVersions = disputeExitVersions == null ? Map.of() : Map.copyOf(disputeExitVersions);
     }
 }

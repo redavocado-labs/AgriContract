@@ -27,6 +27,7 @@ import com.agricontract.contract.domain.repository.ConsentEvidenceRepository;
 import com.agricontract.contract.domain.repository.ContractRepository;
 import com.agricontract.contract.domain.repository.MilestoneEvidenceRepository;
 import com.agricontract.contract.domain.repository.MilestoneRepository;
+import com.agricontract.contract.application.service.Level15Inspections;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -60,6 +61,7 @@ public class RecordBuyerReceiptUseCase {
     private final OperationalConsentStatements statements;
     private final IdempotencyStore idempotencyStore;
     private final ContractEventPublisher events;
+    private final Level15Inspections level15;
     private final EvidenceAttachment attachment;
     private final TransactionRunner transactions;
     private final Clock clock;
@@ -121,8 +123,7 @@ public class RecordBuyerReceiptUseCase {
         events.milestoneBuyerReceived(contract, milestone);
         if (MilestoneCleanSettlement.requiresInspection(contract)) {
             // D77: the report is required before settlement, so Level 1.5 is asked for as soon as the goods are received.
-            events.inspectionLevel15Requested(contract, milestone, InspectionRequestReason.MANDATORY_INSPECTION, null,
-                    now);
+            level15.request(contract, milestone, InspectionRequestReason.MANDATORY_INSPECTION, null, now);
         }
         idempotencyStore.recordResult(command.actorId(), OPERATION, command.idempotencyKey(),
                 consent.consentId().toString());

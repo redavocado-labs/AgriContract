@@ -31,6 +31,9 @@ import org.springframework.context.annotation.Configuration;
  *   <li>escrow-service, until #120 merges: {@code escrow-svc.milestone.funding_requested}, same DLX (D63).</li>
  *   <li>audit-service: {@code audit-svc.milestone.seller_weighed} (#121, D75), same DLX as its other queues: every
  *       weigh declaration reaches the audit chain once audit exists.</li>
+ *   <li>inspection-service: {@code inspection.level1_5_cancelled} (D57, #494) is routed to the queue it already
+ *       declares for {@code inspection.level1_5_requested} ({@code inspection-svc.inspection.level1_5_requested}, DLX
+ *       {@code agricontract.inspection.dlx}), as the event contract says; only the binding is new.</li>
  * </ul>
  * Remove a pair once its consumer declares it. Plain Queue/Binding beans, not a Declarables: DlqMonitor watches
  * contract-service's own DLQs only.
@@ -72,6 +75,10 @@ public class ConsumerQueuesDeclaredAhead {
     static final String AUDIT_DLX = "agricontract.audit.dlx";
     static final String SELLER_WEIGHED_KEY = "milestone.seller_weighed";
     static final String AUDIT_SELLER_WEIGHED_QUEUE = "audit-svc." + SELLER_WEIGHED_KEY;
+
+    static final String LEVEL1_5_CANCELLED_KEY = "inspection.level1_5_cancelled";
+    static final String INSPECTION_REQUESTS_QUEUE = "inspection-svc.inspection.level1_5_requested";
+    static final String INSPECTION_DLX = "agricontract.inspection.dlx";
 
     private static final TopicExchange CONTRACTS = new TopicExchange("agricontract.contracts", true, false);
 
@@ -366,5 +373,15 @@ public class ConsumerQueuesDeclaredAhead {
     @Bean
     Binding auditSellerWeighedDlqBinding() {
         return BindingBuilder.bind(auditSellerWeighedDlq()).to(auditDlx()).with(SELLER_WEIGHED_KEY);
+    }
+
+    @Bean
+    Queue inspectionRequestsQueue() {
+        return QueueBuilder.durable(INSPECTION_REQUESTS_QUEUE).deadLetterExchange(INSPECTION_DLX).build();
+    }
+
+    @Bean
+    Binding level15CancelledBinding() {
+        return BindingBuilder.bind(inspectionRequestsQueue()).to(CONTRACTS).with(LEVEL1_5_CANCELLED_KEY);
     }
 }

@@ -1,0 +1,1 @@
+Tôi rút báo lỗi / chấp nhận vị thế của bên bán cho đợt giao này: bên bán nhận [X] đồng, tôi được hoàn [Y] đồng. Tôi hiểu việc này không làm lại được, giám định đang chờ (nếu có) bị huỷ, và lần báo lỗi này được tính là báo lỗi không thành.

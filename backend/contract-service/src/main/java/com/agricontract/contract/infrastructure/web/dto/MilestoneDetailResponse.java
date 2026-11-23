@@ -17,7 +17,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public record MilestoneDetailResponse(String contractId, MilestoneResponse milestone,
                                       SellerDeclarationView sellerDeclaration, BuyerReceiptView buyerReceipt, FlagView flag,
-                                      List<EvidenceView> evidence, SettlementView settlement, String breachCaseId) {
+                                      List<EvidenceView> evidence, SettlementView settlement, String breachCaseId,
+                                      DisputeExitView disputeExit) {
 
     public static MilestoneDetailResponse from(MilestoneDetailView view) {
         Milestone m = view.milestone();
@@ -54,8 +55,17 @@ public record MilestoneDetailResponse(String contractId, MilestoneResponse miles
                     f.contestedAt() == null ? null : f.contestedAt().toString(),
                     f.contestedBy() == null ? null : f.contestedBy().name());
         }
+        DisputeExitView exit = null;
+        if (view.disputeExit() != null) {
+            var x = view.disputeExit();
+            var p = x.openProposal();
+            exit = new DisputeExitView(x.buyerPosition().wire(), x.sellerPosition().wire(), x.concedeAllowed(),
+                    x.settlementAllowed(), p == null ? null : new SettlementProposalView(
+                            p.agreedSellerEntitlementAmount().wire(), p.proposedByRole().name(),
+                            p.proposedAt().toString()));
+        }
         return new MilestoneDetailResponse(view.contractId(), summary, declaration, receipt, flag, evidence,
-                settlement, m.flag() == null ? null : m.flag().breachCaseId());
+                settlement, m.flag() == null ? null : m.flag().breachCaseId(), exit);
     }
 
     private static EvidenceView evidence(MilestoneEvidenceFile f) {
@@ -101,6 +111,17 @@ public record MilestoneDetailResponse(String contractId, MilestoneResponse miles
     public record BuyerReceiptView(BigDecimal buyerReceivedWeight, String buyerEvidenceFileId,
                                    String deliveryCertificateFileId, String receivedAt,
                                    String confirmWindowClosesAt) {
+    }
+
+    /** MilestoneDisputeExitView (D92). */
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record DisputeExitView(String buyerPositionAmount, String sellerPositionAmount, boolean concedeAllowed,
+                                  boolean settlementAllowed, SettlementProposalView openProposal) {
+    }
+
+    /** MilestoneSettlementProposalView (D92). */
+    public record SettlementProposalView(String agreedSellerEntitlementAmount, String proposedByRole,
+                                         String proposedAt) {
     }
 
     public record EvidenceView(String fileId, String uploadedByRole, String status, String uploadedAt) {

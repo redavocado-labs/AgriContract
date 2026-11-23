@@ -69,6 +69,7 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
     static final String MILESTONE_FLAGGED = "milestone.flagged";
     static final String BREACH_REPORTED = "breach.reported";
     static final String INSPECTION_LEVEL1_5_REQUESTED = "inspection.level1_5_requested";
+    static final String INSPECTION_LEVEL1_5_CANCELLED = "inspection.level1_5_cancelled";
     static final String MILESTONE_DISPUTE_RESOLVED = "milestone.dispute_resolved";
     static final String REMEDY_FINALIZED = "remedy.finalized";
 
@@ -561,6 +562,29 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
         payload.put("requestedAt", at.toString());
 
         outbox.append(new EventEnvelope(UUID.randomUUID(), INSPECTION_LEVEL1_5_REQUESTED, 1, at, PRODUCER,
+                milestoneId, contractId, null, null, payload));
+    }
+
+    /** golden-flow-events.yaml inspectionLevel15Cancelled, a command to inspection-service (D57). */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void inspectionLevel15Cancelled(Contract contract, Milestone milestone, String reason, Instant at) {
+        if (!milestone.contractId().equals(contract.getContractId().value())) {
+            throw new IllegalStateException("inspection.level1_5_cancelled for milestone " + milestone.milestoneId()
+                    + " of another contract");
+        }
+        if (!"DISPUTE_CONCEDED".equals(reason) && !"DISPUTE_SETTLED".equals(reason)) {
+            throw new IllegalArgumentException("inspection.level1_5_cancelled reason " + reason);
+        }
+        String contractId = uuid(contract.getContractId().value(), "contractId");
+        String milestoneId = uuid(milestone.milestoneId(), "milestoneId");
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("contractId", contractId);
+        payload.put("milestoneId", milestoneId);
+        payload.put("reason", reason);
+        payload.put("cancelledAt", at.toString());
+
+        outbox.append(new EventEnvelope(UUID.randomUUID(), INSPECTION_LEVEL1_5_CANCELLED, 1, at, PRODUCER,
                 milestoneId, contractId, null, null, payload));
     }
 

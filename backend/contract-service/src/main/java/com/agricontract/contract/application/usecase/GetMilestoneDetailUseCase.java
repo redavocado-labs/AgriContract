@@ -5,6 +5,7 @@ import com.agricontract.contract.application.dto.MilestoneDetailView;
 import com.agricontract.contract.application.port.MilestoneDeliverySettings;
 import com.agricontract.contract.application.port.MilestoneFlagSettings;
 import com.agricontract.contract.application.port.TransactionRunner;
+import com.agricontract.contract.application.service.DisputeExitStep;
 import com.agricontract.contract.application.service.MilestoneReadAccess;
 import com.agricontract.contract.domain.model.Contract;
 import com.agricontract.contract.domain.model.milestone.BuyerReceipt;
@@ -14,6 +15,7 @@ import com.agricontract.contract.domain.model.milestone.SellerWeighing;
 import com.agricontract.contract.domain.model.terms.VndAmount;
 import com.agricontract.contract.domain.repository.MilestoneEvidenceRepository;
 import com.agricontract.contract.domain.repository.SellerWeighDeclarationRepository;
+import com.agricontract.contract.domain.repository.SettlementProposalRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +38,8 @@ public class GetMilestoneDetailUseCase {
     private final MilestoneDeliverySettings settings;
     private final MilestoneFlagSettings flagSettings;
     private final VietnamBusinessDays calendar;
+    private final DisputeExitStep exits;
+    private final SettlementProposalRepository proposals;
     private final TransactionRunner transactions;
 
     public MilestoneDetailView execute(String contractId, String milestoneId, String actorId, Set<String> roles) {
@@ -47,8 +51,15 @@ public class GetMilestoneDetailUseCase {
             return new MilestoneDetailView(contractId, milestone, price, effectiveDeliveryDeadline(milestone),
                     sellerDeclaration(milestone), buyerReceipt(milestone, readable.contract()),
                     flag(milestone),
-                    evidence.findByMilestoneId(milestoneId));
+                    evidence.findByMilestoneId(milestoneId), disputeExit(readable.contract(), milestone));
         });
+    }
+
+    /** D92: null outside the moments where a concession or a settlement can end the dispute. */
+    private MilestoneDetailView.DisputeExitBlock disputeExit(Contract contract, Milestone milestone) {
+        return exits.peek(contract, milestone).map(w -> new MilestoneDetailView.DisputeExitBlock(w.buyerPosition(),
+                w.sellerPosition(), w.concedeAllowed(), w.settlementAllowed(),
+                proposals.findOpenByMilestoneId(milestone.milestoneId()).orElse(null))).orElse(null);
     }
 
     private MilestoneDetailView.SellerDeclaration sellerDeclaration(Milestone milestone) {

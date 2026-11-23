@@ -32,6 +32,8 @@ import com.agricontract.contract.domain.repository.ContractRepository;
 import com.agricontract.contract.domain.repository.InspectionReportRepository;
 import com.agricontract.contract.domain.repository.MilestoneRepository;
 import com.agricontract.contract.domain.repository.RemedyDecisionRepository;
+import com.agricontract.contract.domain.repository.SettlementProposalRepository;
+import com.agricontract.contract.application.service.Level15Inspections;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -72,6 +74,8 @@ public class ApplyInspectionReportUseCase {
     private final RemedyDecisionRepository remedyDecisions;
     private final MilestoneContestStep contestStep;
     private final ContractEventPublisher events;
+    private final Level15Inspections level15;
+    private final SettlementProposalRepository proposals;
     private final TransactionRunner transactions;
     private final Clock clock;
 
@@ -147,6 +151,13 @@ public class ApplyInspectionReportUseCase {
                 milestone.batchAmount());
         reports.insert(report, assessment, purpose);
         Instant now = Instant.now(clock).truncatedTo(ChronoUnit.MICROS);
+        // D92: the request this report answers ends; a COMPLETE report decides the round, so an open settlement
+        // proposal lapses (it never stopped the inspection).
+        level15.reported(milestone.milestoneId(), now);
+        if (complete && proposals.lapseOpen(milestone.milestoneId(), now)) {
+            log.info("event=settlement_proposal_lapsed reason=report_complete milestoneId={} reportId={}",
+                    milestone.milestoneId(), report.reportId());
+        }
         if (!complete) {
             inconclusive(contract, milestone, report, contested, purpose, now);
             return;
@@ -177,7 +188,7 @@ public class ApplyInspectionReportUseCase {
         }
         log.warn("event=inspection_report_inconclusive reportId={} contractId={} milestoneId={} eventId={}",
                 report.reportId(), report.contractId(), report.milestoneId(), report.receivedEventId());
-        events.inspectionLevel15Requested(contract, milestone, contested
+        level15.request(contract, milestone, contested
                 ? InspectionRequestReason.DISPUTE_ROUTED : InspectionRequestReason.MANDATORY_INSPECTION, null, now);
     }
 

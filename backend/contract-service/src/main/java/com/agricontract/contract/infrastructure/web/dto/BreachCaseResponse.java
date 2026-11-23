@@ -24,7 +24,9 @@ public record BreachCaseResponse(String breachCaseId, String contractId, String 
                 name(c.allegedBreachingRole()), c.breachReasonCode().name(), c.severity().name(),
                 c.evidenceFileIds(), name(c.finalBreachingRole()), name(c.decisionSource()), c.status().name(),
                 c.contestStatus().name(), c.contestDeadline() == null ? null : c.contestDeadline().toString(),
-                c.computedResolution() == null ? null : ComputedResolutionView.from(c.computedResolution()),
+                // D92: an agreed exit has no report behind it; the case's decisionSource MUTUAL says how it ended.
+                c.computedResolution() == null || c.computedResolution().isAgreed() ? null
+                        : ComputedResolutionView.from(c.computedResolution()),
                 c.reportedAt().toString(), c.resolvedAt() == null ? null : c.resolvedAt().toString());
     }
 
