@@ -42,6 +42,8 @@ class InternalUserEligibilityClientTest {
     private volatile CountDownLatch bodyGate;
     private volatile boolean partialBody;
     private volatile int bodyDelayMs;
+    private volatile CountDownLatch trickleGate;
+    private volatile CountDownLatch trickleStarted;
     private HttpServer server;
     private InternalUserEligibilityClient client;
     private volatile int status = 200;
@@ -67,6 +69,15 @@ class InternalUserEligibilityClientTest {
                 return;
             }
             try (var stream = exchange.getResponseBody()) {
+                var trickle = trickleGate;
+                if (trickle != null) {
+                    for (byte value : bytes) {
+                        stream.write(value); stream.flush();
+                        trickleStarted.countDown();
+                        if (trickle.await(75, TimeUnit.MILLISECONDS)) return;
+                    }
+                    return;
+                }
                 var gate = bodyGate;
                 if (gate != null) {
                     if (partialBody) { stream.write(bytes, 0, Math.min(5, bytes.length)); stream.flush(); }
@@ -77,7 +88,7 @@ class InternalUserEligibilityClientTest {
                     try { Thread.sleep(bodyDelayMs); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
                 }
                 stream.write(bytes);
-            }
+            } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
         });
         server.start();
         client = new InternalUserEligibilityClient(RestClient.builder(),
@@ -90,6 +101,19 @@ class InternalUserEligibilityClientTest {
         assertThat(client.loadInspectorEmail(ID)).isEqualTo("inspector@example.com");
         assertThat(requestedPath.get()).isEqualTo("/internal/v1/users/" + ID);
         assertThat(internalSecret.get()).isEqualTo("test-service-secret");
+    }
+
+    @Test void nonPositiveTimeoutsAreRejected() {
+        assertThatThrownBy(() -> new InternalUserEligibilityClient(RestClient.builder(),
+                "http://localhost", "secret", 0, 500)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new InternalUserEligibilityClient(RestClient.builder(),
+                "http://localhost", "secret", 500, 0)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test void duplicateProfileKeysAreRejected() {
+        response = "{\"userId\":\"" + ID + "\",\"email\":\"inspector@example.com\",\"emailVerified\":true,\"emailVerified\":true}";
+        expectedCategory = "malformed_response";
+        assertThatThrownBy(() -> client.loadInspectorEmail(ID)).isInstanceOf(EligibilityUnavailableException.class);
     }
 
     @ParameterizedTest
@@ -139,6 +163,25 @@ class InternalUserEligibilityClientTest {
     void slowCompleteInspectorBodyWithinDeadlineSucceeds() {
         response = "{\"userId\":\"" + ID + "\",\"email\":\"inspector@example.com\",\"emailVerified\":true}";
         bodyDelayMs = 100;
+        assertThat(client.loadInspectorEmail(ID)).isEqualTo("inspector@example.com");
+    }
+
+    @org.junit.jupiter.api.RepeatedTest(3)
+    @org.junit.jupiter.api.Timeout(5)
+    void tricklingBodyCannotExtendTotalDeadline() {
+        response = "{\"userId\":\"" + ID + "\",\"email\":\"inspector@example.com\",\"emailVerified\":true}";
+        trickleGate = new CountDownLatch(1);
+        trickleStarted = new CountDownLatch(1);
+        expectedCategory = "transport";
+        long started = System.nanoTime();
+        try {
+            assertThatThrownBy(() -> client.loadInspectorEmail(ID)).isInstanceOf(EligibilityUnavailableException.class);
+            assertThat(trickleStarted.getCount()).isZero();
+            assertThat(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started)).isLessThan(2000);
+        } finally {
+            trickleGate.countDown();
+            trickleGate = null;
+        }
         assertThat(client.loadInspectorEmail(ID)).isEqualTo("inspector@example.com");
     }
 
@@ -208,7 +251,9 @@ class InternalUserEligibilityClientTest {
     void stopStub() {
         if (responseGate != null) responseGate.countDown();
         if (bodyGate != null) bodyGate.countDown();
-        if (client != null) client.close();
+        if (client != null) {
+            try { client.close(); } catch (Exception e) { throw new IllegalStateException(e); }
+        }
         server.stop(0);
         logger.detachAppender(logs);
         logs.stop();
