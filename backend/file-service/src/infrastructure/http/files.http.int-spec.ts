@@ -1,6 +1,7 @@
 /**
- * POST /internal/v1/files through the whole app (AppModule: config, guard,
- * MySQL, object storage) on the compose services. Run with
+ * POST /internal/v1/files and /internal/v1/files/system-generated through
+ * the whole app (AppModule: config, guard, MySQL, object storage) on the
+ * compose services. Run with
  *   npm run test:int
  * after `docker compose up -d --wait file-db object-storage` and
  * `docker compose up file-migrate` in backend/. DB_* and S3_* apply with the
@@ -27,6 +28,8 @@ const PATH = '/internal/v1/files';
 const SECRET = `int-secret-${randomUUID()}`;
 const bucket = `file-http-int-${randomUUID().slice(0, 8)}`;
 const user = randomUUID();
+/** Keys of this run's system-generated stores, so the cleanup finds their rows. */
+const systemKeyPrefix = `sys-int-${randomUUID().slice(0, 8)}-`;
 const sha256 = (bytes: Buffer) =>
   createHash('sha256').update(bytes).digest('hex');
 
@@ -77,6 +80,9 @@ describe('POST /internal/v1/files on SeaweedFS and MySQL', () => {
   afterAll(async () => {
     try {
       await pool.query('DELETE FROM file WHERE uploaded_by = ?', [user]);
+      await pool.query('DELETE FROM file WHERE idempotency_key LIKE ?', [
+        `${systemKeyPrefix}%`,
+      ]);
       if (app) {
         const res = await client.send(
           new ListObjectsV2Command({ Bucket: bucket }),
@@ -151,5 +157,73 @@ describe('POST /internal/v1/files on SeaweedFS and MySQL', () => {
       ['http-int-3'],
     );
     expect(rows[0].n).toBe(0);
+  });
+
+  describe('POST /internal/v1/files/system-generated (store())', () => {
+    const pdf = Buffer.concat([
+      Buffer.from('%PDF-1.7\n'),
+      Buffer.alloc(200 * 1024, 5),
+      Buffer.from('\n%%EOF\n'),
+    ]);
+    const store = (key: string, body: Buffer = pdf) =>
+      request(app!.getHttpServer() as App)
+        .post(`${PATH}/system-generated`)
+        .set('X-Internal-Secret', SECRET)
+        .set('X-Service-Id', 'contract-service')
+        .set('Idempotency-Key', systemKeyPrefix + key)
+        .set('Content-Type', 'application/pdf')
+        .send(body);
+
+    it('201: the row is READY and SYSTEM_GENERATED under the service id, and GET serves the bytes at once', async () => {
+      const res = await store('1');
+
+      expect(res.status).toBe(201);
+      const body = res.body as { fileId: string };
+      expect(res.body).toEqual({
+        fileId: body.fileId,
+        status: 'READY',
+        storageHash: sha256(pdf),
+        fileSize: pdf.length,
+        contentType: 'application/pdf',
+      });
+      const [rows] = await pool.query<RowDataPacket[]>(
+        'SELECT * FROM file WHERE file_id = ?',
+        [body.fileId],
+      );
+      expect(rows[0]).toMatchObject({
+        uploaded_by: 'contract-service',
+        idempotency_key: systemKeyPrefix + '1',
+        ingest_channel: 'SYSTEM_GENERATED',
+        content_type: 'application/pdf',
+        file_size: pdf.length,
+        storage_hash: sha256(pdf),
+        status: 'READY',
+      });
+
+      const read = await request(app!.getHttpServer() as App)
+        .get(`${PATH}/${body.fileId}`)
+        .set('X-Internal-Secret', SECRET)
+        .buffer(true)
+        .parse((r, done) => {
+          const parts: Buffer[] = [];
+          r.on('data', (c: Buffer) => parts.push(c));
+          r.on('end', () => done(null, Buffer.concat(parts)));
+        });
+      expect(read.status).toBe(200);
+      expect(sha256(read.body as Buffer)).toBe(sha256(pdf));
+    });
+
+    it('a repeat answers the same file and writes nothing', async () => {
+      const first = await store('2');
+      const repeat = await store('2', Buffer.from('%PDF other'));
+
+      expect(repeat.status).toBe(201);
+      expect(repeat.body).toEqual(first.body);
+      const [rows] = await pool.query<RowDataPacket[]>(
+        'SELECT COUNT(*) AS n FROM file WHERE idempotency_key = ?',
+        [systemKeyPrefix + '2'],
+      );
+      expect(rows[0].n).toBe(1);
+    });
   });
 });
