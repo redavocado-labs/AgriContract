@@ -38,6 +38,8 @@ export interface AppConfig {
     host: string;
     port: number;
   };
+  /** Period of the check that warns while file-service.virus-scan.dlq holds messages; 0 = off. */
+  dlqCheckIntervalMs: number;
 }
 
 /**
@@ -67,6 +69,22 @@ export function validate(env: Record<string, unknown>): AppConfig {
     const parsed = Number(raw);
     if (!/^\d+$/.test(raw) || parsed < 1 || parsed > 65535) {
       errors.push(`${name} must be an integer from 1 to 65535, got "${raw}"`);
+      return fallback;
+    }
+    return parsed;
+  };
+
+  /** Whole milliseconds, 0 included; at most 24 h. */
+  const millis = (name: string, fallback: number): number => {
+    const value = env[name];
+    if (value === undefined) return fallback;
+    const raw =
+      typeof value === 'string' ? value.trim() : JSON.stringify(value);
+    const parsed = Number(raw);
+    if (!/^\d+$/.test(raw) || parsed > 86_400_000) {
+      errors.push(
+        `${name} must be whole milliseconds from 0 to 86400000, got "${raw}"`,
+      );
       return fallback;
     }
     return parsed;
@@ -113,6 +131,8 @@ export function validate(env: Record<string, unknown>): AppConfig {
       host: text('CLAMAV_HOST', 'localhost'),
       port: port('CLAMAV_PORT', 3410),
     },
+    // Every 5 minutes, as notification-service's DlqMonitor.
+    dlqCheckIntervalMs: millis('FILE_DLQ_CHECK_INTERVAL_MS', 300_000),
   };
 
   if (errors.length > 0) {
