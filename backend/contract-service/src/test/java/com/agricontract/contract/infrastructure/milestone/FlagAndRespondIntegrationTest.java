@@ -111,7 +111,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ImportAutoConfiguration({JacksonAutoConfiguration.class, EventingAutoConfiguration.class})
-@Import({BusinessCalendarConfiguration.class, SpringTransactionRunner.class, MilestoneFunding.class,
+@Import({com.agricontract.contract.application.service.Level15Inspections.class, com.agricontract.contract.application.service.DisputeExitStep.class, com.agricontract.contract.application.service.MilestoneContestStep.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcLevel15RequestRepository.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcLevel15AssignmentRepository.class, com.agricontract.contract.infrastructure.persistence.dispute.JdbcSettlementProposalRepository.class, com.agricontract.contract.infrastructure.persistence.breach.JdbcBreachCaseRepository.class, com.agricontract.contract.infrastructure.persistence.remedy.JdbcRemedyDecisionRepository.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcInspectionReportRepository.class,
+        BusinessCalendarConfiguration.class, SpringTransactionRunner.class, MilestoneFunding.class,
         JdbcMilestoneRepository.class, JdbcInspectionReportRepository.class, JdbcBreachCaseRepository.class, FlagMilestoneUseCase.class,
         RespondToMilestoneFlagUseCase.class, SellerSilenceMilestonesUseCase.class, MilestoneContestStep.class,
         OutboxContractEventPublisher.class, ContractRepositoryImpl.class,
