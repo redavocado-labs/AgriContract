@@ -7,6 +7,12 @@ export interface IngestPolicy {
   maxBytes: number;
   /** Accepted content types (normalized, see normalizeContentType); null = any. */
   contentTypes: readonly string[] | null;
+  /**
+   * The stored file waits PROCESSING for the virus scan (§4, #131). Without
+   * it the file is READY as soon as it is stored: only the platform's own
+   * files skip the scan (SYSTEM_GENERATED, never an end-user's).
+   */
+  virusScan: boolean;
 }
 
 const MiB = 1024 * 1024;
@@ -19,6 +25,19 @@ export const DIRECT_UPLOAD_POLICY: IngestPolicy = {
   channel: 'DIRECT_UPLOAD',
   maxBytes: 10 * MiB,
   contentTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+  virusScan: true,
+};
+
+/**
+ * SYSTEM_GENERATED (store(), §3, D88): a PDF the platform made itself (the
+ * final contract PDF, an EUDR report), at most 10 MiB, READY at once with no
+ * scan.
+ */
+export const SYSTEM_GENERATED_POLICY: IngestPolicy = {
+  channel: 'SYSTEM_GENERATED',
+  maxBytes: 10 * MiB,
+  contentTypes: ['application/pdf'],
+  virusScan: false,
 };
 
 /**

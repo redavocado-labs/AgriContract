@@ -47,8 +47,9 @@ export interface StoreLogger {
  * The core every entrypoint shares (file-service-phase2-design.md §3): checks
  * the policy of the entrypoint, streams the bytes to object storage under a
  * key it generates (the fileId, §2.3), computes the storage hash while they
- * pass, then records the `file` row PROCESSING. The entrypoint decides the
- * policy and so the ingest channel; the caller never does (§2.1).
+ * pass, then records the `file` row: PROCESSING for the virus scan, or READY
+ * when the policy does not scan (SYSTEM_GENERATED). The entrypoint decides
+ * the policy and so the ingest channel; the caller never does (§2.1).
  *
  * Order: blob first, row second, because the row needs the hash of the bytes
  * actually stored (storage_hash is NOT NULL). A failure in between removes
@@ -129,15 +130,18 @@ export class StoreFileUseCase {
         : new FileLengthMismatchError(declared, meter.bytes);
     }
 
-    const file = newStoredFile({
-      fileId,
-      storageHash: meter.sha256,
-      uploadedBy: input.uploadedBy,
-      ingestChannel: policy.channel,
-      contentType,
-      fileSize: meter.bytes,
-      idempotencyKey,
-    });
+    const file = newStoredFile(
+      {
+        fileId,
+        storageHash: meter.sha256,
+        uploadedBy: input.uploadedBy,
+        ingestChannel: policy.channel,
+        contentType,
+        fileSize: meter.bytes,
+        idempotencyKey,
+      },
+      policy.virusScan ? 'PROCESSING' : 'READY',
+    );
     try {
       await this.files.insert(file);
     } catch (err) {

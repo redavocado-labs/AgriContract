@@ -7,6 +7,7 @@ import { PersistenceModule } from './infrastructure/persistence/persistence.modu
 import { StorageModule } from './infrastructure/storage/storage.module';
 import { StoreFileModule } from './store-file.module';
 import { StoreOnBehalfOfModule } from './store-on-behalf-of.module';
+import { StoreSystemGeneratedModule } from './store-system-generated.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { StoreOnBehalfOfModule } from './store-on-behalf-of.module';
     HealthModule,
     StoreFileModule,
     StoreOnBehalfOfModule,
+    StoreSystemGeneratedModule,
     FileByIdModule,
   ],
 })
