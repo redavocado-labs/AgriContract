@@ -165,17 +165,41 @@ it to its GreenMail). For each mail, streamed through mailparser:
   spfDkimResult, subject, snippet, receivedAt}` and creates no file.
 - **What cannot be taken** (another type, over 20 MiB, empty, not MIME at all) becomes an **`email_intake_failure`**
   row (V4, design §8) for the Operator; the rest of the mail still goes.
+- **At most 40 MiB per mail.** Attachments come one at a time, but each is kept until the mail ends, so the bytes
+  held for one mail are capped at 40 MiB in all (design §4.1, D88): an attachment that would pass it is drained
+  without being held and becomes a failure ("limited to 40 MiB in all"). A mailbox that is abused cannot run the
+  service out of memory.
 
-`emailMeta` = `{senderDomain, spfDkimResult, subject, receivedAt}`: the From domain only (never the address),
-`spfDkimResult` from the topmost `Authentication-Results` header (the one our receiving side added), as
-`spf=pass; dkim=pass; dmarc=pass` with the methods present, or `none`; `receivedAt` = the mailbox's INTERNALDATE.
-A signal for the Operator's review, never a reason to reject.
+`emailMeta` = `{senderDomain, spfDkimResult, subject, receivedAt}` (golden-flow-events.yaml, D88): the From domain
+only (never the address); `receivedAt` = the mailbox's INTERNALDATE. **`spfDkimResult` is `PASS`, `FAIL` or
+`NONE`**, read only from the topmost `Authentication-Results` header whose authserv-id is `INTAKE_AUTHSERV_ID`, the
+one our receiving server wrote. Any other header was written by someone else, possibly the sender, and is ignored
+(RFC 8601 §5); removing forged ones with our id is the receiving server's job.
+
+| Value | When |
+| --- | --- |
+| `PASS` | `dmarc=pass`. DMARC passes with SPF or DKIM aligned, so a forwarded mail with `spf=fail` is still `PASS` |
+| `FAIL` | otherwise, `spf`, `dkim` or `dmarc` is `fail` (`softfail`, `neutral` and the errors are not) |
+| `NONE` | no header of ours, `INTAKE_AUTHSERV_ID` not set, or no verdict either way |
+
+A signal for the Admin's review, never a reason to reject. Compose's GreenMail writes no such header, so there it is
+always `NONE`.
 
 **Once per mail.** The message key (SHA-256 of the Message-ID, else of `UIDVALIDITY:UID`) goes into
 `email_intake_message` in one transaction with the mail's failures and its notice; a mail seen again (the same
 report delivered twice, or polled again after a crash) does nothing. Each attachment's store is idempotent on
 `(file-service:email-intake, messageKey:index)`, so a crash before that record re-stores nothing. A mail is flagged
-`\Seen` once handled; a poll that fails (IMAP, storage or the database down) leaves it unseen for the next poll.
+`\Seen` once handled; a poll that fails (IMAP, storage or the database down) leaves it unseen for the next poll. A
+mail seen again is logged with its uid and the first 12 characters of its key, so a resend that was skipped can be
+traced.
+
+**A mail that fails every time** would hold back every mail behind it, since a poll stops at its first failure.
+Technical failures are counted per mail (`UIDVALIDITY:UID`, in memory; a restart counts from 0): the first two
+leave it unseen, the **third** writes one `email_intake_failure` row (`mail uid N: could not be processed: <code>
+(3 attempts)`), flags it `\Seen` and the poll goes on (design §4, D88). It is not recorded as processed: an
+Operator who flags it unread again, once the cause is fixed, has it taken in anew. The other side of the rule: an
+outage of storage or the database longer than three polls (~15 minutes) gives up the mail at the head of the
+queue, one every three polls, and leaves each for an Operator to re-flag.
 
 ## Lifecycle job (orphans, retention, legal hold)
 
@@ -259,9 +283,10 @@ Environment variables only (no `.env` file). The defaults match the compose serv
 | `FILE_LIFECYCLE_INTERVAL_MS` | `3600000` | Period of the lifecycle job, 0 to 86400000; `0` turns it off |
 | `INTAKE_IMAP_HOST` | unset = intake off | The `intake@` IMAP server; compose: `greenmail` |
 | `INTAKE_IMAP_PORT` / `INTAKE_IMAP_SECURE` | `3143` / `false` | GreenMail's plain IMAP |
-| `INTAKE_IMAP_USERNAME` / `INTAKE_IMAP_PASSWORD` | `intake` / `intake-dev-secret` | The compose GreenMail user |
+| `INTAKE_IMAP_USERNAME` / `INTAKE_IMAP_PASSWORD` | none: **required** when `INTAKE_IMAP_HOST` is set | The IMAP login. Compose takes both from `backend/.env` (`:?must be set`) for file-service and its GreenMail user |
 | `INTAKE_IMAP_MAILBOX` / `INTAKE_ADDRESS` | `INBOX` / `intake@agricontract.local` | The folder polled; the address recorded as `source_mailbox` |
 | `INTAKE_POLL_INTERVAL_MS` | `300000` | Poll period (design: 5 minutes), 0 to 86400000 |
+| `INTAKE_AUTHSERV_ID` | unset = `spfDkimResult` always `NONE` | authserv-id of our receiving mail server; only its `Authentication-Results` are read |
 
 Startup fails when MySQL or the bucket cannot be reached. `GET /actuator/health` answers 200 with
 `components.db` and `components.storage` UP, or 503 with an error code for the one that is down. RabbitMQ and
@@ -280,6 +305,10 @@ dedupes by eventId). `V3__add_blob_deleted_at.sql` marks step 2 of a deletion do
 migrate: compose's `file-migrate` (Flyway 10.10) runs before `file-service`, and CI runs the same image.
 
 ## Run and test
+
+Compose needs `SERVICE_INTERNAL_SECRET`, `INTAKE_IMAP_USERNAME` and `INTAKE_IMAP_PASSWORD` in `backend/.env`
+(see `.env.example`); it refuses to start without them. The int-specs log in to GreenMail as `intake` /
+`intake-dev-secret` unless those two are set in the shell.
 
 ```bash
 # in backend/
