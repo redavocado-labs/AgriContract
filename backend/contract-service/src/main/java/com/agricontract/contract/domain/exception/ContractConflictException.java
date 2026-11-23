@@ -45,6 +45,14 @@ public class ContractConflictException extends RuntimeException {
     /** D81: the decision differs from the case's computedResolution, or INSPECTOR_L1_5 has none to approve. */
     public static final String RESOLUTION_MISMATCH = "RESOLUTION_MISMATCH";
 
+    /** D57, D92: the milestone is not at a moment where a concession or a settlement can end its dispute. */
+    public static final String DISPUTE_EXIT_NOT_ALLOWED = "DISPUTE_EXIT_NOT_ALLOWED";
+    /**
+     * D57, D92: a second proposal, the proposer accepting its own, an acceptance with another amount, or no open
+     * proposal to withdraw or refuse.
+     */
+    public static final String SETTLEMENT_PROPOSAL_CONFLICT = "SETTLEMENT_PROPOSAL_CONFLICT";
+
     private final String code;
 
     public ContractConflictException(String code, String message) {

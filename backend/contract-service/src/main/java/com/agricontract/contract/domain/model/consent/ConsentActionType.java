@@ -14,5 +14,9 @@ public enum ConsentActionType {
     /** D80: the buyer flags a BUYER_RECEIVED milestone (not yet a breach). Operational tier, no OTP. */
     FLAG_MILESTONE_ISSUE,
     /** D80: the seller contests the buyer's flag and asks for an independent inspection. Operational tier, no OTP. */
-    CONTEST_MILESTONE_FLAG
+    CONTEST_MILESTONE_FLAG,
+    /** D57, D92: a party accepts the other party's position in a milestone dispute. High-risk tier: fresh login + OTP. */
+    CONCEDE_DISPUTE,
+    /** D57, D92: a party proposes or accepts an agreed seller entitlement for a disputed milestone. Fresh login + OTP. */
+    SETTLE_DISPUTE
 }

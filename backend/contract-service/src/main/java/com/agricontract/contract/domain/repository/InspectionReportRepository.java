@@ -26,4 +26,8 @@ public interface InspectionReportRepository {
 
     /** True when a COMPLETE report (one that decides money) is stored for the milestone. */
     boolean existsCompleteByMilestoneId(String milestoneId);
+
+    /** D92: the measurement status of each stored report of the milestone, by purpose (empty when none). */
+    java.util.Map<InspectionReportPurpose, com.agricontract.contract.domain.model.quality.MeasurementStatus>
+            statusesByPurpose(String milestoneId);
 }
