@@ -22,6 +22,7 @@ import com.agricontract.contract.domain.repository.BreachCaseRepository;
 import com.agricontract.contract.domain.repository.ContractRepository;
 import com.agricontract.contract.domain.repository.MilestoneRepository;
 import com.agricontract.contract.domain.repository.RemedyDecisionRepository;
+import com.agricontract.contract.domain.repository.SettlementProposalRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -56,6 +57,7 @@ public class ResolveBreachCaseUseCase {
     private final MilestoneRepository milestones;
     private final RemedyDecisionRepository remedyDecisions;
     private final RemedySettlement remedySettlement;
+    private final SettlementProposalRepository proposals;
     private final VietnamBusinessDays calendar;
     private final IdempotencyStore idempotencyStore;
     private final TransactionRunner transactions;
@@ -103,6 +105,8 @@ public class ResolveBreachCaseUseCase {
             throw new IllegalStateException("Milestone " + milestone.milestoneId() + " is " + milestone.status()
                     + ", a resolved case needs it CONTESTED");
         }
+        // D92: an Arbitrator's decision ends any open settlement proposal of the milestone.
+        proposals.lapseOpen(milestone.milestoneId(), now);
         var terms = contract.getCoffeeTerms().snapshot();
         BigDecimal left = terms.sellerDepositAmount().value()
                 .subtract(remedyDecisions.sellerDepositForfeited(contract.getContractId().value()).value());

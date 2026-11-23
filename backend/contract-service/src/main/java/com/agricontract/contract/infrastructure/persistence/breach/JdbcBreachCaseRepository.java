@@ -167,7 +167,7 @@ public class JdbcBreachCaseRepository implements BreachCaseRepository {
         }
     }
 
-    /** decisionSource is the constant INSPECTOR_L1_5 and is written for readers of the column; money as "...00" strings. */
+    /** decisionSource is INSPECTOR_L1_5 (MUTUAL for an agreed exit, D92) and is written for readers of the column; money as "...00" strings. */
     private String writeComputed(BreachCaseComputedResolution r) {
         ObjectNode node = json.createObjectNode();
         node.put("inspectionReportId", r.inspectionReportId());
@@ -175,24 +175,25 @@ public class JdbcBreachCaseRepository implements BreachCaseRepository {
         node.put("acceptedQuantityKg", r.acceptedQuantityKg().stripTrailingZeros().toPlainString());
         node.put("qualityDisposition", r.qualityDisposition() == null ? null : r.qualityDisposition().name());
         node.put("finalBreachingRole", r.finalBreachingRole() == null ? null : r.finalBreachingRole().name());
-        node.put("decisionSource", DecisionSource.INSPECTOR_L1_5.name());
+        node.put("decisionSource", (r.isAgreed() ? DecisionSource.MUTUAL : DecisionSource.INSPECTOR_L1_5).name());
         node.put("sellerEntitlementAmount", r.sellerEntitlementAmount().wire());
         node.put("buyerRefundAmount", r.buyerRefundAmount().wire());
-        node.put("prevailingRole", r.prevailingRole().name());
+        node.put("prevailingRole", r.prevailingRole() == null ? null : r.prevailingRole().name());
         return node.toString();
     }
 
     private BreachCaseComputedResolution readComputed(String text) {
         try {
             JsonNode n = json.readTree(text);
-            return new BreachCaseComputedResolution(n.get("inspectionReportId").asText(),
+            return new BreachCaseComputedResolution(
+                    n.path("inspectionReportId").isNull() ? null : n.get("inspectionReportId").asText(),
                     FlagIssueType.valueOf(n.get("issueType").asText()), new BigDecimal(n.get("acceptedQuantityKg").asText()),
                     n.path("qualityDisposition").isNull() ? null
                             : QualityDisposition.valueOf(n.get("qualityDisposition").asText()),
                     n.path("finalBreachingRole").isNull() ? null : SignerRole.valueOf(n.get("finalBreachingRole").asText()),
                     new VndAmount(new BigDecimal(n.get("sellerEntitlementAmount").asText())),
                     new VndAmount(new BigDecimal(n.get("buyerRefundAmount").asText())),
-                    SignerRole.valueOf(n.get("prevailingRole").asText()));
+                    n.path("prevailingRole").isNull() ? null : SignerRole.valueOf(n.get("prevailingRole").asText()));
         } catch (JsonProcessingException e) {
             throw new IllegalStateException(e);
         }

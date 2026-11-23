@@ -93,6 +93,10 @@ contract:
       CONFIRM_CLEAN_RECEIPT: "1.0"
       FLAG_MILESTONE_ISSUE: "1.1"
       CONTEST_MILESTONE_FLAG: "1.0"
+    # D57, D92: ending a milestone dispute, high-risk tier (checkbox + fresh login + OTP).
+    dispute-exit-versions:
+      CONCEDE_DISPUTE: "1.0"
+      SETTLE_DISPUTE: "1.0"
   milestone:
     # D75: the seller may correct the declared weight for this long after the first declaration (never extended),
     # while the buyer has not recorded receipt. Lower it on the demo (e.g. PT5M).

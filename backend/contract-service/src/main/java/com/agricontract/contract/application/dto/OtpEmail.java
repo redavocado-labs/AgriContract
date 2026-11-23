@@ -11,6 +11,10 @@ public record OtpEmail(String requestId, String recipientUserId, String recipien
 
     /** OtpEmailRequest.purpose (golden-flow-api, D42): absent means SIGN_CONTRACT, so signing sends none. */
     public static final String CANCEL_ACTIVATION = "CANCEL_ACTIVATION";
+    /** D57: the code confirms a concession that ends a milestone dispute. */
+    public static final String CONCEDE_DISPUTE = "CONCEDE_DISPUTE";
+    /** D57: the code confirms a settlement proposal or acceptance for a milestone dispute. */
+    public static final String SETTLE_DISPUTE = "SETTLE_DISPUTE";
 
     /** A signing code: no purpose on the wire, exactly as before D42. */
     public OtpEmail(String requestId, String recipientUserId, String recipientEmail, String contractId,

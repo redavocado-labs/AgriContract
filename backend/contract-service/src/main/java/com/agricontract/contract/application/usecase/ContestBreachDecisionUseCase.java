@@ -27,6 +27,7 @@ import com.agricontract.contract.domain.model.inspection.InspectionReportPurpose
 import com.agricontract.contract.domain.repository.MilestoneEvidenceRepository;
 import com.agricontract.contract.domain.repository.MilestoneRepository;
 import com.agricontract.contract.domain.repository.RemedyDecisionRepository;
+import com.agricontract.contract.application.service.Level15Inspections;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -59,6 +60,7 @@ public class ContestBreachDecisionUseCase {
     private final InspectionReportRepository reports;
     private final MilestoneEvidenceRepository evidence;
     private final ContractEventPublisher events;
+    private final Level15Inspections level15;
     private final EvidenceAttachment attachment;
     private final IdempotencyStore idempotencyStore;
     private final TransactionRunner transactions;
@@ -105,8 +107,7 @@ public class ContestBreachDecisionUseCase {
         requirePending(breachCase);
         breachCases.update(contested);
         evidence.markNamed(command.evidenceFileIds(), now);
-        events.inspectionLevel15Requested(contract, milestone, InspectionRequestReason.DECISION_CONTESTED,
-                command.actorId(), now);
+        level15.request(contract, milestone, InspectionRequestReason.DECISION_CONTESTED, command.actorId(), now);
         idempotencyStore.recordResult(command.actorId(), CONTEST, command.idempotencyKey(), command.breachCaseId());
         log.info("event=breach_decision_contested breachCaseId={} contractId={} milestoneId={} role={} files={}",
                 command.breachCaseId(), command.contractId(), milestone.milestoneId(), role,

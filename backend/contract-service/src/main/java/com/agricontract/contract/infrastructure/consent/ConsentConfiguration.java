@@ -2,6 +2,7 @@ package com.agricontract.contract.infrastructure.consent;
 
 import com.agricontract.contract.domain.model.consent.ConsentActionType;
 import com.agricontract.contract.domain.model.consent.ConsentStatement;
+import com.agricontract.contract.domain.model.consent.DisputeExitConsentStatements;
 import com.agricontract.contract.domain.model.consent.OperationalConsentStatements;
 import com.agricontract.contract.domain.model.consent.ConsentStatements;
 import com.agricontract.contract.domain.model.consent.SignerRole;
@@ -67,6 +68,31 @@ public class ConsentConfiguration {
             templates.put(action.getKey(), new ConsentStatement(code, version, text, CanonicalTerms.sha256(text)));
         }
         return new OperationalConsentStatements(templates);
+    }
+
+    /**
+     * D57, D92: CONCEDE_DISPUTE and SETTLE_DISPUTE, one statement per role (high-risk tier). The hash is over the
+     * template, placeholders ([X], [Y]) left as written. Startup fails if a version or a file is missing.
+     */
+    @Bean
+    DisputeExitConsentStatements disputeExitConsentStatements(ConsentStatementProperties properties)
+            throws IOException {
+        Map<ConsentActionType, Map<SignerRole, ConsentStatement>> statements = new EnumMap<>(ConsentActionType.class);
+        for (ConsentActionType action : new ConsentActionType[]{ConsentActionType.CONCEDE_DISPUTE,
+                ConsentActionType.SETTLE_DISPUTE}) {
+            String version = properties.disputeExitVersions().get(action);
+            if (version == null || version.isBlank()) {
+                throw new IllegalStateException("contract.consent.dispute-exit-versions." + action + " is required");
+            }
+            Map<SignerRole, ConsentStatement> byRole = new EnumMap<>(SignerRole.class);
+            for (SignerRole role : SignerRole.values()) {
+                String code = DisputeExitConsentStatements.code(action, role);
+                String text = load("consent-statement/" + code + "-" + version + ".txt");
+                byRole.put(role, new ConsentStatement(code, version, text, CanonicalTerms.sha256(text)));
+            }
+            statements.put(action, byRole);
+        }
+        return new DisputeExitConsentStatements(statements);
     }
 
     @Bean

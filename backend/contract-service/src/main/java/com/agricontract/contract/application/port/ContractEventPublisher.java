@@ -110,6 +110,12 @@ public interface ContractEventPublisher {
                                     String initiatedByActorId, Instant at);
 
     /**
+     * inspection.level1_5_cancelled (D57, D92): the dispute ended by a concession or an agreed settlement while a Level
+     * 1.5 request was pending; reason DISPUTE_CONCEDED or DISPUTE_SETTLED.
+     */
+    void inspectionLevel15Cancelled(Contract contract, Milestone milestone, String reason, Instant at);
+
+    /**
      * milestone.dispute_resolved (D82): the QUANTITY flag settled on the buyer's weight because the seller was silent;
      * resolutionFavors BUYER.
      */

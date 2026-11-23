@@ -1,5 +1,6 @@
 package com.agricontract.contract.application.dto;
 
+import com.agricontract.contract.domain.model.dispute.SettlementProposal;
 import com.agricontract.contract.domain.model.milestone.BuyerReceipt;
 import com.agricontract.contract.domain.model.milestone.Milestone;
 import com.agricontract.contract.domain.model.milestone.MilestoneEvidenceFile;
@@ -18,11 +19,17 @@ import java.util.List;
  * @param effectiveUnitPrice the milestone's own price once funding was requested, the signed price before
  * @param sellerDeclaration  the declaration in force, null before the seller weighed
  * @param buyerReceipt       null until the buyer recorded receipt
+ * @param disputeExit        D92: the positions and what the parties may do, null outside an exit moment
  */
 public record MilestoneDetailView(String contractId, Milestone milestone, VndAmount effectiveUnitPrice,
                                   LocalDate effectiveDeliveryDeadline, SellerDeclaration sellerDeclaration,
                                   BuyerReceiptBlock buyerReceipt, FlagBlock flag,
-                                  List<MilestoneEvidenceFile> evidence) {
+                                  List<MilestoneEvidenceFile> evidence, DisputeExitBlock disputeExit) {
+
+    /** D92 (MilestoneDisputeExitView): openProposal is null when no settlement proposal is open. */
+    public record DisputeExitBlock(VndAmount buyerPosition, VndAmount sellerPosition, boolean concedeAllowed,
+                                   boolean settlementAllowed, SettlementProposal openProposal) {
+    }
 
     /** confirmWindowClosesAt = receivedAt + buyerConfirmWindowDays business days (D76). */
     public record BuyerReceiptBlock(BuyerReceipt receipt, Instant confirmWindowClosesAt) {
