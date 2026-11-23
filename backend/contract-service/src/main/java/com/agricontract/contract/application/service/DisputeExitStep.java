@@ -113,7 +113,8 @@ public class DisputeExitStep {
         }
         Map<InspectionReportPurpose, com.agricontract.contract.domain.model.quality.MeasurementStatus> statuses =
                 reports.statusesByPurpose(milestone.milestoneId());
-        return DisputeExitWindow.assess(milestone, breachCase, latest, statuses);
+        return DisputeExitWindow.assess(milestone, breachCase, latest, statuses,
+                MilestoneCleanSettlement.requiresInspection(contract));
     }
 
     /**

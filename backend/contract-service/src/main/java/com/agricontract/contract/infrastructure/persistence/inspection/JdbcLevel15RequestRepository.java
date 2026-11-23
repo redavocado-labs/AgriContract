@@ -44,4 +44,11 @@ public class JdbcLevel15RequestRepository implements Level15RequestRepository {
         return jdbc.update("UPDATE level1_5_request SET ended_at = ?, end_reason = ? WHERE milestone_id = ?"
                 + " AND ended_at IS NULL", Timestamp.from(at), reason.name(), milestoneId);
     }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public int cancelOpenExceptMandatory(String milestoneId, Instant at) {
+        return jdbc.update("UPDATE level1_5_request SET ended_at = ?, end_reason = 'CANCELLED' WHERE milestone_id = ?"
+                + " AND ended_at IS NULL AND reason <> 'MANDATORY_INSPECTION'", Timestamp.from(at), milestoneId);
+    }
 }

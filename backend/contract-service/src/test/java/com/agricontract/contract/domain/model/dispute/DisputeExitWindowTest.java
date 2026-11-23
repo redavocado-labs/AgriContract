@@ -99,6 +99,14 @@ class DisputeExitWindowTest {
     }
 
     @Test
+    void aContractWithMandatoryInspection_hasNoWindow_awaitingOrContested() {
+        assertThat(DisputeExitWindow.assess(milestone(MilestoneStatus.AWAITING_SELLER_RESPONSE,
+                FlagIssueType.QUANTITY, "10000", "9800", null), null, null, Map.of(), true)).isEmpty();
+        assertThat(DisputeExitWindow.assess(milestone(MilestoneStatus.CONTESTED, FlagIssueType.QUALITY, "10000",
+                "9800", CASE), openCase(), null, Map.of(), true)).isEmpty();
+    }
+
+    @Test
     void anInconclusiveFirstReport_keepsTheWindowOpen_andIsRemembered() {
         DisputeExitWindow w = window(milestone(MilestoneStatus.CONTESTED, FlagIssueType.QUALITY, "10000", "9800",
                 CASE), openCase(), null, Map.of(InspectionReportPurpose.INITIAL, MeasurementStatus.INCONCLUSIVE))
@@ -224,7 +232,7 @@ class DisputeExitWindowTest {
 
     private static Optional<DisputeExitWindow> window(Milestone m, BreachCase c, RemedyDecision latest,
                                                       Map<InspectionReportPurpose, MeasurementStatus> reports) {
-        return DisputeExitWindow.assess(m, c, latest, reports);
+        return DisputeExitWindow.assess(m, c, latest, reports, false);
     }
 
     private static Milestone milestone(MilestoneStatus status, FlagIssueType issue, String sellerKg, String buyerKg,
