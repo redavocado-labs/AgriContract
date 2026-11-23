@@ -43,7 +43,11 @@ export interface StoredFile {
   idempotencyKey: string | null;
 }
 
-/** A freshly stored file: PROCESSING, not attached (§2.2, §7). */
+/**
+ * A freshly stored file, not attached (§7): PROCESSING until the virus scan
+ * decides (§2.2), or READY at once for a file that is not scanned
+ * (SYSTEM_GENERATED, §3).
+ */
 export function newStoredFile(
   fields: Pick<
     StoredFile,
@@ -55,10 +59,11 @@ export function newStoredFile(
     | 'fileSize'
     | 'idempotencyKey'
   >,
+  status: 'PROCESSING' | 'READY' = 'PROCESSING',
 ): StoredFile {
   return {
     ...fields,
-    status: 'PROCESSING',
+    status,
     attached: false,
     legalHold: false,
     deletedAt: null,
