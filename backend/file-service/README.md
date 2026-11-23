@@ -11,9 +11,10 @@ NestJS 11 on Node 22, port **8089**. Internal only: the gateway never routes it.
 
 #116: the scaffold, the store core and its one entrypoint so far, `POST /internal/v1/files` (`storeOnBehalfOf`,
 request frozen by D60 in `contracts/events/supplementary-services-api.yaml`). #274: `GET`, `DELETE` and
-`confirm-attached` on `/internal/v1/files/{fileId}`. Not done yet: virus scan and `file.ready`/`file.failed` (#131,
-so every file stays `PROCESSING` and `GET` answers 404 for now), `store()` for `SYSTEM_GENERATED` (no path in the
-contract yet), email intake (#275), the retention and orphan-cleanup jobs (#276).
+`confirm-attached` on `/internal/v1/files/{fileId}`, and `store()` for `SYSTEM_GENERATED`
+(`POST /internal/v1/files/system-generated`, D88). Not done yet: virus scan and `file.ready`/`file.failed` (#131, so
+every uploaded file stays `PROCESSING` and `GET` answers 404 for it for now), email intake (#275), the retention and
+orphan-cleanup jobs (#276).
 
 ## `POST /internal/v1/files` (storeOnBehalfOf)
 
@@ -58,6 +59,25 @@ and throws them away **before** it answers: answering first would let Node close
 the caller is still sending, and the caller would get a reset instead of the answer. A body over the cap (413) or
 without a length is not read; the answer carries `Connection: close`.
 
+## `POST /internal/v1/files/system-generated` (storeSystemGenerated, `store()`)
+
+A service stores a PDF it **generated itself**: the final contract PDF (contract-service), an EUDR report
+(audit-service). Never a file that came from an end-user: that goes through `storeOnBehalfOf` and the virus scan, and
+keeping that line is the calling service's job (design §2.1). Body, `Content-Length`, the 10 MiB cap, the unread
+body and the `Idempotency-Key` rules are those of `storeOnBehalfOf`; what differs:
+
+| | |
+| --- | --- |
+| `X-Service-Id` | `contract-service` or `audit-service`, exactly; stored as `uploaded_by`. Anything else is a 400 |
+| `Content-Type` | `application/pdf` only |
+| Channel | `SYSTEM_GENERATED`, fixed by the route |
+| Answer | **201** `{fileId, status: "READY", storageHash, fileSize, contentType}`: no scan, so the file is `READY` at once and `GET` serves it; no `file.ready`/`file.failed` is published for it |
+
+A repeat of (`X-Service-Id`, `Idempotency-Key`) answers 201 with the earlier file, without storing again. The shared
+secret does not say which service is calling, so `X-Service-Id` is trusted like `X-Acting-User-Id`; the fixed list
+only stops a caller from making up an uploader (design §9). The file still needs `confirm-attached` once the caller
+kept its `fileId`, like any other.
+
 ## `/internal/v1/files/{fileId}`: read, confirm-attached, delete
 
 `getFile`, `confirmAttached` and `deleteFile` of the contract (design §6, §7). Every route needs `X-Internal-Secret`;
@@ -89,6 +109,10 @@ and the repeat finishes it, since step 1 is already done. The row stays as the r
 | Policy | Channel | Content types | Cap |
 | --- | --- | --- | --- |
 | `DIRECT_UPLOAD_POLICY` | `DIRECT_UPLOAD` | `image/jpeg`, `image/png`, `application/pdf` | 10 MiB |
+| `SYSTEM_GENERATED_POLICY` | `SYSTEM_GENERATED` | `application/pdf` | 10 MiB |
+
+A policy also says whether its files are scanned (`virusScan`): a scanned file is recorded `PROCESSING`, an unscanned
+one (`SYSTEM_GENERATED` only) `READY`.
 
 For each store:
 
@@ -99,8 +123,8 @@ For each store:
    sits in between: it counts the bytes, computes the SHA-256 `storageHash`, and fails the stream as soon as the
    body sends a byte more than declared, or at the end if it sent fewer. Nothing is buffered whole: the meter holds
    back at most one chunk (see below).
-4. Only then is the `file` row inserted: `PROCESSING`, `attached = FALSE`, `uploaded_by`, `ingest_channel`,
-   `content_type`, the counted `file_size` and the `storage_hash`.
+4. Only then is the `file` row inserted: `PROCESSING` (or `READY` when the policy does not scan), `attached = FALSE`,
+   `uploaded_by`, `ingest_channel`, `content_type`, the counted `file_size` and the `storage_hash`.
 
 Failure handling:
 
@@ -166,7 +190,7 @@ In Git Bash on Windows, put `MSYS_NO_PATHCONV=1` in front of a `docker run` that
 ## Layout
 
 ```
-src/domain/stored-file.ts            the File aggregate (§2): channels, statuses, a new PROCESSING file
+src/domain/stored-file.ts            the File aggregate (§2): channels, statuses, a newly stored file
 src/application/store-file.use-case  the store core shared by every entrypoint
 src/application/byte-meter.ts        count + SHA-256 + length enforcement while streaming
 src/application/ingest-policy.ts     what each entrypoint accepts
