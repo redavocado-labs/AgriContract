@@ -485,11 +485,13 @@ paths:
         certificate for this milestone; the file is recorded against the milestone and the uploader. Checks run in
         this order: party of this contract (403), milestone of this contract (404), the uploader's turn (409):
         SELLER while the milestone is IN_PROGRESS, or SELLER_WEIGHED inside the correction window (D75); BUYER while
-        it is SELLER_WEIGHED. The body is the raw file, streamed, with the rules of file-service storeOnBehalfOf
+        it is SELLER_WEIGHED; D91 (23/11/2026): on a CONTESTED milestone, the party whose role is the case's
+        finalBreachingRole while contestStatus is OPEN, and the party who contested while contestStatus is CONTESTED
+        and the contest's Level 1.5 report is not confirmed yet. The body is the raw file, streamed, with the rules of file-service storeOnBehalfOf
         (D60): Content-Type image/jpeg, image/png or application/pdf, Content-Length required (no chunked body), at
         most 10 MiB. contract-service streams it to storeOnBehalfOf with X-Acting-User-Id = the caller and the same
         Idempotency-Key. The file is PROCESSING until file.ready or file.failed arrives; only a file recorded here
-        for this milestone and this uploader can be named by weigh/confirm/flag. Uploading again with a new key
+        for this milestone and this uploader can be named by weigh/confirm/flag/contest. Uploading again with a new key
         gives a new file; files that are never named are cleaned by file-service.
       parameters:
         - {name: contractId, in: path, required: true, schema: {type: string, format: uuid}}
