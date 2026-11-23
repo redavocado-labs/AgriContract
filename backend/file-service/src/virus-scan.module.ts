@@ -19,6 +19,7 @@ import {
   AMQP_CONNECT,
   AmqpService,
 } from './infrastructure/messaging/amqp.service';
+import { DlqMonitor } from './infrastructure/messaging/dlq-monitor';
 import { ScanWorker } from './infrastructure/messaging/scan-worker';
 import { PersistenceModule } from './infrastructure/persistence/persistence.module';
 import { ClamdScanner } from './infrastructure/scan/clamd-scanner';
@@ -30,7 +31,8 @@ const CLAMD_TIMEOUT_MS = 60_000;
 /**
  * The async pipeline of file-service-phase2-design.md §4 for DIRECT_UPLOAD
  * (#131): outbox → agricontract.files → file-service.virus-scan → clamd →
- * READY / FAILED + file.ready / file.failed.
+ * READY / FAILED + file.ready / file.failed, and the check that warns while
+ * the DLQ holds messages.
  */
 @Module({
   imports: [PersistenceModule, StorageModule],
@@ -62,6 +64,7 @@ const CLAMD_TIMEOUT_MS = 60_000;
         ),
     },
     ScanWorker,
+    DlqMonitor,
   ],
 })
 export class VirusScanModule {}
