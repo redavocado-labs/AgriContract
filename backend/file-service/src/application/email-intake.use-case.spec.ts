@@ -21,13 +21,15 @@ import type {
 import type {
   IntakeMail,
   IntakeMailboxPort,
+  MailLimits,
 } from './ports/intake-mailbox.port';
 import { StoreFileUseCase } from './store-file.use-case';
 
 const RECEIVED = new Date('2026-11-22T02:00:05Z');
 /** INTAKE_AUTHSERV_ID of these tests: the id our receiving server writes. */
 const OUR_SERVER = 'mx.agricontract.local';
-const MiB = 1024 * 1024;
+const KiB = 1024;
+const MiB = 1024 * KiB;
 
 class FakeMailbox implements IntakeMailboxPort {
   readonly address = 'intake@agricontract.local';
@@ -127,6 +129,28 @@ describe('EmailIntakeUseCase', () => {
 
   const stored = () => [...files.rows.values()];
 
+  /**
+   * The use case with a reader that records the limits it is asked for and
+   * reads with them divided by 1024, so a test of a limit moves kilobytes,
+   * not megabytes (the reader's own spec holds it to the limit it is given).
+   */
+  const withScaledReader = (asked: MailLimits[]) =>
+    new EmailIntakeUseCase(
+      mailbox,
+      (source, limits) => {
+        asked.push(limits);
+        return readMail(source, {
+          attachmentBytes: limits.attachmentBytes / KiB,
+          mailBytes: limits.mailBytes / KiB,
+        });
+      },
+      new StoreFileUseCase(storage, files, { warn() {} }),
+      intake,
+      { log() {}, warn() {} },
+      { authservId: OUR_SERVER },
+    );
+  const LIMITS = { attachmentBytes: 20 * MiB, mailBytes: 40 * MiB };
+
   it('a report attachment becomes an EMAIL_INTAKE file, PROCESSING, its hash computed as it was stored', async () => {
     mailbox.add({
       from: 'reports@SGS.example.com',
@@ -212,6 +236,8 @@ describe('EmailIntakeUseCase', () => {
   });
 
   it('what cannot be taken becomes a failure for the Operator; the rest of the mail still goes', async () => {
+    const asked: MailLimits[] = [];
+    useCase = withScaledReader(asked);
     mailbox.add({
       attachments: [
         {
@@ -223,7 +249,7 @@ describe('EmailIntakeUseCase', () => {
         {
           filename: 'huge.pdf',
           contentType: 'application/pdf',
-          bytes: Buffer.alloc(20 * 1024 * 1024 + 1, 1),
+          bytes: Buffer.alloc(20 * KiB + 1, 1),
         },
         { filename: 'report.pdf', contentType: 'application/pdf', bytes: PDF },
       ],
@@ -231,6 +257,7 @@ describe('EmailIntakeUseCase', () => {
 
     await useCase.poll(10);
 
+    expect(asked).toEqual([LIMITS]);
     expect(stored()).toHaveLength(1);
     expect(intake.all[0]).toMatchObject({
       attachments: 1,
@@ -407,10 +434,12 @@ describe('EmailIntakeUseCase', () => {
   });
 
   it('the attachments of one mail are taken up to 40 MiB in all; the rest become failures', async () => {
+    const asked: MailLimits[] = [];
+    useCase = withScaledReader(asked);
     const big = (name: string) => ({
       filename: name,
       contentType: 'application/pdf',
-      bytes: Buffer.alloc(15 * MiB, 1),
+      bytes: Buffer.alloc(15 * KiB, 1),
     });
     mailbox.add({
       attachments: [big('a.pdf'), big('b.pdf'), big('c.pdf')],
@@ -418,6 +447,7 @@ describe('EmailIntakeUseCase', () => {
 
     await useCase.poll(10);
 
+    expect(asked).toEqual([LIMITS]);
     expect(stored()).toHaveLength(2);
     expect(intake.all[0]).toMatchObject({
       attachments: 2,
