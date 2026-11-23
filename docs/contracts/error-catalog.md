@@ -66,6 +66,8 @@ Current explicit `409` codes occupy these slots:
 | `EVIDENCE_REJECTED` | `*_STATE_CONFLICT` |
 | `INSPECTION_REPORT_PENDING` | `*_STATE_CONFLICT` (mandatory or contested inspection has no confirmed report yet) |
 | `RESOLUTION_MISMATCH` | `*_STATE_CONFLICT` (Arbitrator decision differs from the result computed from the report, D81) |
+| `DISPUTE_EXIT_NOT_ALLOWED` | `*_STATE_CONFLICT` (concede or settlement outside the moments of milestone-escrow §3.4 D92: no open flag/dispute, a COMPLETE report already decides it, or the case came from mandatory inspection) |
+| `SETTLEMENT_PROPOSAL_CONFLICT` | `*_STATE_CONFLICT` (a proposal is already open, the acceptance amount differs from it, the proposer accepts its own proposal, or there is no open proposal to withdraw, D57) |
 | `CONSENT_CONTENT_MISMATCH` | `*_VERSION_MISMATCH` |
 
 All current catalog scenarios that can return `409` without naming a canonical code are `*_STATE_CONFLICT`: immutable terms after the first signature; stale or no-longer-acceptable price proposals; funding already requested; an adjustment already accepted; a milestone already `SETTLED` or `WITHDRAWN`; a case already resolved; OTP/challenge binding or superseded-challenge conflicts; reservation replay with different payload; pending supersede/refund transitions; maker-checker conflicts; and mandatory-inspection state conflicts. The same classification applies to any other state-transition or duplicate-with-different-state conflict in this catalog. If a `409` code is ambiguous, classify it as `*_STATE_CONFLICT`; refreshing instead of blindly retrying is the safer default.

@@ -290,6 +290,8 @@ Lý do 2 tầng không thừa nhau: khoá chỉ chặn **tạo mới**, không h
 |---|---|---|---|
 | `milestone.dispute_resolved` | Tín hiệu hành vi | `contract-service` — payload `{contractId, milestoneId, flaggedBy: BUYER, flaggedByUserId, resolutionFavors: BUYER\|SELLER}` | `reputation-service` đếm tỷ lệ `resolutionFavors = SELLER` trên tổng số lần buyer đó từng `FLAG_ISSUE`; IDs đã canonical nên không cần lookup |
 
+**Bổ sung 24/11/2026 (D92):** buyer tự rút báo lỗi (concede, milestone-escrow §3.4) cũng phát `resolutionFavors = SELLER`, nên được đếm là báo lỗi không thành — chặn kiểu báo lỗi bừa để thử seller rồi rút không mất gì. Tín hiệu này chỉ để hiển thị, không khoá, không trừ điểm. Khi đưa ra `public-summary` (#145) hiển thị dạng **"Tỷ lệ báo lỗi không thành: X% (a/b lần)"** — luôn kèm số lần để mẫu nhỏ (1/1 = 100%) không bị hiểu sai.
+
 Dùng đúng bộ máy reputation đã có (view sống — score derive lúc query từ `lock_entry` + facts tables §2.2, không lưu sẵn score, §5.2) — chỉ thêm 1 loại tín hiệu đầu vào (`dispute_outcome_fact`), không phải cơ chế mới.
 
 **Tổng kết B4:** đối xứng hoá reputation (dữ liệu đã có, chỉ thêm chiều hiển thị) + framing 2 deposit rate là công cụ 2 chiều (đã đúng cơ chế, chỉ cần nói rõ) + tín hiệu chống flag-abuse (nhỏ, tái dùng hạ tầng sẵn có). Không phải known-limitation cần chấp nhận — là hoàn chỉnh hoá luận điểm gốc "bảo vệ bên yếu thế" cho đúng cả 2 chiều.

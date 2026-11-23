@@ -679,8 +679,10 @@ paths:
       x-domain-ownership-check: true
       description: >-
         A party accepts the other party's position in an open milestone dispute (D57, milestone-escrow design
-        section 3.4). Allowed while the dispute is open and no final decision is recorded, for disputes a party
-        caused (not mandatory inspection, not the Level 2 buffer fallback). High-risk consent: checkbox statement
+        section 3.4). D92: also while the flag waits for the seller's response, where the seller accepting the
+        flag and the buyer withdrawing it are both a concession. Not allowed once a COMPLETE Level 1.5 report
+        decides the dispute, for a case opened by mandatory inspection, or for the Level 2 buffer fallback
+        (409 DISPUTE_EXIT_NOT_ALLOWED). High-risk consent: checkbox statement
         CONCEDE_DISPUTE bound to the current signedContentHash, a fresh login (auth_time within 300 s) and an emailed
         OTP with purpose CONCEDE_DISPUTE. Nothing changes until /dispute/concede/verify.
       security: [{bearerAuth: []}]
@@ -730,7 +732,9 @@ paths:
       description: >-
         Proposes, or accepts, an agreed seller entitlement for the disputed milestone (D57, milestone-escrow design
         section 3.4). With no open proposal the caller proposes; with an open proposal from the other party the
-        caller accepts and must send exactly the proposed amount (409 otherwise). The amount must lie between the
+        caller accepts and must send exactly the proposed amount (409 SETTLEMENT_PROPOSAL_CONFLICT otherwise).
+        D92: only on a CONTESTED milestone before a COMPLETE report of the pending round (409
+        DISPUTE_EXIT_NOT_ALLOWED). The amount must lie between the
         buyer's and the seller's positions computed by contract-service, both ends included (400 otherwise).
         At most one open proposal per milestone; the proposer cannot accept its own proposal (409). High-risk
         consent: checkbox statement SETTLE_DISPUTE bound to the current signedContentHash, fresh login and an
@@ -759,7 +763,8 @@ paths:
         Checks the SETTLE_DISPUTE OTP. For a proposal it records the open proposal and notifies the other party;
         the inspection keeps running. For an acceptance it ends the dispute in one transaction: AttributionDecision
         (decisionSource MUTUAL, no fault), RemedyDecision (inspection fee on the party that requested the
-        inspection when an inspector was assigned and its freeCancelUntil has passed), remedy.finalized, and
+        inspection when an inspector was assigned and its freeCancelUntil has passed; split between both parties
+        for a first report that came back INCONCLUSIVE, D92), remedy.finalized, and
         inspection.level1_5_cancelled when a Level 1.5 request is pending. No milestone.dispute_resolved.
       security: [{bearerAuth: []}]
       parameters:
@@ -781,7 +786,7 @@ paths:
       x-domain-ownership-check: true
       description: >-
         Ends the open settlement proposal: the proposer withdraws it or the other party refuses it. The dispute and
-        any inspection continue. No open proposal: 409.
+        any inspection continue. No open proposal: 409 SETTLEMENT_PROPOSAL_CONFLICT.
       security: [{bearerAuth: []}]
       parameters:
         - {name: contractId, in: path, required: true, schema: {type: string, format: uuid}}
@@ -1871,7 +1876,7 @@ components:
       additionalProperties: false
     MilestoneDetailResponse:
       type: object
-      required: [contractId, milestone, sellerDeclaration, buyerReceipt, flag, evidence, settlement, breachCaseId]
+      required: [contractId, milestone, sellerDeclaration, buyerReceipt, flag, evidence, settlement, breachCaseId, disputeExit]
       additionalProperties: false
       description: D84. Read model for the BF-04 screens; nested blocks are null until their step has happened.
       properties:
@@ -1890,6 +1895,29 @@ components:
         settlement:
           oneOf: [{$ref: '#/components/schemas/MilestoneSettlementView'}, {type: 'null'}]
         breachCaseId: {type: [string, 'null'], format: uuid, description: The milestone's breach case opened by a contest (D80); null otherwise.}
+        disputeExit:
+          oneOf: [{$ref: '#/components/schemas/MilestoneDisputeExitView'}, {type: 'null'}]
+          description: D92. Present while the milestone is at a moment where a concession or a settlement can end the dispute (milestone-escrow 3.4); null otherwise.
+    MilestoneDisputeExitView:
+      type: object
+      required: [buyerPositionAmount, sellerPositionAmount, concedeAllowed, settlementAllowed, openProposal]
+      additionalProperties: false
+      description: D92. Server-computed positions (milestone-escrow 3.4 table) bounding a settlement, both ends included; the FE fills the CONCEDE_DISPUTE and SETTLE_DISPUTE statements from them.
+      properties:
+        buyerPositionAmount: {type: string, pattern: '^[0-9]+\.[0-9]{2}$', description: Seller entitlement in VND under the buyer's position (lower bound).}
+        sellerPositionAmount: {type: string, pattern: '^[0-9]+\.[0-9]{2}$', description: Seller entitlement in VND under the seller's position (upper bound).}
+        concedeAllowed: {type: boolean}
+        settlementAllowed: {type: boolean, description: False while the flag waits for the seller's response.}
+        openProposal:
+          oneOf: [{$ref: '#/components/schemas/MilestoneSettlementProposalView'}, {type: 'null'}]
+    MilestoneSettlementProposalView:
+      type: object
+      required: [agreedSellerEntitlementAmount, proposedByRole, proposedAt]
+      additionalProperties: false
+      properties:
+        agreedSellerEntitlementAmount: {type: string, pattern: '^[0-9]+\.[0-9]{2}$'}
+        proposedByRole: {enum: [BUYER, SELLER]}
+        proposedAt: {type: string, format: date-time}
     MilestoneSellerDeclarationView:
       type: object
       required: [declarationNumber, sellerDeclaredWeight, sellerEvidenceFileId, deliveryCertificateFileId, declaredAt, correctionWindowClosesAt]
