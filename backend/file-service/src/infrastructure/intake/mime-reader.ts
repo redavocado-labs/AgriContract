@@ -8,6 +8,7 @@ import {
 import {
   UnreadableMailError,
   type MailAttachment,
+  type MailLimits,
   type MailReader,
   type ParsedMail,
 } from '../../application/ports/intake-mailbox.port';
@@ -17,11 +18,14 @@ const TEXT_KEPT = 4_000;
 
 /**
  * MailReader on mailparser's streaming MailParser: headers, the text body
- * and each attachment arrive as the raw mail streams through. An attachment
- * is collected up to the cap; past it the collected bytes are let go and
- * the rest is drained, so memory stays at most one cap per mail.
+ * and each attachment arrive as the raw mail streams through, one
+ * attachment at a time (the parser waits for each to be released). An
+ * attachment is collected while it stays within its cap and within what is
+ * left of the mail's limit; past either, the collected bytes are let go and
+ * the rest is drained. So the bytes held for one mail never pass
+ * limits.mailBytes, however many attachments it has.
  */
-export const readMail: MailReader = (source: Readable, maxAttachmentBytes) =>
+export const readMail: MailReader = (source: Readable, limits: MailLimits) =>
   new Promise<ParsedMail>((resolve, reject) => {
     const parser = new MailParser({
       skipImageLinks: true,
@@ -36,6 +40,8 @@ export const readMail: MailReader = (source: Readable, maxAttachmentBytes) =>
       attachments: [],
     };
     const pending: Promise<void>[] = [];
+    // What the mail may still hold, taken chunk by chunk as attachments are kept.
+    const room = { bytes: limits.mailBytes };
     // One slot per attachment in the order of the mail, whatever order they finish in.
     const slots: (MailAttachment | null)[] = [];
     let failed = false;
@@ -74,7 +80,7 @@ export const readMail: MailReader = (source: Readable, maxAttachmentBytes) =>
       }
       const slot = slots.push(null) - 1;
       pending.push(
-        collect(data, maxAttachmentBytes).then((a) => {
+        collect(data, limits.attachmentBytes, room).then((a) => {
           slots[slot] = a;
         }),
       );
@@ -97,36 +103,45 @@ export const readMail: MailReader = (source: Readable, maxAttachmentBytes) =>
     source.pipe(parser);
   });
 
-/** Reads one attachment, holding at most `cap` bytes; null when it is embedded. */
+/**
+ * Reads one attachment, holding its bytes only while they stay within `cap`
+ * and within `room`, what the mail may still hold: each kept chunk is taken
+ * from it at once, and given back when the attachment is let go. Null when
+ * it is embedded, which is drained without holding anything.
+ */
 async function collect(
   attachment: AttachmentStream,
   cap: number,
+  room: { bytes: number },
 ): Promise<MailAttachment | null> {
-  let chunks: Buffer[] | null = [];
+  // Embedded in an HTML body (multipart/related, an inline cid: image): not a
+  // document the sender attached.
+  let chunks: Buffer[] | null = attachment.related ? null : [];
   let size = 0;
   try {
     for await (const chunk of attachment.content as AsyncIterable<Buffer>) {
       size += chunk.length;
-      if (chunks && size <= cap) chunks.push(chunk);
-      else chunks = null; // over the cap: let go, drain the rest
+      if (chunks && size <= cap && chunk.length <= room.bytes) {
+        chunks.push(chunk);
+        room.bytes -= chunk.length;
+      } else if (chunks) {
+        // Past a limit: let go of what was held, drain the rest.
+        room.bytes += size - chunk.length;
+        chunks = null;
+      }
     }
   } finally {
     attachment.release?.();
   }
-  // Embedded in an HTML body (multipart/related, an inline cid: image): not a
-  // document the sender attached.
   if (attachment.related) return null;
-  return chunks
-    ? {
-        filename: attachment.filename ?? null,
-        contentType: attachment.contentType,
-        bytes: Buffer.concat(chunks),
-      }
-    : {
-        filename: attachment.filename ?? null,
-        contentType: attachment.contentType,
-        tooLarge: true,
-      };
+  const about = {
+    filename: attachment.filename ?? null,
+    contentType: attachment.contentType,
+  };
+  if (chunks) return { ...about, bytes: Buffer.concat(chunks) };
+  return size > cap
+    ? { ...about, tooLarge: true }
+    : { ...about, overMailLimit: true };
 }
 
 function firstAddress(from: AddressObject | undefined): string | null {

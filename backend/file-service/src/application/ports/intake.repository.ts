@@ -22,4 +22,10 @@ export interface IntakeRepository {
    * recorded (another instance got there first).
    */
   recordProcessed(mail: ProcessedMail): Promise<boolean>;
+  /**
+   * One email_intake_failure row on its own, for a mail given up after its
+   * technical attempts (design §4, D88). The mail is not recorded as
+   * processed: flagged unread again by hand, it is taken in anew.
+   */
+  recordFailure(sourceMailbox: string, reason: string): Promise<void>;
 }

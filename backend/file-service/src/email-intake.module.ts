@@ -39,6 +39,7 @@ import { StoreFileModule } from './store-file.module';
           store,
           new IntakeMysqlRepository(pool),
           new Logger('EmailIntake'),
+          { authservId: intake.authservId },
         );
       },
     },

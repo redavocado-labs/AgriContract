@@ -20,6 +20,14 @@ export class IntakeMysqlRepository implements IntakeRepository {
     return rows.length > 0;
   }
 
+  async recordFailure(sourceMailbox: string, reason: string): Promise<void> {
+    await this.pool.query(
+      `INSERT INTO email_intake_failure (failure_id, file_id, source_mailbox, failure_reason)
+       VALUES (?, NULL, ?, ?)`,
+      [randomUUID(), sourceMailbox, reason],
+    );
+  }
+
   async recordProcessed(mail: ProcessedMail): Promise<boolean> {
     const conn = await this.pool.getConnection();
     try {
