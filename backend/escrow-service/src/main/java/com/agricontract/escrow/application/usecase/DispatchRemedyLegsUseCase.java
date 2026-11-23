@@ -51,6 +51,11 @@ public class DispatchRemedyLegsUseCase {
     private final Clock clock;
 
     public void execute(RemedyFinalizedCommand command) {
+        // #582: the contract-level lock comes first, before anything else is read FOR UPDATE. Looking up a decision
+        // that does not exist yet takes a gap lock on remedy_decision; two dispatches holding that gap and then
+        // inserting into it deadlocked. Under the contract lock they queue instead, and the second one sees the
+        // first one's decision and pools.
+        depositLegs.findByContractIdForUpdate(command.contractId());
         Optional<RemedyDecision> existing = remedyLegs.findDecisionForUpdate(command.remedyDecisionId());
 
         List<PlannedRemedyLeg> planned = null;
@@ -114,7 +119,7 @@ public class DispatchRemedyLegsUseCase {
      * Returns a reject reason when a pool's milestone is unknown to escrow (nothing is locked for it), else null.
      */
     private String lockPools(RemedyFinalizedCommand command, List<PlannedRemedyLeg> planned) {
-        depositLegs.findByContractIdForUpdate(command.contractId());
+        // The deposit legs are already locked at the start of execute (#582).
         TreeSet<String> milestoneIds = new TreeSet<>();
         planned.stream().map(PlannedRemedyLeg::milestoneId).filter(Objects::nonNull).forEach(milestoneIds::add);
         for (String milestoneId : milestoneIds) {

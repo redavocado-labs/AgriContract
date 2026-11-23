@@ -195,7 +195,7 @@ class DispatchRemedyLegsUseCaseTest {
     }
 
     @Test
-    void locksComeBeforeTheLedgerRead_depositsFirst_thenTheMilestoneAndItsSettlementLegs() {
+    void locksComeBeforeTheLedgerRead_depositsFirst_thenTheDecision_thenTheMilestoneAndItsSettlementLegs() {
         stubLedger(List.of(
                 new LedgerEntryView("LOCK_MILESTONE", "MILESTONE_PAYMENT", milestone, new BigDecimal("10.00")),
                 new LedgerEntryView("LOCK_BUYER_DEPOSIT", "BUYER_DEPOSIT", null, new BigDecimal("1.00"))));
@@ -203,8 +203,9 @@ class DispatchRemedyLegsUseCaseTest {
         useCase.execute(command(List.of(milestone), leg("PAYMENT_SETTLEMENT", "MILESTONE_PAYMENT", "SELLER", "10.00"),
                 leg("PAYMENT_REFUND", "BUYER_DEPOSIT", "BUYER", "0.01")));
 
-        InOrder order = Mockito.inOrder(depositLegs, milestones, settlementLegs, ledger, outstanding);
+        InOrder order = Mockito.inOrder(depositLegs, repo, milestones, settlementLegs, ledger, outstanding);
         order.verify(depositLegs).findByContractIdForUpdate(contractId);
+        order.verify(repo).findDecisionForUpdate(anyString());
         order.verify(milestones).findByIdForUpdate(milestone);
         order.verify(settlementLegs).findByMilestoneIdForUpdate(milestone);
         order.verify(ledger).entriesOf(contractId);
