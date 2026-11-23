@@ -315,7 +315,8 @@ Bản cũ của API gộp "buyer cân" với "xác nhận sạch/báo lỗi" và
 - **Tiền clean path (D77, D78):** công thức §4. Giao thiếu so với cam kết vượt `shortfallPenaltyThreshold` vẫn trả theo khối lượng tính tiền, phần còn lại hoàn buyer; hồ sơ vi phạm Delta 1 nhánh 2 thuộc #240, clean settle không mở.
 - **Seller phản hồi báo lỗi:** trong `sellerResponseWindowDays`:
   - `respondToMilestoneFlag` = phản đối (consent `CONTEST_MILESTONE_FLAG`). Đợt → `CONTESTED`, mở `BreachCase` (`requestedBy = BUYER`, `allegedBreachingRole = SELLER`, `breachReasonCode = SHORTFALL` với `QUANTITY` / `QUALITY_BELOW_COMMITTED` với `QUALITY`, chỉ là cáo buộc, không hậu quả) và publish `inspection.level1_5_requested` `reason = DISPUTE_ROUTED`, `initiatedByActorId` = seller (D80: đi thẳng Level 1.5, không qua Arbitrator xem ảnh, Level 2 chưa làm trong BF-04).
-  - Seller chấp nhận số của buyer một cách chủ động = `concede` của §3.4 (D57).
+  - Seller chấp nhận lời báo lỗi một cách chủ động = `concede` của §3.4 (D57, D92), OTP. Báo `QUANTITY` → trả theo số buyer cân, không lỗi, không phạt (như im lặng D82, khớp D83). Báo `QUALITY` → vị thế buyer là trả cả lô (`NON_CONFORMING`): seller có lỗi, phạt + khoá uy tín như thường.
+  - Buyer rút lời báo lỗi = `concede` của buyer (D92, 24/11/2026), cũng OTP: trả theo vị thế seller, publish `milestone.dispute_resolved` `resolutionFavors = SELLER` (tính vào tỷ lệ báo lỗi không thành). Rút được cả khi seller chưa trả lời lẫn khi đang tranh chấp.
   - **Im lặng (D82):** `QUANTITY` → đợt `SETTLED` theo số buyer cân: `actualAmount = min(lockedAmount, buyerReceivedWeight × effectiveUnitPrice)`, không áp ngưỡng D77 (seller chịu toàn bộ hao hụt), publish `milestone.settled` + `milestone.dispute_resolved` `resolutionFavors = BUYER`. `QUALITY` → im lặng **không** = thua: hệ thống tự phản đối thay (như trên, `initiatedByActorId = null`), vì vị thế buyer khi báo chất lượng là trả cả lô (D57 điểm 2).
 - **Report về (D81):** `inspection.report_confirmed` cho đợt `CONTESTED` → contract-service tính kết quả tất định và gắn vào `BreachCase.computedResolution`:
   - **Luôn tính đủ theo report (D90, 23/11/2026):** report `COMPLETE` nào cũng chạy `QualityAssessment` + công thức §3.3 (số kg chấp nhận **và** chất lượng), bất kể buyer báo `QUANTITY` hay `QUALITY`. Report có cả số cân lẫn chỉ tiêu, nên không bỏ phần nào. `qualityDisposition` luôn có giá trị với report `COMPLETE`; `finalBreachingRole = SELLER` chỉ khi `NON_CONFORMING`, còn lại `NULL`.
@@ -564,6 +565,30 @@ Conservation kiểm theo nguồn tiền, không cộng lẫn các chế tài:
 Bên chịu phí được ghi trên `RemedyDecision` cùng cách phân bổ phí ở §3.3; Phase 2 không có ledger leg phí giám định (§3.3), nên đây là ghi nhận trách nhiệm, không phát lệnh tiền. Chưa nhận `inspection.level1_5_assigned` lúc tranh chấp kết thúc = coi như chưa có inspector (miễn phí); race này chấp nhận được vì inspector nhận mail cùng lúc event được ghi và được dặn chưa đi trước `freeCancelUntil`.
 
 **Tiền và event:** cả hai đường đi đúng một đường `AttributionDecision → RemedyDecision → remedy.finalized` như mọi kết thúc tranh chấp (legs `MILESTONE_PAYMENT` cộng đúng `batchAmount`: seller nhận entitlement đã chốt, phần còn lại refund buyer; penalty/forfeiture chỉ khi concede vào vị thế có lỗi), không phát `milestone.settled`. Breach cấp milestone đã kết thúc bằng sự đồng ý của chính bên chịu hậu quả nên không mở contest window GB-50. Concede vào tranh chấp buyer flag publish `milestone.dispute_resolved` với `resolutionFavors` = bên được nhận (buyer tự rút flag vẫn tính là flag-rồi-thua cho tín hiệu chống lạm dụng `FLAG_ISSUE` của reputation design); settlement không có bên thắng nên không publish `milestone.dispute_resolved`. Nếu đang có yêu cầu giám định Level 1.5 (đang chờ inspector hoặc đang có assignment), cùng transaction ghi `inspection.level1_5_cancelled` qua outbox; inspection-service dừng việc giám định (`inspection-phase2-design.md` §2.5). Report tới muộn sau khi tranh chấp đã kết thúc bị bỏ qua (đã có).
+
+**Khi nào mở (D92, 24/11/2026).** Thay câu "mở tới khi phán quyết cuối" ở trên cho rõ theo trạng thái thật:
+
+| Lúc | Concede | Settlement |
+|---|---|---|
+| Đợt `AWAITING_SELLER_RESPONSE` (buyer vừa báo lỗi, seller chưa trả lời) | có (seller chấp nhận / buyer rút) | không (chưa thành tranh chấp) |
+| `CONTESTED`, `BreachCase` chưa `RESOLVED`, chưa có report Level 1.5 `COMPLETE` của lượt đang chờ (đang chờ inspector, đang đo, hoặc report lần đầu `INCONCLUSIVE` đang chờ đo lại) | có | có |
+| Bên bị quy lỗi đã phản đối (`contestStatus = CONTESTED`), report lần phản đối chưa xác nhận | có | có |
+| Đã có report `COMPLETE` chờ Arbitrator duyệt (`computedResolution` có giá trị) | **không**: kết quả đã rõ, chặn bên sắp thua ép thoả thuận né phạt | **không** |
+| Cửa sổ phản đối `OPEN` chưa ai phản đối, đã `RESOLVED` không lỗi, hoặc `BreachCase` do giám định bắt buộc mở (D90) | không | không |
+
+Sai lúc → 409 `DISPUTE_EXIT_NOT_ALLOWED`. Vị thế khi đợt `AWAITING_SELLER_RESPONSE` dùng cùng bảng như `CONTESTED` theo `issueType`. Concede lúc chưa có `BreachCase` (đợt `AWAITING_SELLER_RESPONSE`) thì contract-service tự mở và chốt case trong cùng transaction, để mọi kết thúc vẫn đi `AttributionDecision → RemedyDecision → remedy.finalized`. Một đề xuất settlement đang mở tự hết hiệu lực khi report `COMPLETE` của lượt đang chờ được ghi.
+
+**Phí giám định khi lần đo đầu không kết luận được (D92).** Report lần đầu `INCONCLUSIVE` là việc inspector đã làm, không lỗi bên nào. Tranh chấp kết thúc bằng **settlement** trong lúc chờ đo lại → phí lần đo đó **hai bên chia đôi** (`inspectionFeeParty = SPLIT` trên `RemedyDecision`); kết thúc bằng **concede** → bên nhận thua chịu (`LOSER_PAYS`). Mọi settlement khác giữ bảng trên (bên đã yêu cầu giám định, sau khung 4 giờ). Như mọi phí giám định Phase 2: chỉ ghi bên chịu, không lệnh tiền.
+
+**Câu consent (v1.0, file text trên classpath như §3.2.3, theo role).** FE điền placeholder từ `disputeExit` của `getMilestoneDetail`. `presentedContentHash` = `signedContentHash` của hợp đồng (như `CANCEL_ACTIVATION`).
+
+| Statement | Câu |
+|---|---|
+| `CONCEDE_DISPUTE` (BUYER) | Tôi rút báo lỗi / chấp nhận vị thế của bên bán cho đợt giao này: bên bán nhận [X] đồng, tôi được hoàn [Y] đồng. Tôi hiểu việc này không làm lại được, giám định đang chờ (nếu có) bị huỷ, và lần báo lỗi này được tính là báo lỗi không thành. |
+| `CONCEDE_DISPUTE` (SELLER) | Tôi chấp nhận vị thế của bên mua cho đợt giao này: tôi nhận [X] đồng, bên mua được hoàn [Y] đồng. Tôi hiểu việc này không làm lại được, giám định đang chờ (nếu có) bị huỷ, và nếu vị thế này có lỗi thì tôi chịu phạt và khoá uy tín theo chính sách. |
+| `SETTLE_DISPUTE` (cả hai role) | Tôi đồng ý bên bán nhận [X] đồng cho đợt giao này, phần còn lại hoàn bên mua. Thoả thuận chỉ có hiệu lực khi bên kia xác nhận đúng con số này; khi đó tranh chấp kết thúc không bên nào có lỗi. Nếu không thoả thuận được, giám định tiếp tục. |
+
+**Read model (D92).** `MilestoneDetailResponse.disputeExit` (null khi đợt không ở lúc nào trong bảng "Khi nào mở"): `buyerPositionAmount`, `sellerPositionAmount` (chuỗi tiền, server tính), `concedeAllowed`, `settlementAllowed`, `openProposal` (`agreedSellerEntitlementAmount`, `proposedByRole`, `proposedAt`, hoặc null). FE không tự tính khoảng.
 
 **Known limitation:** bị ép ngoài nền tảng (buyer doạ không mua mùa sau để seller concede hoặc thoả thuận) thì hệ thống không phát hiện được, giống `MUTUAL_TERMINATION`. Thiết kế chỉ giới hạn thiệt hại: từ chối là mặc định và an toàn, con số thoả thuận bị kẹp trong khoảng hai vị thế, thoả thuận không có lỗi nên không dùng để hạ uy tín được, OTP + statement để lại bằng chứng seller đã thấy rõ mình đồng ý cái gì.
 
