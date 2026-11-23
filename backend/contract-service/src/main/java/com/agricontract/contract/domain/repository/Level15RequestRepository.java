@@ -15,4 +15,7 @@ public interface Level15RequestRepository {
 
     /** Every open request of the milestone ends with {@code reason} at {@code at}; returns how many did. */
     int endOpen(String milestoneId, Level15Request.EndReason reason, Instant at);
+
+    /** Every open request of the milestone but MANDATORY_INSPECTION ones ends CANCELLED; returns how many did. */
+    int cancelOpenExceptMandatory(String milestoneId, Instant at);
 }

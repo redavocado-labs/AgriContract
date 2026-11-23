@@ -410,6 +410,22 @@ class DisputeExitIntegrationTest {
         assertExitNotAllowed(() -> initiate(DisputeExitType.CONCEDE, first, SELLER, null));
     }
 
+    @Test
+    void aMandatoryInspectionContract_refusesTheExit_andKeepsItsInspection() {
+        activate(true);
+        flagged(first, FlagIssueType.QUANTITY, "10000", "9800");
+        assertThat(reload(first).status()).isEqualTo(MilestoneStatus.AWAITING_SELLER_RESPONSE);
+
+        assertExitNotAllowed(() -> initiate(DisputeExitType.CONCEDE, first, SELLER, null));
+        assertExitNotAllowed(() -> initiate(DisputeExitType.CONCEDE, first, BUYER, null));
+
+        assertThat(detailOf(first, BUYER, "BUYER").disputeExit()).isNull();
+        assertThat(jdbc.queryForList("SELECT reason FROM level1_5_request WHERE milestone_id = ? AND ended_at IS NULL",
+                String.class, first.milestoneId())).containsExactly("MANDATORY_INSPECTION");
+        assertThat(events("inspection.level1_5_cancelled")).isEmpty();
+        assertThat(reload(first).status()).isEqualTo(MilestoneStatus.AWAITING_SELLER_RESPONSE);
+    }
+
     // ---- settlement ----
 
     @Test

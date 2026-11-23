@@ -41,14 +41,16 @@ public class Level15Inspections {
     }
 
     /**
-     * The dispute ended by agreement: the open requests end CANCELLED and inspection.level1_5_cancelled is written,
+     * The dispute ended by agreement: the open requests, except a MANDATORY_INSPECTION one, end CANCELLED and inspection.level1_5_cancelled is written,
      * once, only when one was open. Returns whether one was.
      *
      * @param reason DISPUTE_CONCEDED or DISPUTE_SETTLED
      */
     public boolean cancelOpen(Contract contract, Milestone milestone, String reason, Instant now) {
         transactions.requireTransaction();
-        int ended = requests.endOpen(milestone.milestoneId(), Level15Request.EndReason.CANCELLED, now);
+        // A MANDATORY_INSPECTION request is a signed term: an exit never cancels it (the window refuses such
+        // contracts already; this keeps the request even if that check were bypassed).
+        int ended = requests.cancelOpenExceptMandatory(milestone.milestoneId(), now);
         if (ended == 0) {
             return false;
         }

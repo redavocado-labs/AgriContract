@@ -35,7 +35,8 @@ import java.util.Optional;
  *   <li>a decision under contest (case RESOLVED, contestStatus CONTESTED, its RemedyDecision PENDING_CONTEST), no
  *       COMPLETE CONTEST report: concession or settlement.</li>
  * </ul>
- * Never for a case the system opened (mandatory inspection). Positions, as seller entitlement in whole dong (HALF_UP
+ * Never for a contract whose signed terms require the inspection before settlement, nor for a case the system
+ * opened (mandatory inspection). Positions, as seller entitlement in whole dong (HALF_UP
  * once, capped at the locked batch L, price P): seller = min(L, sellerDeclaredKg x P); buyer = min(L, buyerReceivedKg x
  * P) for a QUANTITY flag, 0 for a QUALITY flag (the lot rejected), and the pending decision's seller payment for a
  * decision under contest.
@@ -62,11 +63,17 @@ public record DisputeExitWindow(DisputeExitStage stage, FlagIssueType issueType,
      * @param breachCase the milestone's case, null before the contest step
      * @param latest     the case's latest RemedyDecision, null when it has none
      * @param reports    the measurement status of each stored report of the milestone, by purpose
+     * @param mandatoryInspection the contract requires a Level 1.5 report before settlement (signed term
+     *                            MANDATORY_BEFORE_SETTLEMENT): no exit ever applies (D57, milestone-escrow 3.4)
      */
     public static Optional<DisputeExitWindow> assess(Milestone milestone, BreachCase breachCase, RemedyDecision latest,
-                                                     Map<InspectionReportPurpose, MeasurementStatus> reports) {
+                                                     Map<InspectionReportPurpose, MeasurementStatus> reports,
+                                                     boolean mandatoryInspection) {
         Objects.requireNonNull(milestone, "milestone");
         Objects.requireNonNull(reports, "reports");
+        if (mandatoryInspection) {
+            return Optional.empty();
+        }
         if (milestone.flag() == null || milestone.sellerWeighing() == null || milestone.buyerReceipt() == null
                 || milestone.batchAmount() == null || milestone.effectiveUnitPrice() == null) {
             return Optional.empty();
