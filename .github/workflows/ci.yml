@@ -357,7 +357,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 12
-      # The compose clamav (scan profile) on the same host port. The image ships its signatures, so
+      # The compose clamav on the same host port. The image ships its signatures, so
       # clamd starts even if freshclam cannot update them; the first start takes about a minute.
       clamav:
         image: clamav/clamav:1.4
