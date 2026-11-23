@@ -28,10 +28,15 @@ export interface IntakeMailboxPort {
   ): Promise<number>;
 }
 
-/** An attachment as the MIME reader gives it: its bytes, or only that it was too big. */
+/**
+ * An attachment as the MIME reader gives it: its bytes, or only that it was
+ * not held, being over the attachment cap (tooLarge) or past what one mail
+ * may hold in all (overMailLimit).
+ */
 export type MailAttachment =
   | { filename: string | null; contentType: string; bytes: Buffer }
-  | { filename: string | null; contentType: string; tooLarge: true };
+  | { filename: string | null; contentType: string; tooLarge: true }
+  | { filename: string | null; contentType: string; overMailLimit: true };
 
 export interface ParsedMail {
   messageId: string | null;
@@ -54,13 +59,26 @@ export class UnreadableMailError extends Error {
   }
 }
 
+/** What one mail may hold in memory while it is read. */
+export interface MailLimits {
+  /** One attachment: past it, its bytes are dropped as they come (tooLarge). */
+  attachmentBytes: number;
+  /**
+   * All the attachments held for one mail together (design §4.1, D88): an
+   * attachment that would take the total past it is dropped as it comes
+   * (overMailLimit), so a mailbox that is abused cannot run the service out
+   * of memory.
+   */
+  mailBytes: number;
+}
+
 /**
  * Reads one mail from its raw bytes, streaming: an attachment is held only
- * up to `maxAttachmentBytes`; past that its bytes are dropped as they come
- * (tooLarge) instead of being held (design §3: check while the MIME part is
- * read, never load it all first).
+ * within `limits`; past them its bytes are dropped as they come instead of
+ * being held (design §3: check while the MIME part is read, never load it
+ * all first).
  */
 export type MailReader = (
   source: Readable,
-  maxAttachmentBytes: number,
+  limits: MailLimits,
 ) => Promise<ParsedMail>;

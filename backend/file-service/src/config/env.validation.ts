@@ -45,7 +45,8 @@ export interface AppConfig {
   /**
    * The email intake bridge (#275): the `intake@...` IMAP mailbox. null =
    * off, which is the default: it is on only when INTAKE_IMAP_HOST is set
-   * (compose sets it to its GreenMail).
+   * (compose sets it to its GreenMail). Then INTAKE_IMAP_USERNAME and
+   * INTAKE_IMAP_PASSWORD are required: no secret has a default.
    */
   intake: {
     host: string;
@@ -57,6 +58,12 @@ export interface AppConfig {
     /** The address mails are sent to; email_intake_failure.source_mailbox. */
     address: string;
     pollIntervalMs: number;
+    /**
+     * The authserv-id our receiving mail server writes in its
+     * Authentication-Results header (RFC 8601 §2.5). Only headers carrying
+     * it are read; null = no trusted receiver, so spfDkimResult is NONE.
+     */
+    authservId: string | null;
   } | null;
 }
 
@@ -75,6 +82,16 @@ export function validate(env: Record<string, unknown>): AppConfig {
     if (typeof value !== 'string' || value.trim() === '') {
       errors.push(`${name} must not be empty`);
       return fallback;
+    }
+    return value;
+  };
+
+  /** A value with no default: missing or empty is an error (no secret defaults, #534). */
+  const required = (name: string): string => {
+    const value = env[name];
+    if (typeof value !== 'string' || value.trim() === '') {
+      errors.push(`${name} must be set`);
+      return '';
     }
     return value;
   };
@@ -172,11 +189,15 @@ export function validate(env: Record<string, unknown>): AppConfig {
             host: text('INTAKE_IMAP_HOST', 'localhost'),
             port: port('INTAKE_IMAP_PORT', 3143),
             secure: flag('INTAKE_IMAP_SECURE', false),
-            username: text('INTAKE_IMAP_USERNAME', 'intake'),
-            password: text('INTAKE_IMAP_PASSWORD', 'intake-dev-secret'),
+            username: required('INTAKE_IMAP_USERNAME'),
+            password: required('INTAKE_IMAP_PASSWORD'),
             mailbox: text('INTAKE_IMAP_MAILBOX', 'INBOX'),
             address: text('INTAKE_ADDRESS', 'intake@agricontract.local'),
             pollIntervalMs: millis('INTAKE_POLL_INTERVAL_MS', 300_000),
+            authservId:
+              env.INTAKE_AUTHSERV_ID === undefined
+                ? null
+                : text('INTAKE_AUTHSERV_ID', ''),
           },
   };
 

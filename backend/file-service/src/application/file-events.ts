@@ -35,11 +35,14 @@ export const FILE_EMAIL_NOTICE = 'file.email_notice';
  * (design §5, inspection §3.6): enough to match a case ID and weigh the
  * sender, never the sender's address itself.
  */
+/** emailMeta.spfDkimResult and file.email_notice.spfDkimResult (D88). */
+export type SpfDkimResult = 'PASS' | 'FAIL' | 'NONE';
+
 export interface EmailMeta {
   [key: string]: string;
   senderDomain: string;
-  /** From the Authentication-Results our mailbox added, e.g. "spf=pass; dkim=pass", or "none". */
-  spfDkimResult: string;
+  /** From the Authentication-Results of our own receiving server only (design §4.1). */
+  spfDkimResult: SpfDkimResult;
   subject: string;
   /** When the intake mailbox received it (IMAP INTERNALDATE), ISO-8601 UTC. */
   receivedAt: string;
