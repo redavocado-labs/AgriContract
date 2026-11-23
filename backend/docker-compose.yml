@@ -352,14 +352,12 @@ services:
       timeout: 5s
       retries: 5
 
-  # Virus scan for uploaded files (file-service). OFF by default: clamd keeps every signature in memory
-  # (~1GB+ RAM) and freshclam updates them on start. Start it only when testing the upload/scan flow:
-  #   docker compose --profile scan up -d clamav
-  # Signatures persist in clamav_data. Measured 24/10: healthy in ~40s on first start.
+  # Virus scan for uploaded files (file-service). Runs by default: without it no upload ever becomes READY, so
+  # evidence (BF-04) and Level 1.5 reports would be stuck. clamd keeps every signature in memory (~1GB+ RAM) and
+  # freshclam updates them on start. Signatures persist in clamav_data. Measured 24/10: healthy in ~40s on first start.
   clamav:
     image: clamav/clamav:1.4
     container_name: clamav
-    profiles: [ "scan" ]
     ports:
       - "3410:3310"   # host 3310 is escrow-db; inside the network use clamav:3310
     volumes:
@@ -712,8 +710,8 @@ services:
       SERVICE_INTERNAL_SECRET: ${SERVICE_INTERNAL_SECRET:?SERVICE_INTERNAL_SECRET must be set in .env}
       # Outbox (file.uploaded.direct, file.ready, file.failed on agricontract.files) and the scan queue (#131).
       RABBITMQ_HOST: rabbitmq
-      # The virus scan. clamav is in the "scan" profile: without it every upload stays PROCESSING and its
-      # scan job ends in file-service.virus-scan.dlq after 3 attempts (replay it once clamav runs).
+      # The virus scan. While clamav is down, uploads stay PROCESSING and their scan jobs end in
+      # file-service.virus-scan.dlq after 3 attempts (the DLQ check warns; replay them once clamav runs).
       CLAMAV_HOST: clamav
       CLAMAV_PORT: 3310
     # Local only, for manual tests; the gateway never routes file-service.
@@ -726,6 +724,10 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      # Started with it, not waited for: clamd takes up to a few minutes on a first start, and uploads and reads
+      # work meanwhile (a scan job retries, then waits in the DLQ).
+      clamav:
+        condition: service_started
       file-migrate:
         condition: service_completed_successfully
     networks:
