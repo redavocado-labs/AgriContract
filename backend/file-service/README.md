@@ -132,6 +132,9 @@ OutboxPoller ──> agricontract.files (topic, routing key = eventType)
   A job that can never work (not an envelope, not a scan job, no fileId) goes there at once. Replay a DLQ message
   by publishing its body and properties unchanged to `agricontract.files` with routing key `file.uploaded.direct`;
   the scan then runs again.
+- **The DLQ is watched.** `DlqMonitor` checks `file-service.virus-scan.dlq` every `FILE_DLQ_CHECK_INTERVAL_MS` (5 min)
+  and logs a warning with the queue name and message count while it holds messages, as notification-service does.
+  The check is passive (`checkQueue`), never takes a message, and is off in the tests.
 
 | Exchange / queue | Type | Bound with |
 | --- | --- | --- |
@@ -202,6 +205,7 @@ Environment variables only (no `.env` file). The defaults match the compose serv
 | `RABBITMQ_HOST` / `RABBITMQ_PORT` | `localhost` / `5672` | compose `rabbitmq` |
 | `RABBITMQ_USERNAME` / `RABBITMQ_PASSWORD` | `guest` / `guest` | |
 | `CLAMAV_HOST` / `CLAMAV_PORT` | `localhost` / `3410` | compose `clamav` (host port 3410; `clamav:3310` inside compose) |
+| `FILE_DLQ_CHECK_INTERVAL_MS` | `300000` | Period of the DLQ check, whole ms up to 24 h; `0` turns it off |
 
 Startup fails when MySQL or the bucket cannot be reached. `GET /actuator/health` answers 200 with
 `components.db` and `components.storage` UP, or 503 with an error code for the one that is down. RabbitMQ and
@@ -221,9 +225,8 @@ dedupes by eventId). The app does not migrate: compose's `file-migrate` (Flyway 
 
 ```bash
 # in backend/
-docker compose up -d --wait file-db object-storage rabbitmq
+docker compose up -d --wait file-db object-storage rabbitmq clamav   # clamav: ~1 GB RAM, healthy in ~40 s
 docker compose up file-migrate
-docker compose --profile scan up -d --wait clamav   # ~1 GB RAM; without it uploads stay PROCESSING
 docker compose up -d --build file-service      # optional: the service itself on :8089
 ```
 
