@@ -173,6 +173,22 @@ public record BreachCase(String breachCaseId, String contractId, String mileston
                 contestEvidenceFileIds, contestedAt, contestedByActorId);
     }
 
+    /**
+     * D91: whether this party may upload contest evidence for the case's milestone now. The blamed party while the
+     * window is OPEN (so files are ready for the contest); the contester while CONTESTED until the contest's Level 1.5
+     * report is stored. Never for a contract-level case.
+     */
+    public boolean allowsContestEvidenceUpload(SignerRole role, String actorId, Instant now,
+                                               boolean contestReportStored) {
+        if (status != BreachCaseStatus.RESOLVED || milestoneId == null) {
+            return false;
+        }
+        if (contestStatus == ContestStatus.OPEN) {
+            return role == finalBreachingRole && contestDeadline != null && now.isBefore(contestDeadline);
+        }
+        return contestStatus == ContestStatus.CONTESTED && actorId.equals(contestedByActorId) && !contestReportStored;
+    }
+
     /** 403 unless the caller's role is the finalBreachingRole: only the party the decision blames can contest it. */
     public void requireContester(SignerRole callerRole) {
         if (finalBreachingRole == null || callerRole != finalBreachingRole) {

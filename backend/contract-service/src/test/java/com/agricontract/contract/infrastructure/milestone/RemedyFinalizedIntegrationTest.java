@@ -896,6 +896,78 @@ class RemedyFinalizedIntegrationTest {
     }
 
     /** What #246 will write: the computed resolution of a confirmed Level 1.5 report (9000 of 9500 kg at 95,000). */
+    // ---- #593 (D91): contest evidence uploads, and the INCONCLUSIVE re-run outside the contest ----
+
+    private static void assertNotYourTurn(org.assertj.core.api.ThrowableAssert.ThrowingCallable call) {
+        assertThatThrownBy(call).isInstanceOfSatisfying(ContractConflictException.class,
+                e -> assertThat(e.getCode()).isEqualTo(ContractConflictException.MILESTONE_ACTION_NOT_ALLOWED));
+    }
+
+    @Test
+    void contestEvidence_isUploadedByTheBlamedPartyWhileOpen_thenByTheContester_untilTheContestReport() {
+        activate(false);
+        String caseId = disputedQuietly();
+
+        String beforeContest = uploadReady(SELLER, first);
+        assertNotYourTurn(() -> uploadFile(BUYER, first, UUID.randomUUID()));
+
+        contestUc.contest(contest(caseId, SELLER, List.of(beforeContest)));
+        String topUp = uploadReady(SELLER, first);
+        assertNotYourTurn(() -> uploadFile(BUYER, first, UUID.randomUUID()));
+        contestUc.addEvidence(new BreachCaseCommands.AddContestEvidence(id(), caseId, SELLER, UUID.randomUUID(),
+                List.of(topUp)));
+        assertThat(caseOf(caseId).contestEvidenceFileIds()).containsExactly(beforeContest, topUp);
+
+        secondReport(first, "10000.000", CONFORMING);
+
+        assertNotYourTurn(() -> uploadFile(SELLER, first, UUID.randomUUID()));
+    }
+
+    @Test
+    void contestEvidence_cannotBeUploadedOnceTheWindowPassed() {
+        activate(false);
+        String caseId = disputedQuietly();
+        windowPassed(caseId);
+
+        assertNotYourTurn(() -> uploadFile(SELLER, first, UUID.randomUUID()));
+    }
+
+    @Test
+    void anInconclusiveRerun_doesNotUseUpTheContest_soAThirdReportDecides() throws Exception {
+        activate(false);
+        delivered(first, "10000", "9800");
+        flag.execute(flagCommand(first, BUYER, UUID.randomUUID(), FlagIssueType.QUALITY));
+        respond.execute(respondCommand(first, SELLER, UUID.randomUUID()));
+        String caseId = reload(first).flag().breachCaseId();
+        deliver(reportPayload(first.milestoneId(), "INCONCLUSIVE", "0.000", "0.000", CONFORMING));
+        deliver(reportPayload(first.milestoneId(), "COMPLETE", "9800.000", "9800.000", NON_CONFORMING));
+        reviewCase.execute(review(caseId, UUID.randomUUID()));
+        resolveCase.execute(resolve(caseId, SignerRole.SELLER, DecisionSource.INSPECTOR_L1_5));
+        assertThat(caseOf(caseId).contestStatus()).isEqualTo(ContestStatus.OPEN);
+
+        contestUc.contest(contest(caseId, SELLER, List.of()));
+        assertThat(events("inspection.level1_5_requested")).extracting(e -> e.at("/payload/reason").asText())
+                .containsExactly("DISPUTE_ROUTED", "DISPUTE_ROUTED", "DECISION_CONTESTED");
+
+        secondReport(first, "10000.000", CONFORMING);
+
+        assertThat(jdbc.queryForList("SELECT purpose FROM inspection_report WHERE milestone_id = ? ORDER BY `round`",
+                String.class, first.milestoneId())).containsExactly("INITIAL", "RERUN", "CONTEST");
+        assertThat(caseOf(caseId).status().name()).isEqualTo("UNDER_REVIEW");
+        assertThat(decisionOf(caseId)).containsEntry("status", "SUPERSEDED");
+
+        resolveCase.execute(resolve(caseId, null, DecisionSource.INSPECTOR_L1_5));
+
+        assertThat(reload(first).status()).isEqualTo(MilestoneStatus.SETTLED);
+        assertThat(reload(first).settlement().sellerAmount().wire()).isEqualTo("150000000.00");
+        assertThat(events("remedy.finalized")).hasSize(1);
+
+        // A fourth report is ignored.
+        secondReport(first, "9000.000", NON_CONFORMING);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE milestone_id = ?", Integer.class,
+                first.milestoneId())).isEqualTo(3);
+    }
+
     private void seedComputed(String caseId, String finalRole, String disposition) {
         String json = "{\"inspectionReportId\":\"" + UUID.randomUUID() + "\",\"issueType\":\"QUANTITY\","
                 + "\"acceptedQuantityKg\":\"9000\",\"qualityDisposition\":\"" + disposition + "\","

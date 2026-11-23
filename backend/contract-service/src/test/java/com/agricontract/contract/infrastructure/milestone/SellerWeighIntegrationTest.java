@@ -102,7 +102,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ImportAutoConfiguration({JacksonAutoConfiguration.class, EventingAutoConfiguration.class})
 @Import({BusinessCalendarConfiguration.class, SpringTransactionRunner.class, MilestoneFunding.class,
-        JdbcMilestoneRepository.class, JdbcInspectionReportRepository.class, OutboxContractEventPublisher.class, ContractRepositoryImpl.class,
+        JdbcMilestoneRepository.class, JdbcInspectionReportRepository.class, com.agricontract.contract.infrastructure.persistence.breach.JdbcBreachCaseRepository.class, OutboxContractEventPublisher.class, ContractRepositoryImpl.class,
         JdbcSignatureRepository.class, ContractMapper.class, JcsTermsCanonicalizer.class,
         ContractTermsConfiguration.class, ConsentConfiguration.class, MilestoneDeliveryConfiguration.class,
         JdbcMilestoneEvidenceRepository.class, JdbcSellerWeighDeclarationRepository.class,

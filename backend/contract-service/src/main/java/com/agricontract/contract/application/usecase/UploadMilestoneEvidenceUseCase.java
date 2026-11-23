@@ -15,9 +15,13 @@ import com.agricontract.contract.domain.model.consent.SignerRole;
 import com.agricontract.contract.domain.model.milestone.EvidenceScanStatus;
 import com.agricontract.contract.domain.model.milestone.Milestone;
 import com.agricontract.contract.domain.model.milestone.MilestoneEvidenceFile;
+import com.agricontract.contract.domain.model.milestone.MilestoneStatus;
+import com.agricontract.contract.domain.model.inspection.InspectionReportPurpose;
 import com.agricontract.contract.domain.model.vo.ContractId;
 import com.agricontract.contract.domain.model.vo.ContractStatus;
+import com.agricontract.contract.domain.repository.BreachCaseRepository;
 import com.agricontract.contract.domain.repository.ContractRepository;
+import com.agricontract.contract.domain.repository.InspectionReportRepository;
 import com.agricontract.contract.domain.repository.MilestoneEvidenceRepository;
 import com.agricontract.contract.domain.repository.MilestoneRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +42,8 @@ import java.util.Set;
  * the type and size (400/413). A repeat of the caller's Idempotency-Key for this milestone answers with the file's
  * current status, whatever the milestone's state now. The bytes are streamed to file-service outside any transaction;
  * the turn is checked again under the contract and milestone locks before the file is recorded, so a file that lost
- * the race is never recorded (file-service cleans it as an orphan).
+ * the race is never recorded (file-service cleans it as an orphan). On a CONTESTED milestone the turn is the contest's
+ * (D91): the blamed party while contestStatus is OPEN, the contester until the contest's report is confirmed.
  */
 @Slf4j
 @Service
@@ -50,6 +55,8 @@ public class UploadMilestoneEvidenceUseCase {
     private final ContractRepository contracts;
     private final MilestoneRepository milestones;
     private final MilestoneEvidenceRepository evidence;
+    private final BreachCaseRepository breachCases;
+    private final InspectionReportRepository inspectionReports;
     private final EvidenceFileStore files;
     private final MilestoneDeliverySettings settings;
     private final TransactionRunner transactions;
@@ -66,7 +73,7 @@ public class UploadMilestoneEvidenceUseCase {
                     .orElseThrow(() -> new MilestoneNotFoundException(command.contractId(), command.milestoneId()));
             Optional<MilestoneEvidenceCommands.Uploaded> previous = previousUpload(command, key);
             if (previous.isEmpty()) {
-                requireTurn(contract, milestone, role, now());
+                requireTurn(contract, milestone, role, command.actorId(), now());
             }
             return previous;
         });
@@ -90,7 +97,7 @@ public class UploadMilestoneEvidenceUseCase {
                 return previous.get();
             }
             Instant now = now();
-            requireTurn(contract, milestone, role, now);
+            requireTurn(contract, milestone, role, command.actorId(), now);
             evidence.insert(new MilestoneEvidenceFile(stored.fileId(), milestone.milestoneId(),
                     command.contractId(), command.actorId(), role, now, EvidenceScanStatus.PROCESSING), key);
             EvidenceScanStatus status = evidence.findById(stored.fileId()).orElseThrow().scanStatus();
@@ -111,10 +118,23 @@ public class UploadMilestoneEvidenceUseCase {
         });
     }
 
-    private void requireTurn(Contract contract, Milestone milestone, SignerRole role, Instant now) {
+    private void requireTurn(Contract contract, Milestone milestone, SignerRole role, String actorId, Instant now) {
         if (contract.getStatus() != ContractStatus.ACTIVE) {
             throw new ContractConflictException(ContractConflictException.MILESTONE_ACTION_NOT_ALLOWED,
                     "The contract is " + contract.getStatus() + "; evidence can only be uploaded while it is ACTIVE.");
+        }
+        if (milestone.status() == MilestoneStatus.CONTESTED) {
+            // D91: contest evidence, by the blamed party while the window is open, then by the contester until the
+            // contest's Level 1.5 report is confirmed.
+            boolean contestReportStored = inspectionReports.existsByMilestoneIdAndPurpose(milestone.milestoneId(),
+                    InspectionReportPurpose.CONTEST);
+            boolean allowed = breachCases.findByMilestoneId(milestone.milestoneId())
+                    .filter(c -> c.allowsContestEvidenceUpload(role, actorId, now, contestReportStored)).isPresent();
+            if (!allowed) {
+                throw new ContractConflictException(ContractConflictException.MILESTONE_ACTION_NOT_ALLOWED,
+                        "It is not your turn to upload evidence for this milestone (CONTESTED).");
+            }
+            return;
         }
         milestone.requireEvidenceUploadTurn(role, now, settings.weighCorrectionWindow());
     }
