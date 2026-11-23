@@ -49,7 +49,7 @@ public class ReportFileConfiguration {
             AssignmentLifecycleRepository assignments, ManageLevel15Assignments lifecycle, TransactionRunner transactions,
             InspectionCanonicalizer canonicalizer, AuthenticatedSession session, JdbcReportFileBindings bindings,
             FileServiceClient files, ConfirmLevel15Report.ConfirmationWrites writes, Clock clock,
-            @Value("${inspection.file-service.download-enabled:false}") boolean downloadEnabled,
+            @Value("${inspection.file-service.download-enabled:true}") boolean downloadEnabled,
             @Value("${inspection.auth-max-age-seconds:1800}") long maxAgeSeconds) {
         return new ConfirmLevel15Report(persistence, assignments, lifecycle, transactions, canonicalizer,
                 session, new AssignmentVerifiedFiles(bindings, files, downloadEnabled), writes, clock, Duration.ofSeconds(maxAgeSeconds));
