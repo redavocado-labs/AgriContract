@@ -75,12 +75,13 @@ services:
       retries: 5
 
   # The intake@ mailbox of file-service's email intake (#275, file-service-phase2-design §4.1: IMAP polling).
-  # GreenMail: IMAP on 3143, SMTP on 3025 to drop a test mail in (user intake / intake-dev-secret).
+  # GreenMail: IMAP on 3143, SMTP on 3025 to drop a test mail in. Its one user is the login file-service polls
+  # with, INTAKE_IMAP_USERNAME / INTAKE_IMAP_PASSWORD of .env (no default for a secret).
   greenmail:
     image: greenmail/standalone:2.1.5
     container_name: greenmail
     environment:
-      GREENMAIL_OPTS: "-Dgreenmail.setup.test.imap -Dgreenmail.setup.test.smtp -Dgreenmail.hostname=0.0.0.0 -Dgreenmail.users=intake:intake-dev-secret@agricontract.local -Dgreenmail.users.login=local_part"
+      GREENMAIL_OPTS: "-Dgreenmail.setup.test.imap -Dgreenmail.setup.test.smtp -Dgreenmail.hostname=0.0.0.0 -Dgreenmail.users=${INTAKE_IMAP_USERNAME:?INTAKE_IMAP_USERNAME must be set in .env}:${INTAKE_IMAP_PASSWORD:?INTAKE_IMAP_PASSWORD must be set in .env}@agricontract.local -Dgreenmail.users.login=local_part"
     ports:
       - "3143:3143"
       - "3025:3025"
@@ -736,6 +737,10 @@ services:
       # Email intake (#275): poll the GreenMail intake@ mailbox every 5 minutes.
       INTAKE_IMAP_HOST: greenmail
       INTAKE_IMAP_PORT: 3143
+      INTAKE_IMAP_USERNAME: ${INTAKE_IMAP_USERNAME:?INTAKE_IMAP_USERNAME must be set in .env}
+      INTAKE_IMAP_PASSWORD: ${INTAKE_IMAP_PASSWORD:?INTAKE_IMAP_PASSWORD must be set in .env}
+      # GreenMail writes no Authentication-Results, so INTAKE_AUTHSERV_ID stays unset here and every
+      # spfDkimResult is NONE. Set it to the authserv-id of the real receiving server.
     # Local only, for manual tests; the gateway never routes file-service.
     ports:
       - "8089:8089"
