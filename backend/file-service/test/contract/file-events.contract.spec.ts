@@ -20,6 +20,7 @@ import {
   scanRequested,
   fileFailed,
   fileReady,
+  type EmailMeta,
 } from '../../src/application/file-events';
 import { FAILURE_REASONS } from '../../src/application/scan-file.use-case';
 import { INGEST_CHANNELS, newStoredFile } from '../../src/domain/stored-file';
@@ -146,9 +147,9 @@ describe('file.ready / file.failed (golden-flow-events.yaml)', () => {
 });
 
 describe('EMAIL_INTAKE: file.ready with emailMeta, file.email_notice (#275)', () => {
-  const meta = {
+  const meta: EmailMeta = {
     senderDomain: 'sgs.example.com',
-    spfDkimResult: 'spf=pass; dkim=pass',
+    spfDkimResult: 'PASS',
     subject: 'Report CASE-2026-0042',
     receivedAt: '2026-11-22T02:00:05.000Z',
   };
@@ -165,6 +166,37 @@ describe('EMAIL_INTAKE: file.ready with emailMeta, file.email_notice (#275)', ()
     expect(Object.keys(event.payload).sort()).toEqual(
       [...own('fileReady').payload.required, 'emailMeta'].sort(),
     );
+  });
+
+  it.each(['PASS', 'FAIL', 'NONE'] as const)(
+    'spfDkimResult %s is a value of the contract, in file.ready and file.email_notice',
+    (spfDkimResult) => {
+      const withResult = { ...meta, spfDkimResult };
+
+      expect(
+        accepts('fileReady')(
+          fileReady(scanRequested(intakeFile, withResult), intakeFile),
+        ),
+      ).toBe(true);
+      expect(
+        accepts('fileEmailNotice')(
+          fileEmailNotice('a'.repeat(64), withResult, 'x'),
+        ),
+      ).toBe(true);
+    },
+  );
+
+  it('the old free-text spfDkimResult is refused by the contract (D88)', () => {
+    const old = {
+      ...meta,
+      spfDkimResult: 'spf=pass; dkim=pass',
+    } as unknown as EmailMeta;
+
+    expect(
+      accepts('fileReady')(
+        fileReady(scanRequested(intakeFile, old), intakeFile),
+      ),
+    ).toBe(false);
   });
 
   it('file.email_notice is an event of the contract and is accepted with exactly its fields', () => {

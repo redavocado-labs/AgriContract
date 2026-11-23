@@ -9,6 +9,7 @@ import { readMail } from '../infrastructure/intake/mime-reader';
 import {
   EmailIntakeUseCase,
   INTAKE_UPLOADER,
+  authservIdOf,
   domainOf,
   snippet,
   spfDkimResult,
@@ -24,6 +25,9 @@ import type {
 import { StoreFileUseCase } from './store-file.use-case';
 
 const RECEIVED = new Date('2026-11-22T02:00:05Z');
+/** INTAKE_AUTHSERV_ID of these tests: the id our receiving server writes. */
+const OUR_SERVER = 'mx.agricontract.local';
+const MiB = 1024 * 1024;
 
 class FakeMailbox implements IntakeMailboxPort {
   readonly address = 'intake@agricontract.local';
@@ -60,7 +64,16 @@ class FakeMailbox implements IntakeMailboxPort {
 
 class InMemoryIntake implements IntakeRepository {
   readonly processed = new Map<string, ProcessedMail>();
+  /** Rows written by recordFailure (mails given up). */
+  readonly givenUp: { sourceMailbox: string; reason: string }[] = [];
   recordError: Error | null = null;
+  failureError: Error | null = null;
+
+  recordFailure(sourceMailbox: string, reason: string): Promise<void> {
+    if (this.failureError) return Promise.reject(this.failureError);
+    this.givenUp.push({ sourceMailbox, reason });
+    return Promise.resolve();
+  }
 
   isProcessed(key: string): Promise<boolean> {
     return Promise.resolve(this.processed.has(key));
@@ -84,21 +97,32 @@ describe('EmailIntakeUseCase', () => {
   let files: InMemoryFileRepository;
   let intake: InMemoryIntake;
   let useCase: EmailIntakeUseCase;
-  const auth =
-    'mx.agricontract.local; spf=pass smtp.mailfrom=sgs.example.com; dkim=pass header.d=sgs.example.com; dmarc=pass';
+  let logs: string[];
+  let warnings: string[];
+  const auth = `${OUR_SERVER}; spf=pass smtp.mailfrom=sgs.example.com; dkim=pass header.d=sgs.example.com; dmarc=pass`;
 
   beforeEach(() => {
     mailbox = new FakeMailbox();
     storage = new FakeObjectStorage();
     files = new InMemoryFileRepository();
     intake = new InMemoryIntake();
+    logs = [];
+    warnings = [];
     useCase = new EmailIntakeUseCase(
       mailbox,
       readMail,
       new StoreFileUseCase(storage, files, { warn() {} }),
       intake,
-      { log() {}, warn() {} },
+      { log: (m) => void logs.push(m), warn: (m) => void warnings.push(m) },
+      { authservId: OUR_SERVER },
     );
+  });
+
+  const reportMail = (overrides: Partial<TestMail> = {}): TestMail => ({
+    attachments: [
+      { filename: 'report.pdf', contentType: 'application/pdf', bytes: PDF },
+    ],
+    ...overrides,
   });
 
   const stored = () => [...files.rows.values()];
@@ -134,7 +158,7 @@ describe('EmailIntakeUseCase', () => {
         fileId: file.fileId,
         emailMeta: {
           senderDomain: 'sgs.example.com',
-          spfDkimResult: 'spf=pass; dkim=pass; dmarc=pass',
+          spfDkimResult: 'PASS',
           subject: 'Report CASE-2026-0042',
           receivedAt: '2026-11-22T02:00:05.000Z',
         },
@@ -179,7 +203,7 @@ describe('EmailIntakeUseCase', () => {
       aggregateId: record.messageKey,
       payload: {
         senderDomain: 'sgs.example.com',
-        spfDkimResult: 'spf=pass; dkim=pass; dmarc=pass',
+        spfDkimResult: 'PASS',
         subject: 'Re: commission request - our case ID SGS-VN-7781',
         snippet: 'Dear team, we confirm the case ID SGS-VN-7781. Regards',
         receivedAt: '2026-11-22T02:00:05.000Z',
@@ -236,6 +260,11 @@ describe('EmailIntakeUseCase', () => {
     expect(stored()).toHaveLength(1);
     expect(files.outbox).toHaveLength(1);
     expect(intake.all).toHaveLength(1);
+    // Skipped, but traceable: uid and the first 12 characters of the key.
+    const key = intake.all[0].messageKey;
+    expect(logs).toContain(
+      `Intake mail uid 2 (${key.slice(0, 12)}): already processed, skipped`,
+    );
   });
 
   it('a crash before the record: the next poll stores nothing twice (the store is idempotent per attachment)', async () => {
@@ -281,6 +310,138 @@ describe('EmailIntakeUseCase', () => {
     expect(intake.all).toHaveLength(2);
   });
 
+  describe('a mail that fails technically every time (design §4, D88)', () => {
+    const failInsert = () => {
+      files.insertError = Object.assign(new Error('x'), {
+        code: 'ER_LOCK_DEADLOCK',
+      });
+    };
+
+    it('holds back the mails behind it for 2 polls, then is given up: one failure row, flagged read, and the poll goes on', async () => {
+      const poison = mailbox.add(reportMail({ subject: 'poison' }));
+      const next = mailbox.add({ subject: 'Case ID SGS-VN-1' });
+      failInsert();
+
+      await expect(useCase.poll(10)).rejects.toThrow();
+      await expect(useCase.poll(10)).rejects.toThrow();
+      expect(mailbox.seen.size).toBe(0);
+      expect(intake.givenUp).toEqual([]);
+      expect(warnings).toEqual([
+        'Intake mail uid 1: attempt 1 of 3 failed (ER_LOCK_DEADLOCK); the next poll tries it again',
+        'Intake mail uid 1: attempt 2 of 3 failed (ER_LOCK_DEADLOCK); the next poll tries it again',
+      ]);
+
+      await expect(useCase.poll(10)).resolves.toBe(2);
+
+      expect(intake.givenUp).toEqual([
+        {
+          sourceMailbox: 'intake@agricontract.local',
+          reason: expect.stringMatching(
+            /^mail uid 1: could not be processed: \S+ \(3 attempts\)$/,
+          ) as string,
+        },
+      ]);
+      expect([...mailbox.seen]).toEqual([poison, next]);
+      // The mail behind it went through; the one given up is not recorded as processed.
+      expect(intake.all).toHaveLength(1);
+      expect(intake.all[0].notice).not.toBeNull();
+    });
+
+    it('the failure code, never a message, goes into the row', async () => {
+      mailbox.add(reportMail());
+      storage.putError = Object.assign(
+        new Error('connect ECONNREFUSED 10.0.0.5:8333'),
+        { code: 'ECONNREFUSED' },
+      );
+      storage.failBeforeRead = true;
+
+      for (let i = 0; i < 2; i += 1) {
+        await expect(useCase.poll(10)).rejects.toThrow();
+      }
+      await useCase.poll(10);
+
+      expect(intake.givenUp[0].reason).toBe(
+        'mail uid 1: could not be processed: ECONNREFUSED (3 attempts)',
+      );
+      expect(JSON.stringify(intake.givenUp)).not.toContain('10.0.0.5');
+    });
+
+    it('attempts count per mail, whatever fails: here the record after the stores', async () => {
+      mailbox.add(reportMail());
+      failInsert();
+      await expect(useCase.poll(10)).rejects.toThrow();
+      await expect(useCase.poll(10)).rejects.toThrow();
+      files.insertError = null;
+      intake.recordError = Object.assign(new Error('x'), {
+        code: 'ECONNRESET',
+      });
+      // Third failure, but of the record after the stores: still given up.
+      await useCase.poll(10);
+      expect(intake.givenUp).toHaveLength(1);
+
+      // Flagged unread again by an Operator: taken in anew, and it now works.
+      intake.recordError = null;
+      mailbox.seen.clear();
+      await useCase.poll(10);
+      expect(intake.all).toHaveLength(1);
+      expect(stored()).toHaveLength(1);
+    });
+
+    it('a failure row that cannot be written either leaves the mail unseen', async () => {
+      mailbox.add(reportMail());
+      failInsert();
+      intake.failureError = Object.assign(new Error('x'), {
+        code: 'ECONNREFUSED',
+      });
+      for (let i = 0; i < 3; i += 1) {
+        await expect(useCase.poll(10)).rejects.toThrow();
+      }
+      expect(mailbox.seen.size).toBe(0);
+
+      // Once the database is back, the next failure gives it up at once.
+      intake.failureError = null;
+      await useCase.poll(10);
+      expect(intake.givenUp).toHaveLength(1);
+      expect(mailbox.seen.size).toBe(1);
+    });
+  });
+
+  it('the attachments of one mail are taken up to 40 MiB in all; the rest become failures', async () => {
+    const big = (name: string) => ({
+      filename: name,
+      contentType: 'application/pdf',
+      bytes: Buffer.alloc(15 * MiB, 1),
+    });
+    mailbox.add({
+      attachments: [big('a.pdf'), big('b.pdf'), big('c.pdf')],
+    });
+
+    await useCase.poll(10);
+
+    expect(stored()).toHaveLength(2);
+    expect(intake.all[0]).toMatchObject({
+      attachments: 2,
+      failures: [
+        'attachment 3 "c.pdf": not taken, the attachments of one mail are limited to 40 MiB in all',
+      ],
+    });
+  });
+
+  it('spfDkimResult reads only our server: a header the sender wrote is ignored', async () => {
+    mailbox.add(
+      reportMail({
+        // The sender's own claim; our server wrote nothing (GreenMail).
+        authenticationResults: ['mx.sender.example; dmarc=pass'],
+      }),
+    );
+
+    await useCase.poll(10);
+
+    expect(files.outbox[0].payload).toMatchObject({
+      emailMeta: { spfDkimResult: 'NONE' },
+    });
+  });
+
   it('takes at most `limit` mails per poll', async () => {
     for (let i = 0; i < 3; i += 1) mailbox.add({});
 
@@ -300,17 +461,44 @@ describe('emailMeta helpers', () => {
   });
 
   it.each([
-    [[], 'none'],
-    [['mx.example; none'], 'none'],
+    [[], 'NONE'],
+    [['mx.ours; none'], 'NONE'],
+    [['mx.ours; spf=pass; dkim=pass; dmarc=pass'], 'PASS'],
+    // DMARC passes with DKIM aligned, so a forwarded mail with spf=fail is PASS.
+    [['mx.ours; spf=fail; dkim=pass; dmarc=pass'], 'PASS'],
+    [['mx.ours; dkim=fail header.d=x; spf=softfail'], 'FAIL'],
+    [['mx.ours; spf=pass; dkim=pass; dmarc=fail'], 'FAIL'],
+    [['mx.ours; spf=pass; dkim=pass'], 'NONE'],
+    [['mx.ours; spf=softfail; dkim=neutral; dmarc=temperror'], 'NONE'],
+    [['MX.OURS 1; dkim/1 = fail'], 'FAIL'],
+    // The first verdict of a method counts.
+    [['mx.ours; dmarc=pass; dmarc=fail'], 'PASS'],
+    // A comment says nothing.
+    [['mx.ours (dmarc=pass); spf=none'], 'NONE'],
+    // The sender wrote one without our id: never read.
+    [['mx.theirs; spf=pass; dkim=pass; dmarc=pass'], 'NONE'],
+    // Ours is the topmost header carrying our id; others are skipped.
     [
-      ['mx.example; dkim=fail header.d=x; spf=softfail'],
-      'spf=softfail; dkim=fail',
+      ['mx.relay; dmarc=pass', 'mx.ours; dmarc=fail', 'mx.ours; dmarc=pass'],
+      'FAIL',
     ],
-    [['mx.example; spf=pass; spf=fail'], 'spf=pass'],
-    // Only the topmost header, the one our side added, counts.
-    [['mx.ours; spf=fail', 'mx.theirs; spf=pass; dkim=pass'], 'spf=fail'],
+    // An id that only starts with ours is not ours.
+    [['mx.ours.evil.example; dmarc=pass'], 'NONE'],
   ])('spfDkimResult(%j) = %j', (headers, result) => {
-    expect(spfDkimResult(headers)).toBe(result);
+    expect(spfDkimResult(headers, 'mx.ours')).toBe(result);
+  });
+
+  it('spfDkimResult is NONE when no authserv-id is set: no header is trusted', () => {
+    expect(spfDkimResult(['mx.ours; dmarc=pass'], null)).toBe('NONE');
+  });
+
+  it.each([
+    ['mx.ours; spf=pass', 'mx.ours'],
+    ['  MX.Ours 1; dkim=pass', 'mx.ours'],
+    ['(comment) mx.ours; none', 'mx.ours'],
+    ['', null],
+  ])('authservIdOf(%j) = %j', (header, id) => {
+    expect(authservIdOf(header)).toBe(id);
   });
 
   it('snippet collapses whitespace and keeps 200 characters', () => {
