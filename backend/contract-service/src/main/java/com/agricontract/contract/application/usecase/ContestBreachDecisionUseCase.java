@@ -23,6 +23,7 @@ import com.agricontract.contract.domain.model.vo.ContractId;
 import com.agricontract.contract.domain.repository.BreachCaseRepository;
 import com.agricontract.contract.domain.repository.ContractRepository;
 import com.agricontract.contract.domain.repository.InspectionReportRepository;
+import com.agricontract.contract.domain.model.inspection.InspectionReportPurpose;
 import com.agricontract.contract.domain.repository.MilestoneEvidenceRepository;
 import com.agricontract.contract.domain.repository.MilestoneRepository;
 import com.agricontract.contract.domain.repository.RemedyDecisionRepository;
@@ -134,11 +135,11 @@ public class ContestBreachDecisionUseCase {
         MilestoneEvidenceFile.requireAllUploadedBy(command.fileIds(), command.actorId(), breachCase.milestoneId(),
                 known);
         BreachCase updated = breachCase.addContestEvidence(command.actorId(), command.fileIds());
-        // D91: only until the second report is confirmed; the milestone is locked after the case, as everywhere.
+        // D91: only until the contest's report is confirmed; the milestone is locked after the case, as everywhere.
         milestones.findByIdForUpdate(breachCase.milestoneId());
-        if (reports.countByMilestoneId(breachCase.milestoneId()) >= 2) {
+        if (reports.existsByMilestoneIdAndPurpose(breachCase.milestoneId(), InspectionReportPurpose.CONTEST)) {
             throw new ContractConflictException(ContractConflictException.BREACH_CASE_ACTION_NOT_ALLOWED,
-                    "The second inspection report is already confirmed; evidence can no longer be added.");
+                    "The contest's inspection report is already confirmed; evidence can no longer be added.");
         }
         MilestoneEvidenceFile.requireAllReady(command.fileIds(), known);
         List<String> added = command.fileIds().stream().filter(id -> !breachCase.contestEvidenceFileIds().contains(id))

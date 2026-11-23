@@ -12,6 +12,7 @@ import com.agricontract.contract.domain.model.breach.BreachCaseStatus;
 import com.agricontract.contract.domain.model.consent.SignerRole;
 import com.agricontract.contract.domain.model.breach.ContestStatus;
 import com.agricontract.contract.domain.model.inspection.InspectionReport;
+import com.agricontract.contract.domain.model.inspection.InspectionReportPurpose;
 import com.agricontract.contract.domain.model.inspection.InspectionRequestReason;
 import com.agricontract.contract.domain.model.milestone.FlagIssueType;
 import com.agricontract.contract.domain.model.milestone.Milestone;
@@ -55,9 +56,10 @@ import java.time.temporal.ChronoUnit;
  *       original request (a second INCONCLUSIVE is final: the milestone and its money stay locked, WARN
  *       inspection_inconclusive_final, an operator handles it).</li>
  * </ul>
- * Rounds (D85, D91, V24): a milestone takes a second report only after an INCONCLUSIVE first one, or as the result of
- * a contest (its case is CONTESTED). The second report of a contest replaces the case's computed resolution, the case
- * goes back to UNDER_REVIEW and the pending RemedyDecision is SUPERSEDED. A third report is ignored.
+ * Rounds (D85, D91, V24, V25): each report has a purpose, at most one of each per milestone: INITIAL, RERUN (only after
+ * an INCONCLUSIVE first report) and CONTEST (only while the case is CONTESTED). The re-run never uses up the contest.
+ * The contest report replaces the case's computed resolution, the case goes back to UNDER_REVIEW and the pending
+ * RemedyDecision is SUPERSEDED. Any other report is ignored.
  */
 @Slf4j
 @Service
@@ -72,9 +74,6 @@ public class ApplyInspectionReportUseCase {
     private final ContractEventPublisher events;
     private final TransactionRunner transactions;
     private final Clock clock;
-
-    /** D85, D91: a milestone has at most two reports, the first and one re-run. */
-    static final int MAX_ROUNDS = 2;
 
     public void execute(InspectionReportCommands.ApplyConfirmed command) {
         transactions.requireTransaction();
@@ -122,22 +121,12 @@ public class ApplyInspectionReportUseCase {
             }
         }
 
-        int stored = reports.countByMilestoneId(milestone.milestoneId());
-        if (stored >= MAX_ROUNDS) {
-            ignore(report, "report_round_limit");
+        InspectionReportPurpose purpose = purposeOf(breachCase, milestone);
+        if (purpose == null) {
+            ignore(report, "report_already_stored");
             return;
         }
-        boolean contestRound = false;
-        if (stored == 1) {
-            contestRound = breachCase != null && breachCase.status() == BreachCaseStatus.RESOLVED
-                    && breachCase.contestStatus() == ContestStatus.CONTESTED;
-            boolean rerun = reports.findByMilestoneId(milestone.milestoneId()).orElseThrow().measurementStatus()
-                    == MeasurementStatus.INCONCLUSIVE;
-            if (!contestRound && !rerun) {
-                ignore(report, "report_already_stored");
-                return;
-            }
-        }
+        boolean contestRound = purpose == InspectionReportPurpose.CONTEST;
         RemedyDecision pending = null;
         if (contestRound) {
             pending = remedyDecisions.findByBreachCaseId(breachCase.breachCaseId())
@@ -156,10 +145,10 @@ public class ApplyInspectionReportUseCase {
                 contract.getCoffeeTerms().snapshot().negotiated().qualityTerms(), report.measurementStatus(),
                 report.actualMetrics(), report.acceptedQuantityKg(), milestone.effectiveUnitPrice(),
                 milestone.batchAmount());
-        reports.insert(report, assessment);
+        reports.insert(report, assessment, purpose);
         Instant now = Instant.now(clock).truncatedTo(ChronoUnit.MICROS);
         if (!complete) {
-            inconclusive(contract, milestone, report, contested, stored, now);
+            inconclusive(contract, milestone, report, contested, purpose, now);
             return;
         }
 
@@ -180,8 +169,8 @@ public class ApplyInspectionReportUseCase {
      * for a contested milestone, a mandatory inspection otherwise); the second is final.
      */
     private void inconclusive(Contract contract, Milestone milestone, InspectionReport report, boolean contested,
-                              int stored, Instant now) {
-        if (stored >= 1) {
+                              InspectionReportPurpose purpose, Instant now) {
+        if (purpose != InspectionReportPurpose.INITIAL) {
             log.warn("event=inspection_inconclusive_final reportId={} contractId={} milestoneId={} eventId={}",
                     report.reportId(), report.contractId(), report.milestoneId(), report.receivedEventId());
             return;
@@ -237,6 +226,27 @@ public class ApplyInspectionReportUseCase {
         log.info("event=milestone_settled contractId={} milestoneId={} path={} sellerAmount={} buyerRefundAmount={}",
                 contract.getContractId().value(), milestone.milestoneId(), settlement.path(),
                 settlement.sellerAmount().wire(), settlement.buyerRefundAmount().wire());
+    }
+
+    /**
+     * D85, D91: why this report was asked for, or null when the milestone takes no more. The report a contest asked
+     * for (case RESOLVED and CONTESTED, none stored yet); else the first one; else the one re-run after an
+     * INCONCLUSIVE first report. The re-run never uses up the contest, so a milestone has at most three reports.
+     */
+    private InspectionReportPurpose purposeOf(BreachCase breachCase, Milestone milestone) {
+        String milestoneId = milestone.milestoneId();
+        if (breachCase != null && breachCase.status() == BreachCaseStatus.RESOLVED
+                && breachCase.contestStatus() == ContestStatus.CONTESTED) {
+            return reports.existsByMilestoneIdAndPurpose(milestoneId, InspectionReportPurpose.CONTEST)
+                    ? null : InspectionReportPurpose.CONTEST;
+        }
+        int stored = reports.countByMilestoneId(milestoneId);
+        if (stored == 0) {
+            return InspectionReportPurpose.INITIAL;
+        }
+        boolean firstInconclusive = stored == 1 && reports.findByMilestoneId(milestoneId).orElseThrow()
+                .measurementStatus() == MeasurementStatus.INCONCLUSIVE;
+        return firstInconclusive ? InspectionReportPurpose.RERUN : null;
     }
 
     private static void ignore(InspectionReport report, String reason) {

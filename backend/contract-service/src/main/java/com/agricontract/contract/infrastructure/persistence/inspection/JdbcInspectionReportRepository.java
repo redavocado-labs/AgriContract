@@ -1,6 +1,7 @@
 package com.agricontract.contract.infrastructure.persistence.inspection;
 
 import com.agricontract.contract.domain.model.inspection.InspectionReport;
+import com.agricontract.contract.domain.model.inspection.InspectionReportPurpose;
 import com.agricontract.contract.domain.model.quality.CoffeeActualMetrics;
 import com.agricontract.contract.domain.model.quality.MeasurementStatus;
 import com.agricontract.contract.domain.model.quality.MetricOutcome;
@@ -36,16 +37,16 @@ public class JdbcInspectionReportRepository implements InspectionReportRepositor
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
-    public void insert(InspectionReport r, QualityAssessment a) {
+    public void insert(InspectionReport r, QualityAssessment a, InspectionReportPurpose purpose) {
         jdbc.update("INSERT INTO inspection_report (report_id, contract_id, milestone_id, tier, measurement_status,"
                         + " measured_quantity_kg, accepted_quantity_kg, actual_metrics, result_hash, report_hash,"
-                        + " confirmed_at, received_event_id, created_at, `round`)"
-                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        + " confirmed_at, received_event_id, created_at, `round`, purpose)"
+                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 r.reportId(), r.contractId(), r.milestoneId(), r.tier(), r.measurementStatus().name(),
                 r.measuredQuantityKg(), r.acceptedQuantityKg(), r.actualMetrics() == null ? null : write(r.actualMetrics()),
                 r.resultHash(), r.reportHash(), Timestamp.from(r.confirmedAt()), r.receivedEventId(),
                 Timestamp.from(Instant.now(clock).truncatedTo(ChronoUnit.MICROS)),
-                countByMilestoneId(r.milestoneId()) + 1);
+                countByMilestoneId(r.milestoneId()) + 1, purpose.name());
         jdbc.update("INSERT INTO quality_assessment (report_id, disposition, type_outcome, metric_outcomes,"
                         + " quality_discount_rate, quality_discount_amount, quantity_adjusted_entitlement,"
                         + " final_seller_entitlement, buyer_refund_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -72,6 +73,13 @@ public class JdbcInspectionReportRepository implements InspectionReportRepositor
         Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE milestone_id = ?",
                 Integer.class, milestoneId);
         return n == null ? 0 : n;
+    }
+
+    @Override
+    public boolean existsByMilestoneIdAndPurpose(String milestoneId, InspectionReportPurpose purpose) {
+        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE milestone_id = ? AND purpose = ?",
+                Integer.class, milestoneId, purpose.name());
+        return n != null && n > 0;
     }
 
     @Override
