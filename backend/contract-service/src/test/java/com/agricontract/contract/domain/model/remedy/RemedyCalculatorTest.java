@@ -251,6 +251,39 @@ class RemedyCalculatorTest {
                 disposition, finalRole, VndAmount.parse(seller), VndAmount.parse(refund), prevailing);
     }
 
+    // ---- D92: agreed exits and the inspection fee party ----
+
+    @Test
+    void aReportBasedDecision_putsTheInspectionFeeOnTheNonPrevailingRole() {
+        RemedyDecision d = calculator.calculate(resolvedBySeller(), milestone("10000"),
+                terms("0.08", GoverningLaw.VN_COMMERCIAL_LAW), deposit("22500000.00"), 0, NOW);
+
+        assertThat(d.inspectionFeeParty()).isEqualTo(InspectionFeeParty.SELLER);
+    }
+
+    @Test
+    void anAgreedConcessionWithFault_isFinalizedAtOnce_withThePenalty_andTheGivenFeeParty() {
+        BreachCaseComputedResolution agreed = BreachCaseComputedResolution.agreed(FlagIssueType.QUALITY,
+                BigDecimal.ZERO, QualityDisposition.NON_CONFORMING, SignerRole.SELLER, VndAmount.parse("0.00"),
+                VndAmount.parse("150000000.00"), SignerRole.BUYER);
+        BreachCase mutual = BreachCase.reportedByBuyer(CASE, CONTRACT, MILESTONE,
+                BreachReasonCode.QUALITY_BELOW_COMMITTED, List.of(), NOW).endByAgreement(agreed, NOW, "seller");
+
+        RemedyDecision d = calculator.calculateAgreed(mutual, milestone("10000"),
+                terms("0.08", GoverningLaw.VN_COMMERCIAL_LAW), deposit("22500000.00"), 0, InspectionFeeParty.SELLER,
+                NOW);
+
+        assertThat(d.status()).isEqualTo(RemedyStatus.FINALIZED);
+        assertThat(d.decisionSource()).isEqualTo(DecisionSource.MUTUAL);
+        assertThat(d.reputationEligible()).isTrue();
+        assertThat(d.penaltyAmount().wire()).isEqualTo("12000000.00");
+        assertThat(d.sellerDepositForfeited().wire()).isEqualTo("12000000.00");
+        assertThat(d.inspectionFeeParty()).isEqualTo(InspectionFeeParty.SELLER);
+        assertThatThrownBy(() -> calculator.calculate(mutual, milestone("10000"),
+                terms("0.08", GoverningLaw.VN_COMMERCIAL_LAW), deposit("22500000.00"), 0, NOW))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
     private static BreachCase resolvedBySeller() {
         return resolved(computed(FlagIssueType.QUALITY, QualityDisposition.NON_CONFORMING, SignerRole.SELLER, "0.00",
                 "150000000.00", SignerRole.BUYER));
