@@ -53,7 +53,8 @@ services:
       interval: 15s
       timeout: 5s
       retries: 10
-      start_period: 30s
+      # 30 s was too short on a cold start of the whole stack: it gave up at 176 s, just before Keycloak was up.
+      start_period: 120s
 
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
@@ -73,6 +74,8 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
+      # A cold start of the whole stack took 95 s here: without a start period, 5 x 15 s marked it unhealthy first.
+      start_period: 120s
 
   # The intake@ mailbox of file-service's email intake (#275, file-service-phase2-design §4.1: IMAP polling).
   # GreenMail: IMAP on 3143, SMTP on 3025 to drop a test mail in. Its one user is the login file-service polls
