@@ -6,6 +6,7 @@ import java.util.UUID;
 import com.agricontract.inspection.application.exception.EligibilityUnavailableException;
 import com.agricontract.inspection.application.port.InspectorEligibilityPort;
 import com.agricontract.inspection.domain.model.InspectorEligibility;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,22 +17,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.JettyClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.ByteBuffer;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Flow;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.Request;
+import java.net.URI;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import jakarta.annotation.PreDestroy;
-import org.springframework.web.util.UriComponentsBuilder;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
@@ -43,11 +38,8 @@ public class InternalUserEligibilityClient implements InspectorEligibilityPort {
     private final ObjectReader eligiblePoolReader = mapper.readerFor(JsonNode.class)
             .with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
             .with(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
+    private final RestClient client;
     private final HttpClient transport;
-    private final ThreadPoolExecutor httpExecutor;
-    private final String baseUrl;
-    private final String secret;
-    private final int deadlineMs;
 
     public InternalUserEligibilityClient(RestClient.Builder builder,
             @Value("${inspection.user-service.base-url}") String baseUrl,
@@ -57,29 +49,49 @@ public class InternalUserEligibilityClient implements InspectorEligibilityPort {
         if (secret == null || secret.isBlank()) {
             throw new IllegalArgumentException("SERVICE_INTERNAL_SECRET must be configured");
         }
-        this.baseUrl = baseUrl;
-        this.secret = secret;
-        this.deadlineMs = readTimeoutMs;
-        httpExecutor = new ThreadPoolExecutor(4, 4, 0, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(256), task -> {
-            var thread = new Thread(task, "inspection-user-http");
-            thread.setDaemon(true);
-            return thread;
-        });
-        transport = HttpClient.newBuilder().executor(httpExecutor)
-                .connectTimeout(Duration.ofMillis(connectTimeoutMs))
-                .followRedirects(HttpClient.Redirect.NEVER).build();
+        if (connectTimeoutMs <= 0 || readTimeoutMs <= 0) {
+            throw new IllegalArgumentException("User-service timeouts must be positive");
+        }
+        transport = new HttpClient() {
+            @Override public Request newRequest(URI uri) {
+                return super.newRequest(uri).timeout(readTimeoutMs, TimeUnit.MILLISECONDS);
+            }
+        };
+        transport.setConnectTimeout(connectTimeoutMs);
+        transport.setFollowRedirects(false);
+        transport.setMaxConnectionsPerDestination(16);
+        transport.setMaxRequestsQueuedPerDestination(128);
+        var factory = new JettyClientHttpRequestFactory(transport);
+        factory.setReadTimeout(Duration.ofMillis(readTimeoutMs));
+        client = builder.requestFactory(factory).baseUrl(baseUrl)
+                .defaultHeader("X-Internal-Secret", secret).build();
     }
 
     @PreDestroy
-    public void close() {
-        transport.shutdownNow();
-        httpExecutor.shutdownNow();
+    public void close() throws Exception {
+        transport.stop();
     }
 
     @Override
     public InspectorEligibility load(String authenticatedUserId) {
         try {
-            JsonNode body = readInspectorProfile(authenticatedUserId);
+            JsonNode body = client.get().uri("/internal/v1/users/{userId}", authenticatedUserId)
+                    .exchange((request, response) -> {
+                        if (!response.getStatusCode().is2xxSuccessful()) {
+                            throw new InvalidEligibility("dependency_http");
+                        }
+                        try {
+                            var contentType = response.getHeaders().getContentType();
+                            if (contentType == null || !(MediaType.APPLICATION_JSON.isCompatibleWith(contentType)
+                                    || new MediaType("application", "*+json").isCompatibleWith(contentType))) {
+                                throw new InvalidEligibility("malformed_response");
+                            }
+                            return eligiblePoolReader.readValue(bounded(response.getBody(), 65536));
+                        } catch (JsonProcessingException | InvalidMediaTypeException malformed) {
+                            throw new InvalidEligibility("malformed_response");
+                        }
+                        // Other I/O failures propagate to RestClient's ResourceAccessException.
+                    });
             if (body == null || !body.isObject() || !body.has("authorizationExpiresAt")) {
                 throw new InvalidEligibility("malformed_response");
             }
@@ -94,6 +106,8 @@ public class InternalUserEligibilityClient implements InspectorEligibilityPort {
                     requiredText(body, "verificationStatus"), expiry);
         } catch (InvalidEligibility failure) {
             throw unavailable(failure.category);
+        } catch (ResourceAccessException failure) {
+            throw unavailable("transport");
         } catch (DateTimeParseException failure) {
             throw unavailable("malformed_response");
         } catch (RuntimeException failure) {
@@ -105,7 +119,21 @@ public class InternalUserEligibilityClient implements InspectorEligibilityPort {
     @Override
     public String loadInspectorEmail(String userId) {
         try {
-            JsonNode body = readInspectorProfile(userId);
+            String canonical = UUID.fromString(userId).toString();
+            if (!canonical.equals(userId)) throw new InvalidEligibility("malformed_response");
+            JsonNode body = client.get().uri("/internal/v1/users/{userId}", userId)
+                    .exchange((request, response) -> {
+                        if (!response.getStatusCode().is2xxSuccessful()) throw new InvalidEligibility("dependency_http");
+                        try {
+                            var type = response.getHeaders().getContentType();
+                            if (type == null || !(MediaType.APPLICATION_JSON.isCompatibleWith(type)
+                                    || new MediaType("application", "*+json").isCompatibleWith(type)))
+                                throw new InvalidEligibility("malformed_response");
+                            return eligiblePoolReader.readValue(bounded(response.getBody(), 65536));
+                        } catch (JsonProcessingException | InvalidMediaTypeException malformed) {
+                            throw new InvalidEligibility("malformed_response");
+                        }
+                    });
             if (body == null || !body.isObject() || !userId.equals(requiredText(body, "userId"))
                     || !body.path("emailVerified").isBoolean() || !body.path("emailVerified").booleanValue())
                 throw new InvalidEligibility("malformed_response");
@@ -117,73 +145,29 @@ public class InternalUserEligibilityClient implements InspectorEligibilityPort {
             return email;
         } catch (InvalidEligibility failure) {
             throw unavailable(failure.category);
+        } catch (ResourceAccessException failure) {
+            throw unavailable("transport");
         } catch (RuntimeException failure) {
             throw unavailable("malformed_response");
         }
     }
 
-    private JsonNode readInspectorProfile(String userId) {
-        var uri = UriComponentsBuilder.fromUriString(baseUrl).pathSegment("internal", "v1", "users", "{id}")
-                .buildAndExpand(userId).encode().toUri();
-        return readJson(uri, 65536);
-    }
-
-    private JsonNode readJson(java.net.URI uri, int maximumBytes) {
-        var request = HttpRequest.newBuilder(uri).header("X-Internal-Secret", secret)
-                .timeout(Duration.ofMillis(deadlineMs)).GET().build();
-        var future = transport.sendAsync(request, response -> new LimitedBodySubscriber(maximumBytes));
-        try {
-            var response = future.get(deadlineMs, TimeUnit.MILLISECONDS);
-            if (response.statusCode() < 200 || response.statusCode() >= 300) throw new InvalidEligibility("dependency_http");
-            var type = response.headers().firstValue("Content-Type").map(MediaType::parseMediaType).orElse(null);
-            if (type == null || !(MediaType.APPLICATION_JSON.isCompatibleWith(type)
-                    || new MediaType("application", "*+json").isCompatibleWith(type)))
-                throw new InvalidEligibility("malformed_response");
-            return eligiblePoolReader.readValue(response.body());
-        } catch (TimeoutException failure) {
-            future.cancel(true);
-            throw new InvalidEligibility("transport");
-        } catch (InterruptedException failure) {
-            future.cancel(true);
-            Thread.currentThread().interrupt();
-            throw new InvalidEligibility("transport");
-        } catch (ExecutionException failure) {
-            throw new InvalidEligibility("transport");
-        } catch (java.io.IOException | InvalidMediaTypeException failure) {
-            throw new InvalidEligibility("malformed_response");
-        }
-    }
-
-    private static final class LimitedBodySubscriber implements HttpResponse.BodySubscriber<byte[]> {
-        private final HttpResponse.BodySubscriber<byte[]> delegate = HttpResponse.BodySubscribers.ofByteArray();
-        private final int limit;
-        private int bytes;
-        private Flow.Subscription subscription;
-        private LimitedBodySubscriber(int limit) { this.limit = limit; }
-        @Override public CompletionStage<byte[]> getBody() { return delegate.getBody(); }
-        @Override public void onSubscribe(Flow.Subscription subscription) {
-            this.subscription = subscription;
-            delegate.onSubscribe(subscription);
-        }
-        @Override public void onNext(List<ByteBuffer> buffers) {
-            long received = buffers.stream().mapToLong(ByteBuffer::remaining).sum();
-            if (received > limit - bytes) {
-                subscription.cancel();
-                delegate.onError(new IllegalStateException("Response too large"));
-                return;
-            }
-            bytes += (int) received;
-            delegate.onNext(buffers);
-        }
-        @Override public void onError(Throwable error) { delegate.onError(error); }
-        @Override public void onComplete() { delegate.onComplete(); }
-    }
-
     @Override
     public List<String> loadEligibleInspectors() {
         try {
-            JsonNode body = readJson(UriComponentsBuilder.fromUriString(baseUrl)
-                    .pathSegment("internal", "v1", "users", "inspectors", "eligible").build().toUri(), 1024 * 1024);
+            JsonNode body = client.get().uri("/internal/v1/users/inspectors/eligible")
+                    .exchange((request, response) -> {
+                        if (!response.getStatusCode().is2xxSuccessful())
+                            throw new InvalidEligibility("dependency_http");
+                        var type = response.getHeaders().getContentType();
+                        if (type == null || !MediaType.APPLICATION_JSON.isCompatibleWith(type))
+                            throw new InvalidEligibility("malformed_response");
+                        try {
+                            return eligiblePoolReader.readValue(bounded(response.getBody(), 1024 * 1024));
+                        } catch (JsonProcessingException malformed) {
+                            throw new InvalidEligibility("malformed_response");
+                        }
+                    });
             if (body == null || !body.isArray()) throw new InvalidEligibility("malformed_response");
             var ids = new LinkedHashSet<String>();
             for (JsonNode item : body) {
@@ -196,6 +180,8 @@ public class InternalUserEligibilityClient implements InspectorEligibilityPort {
             return List.copyOf(ids);
         } catch (InvalidEligibility failure) {
             throw unavailable(failure.category);
+        } catch (ResourceAccessException failure) {
+            throw unavailable("transport");
         } catch (RuntimeException failure) {
             throw unavailable("malformed_response");
         }
@@ -205,6 +191,12 @@ public class InternalUserEligibilityClient implements InspectorEligibilityPort {
         // Only bounded, locally defined categories: never pass the exception or remote data to the logger.
         LOG.warn("eligibility_dependency_failure category={}", category);
         return new EligibilityUnavailableException();
+    }
+
+    private static byte[] bounded(java.io.InputStream body, int limit) throws java.io.IOException {
+        byte[] bytes = body.readNBytes(limit + 1);
+        if (bytes.length > limit) throw new InvalidEligibility("transport");
+        return bytes;
     }
 
     private static final class InvalidEligibility extends RuntimeException {
