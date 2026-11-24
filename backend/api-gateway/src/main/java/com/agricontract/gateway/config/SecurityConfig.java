@@ -107,8 +107,7 @@ public class SecurityConfig {
                                 "/api/v1/contracts/*/milestones/*/force-majeure/resolve").hasRole("ARBITRATOR")
                         .pathMatchers(HttpMethod.POST,
                                 "/api/v1/contracts/*/activation/retry-deposit-lock",
-                                "/api/v1/contracts/*/milestones/*/funding/retry",
-                                "/api/v1/contracts/*/remedy/retry-legs").hasRole("OPERATOR")
+                                "/api/v1/contracts/*/milestones/*/funding/retry").hasRole("OPERATOR")
                         // #233: only a party withdraws an offer before the second signature.
                         .pathMatchers(HttpMethod.POST, "/api/v1/contracts/*/withdraw").hasAnyRole("BUYER", "SELLER")
                         // D42: the parties, not OPERATOR, stop a contract whose deposit lock failed.
