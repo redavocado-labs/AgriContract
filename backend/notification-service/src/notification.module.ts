@@ -26,6 +26,9 @@ import {
   NotifyLevel15AssignmentWaitingUseCase,
   NotifyLevel15InspectorAssignmentUseCase,
   NotifyMilestoneFundingStatusUseCase,
+  NotifyMilestoneStatusUseCase,
+  NotifyBreachNoticeUseCase,
+  NotifyRemedyFinalizedUseCase,
   NotifyUserKycResultUseCase,
   NotifyUserLockChangedUseCase,
 } from './application/use-cases';
@@ -103,6 +106,9 @@ const USE_CASES = {
     useCaseOf(NotifyContractActivationFailedUseCase),
     useCaseOf(NotifyContractTerminatedUseCase),
     useCaseOf(NotifyMilestoneFundingStatusUseCase),
+    useCaseOf(NotifyMilestoneStatusUseCase),
+    useCaseOf(NotifyBreachNoticeUseCase),
+    useCaseOf(NotifyRemedyFinalizedUseCase),
     {
       provide: DOCUMENT_FILES,
       inject: [ConfigService],
@@ -201,6 +207,9 @@ const USE_CASES = {
         NotifyEscrowRemedyRejectedUseCase,
         NotifyMilestoneFundingStatusUseCase,
         NotifyContractDocumentReadyUseCase,
+        NotifyMilestoneStatusUseCase,
+        NotifyBreachNoticeUseCase,
+        NotifyRemedyFinalizedUseCase,
       ],
       useFactory: (
         contractAnchor: NotifyContractAnchorUseCase,
@@ -216,6 +225,9 @@ const USE_CASES = {
         escrowRemedyRejected: NotifyEscrowRemedyRejectedUseCase,
         milestoneFundingStatus: NotifyMilestoneFundingStatusUseCase,
         contractDocumentReady: NotifyContractDocumentReadyUseCase,
+        milestoneStatus: NotifyMilestoneStatusUseCase,
+        breachNotice: NotifyBreachNoticeUseCase,
+        remedyFinalized: NotifyRemedyFinalizedUseCase,
       ) =>
         commandRoutes({
           contractAnchor,
@@ -231,6 +243,9 @@ const USE_CASES = {
           escrowRemedyRejected,
           milestoneFundingStatus,
           contractDocumentReady,
+          milestoneStatus,
+          breachNotice,
+          remedyFinalized,
         }),
     },
     {

@@ -54,6 +54,66 @@ export const COMMAND_KINDS = {
     notificationType: 'USER_LOCK_CHANGED',
     templateVersion: 'user-lock-changed/v1',
   },
+  // notification.milestone_status_requested (D96): one kind per statusType,
+  // each its own template, to every recipient the command names.
+  milestoneWeighed: {
+    eventType: 'notification.milestone_status_requested',
+    notificationType: 'MILESTONE_WEIGHED',
+    templateVersion: 'milestone-weighed/v1',
+  },
+  milestoneConfirmed: {
+    eventType: 'notification.milestone_status_requested',
+    notificationType: 'MILESTONE_CONFIRMED',
+    templateVersion: 'milestone-confirmed/v1',
+  },
+  milestoneFlagged: {
+    eventType: 'notification.milestone_status_requested',
+    notificationType: 'MILESTONE_FLAGGED',
+    templateVersion: 'milestone-flagged/v1',
+  },
+  milestoneForceMajeure: {
+    eventType: 'notification.milestone_status_requested',
+    notificationType: 'MILESTONE_FORCE_MAJEURE',
+    templateVersion: 'milestone-force-majeure/v1',
+  },
+  milestoneLevel2OptoutRequested: {
+    eventType: 'notification.milestone_status_requested',
+    notificationType: 'MILESTONE_LEVEL2_OPTOUT_REQUESTED',
+    templateVersion: 'milestone-level2-optout-requested/v1',
+  },
+  milestoneBuyerReceiveReminder: {
+    eventType: 'notification.milestone_status_requested',
+    notificationType: 'MILESTONE_BUYER_RECEIVE_REMINDER',
+    templateVersion: 'milestone-buyer-receive-reminder/v1',
+  },
+  milestonePenalty: {
+    eventType: 'notification.milestone_status_requested',
+    notificationType: 'MILESTONE_PENALTY',
+    templateVersion: 'milestone-penalty/v1',
+  },
+  milestoneProvisionalLevel2: {
+    eventType: 'notification.milestone_status_requested',
+    notificationType: 'MILESTONE_PROVISIONAL_LEVEL2',
+    templateVersion: 'milestone-provisional-level2/v1',
+  },
+  // notification.breach_notice_requested (D96): the BreachCase notice.
+  breachNotice: {
+    eventType: 'notification.breach_notice_requested',
+    notificationType: 'BREACH_NOTICE',
+    templateVersion: 'breach-notice/v1',
+  },
+  // notification.remedy_finalized_requested (D96): the normal completion
+  // (D94) has its own kind, every other finalized decision shares one.
+  contractCompleted: {
+    eventType: 'notification.remedy_finalized_requested',
+    notificationType: 'CONTRACT_COMPLETED',
+    templateVersion: 'contract-completed/v1',
+  },
+  remedyFinalized: {
+    eventType: 'notification.remedy_finalized_requested',
+    notificationType: 'REMEDY_FINALIZED',
+    templateVersion: 'remedy-finalized/v1',
+  },
   // notification.contract_document_ready_requested (design §3.3): the final
   // signed contract PDF. Its rows are keyed by documentId, not eventId
   // (design §5: documentId + recipient + CONTRACT_FINAL_PDF).

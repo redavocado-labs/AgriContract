@@ -41,6 +41,9 @@ const EXPECTED_QUEUES = [
   'notification-svc.notification.contract_terminated_requested',
   'notification-svc.notification.milestone_funding_status_requested',
   'notification-svc.notification.contract_document_ready_requested',
+  'notification-svc.notification.milestone_status_requested',
+  'notification-svc.notification.breach_notice_requested',
+  'notification-svc.notification.remedy_finalized_requested',
   'notification-svc.category.approved',
   'notification-svc.category.rejected',
   'notification-svc.notification.user_kyc_result_requested',
@@ -67,7 +70,7 @@ const dlxOf = (queue: string): string => {
 };
 
 describe('topology (must match the Java RabbitMQConfig)', () => {
-  it('names the 15 queues and 15 DLQs', () => {
+  it('names the 18 queues and 18 DLQs', () => {
     expect(queueNames()).toEqual(EXPECTED_QUEUES);
     expect(dlqNames()).toEqual(EXPECTED_QUEUES.map((q) => `${q}.dlq`));
   });
@@ -96,11 +99,11 @@ describe('topology (must match the Java RabbitMQConfig)', () => {
     ]);
   });
 
-  it('declares 30 queues: main queues with only x-dead-letter-exchange, DLQs without arguments', async () => {
+  it('declares 36 queues: main queues with only x-dead-letter-exchange, DLQs without arguments', async () => {
     const { channel, queues } = recordingChannel();
     await declareTopology(channel);
 
-    expect(queues).toHaveLength(30);
+    expect(queues).toHaveLength(36);
 
     for (const q of EXPECTED_QUEUES) {
       // toEqual on the whole options object also fails on any extra option
@@ -130,7 +133,24 @@ describe('topology (must match the Java RabbitMQConfig)', () => {
     const { channel, bindings } = recordingChannel();
     await declareTopology(channel);
 
-    expect(bindings).toHaveLength(30);
+    expect(bindings).toHaveLength(36);
+    // D96: contract-service declares these three ahead with the same names.
+    for (const key of [
+      'notification.milestone_status_requested',
+      'notification.breach_notice_requested',
+      'notification.remedy_finalized_requested',
+    ]) {
+      expect(bindings).toContainEqual([
+        `notification-svc.${key}`,
+        'agricontract.contracts',
+        key,
+      ]);
+      expect(bindings).toContainEqual([
+        `notification-svc.${key}.dlq`,
+        'notification-svc.contracts.dlx',
+        key,
+      ]);
+    }
     expect(bindings).toContainEqual([
       'notification-svc.notification.contract_document_ready_requested',
       'agricontract.contracts',

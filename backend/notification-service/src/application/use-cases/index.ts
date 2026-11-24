@@ -16,3 +16,6 @@ export { NotifyEscrowLegAlertUseCase } from './notify-escrow-leg-alert.use-case'
 export { NotifyEscrowRemedyLegAlertUseCase } from './notify-escrow-remedy-leg-alert.use-case';
 export { NotifyEscrowRemedyRejectedUseCase } from './notify-escrow-remedy-rejected.use-case';
 export { NotifyMilestoneFundingStatusUseCase } from './notify-milestone-funding-status.use-case';
+export { NotifyMilestoneStatusUseCase } from './notify-milestone-status.use-case';
+export { NotifyBreachNoticeUseCase } from './notify-breach-notice.use-case';
+export { NotifyRemedyFinalizedUseCase } from './notify-remedy-finalized.use-case';

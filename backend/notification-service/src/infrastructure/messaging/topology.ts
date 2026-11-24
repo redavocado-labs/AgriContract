@@ -19,6 +19,9 @@ export const TOPOLOGY = [
       'notification.contract_terminated_requested',
       'notification.milestone_funding_status_requested',
       'notification.contract_document_ready_requested',
+      'notification.milestone_status_requested',
+      'notification.breach_notice_requested',
+      'notification.remedy_finalized_requested',
     ],
   },
   {
@@ -92,6 +95,12 @@ export type RoutingKey = (typeof TOPOLOGY)[number]['routingKeys'][number];
  * parties the final signed contract PDF, read from file-service. Same
  * exchange, same DLX, and likewise not yet published nor declared ahead.
  *
+ * `notification.milestone_status_requested`, `notification.breach_notice_requested`
+ * and `notification.remedy_finalized_requested` (D96) tell the parties how a
+ * milestone moves, that a breach case opened, and every finalized remedy
+ * decision. Same exchange, same DLX; contract-service declares all three ahead
+ * (ConsumerQueuesDeclaredAhead, D96) with these exact names and options.
+ *
  * `notification.user_kyc_result_requested` tells a user the KYC decision on
  * their organisation; its one address is `payload.recipientEmail`. It rides
  * user-service's exchange, agricontract.user, in a row of its own. Unlike
@@ -137,6 +146,9 @@ export const COMMAND_ROUTING_KEYS = [
   'notification.contract_terminated_requested',
   'notification.milestone_funding_status_requested',
   'notification.contract_document_ready_requested',
+  'notification.milestone_status_requested',
+  'notification.breach_notice_requested',
+  'notification.remedy_finalized_requested',
   'notification.user_kyc_result_requested',
   'notification.user_lock_changed_requested',
   'notification.level1_5_assignment_waiting_requested',
