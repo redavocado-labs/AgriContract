@@ -45,6 +45,16 @@ export function OrganizationLayout({
           { label: "Sàn nguồn hàng", icon: "storefront", href: "/listing" },
         ]
       : []),
+    ...(roles.includes("ADMIN")
+      ? [
+          {
+            label: "Nhật ký bằng chứng",
+            icon: "fact_check",
+            href: "/admin/audit",
+            active: pathname.startsWith("/admin/audit"),
+          },
+        ]
+      : []),
     { label: "Trang chủ", icon: "home", href: "/" },
   ]
   return (

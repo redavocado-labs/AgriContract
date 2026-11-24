@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
-import { useParams } from "react-router-dom"
+import { useParams, useSearchParams } from "react-router-dom"
 import { useContract } from "@/features/contracts/hooks/use-contracts"
+import { ContractPartyAuditTab } from "@/features/audit"
 import { ContractsLayout } from "@/features/contracts/components/contracts-layout"
 import {
   ContractBadge,
@@ -20,6 +21,7 @@ import { useAuthStore } from "@/shared/auth/auth-store"
 import { Banner } from "@/shared/ui/banner"
 import { Button } from "@/shared/ui/button"
 import { ContentHashDisplay } from "@/shared/ui/content-hash-display"
+import { TabsUnderline } from "@/shared/ui/tabs-underline"
 import { useToast } from "@/shared/ui/toast"
 
 export function ContractDetailPage() {
@@ -36,7 +38,27 @@ function Detail({ id }: { id: string }) {
     (contract?.status !== "SIGNED" || [401, 403, 404].includes(readStatus))
   const previous = useRef<{ hash: string | null; status: string } | null>(null)
   const [changed, setChanged] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const roles = useAuthStore((state) => state.roles)
+  const showEvidenceTab =
+    roles.includes("BUYER") || roles.includes("SELLER")
+  const [tab, setTab] = useState<"overview" | "evidence">(
+    showEvidenceTab && searchParams.get("tab") === "evidence"
+      ? "evidence"
+      : "overview"
+  )
   const toast = useToast()
+
+  function changeTab(next: string) {
+    const resolved = next === "evidence" ? "evidence" : "overview"
+    setTab(resolved)
+    setSearchParams((prev) => {
+      const copy = new URLSearchParams(prev)
+      if (resolved === "evidence") copy.set("tab", "evidence")
+      else copy.delete("tab")
+      return copy
+    }, { replace: true })
+  }
   useEffect(() => {
     if (!contract) return
     if (previous.current?.hash && previous.current.hash !== contract.hash)
@@ -71,7 +93,25 @@ function Detail({ id }: { id: string }) {
                 <WithdrawOffer contract={contract} />
               </div>
             </div>
-            {changed && (
+            {showEvidenceTab && (
+              <TabsUnderline
+                tabs={[
+                  { key: "overview", label: "Tổng quan hợp đồng" },
+                  { key: "evidence", label: "Bằng chứng" },
+                ]}
+                value={tab}
+                onChange={changeTab}
+                scrollable
+              />
+            )}
+            {showEvidenceTab && tab === "evidence" ? (
+              <ContractPartyAuditTab
+                contractId={contract.id}
+                active={tab === "evidence"}
+              />
+            ) : (
+              <>
+                {changed && (
               <Banner variant="warning">
                 Điều khoản vừa thay đổi. Hãy đọc lại nội dung và mã vân tay mới;
                 bản đề xuất và xác nhận cũ đã được bỏ.
@@ -190,6 +230,8 @@ function Detail({ id }: { id: string }) {
                 </Button>
               </div>
             </section>
+              </>
+            )}
           </>
         )
       )}

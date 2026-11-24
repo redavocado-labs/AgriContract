@@ -39,6 +39,8 @@ export function AccountPage() {
       {pathname === "/workspace" && (
         roles.includes("OPERATOR") ? (
           <Link className="text-sm text-primary underline" to="/operations/remedy">Gửi lại lệnh tiền lỗi</Link>
+        ) : roles.includes("ADMIN") ? (
+          <Link className="text-sm text-primary underline" to="/admin/audit">Nhật ký bằng chứng</Link>
         ) : (
           <p className="text-sm text-text-secondary">
             Các chức năng nghiệp vụ sẽ được bổ sung ở giai đoạn tiếp theo.

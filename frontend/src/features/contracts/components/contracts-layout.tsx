@@ -58,6 +58,14 @@ export function ContractsLayout({
           active: pathname.startsWith("/operations/remedy"),
         }]
       : []),
+    ...(roles.includes("ADMIN")
+      ? [{
+          label: "Nhật ký bằng chứng",
+          icon: "fact_check",
+          href: "/admin/audit",
+          active: pathname.startsWith("/admin/audit"),
+        }]
+      : []),
     { label: "Hồ sơ doanh nghiệp", icon: "domain", href: "/account" },
   ]
   return (
