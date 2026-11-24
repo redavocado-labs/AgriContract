@@ -19,6 +19,7 @@ import {
   LEVEL15_INSPECTOR_STAGES,
   LEVEL15_WAITING_STAGES,
   LOCK_ACTIONS,
+  MILESTONE_FUNDING_STATUS_TYPES,
   PARTY_ROLES,
   RECIPIENT_ROLES,
   REMEDY_TYPES,
@@ -34,6 +35,7 @@ import {
   type EscrowRemedyRejectedRequestedCommand,
   type Level15AssignmentWaitingRequestedCommand,
   type Level15InspectorAssignmentRequestedCommand,
+  type MilestoneFundingStatusRequestedCommand,
   type NotificationRecipient,
   type RecipientRole,
   type UserKycResultRequestedCommand,
@@ -211,6 +213,16 @@ class CommandReader {
   optionalNullableDateTime(field: string): string | null {
     const value = this.payload[field];
     return value === undefined || value === null ? null : this.dateTime(field);
+  }
+
+  /**
+   * An optional string that may also be null, as `{type: [string, "null"]}`
+   * outside `required` is declared: absent and null both read as null, and
+   * any string, the empty one included, is kept.
+   */
+  optionalNullableText(field: string): string | null {
+    const value = this.payload[field];
+    return value === undefined || value === null ? null : this.text(field);
   }
 
   /** A single address outside `payload.recipients`, checked as a recipient's is; never quoted. */
@@ -547,6 +559,54 @@ export function parseActivationCancelRequested(
       CANCEL_REQUESTER_ROLES,
     ),
     oneSidedCancelAllowedFrom: payload.dateTime('oneSidedCancelAllowedFrom'),
+  };
+}
+
+export const MILESTONE_FUNDING_STATUS_REQUESTED =
+  'notification.milestone_funding_status_requested';
+
+/** Payload properties of `milestoneFundingStatusRequested`; `deadline` and `reason` are optional. */
+export const MILESTONE_FUNDING_STATUS_FIELDS = [
+  'contractId',
+  'milestoneId',
+  'recipients',
+  'statusType',
+  'deadline',
+  'reason',
+] as const;
+
+/** The required ones among MILESTONE_FUNDING_STATUS_FIELDS. */
+export const MILESTONE_FUNDING_STATUS_REQUIRED = [
+  'contractId',
+  'milestoneId',
+  'recipients',
+  'statusType',
+] as const;
+
+/**
+ * contract-service's funding status of one milestone (milestone-escrow
+ * design §6b). `deadline` and `reason` may be absent or null with any
+ * statusType: which status carries them is the publisher's rule, and the
+ * email says when none was given.
+ */
+export function parseMilestoneFundingStatusRequested(
+  body: Buffer,
+): MilestoneFundingStatusRequestedCommand {
+  const { envelope, payload } = readCommand(
+    body,
+    MILESTONE_FUNDING_STATUS_REQUESTED,
+    'contract-service',
+  );
+  payload.only(MILESTONE_FUNDING_STATUS_FIELDS);
+
+  return {
+    eventId: envelope.eventId,
+    contractId: payload.uuid('contractId'),
+    milestoneId: payload.uuid('milestoneId'),
+    recipients: payload.recipients(),
+    statusType: payload.enumValue('statusType', MILESTONE_FUNDING_STATUS_TYPES),
+    deadline: payload.optionalNullableDateTime('deadline'),
+    reason: payload.optionalNullableText('reason'),
   };
 }
 

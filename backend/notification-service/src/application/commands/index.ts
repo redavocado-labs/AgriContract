@@ -62,6 +62,11 @@ export {
 } from './escrow-leg-alert-requested.command';
 export type { EscrowRemedyLegAlertRequestedCommand } from './escrow-remedy-leg-alert-requested.command';
 export {
+  MILESTONE_FUNDING_STATUS_TYPES,
+  type MilestoneFundingStatusRequestedCommand,
+  type MilestoneFundingStatusType,
+} from './milestone-funding-status-requested.command';
+export {
   ESCROW_REMEDY_REJECTED_REASON_MAX_LENGTH,
   type EscrowRemedyRejectedRequestedCommand,
 } from './escrow-remedy-rejected-requested.command';

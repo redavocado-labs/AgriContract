@@ -41,6 +41,9 @@ import {
   remedyRejectedBody,
   remedyRejectedCommand,
   remedyRejectedPayload,
+  fundingBody,
+  fundingCommand,
+  fundingPayload,
 } from '../../../test/support/commands';
 import {
   parseActivationCancelRequested,
@@ -63,6 +66,8 @@ import {
   parseEscrowRemedyLegAlertRequested,
   ESCROW_REMEDY_REJECTED_FIELDS,
   parseEscrowRemedyRejectedRequested,
+  MILESTONE_FUNDING_STATUS_REQUIRED,
+  parseMilestoneFundingStatusRequested,
 } from './notification-command.parsers';
 
 /** Delivers a message built from `overrides` on the envelope. */
@@ -1106,6 +1111,115 @@ describe('parseEscrowRemedyRejectedRequested', () => {
   it('rejects the remedy leg alert, whose eventType is not this queue’s', () => {
     expect(
       message(() => parseEscrowRemedyRejectedRequested(remedyLegAlertBody())),
+    ).toContain("is not this queue's command");
+  });
+});
+
+describe('parseMilestoneFundingStatusRequested', () => {
+  const parseFunding = (payload: Record<string, unknown> = fundingPayload()) =>
+    parseMilestoneFundingStatusRequested(fundingBody({ payload }));
+
+  it('reads the envelope eventId and every payload field', () => {
+    expect(parseFunding()).toEqual(fundingCommand());
+  });
+
+  it.each(['FUNDING_REMINDER', 'FUNDING_FAILED', 'FUNDING_CURE_DEADLINE'])(
+    'accepts statusType %s',
+    (statusType) => {
+      expect(parseFunding(fundingPayload({ statusType })).statusType).toBe(
+        statusType,
+      );
+    },
+  );
+
+  it.each([
+    ['deadline', null],
+    ['reason', null],
+  ] as const)('reads %s = null as null', (field, value) => {
+    expect(parseFunding(fundingPayload({ [field]: value }))[field]).toBeNull();
+  });
+
+  it.each(['deadline', 'reason'])('reads an absent %s as null', (field) => {
+    const payload = fundingPayload();
+    delete payload[field];
+
+    expect(parseFunding(payload)[field as 'deadline' | 'reason']).toBeNull();
+  });
+
+  it('keeps an empty reason, as the contract allows', () => {
+    expect(parseFunding(fundingPayload({ reason: '' })).reason).toBe('');
+  });
+
+  it('accepts a deadline with an offset', () => {
+    expect(
+      parseFunding(fundingPayload({ deadline: '2026-12-04T23:59:59+07:00' }))
+        .deadline,
+    ).toBe('2026-12-04T23:59:59+07:00');
+  });
+
+  it.each([
+    [
+      'statusType',
+      'FUNDING_OK',
+      'field "statusType" must be one of FUNDING_REMINDER, FUNDING_FAILED, FUNDING_CURE_DEADLINE',
+    ],
+    ['statusType', 'funding_failed', 'field "statusType" must be one of'],
+    ['deadline', '2026-12-04', 'field "deadline" must be an RFC 3339'],
+    ['deadline', 42, 'field "deadline" must be a non-empty string'],
+    ['reason', 42, 'field "reason" must be a string, got a number'],
+    ['contractId', 'contract-1', 'field "contractId" must be a UUID'],
+    ['milestoneId', 'milestone-1', 'field "milestoneId" must be a UUID'],
+    ['recipients', [], 'field "recipients"'],
+    ['amount', '1.00', 'unknown payload property "amount"'],
+  ])(
+    'rejects %s = %p as an invalid payload, without retrying',
+    (field, value, reason) => {
+      const text = message(() =>
+        parseFunding(fundingPayload({ [field]: value })),
+      );
+
+      expect(text).toContain(
+        'Malformed notification.milestone_funding_status_requested',
+      );
+      expect(text).toContain(reason);
+    },
+  );
+
+  it.each(MILESTONE_FUNDING_STATUS_REQUIRED)(
+    'rejects a missing %s',
+    (field) => {
+      const payload = fundingPayload();
+      delete payload[field];
+
+      expect(message(() => parseFunding(payload))).toContain(`"${field}"`);
+    },
+  );
+
+  it('never quotes a recipient address', () => {
+    const recipients = [
+      { userId: null, email: 'not-an-address', role: 'BUYER' },
+    ];
+
+    expect(
+      message(() => parseFunding(fundingPayload({ recipients }))),
+    ).not.toContain('not-an-address');
+  });
+
+  it('rejects a command from another producer', () => {
+    expect(
+      message(() =>
+        parseMilestoneFundingStatusRequested(
+          fundingBody({ producer: 'escrow-service' }),
+        ),
+      ),
+    ).toContain('producer must be "contract-service"');
+  });
+
+  it('rejects the activation-failed command, whose eventType is not this queue’s', () => {
+    expect(
+      message(() =>
+        parseMilestoneFundingStatusRequested(activationFailedBody()),
+      ),
     ).toContain("is not this queue's command");
   });
 });
