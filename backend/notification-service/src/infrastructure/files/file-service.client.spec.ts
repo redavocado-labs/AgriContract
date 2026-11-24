@@ -97,7 +97,7 @@ describe('FileServiceClient', () => {
     );
   });
 
-  it.each([503, 500])(
+  it.each([503, 500, 502, 429, 408])(
     '%d is FileServiceUnavailableError, retryable',
     async (status) => {
       handle = (_req, res) => res.writeHead(status).end();

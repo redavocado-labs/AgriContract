@@ -76,7 +76,7 @@ export class FileNotReadyError extends NotificationError {
   }
 }
 
-/** Retryable: file-service could not be reached or answered 503; `code` names the cause. */
+/** Retryable: file-service could not be reached, or answered 408, 429 or 5xx; `code` names the cause. */
 export class FileServiceUnavailableError extends NotificationError {
   constructor(
     readonly fileId: string,
@@ -88,8 +88,8 @@ export class FileServiceUnavailableError extends NotificationError {
 
 /**
  * Not retryable: file-service refused the read in a way no redelivery can
- * change (401: SERVICE_INTERNAL_SECRET differs; another status the contract
- * does not list; a file over the size cap). The route dead-letters it at once.
+ * change (401: SERVICE_INTERNAL_SECRET differs; 403 or another 4xx but 404,
+ * 408 and 429; a file over the size cap). The route dead-letters it at once.
  */
 export class FileServiceRejectedError extends NotificationError {
   constructor(
