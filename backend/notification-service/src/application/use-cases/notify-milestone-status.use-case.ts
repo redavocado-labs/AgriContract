@@ -184,9 +184,10 @@ function textOf(
           ? [
               'Receive the goods, weigh them and record your weight on',
               'AgriContract. Then, within your confirm window, either confirm the',
-              'milestone or flag an issue with its quantity or quality. Until you',
-              'record your weight the seller may correct the declaration; you get',
-              'an email for each one.',
+              'milestone or flag an issue with its quantity or quality.',
+              'The seller may correct the declaration within one hour of the first',
+              'one, and only until you record your weight; you get an email for',
+              'each correction.',
             ]
           : [
               'The buyer has been asked to receive and weigh the goods, then to',
