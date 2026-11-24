@@ -60,6 +60,11 @@ export {
   type EscrowLegKind,
   type EscrowLegStatus,
 } from './escrow-leg-alert-requested.command';
+export type { EscrowRemedyLegAlertRequestedCommand } from './escrow-remedy-leg-alert-requested.command';
+export {
+  ESCROW_REMEDY_REJECTED_REASON_MAX_LENGTH,
+  type EscrowRemedyRejectedRequestedCommand,
+} from './escrow-remedy-rejected-requested.command';
 export { RECIPIENT_ROLES } from './notification-recipient';
 export type {
   NotificationRecipient,
