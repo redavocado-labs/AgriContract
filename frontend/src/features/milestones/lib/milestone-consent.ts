@@ -1,6 +1,6 @@
 /**
  * Milestone consent (milestone-escrow design §3.2.3, D84): fixed statements
- * v1.0 shown word for word with their placeholders filled, and the
+ * shown word for word with their placeholders filled, and the
  * presentedContentHash recipe the server recomputes. Keep this the only place
  * that knows either.
  */
@@ -13,7 +13,9 @@ export type MilestoneConsentAction =
 
 export type IssueType = "QUANTITY" | "QUALITY"
 
-export const MILESTONE_STATEMENT_VERSION = "1.0"
+export function milestoneStatementVersion(action: MilestoneConsentAction) {
+  return action === "FLAG_MILESTONE_ISSUE" ? "1.1" : "1.0"
+}
 
 /** Placeholder rendering for the statement: Vietnamese grouping, up to 3 decimals. */
 export function displayKg(value: number | string) {
@@ -40,7 +42,7 @@ export function milestoneStatement(
     case "CONFIRM_CLEAN_RECEIPT":
       return `Tôi xác nhận lô hàng của đợt giao này đạt yêu cầu, với số cân bên bán khai ${displayKg(values.s ?? 0)} kg và bên mua cân ${displayKg(values.b ?? 0)} kg, và đồng ý tất toán đợt theo khối lượng tính tiền hệ thống tính. Việc xác nhận nhận hàng không làm mất quyền khiếu nại hay giám định còn hiệu lực theo hợp đồng.`
     case "FLAG_MILESTONE_ISSUE":
-      return `Tôi báo lô hàng của đợt giao này có vấn đề về ${values.issueType === "QUALITY" ? "chất lượng" : "khối lượng"}. Tôi hiểu đây mới là báo lỗi: tiền của đợt vẫn được giữ cho tới khi bên bán phản hồi hoặc có kết quả giám định.`
+      return `Tôi báo lô hàng của đợt giao này có vấn đề về ${values.issueType === "QUALITY" ? "chất lượng" : "khối lượng"}. Tôi hiểu đây mới là báo lỗi: tiền của đợt vẫn được giữ cho tới khi bên bán phản hồi hoặc có kết quả giám định. Tôi cam kết giữ riêng lô hàng này, không sử dụng hay trộn với hàng khác, cho tới khi giám định xong.`
     case "CONTEST_MILESTONE_FLAG":
       return "Tôi không đồng ý với báo lỗi của bên mua và yêu cầu giám định độc lập. Tôi hiểu kết quả giám định là căn cứ tất toán đợt này, và bên không được kết quả giám định ủng hộ chịu phí giám định."
   }
@@ -161,7 +163,7 @@ export async function sha256Hex(text: string) {
 /** ConsentInput for a milestone action. */
 export async function milestoneConsent(parts: Parts) {
   return {
-    statementVersion: MILESTONE_STATEMENT_VERSION,
+    statementVersion: milestoneStatementVersion(parts.action),
     presentedContentHash: await sha256Hex(consentContent(parts)),
   }
 }

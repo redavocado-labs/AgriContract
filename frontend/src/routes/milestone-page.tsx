@@ -127,10 +127,12 @@ function Milestone({
               <Action
                 detail={detail.data}
                 viewer={viewer}
-                toleranceRate={
-                  typeof contract.data?.terms.toleranceRate === "number"
-                    ? contract.data.terms.toleranceRate
-                    : null
+                inspectionPending={
+                  contract.data?.terms.inspectionTerms != null &&
+                  typeof contract.data.terms.inspectionTerms === "object" &&
+                  "requirement" in contract.data.terms.inspectionTerms &&
+                  contract.data.terms.inspectionTerms.requirement ===
+                    "MANDATORY_BEFORE_SETTLEMENT"
                 }
               />
             </div>
@@ -233,11 +235,11 @@ function Summary({ detail }: { detail: MilestoneDetail }) {
 function Action({
   detail,
   viewer,
-  toleranceRate,
+  inspectionPending,
 }: {
   detail: MilestoneDetail
   viewer: Viewer
-  toleranceRate: number | null
+  inspectionPending: boolean
 }) {
   const { canCreateOrSign } = useOrganizationPermissions()
   const navigate = useNavigate()
@@ -254,7 +256,7 @@ function Action({
   const body = (() => {
     switch (m.status) {
       case "CREATED":
-        return <FundingPanel detail={detail} operator={viewer === "OPERATOR"} />
+        return <FundingPanel detail={detail} />
       case "IN_PROGRESS":
         return acting && viewer === "SELLER" ? (
           <SellerWeighPanel detail={detail} />
@@ -279,7 +281,7 @@ function Action({
         )
       case "BUYER_RECEIVED":
         return acting && viewer === "BUYER" ? (
-          <BuyerDecisionPanel detail={detail} toleranceRate={toleranceRate} />
+          <BuyerDecisionPanel detail={detail} inspectionPending={inspectionPending} />
         ) : (
           <WaitingPanel
             detail={detail}

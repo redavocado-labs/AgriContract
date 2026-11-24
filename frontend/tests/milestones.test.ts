@@ -12,7 +12,6 @@ import {
   milestoneDetailSchema,
 } from "../src/features/milestones/api/milestones"
 import {
-  cleanSettlementPreview,
   daysLeft,
   milestoneTimeline,
 } from "../src/features/milestones/lib/presentation"
@@ -138,38 +137,7 @@ describe("BF-04 read model", () => {
     )
     expect(disputed.find((n) => n.key === "CONTESTED")?.status).toBe("active")
   })
-  it("previews D77: loss within tolerance pays the seller weight", () => {
-    const within = cleanSettlementPreview({
-      sellerKg: 9980,
-      buyerKg: 9900,
-      toleranceRate: 0.01,
-      unitPrice: "95000.00",
-      batchAmount: "950000000.00",
-    })
-    expect(within.billable).toBe(9980)
-    expect(within.sellerAmount).toBe("948100000.00")
-    expect(within.buyerRefund).toBe("1900000.00")
-  })
-  it("previews D77: the excess over tolerance is split 50/50, capped at the lock", () => {
-    const over = cleanSettlementPreview({
-      sellerKg: 9680,
-      buyerKg: 9550,
-      toleranceRate: 0.01,
-      unitPrice: "95000.00",
-      batchAmount: "950000000.00",
-    })
-    expect(over.withinTolerance).toBe(false)
-    expect(over.billable).toBe(9663.4)
-    expect(over.sellerAmount).toBe("918023000.00")
-    const capped = cleanSettlementPreview({
-      sellerKg: 11000,
-      buyerKg: 11000,
-      toleranceRate: 0.01,
-      unitPrice: "95000.00",
-      batchAmount: "950000000.00",
-    })
-    expect(capped.sellerAmount).toBe("950000000.00")
-  })
+
   it("counts whole days left from a server deadline without moving it", () => {
     const now = Date.parse("2026-11-22T00:00:00Z")
     expect(daysLeft("2026-11-24T05:00:00Z", now)).toBe(2)

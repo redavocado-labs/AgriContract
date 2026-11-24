@@ -3,7 +3,6 @@ import { Banner } from "@/shared/ui/banner"
 import { Button } from "@/shared/ui/button"
 import { EvidenceUploader } from "@/shared/ui/evidence-uploader"
 import { KeyValueList } from "@/shared/ui/key-value-list"
-import { MoneyDisplay } from "@/shared/ui/money-display"
 import { RadioButton, RadioGroup } from "@/shared/ui/radio-group"
 import { TextInput } from "@/shared/ui/text-input"
 import { useToast } from "@/shared/ui/toast"
@@ -20,9 +19,10 @@ import {
   displayKg,
   milestoneConsent,
   milestoneStatement,
+  milestoneStatementVersion,
   type IssueType,
 } from "../lib/milestone-consent"
-import { cleanSettlementPreview, issueTypeLabel } from "../lib/presentation"
+import { issueTypeLabel } from "../lib/presentation"
 import {
   useConsentHash,
   useEvidenceSlot,
@@ -253,6 +253,7 @@ function WeighForm({
               : "Số cân nhận hàng không sửa được sau khi gửi. Nếu có sai lệch, bạn báo vấn đề ở bước sau."}
           </Banner>
           <ConsentCheckbox
+            version={milestoneStatementVersion(action)}
             statement={milestoneStatement(action, { x: weight.trim() })}
             hash={hash}
             checked={accepted}
@@ -420,10 +421,10 @@ export function BuyerReceiptPanel({ detail }: { detail: MilestoneDetail }) {
 
 export function BuyerDecisionPanel({
   detail,
-  toleranceRate,
+  inspectionPending,
 }: {
   detail: MilestoneDetail
-  toleranceRate: number | null
+  inspectionPending: boolean
 }) {
   const toast = useToast()
   const command = useMilestoneCommand(detail)
@@ -449,18 +450,8 @@ export function BuyerDecisionPanel({
         ? { action: "FLAG_MILESTONE_ISSUE" as const, ...common, issueType }
         : null
   const hash = useConsentHash(parts)
-  const preview =
-    toleranceRate == null
-      ? null
-      : cleanSettlementPreview({
-          sellerKg: declaration.sellerDeclaredWeight,
-          buyerKg: receipt.buyerReceivedWeight,
-          toleranceRate,
-          unitPrice: m.effectiveUnitPrice,
-          batchAmount: m.batchAmount,
-        })
   async function submit() {
-    if (!parts || !accepted) return
+    if (!parts || !accepted || closed || (mode === "confirm" && inspectionPending)) return
     const consent = await milestoneConsent(parts)
     const ok = await command.run(consent.presentedContentHash, (key) =>
       parts.action === "CONFIRM_CLEAN_RECEIPT"
@@ -502,30 +493,10 @@ export function BuyerDecisionPanel({
         seller={declaration.sellerDeclaredWeight}
         buyer={receipt.buyerReceivedWeight}
       />
-      {preview && (
-        <div className="space-y-3 rounded-md border border-border bg-page-bg p-4">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <span className="text-sm text-text-secondary">
-              Giải ngân dự kiến cho bên bán
-            </span>
-            <MoneyDisplay amount={preview.sellerAmount} emphasis="large" />
-          </div>
-          <p className="text-sm text-text-secondary">
-            {preview.withinTolerance
-              ? `Hao hụt ${displayKg(preview.loss)} kg nằm trong dung sai ${displayKg(preview.tolerance)} kg nên tính theo số bên bán khai: ${displayKg(preview.billable)} kg × ${Number(m.effectiveUnitPrice).toLocaleString("vi-VN")} ₫/kg.`
-              : `Hao hụt ${displayKg(preview.loss)} kg vượt dung sai ${displayKg(preview.tolerance)} kg: phần trong dung sai bên mua chịu, phần vượt chia đôi. Khối lượng tính tiền ${displayKg(preview.billable)} kg.`}
-          </p>
-          {preview.buyerRefund && (
-            <p className="text-sm">
-              Hoàn về bên mua:{" "}
-              <MoneyDisplay amount={preview.buyerRefund} className="text-sm" />
-            </p>
-          )}
-          <p className="text-xs text-text-muted">
-            Số dự kiến để tham khảo. Số tiền chính thức do hệ thống tính khi tất
-            toán.
-          </p>
-        </div>
+      {inspectionPending && (
+        <Banner variant="info">
+          Chưa có báo cáo giám định bắt buộc được xác nhận cho đợt này.
+        </Banner>
       )}
       {closed ? (
         <Banner variant="info">
@@ -535,13 +506,13 @@ export function BuyerDecisionPanel({
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2">
-            <ChoiceCard
+            {!inspectionPending && <ChoiceCard
               icon="check_circle"
               title="Hàng đạt, xác nhận đúng"
               text="Đợt được tất toán ngay theo khối lượng tính tiền."
               selected={mode === "confirm"}
               onClick={() => choose("confirm")}
-            />
+            />}
             <ChoiceCard
               icon="flag"
               title="Báo vấn đề"
@@ -591,8 +562,9 @@ export function BuyerDecisionPanel({
               </RadioGroup>
             </div>
           )}
-          {parts && (
+          {parts && !(mode === "confirm" && inspectionPending) && (
             <ConsentCheckbox
+              version={milestoneStatementVersion(parts.action)}
               statement={
                 parts.action === "CONFIRM_CLEAN_RECEIPT"
                   ? milestoneStatement("CONFIRM_CLEAN_RECEIPT", {
@@ -614,7 +586,7 @@ export function BuyerDecisionPanel({
               {command.error}
             </Banner>
           )}
-          {parts && (
+          {parts && !(mode === "confirm" && inspectionPending) && (
             <Button
               className="w-full sm:w-auto"
               variant={mode === "flag" ? "destructive-solid" : "default"}
@@ -749,6 +721,7 @@ export function SellerRespondPanel({ detail }: { detail: MilestoneDetail }) {
             </p>
           </div>
           <ConsentCheckbox
+            version={milestoneStatementVersion(parts.action)}
             statement={milestoneStatement("CONTEST_MILESTONE_FLAG")}
             hash={hash}
             checked={accepted}

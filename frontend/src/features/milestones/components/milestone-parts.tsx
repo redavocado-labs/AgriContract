@@ -8,7 +8,6 @@ import { Countdown } from "@/shared/ui/countdown"
 import { vietnamTime } from "@/shared/lib/vietnam-time"
 import type { MilestoneStatus } from "@/features/contracts/types/contract"
 import { readEvidence, type MilestoneDetail } from "../api/milestones"
-import { MILESTONE_STATEMENT_VERSION } from "../lib/milestone-consent"
 import {
   daysLeft,
   milestoneStatusLabel,
@@ -95,12 +94,14 @@ export function ServerDeadline({
 /** Checkbox + statement word for word + version + the hash it binds to. */
 export function ConsentCheckbox({
   statement,
+  version,
   hash,
   checked,
   onChange,
   disabled,
 }: {
   statement: string
+  version: string
   hash: string | null
   checked: boolean
   onChange: (value: boolean) => void
@@ -116,7 +117,7 @@ export function ConsentCheckbox({
         label={<span className="leading-6">{statement}</span>}
       />
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pl-6 text-xs text-text-secondary">
-        <span>Phiên bản cam kết {MILESTONE_STATEMENT_VERSION}</span>
+        <span>Phiên bản cam kết {version}</span>
         {hash ? (
           <span className="flex items-center gap-1">
             Mã nội dung <ContentHashDisplay hash={hash} className="text-xs" />

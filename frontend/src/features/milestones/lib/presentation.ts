@@ -124,36 +124,6 @@ export function secondsLeft(deadline: string, now = Date.now()) {
   return Math.max(0, Math.floor((Date.parse(deadline) - now) / 1000))
 }
 
-/**
- * D77 preview for the buyer before confirming. Labelled "dự kiến": the server
- * computes and rounds the real amount. Transit loss within toleranceRate x
- * seller kg is borne by the buyer; the excess is split 50/50; capped at the
- * locked batch amount.
- */
-export function cleanSettlementPreview(input: {
-  sellerKg: number
-  buyerKg: number
-  toleranceRate: number
-  unitPrice: string
-  batchAmount: string | null
-}) {
-  const loss = Math.max(0, input.sellerKg - input.buyerKg)
-  const tolerance = input.toleranceRate * input.sellerKg
-  const billable =
-    loss <= tolerance ? input.sellerKg : input.sellerKg - (loss - tolerance) / 2
-  const raw = Math.round(billable * Number(input.unitPrice))
-  const locked = input.batchAmount == null ? null : Number(input.batchAmount)
-  const seller = locked == null ? raw : Math.min(raw, locked)
-  return {
-    loss,
-    tolerance,
-    withinTolerance: loss <= tolerance,
-    billable: Math.round(billable * 1000) / 1000,
-    sellerAmount: `${seller}.00`,
-    buyerRefund: locked == null ? null : `${Math.max(0, locked - seller)}.00`,
-  }
-}
-
 export const breachStatusLabel = {
   REPORTED: "Mới nhận",
   UNDER_REVIEW: "Đang xem xét",

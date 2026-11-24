@@ -258,19 +258,6 @@ export function respondToMilestoneFlag(
   return command(`${base(contractId, milestoneId)}/respond`, consent, key)
 }
 
-/** OPERATOR: retry a FUNDING_FAILED milestone lock. */
-export function retryMilestoneFunding(
-  contractId: string,
-  milestoneId: string,
-  key: string
-) {
-  return command(
-    `${base(contractId, milestoneId)}/funding/retry`,
-    undefined,
-    key
-  )
-}
-
 const breachPath = (contractId: string, breachCaseId: string) =>
   `/api/v1/contracts/${encodeURIComponent(contractId)}/breach-cases/${encodeURIComponent(breachCaseId)}`
 
