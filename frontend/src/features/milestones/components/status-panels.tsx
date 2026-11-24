@@ -1,14 +1,14 @@
+import { useAuthStore } from "@/shared/auth/auth-store"
 import { Banner } from "@/shared/ui/banner"
 import { KeyValueList } from "@/shared/ui/key-value-list"
 import { MoneyDisplay } from "@/shared/ui/money-display"
 import { Skeleton } from "@/shared/ui/skeleton"
 import { VerticalStepper } from "@/shared/ui/vertical-stepper"
 import { vietnamTime } from "@/shared/lib/vietnam-time"
-import {
-  type MilestoneDetail,
-} from "../api/milestones"
+import { type MilestoneDetail } from "../api/milestones"
 import { displayKg } from "../lib/milestone-consent"
 import {
+  canReadMilestoneCase,
   fundingLabel,
   issueTypeLabel,
   settlementPathLabel,
@@ -31,6 +31,9 @@ export function WaitingPanel({
 }) {
   const d = detail.sellerDeclaration
   const r = detail.buyerReceipt
+  const showEvidence = useAuthStore((state) =>
+    canReadMilestoneCase(state.roles)
+  )
   return (
     <Panel title={title} description={text}>
       {deadline && (
@@ -41,7 +44,7 @@ export function WaitingPanel({
         seller={d?.sellerDeclaredWeight}
         buyer={r?.buyerReceivedWeight}
       />
-      {d && (
+      {d && showEvidence && (
         <div className="space-y-2">
           <h3 className="text-sm font-medium">Ảnh cân bên bán</h3>
           <EvidenceGallery
@@ -51,7 +54,7 @@ export function WaitingPanel({
           />
         </div>
       )}
-      {r && (
+      {r && showEvidence && (
         <div className="space-y-2">
           <h3 className="text-sm font-medium">Ảnh cân bên mua</h3>
           <EvidenceGallery
@@ -65,12 +68,7 @@ export function WaitingPanel({
   )
 }
 
-
-export function FundingPanel({
-  detail,
-}: {
-  detail: MilestoneDetail
-}) {
+export function FundingPanel({ detail }: { detail: MilestoneDetail }) {
   const m = detail.milestone
   const failed = m.fundingStatus === "FUNDING_FAILED"
   return (
@@ -122,6 +120,7 @@ export function InspectionPendingPanel({
 }) {
   const flag = detail.flag
   const breach = useMilestoneBreachCase(detail)
+  const canRead = useAuthStore((state) => canReadMilestoneCase(state.roles))
   const reported = !!breach.data?.computedResolution
   return (
     <Panel
@@ -136,15 +135,16 @@ export function InspectionPendingPanel({
         Tiền đợt vẫn được giữ. Kết quả giám định Level 1.5 là căn cứ tất toán;
         trọng tài chỉ duyệt kết quả hệ thống tính từ báo cáo, không tự đổi số.
       </Banner>
-      {breach.isPending && detail.breachCaseId ? (
-        <Skeleton className="h-40" />
-      ) : (
-        <VerticalStepper
-          steps={steps}
-          currentStep={reported ? 3 : 2}
-          currentBadgeLabel="Đang xử lý"
-        />
-      )}
+      {canRead &&
+        (breach.isLoading ? (
+          <Skeleton className="h-40" />
+        ) : (
+          <VerticalStepper
+            steps={steps}
+            currentStep={reported ? 3 : 2}
+            currentBadgeLabel="Đang xử lý"
+          />
+        ))}
       <MilestoneDeltas
         committed={detail.milestone.committedQuantity}
         seller={detail.sellerDeclaration?.sellerDeclaredWeight}

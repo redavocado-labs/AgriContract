@@ -131,3 +131,9 @@ export const breachStatusLabel = {
   UNDER_REVIEW: "Đang xem xét",
   RESOLVED: "Đã duyệt",
 } as const
+
+export function canReadMilestoneCase(roles: readonly string[]) {
+  return roles.some(
+    (role) => role === "BUYER" || role === "SELLER" || role === "ARBITRATOR"
+  )
+}

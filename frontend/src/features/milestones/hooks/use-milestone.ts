@@ -11,6 +11,7 @@ import {
   uploadEvidence,
   type MilestoneDetail,
 } from "../api/milestones"
+import { canReadMilestoneCase } from "../lib/presentation"
 import { sha256Hex, consentContent } from "../lib/milestone-consent"
 
 export const milestoneKey = (
@@ -55,12 +56,12 @@ export function useMilestoneDetail(contractId: string, milestoneId: string) {
 }
 
 export function useMilestoneBreachCase(detail: MilestoneDetail) {
-  const userId = useAuthStore((state) => state.userId)
+  const { userId, roles } = useAuthStore()
   return useQuery({
     queryKey: ["breach-case", detail.contractId, detail.breachCaseId, userId],
     queryFn: ({ signal }) =>
       getBreachCase(detail.contractId, detail.breachCaseId!, signal),
-    enabled: !!userId && !!detail.breachCaseId,
+    enabled: !!userId && !!detail.breachCaseId && canReadMilestoneCase(roles),
     retry: false,
   })
 }
