@@ -9,8 +9,9 @@ Section I corrections (checked against the repository on 24/11/2026):
   controller slices mock the use case and are unit-level.
 * Report-5.1 types 265 unit test cases as Boundary, many of them replays, races or shutdown cases with no limit; the
   Input validation item now says what Boundary means.
-* Bruno is used for both IT (product-service and notification-service requests call the service or the broker
-  directly) and ST (requests through the gateway), not only for system tests.
+* Every Bruno request is an integration test (mentor review R01), not a system test: it calls one service directly
+  (X-Gateway-Secret / X-Internal-Secret, or the broker) or goes through the gateway with a Keycloak token. System
+  tests follow a user flow on the FE (BF-01..BF-07).
 * JMeter and Playwright are planned: there is no .jmx file and no Playwright dependency in the repository yet.
 """
 import copy
@@ -58,8 +59,9 @@ replace("Functional testing. Objective:",
         "Functional testing. Objective: each use case and state transition behaves as the SRS and the state machines "
         "define. Technique: equivalence partitioning and state-transition testing on domain objects and use cases, "
         "and controller slices (@WebMvcTest, use case mocked) at UT; REST calls through MockMvc in a @SpringBootTest "
-        "on the real schema at IT; Bruno requests through the gateway at ST. Completion: every allowed transition "
-        "and every forbidden one has a test; all pass.")
+        "on the real schema and Bruno requests, to the service directly or through the gateway, at IT; the FE user "
+        "flows BF-01..BF-07 at ST. Completion: every allowed transition and every forbidden one has a test; all "
+        "pass.")
 
 replace("Input validation testing. Objective:",
         "Input validation testing. Objective: invalid requests and payloads are rejected with the frozen error code "
@@ -75,8 +77,8 @@ for tr in tools.findall(qn("w:tr")):
     tcs = tr.findall(qn("w:tc"))
     first, second = text_of(tcs[0]).strip(), text_of(tcs[1]).strip()
     if second == "Bruno CLI":
-        set_cell_text(tcs[0], "API test collections: integration (one service or the broker called directly) and "
-                              "system (through the gateway) test cases of Report-5.2")
+        set_cell_text(tcs[0], "API test collections: the integration test cases of Report-5.2, each calling one "
+                              "service (or the broker) directly or going through the gateway with a Keycloak token")
     elif second == "Apache JMeter":
         set_cell_text(tcs[0], "Load and response-time testing (planned: no test plan in the repository yet)")
     elif second == "Playwright":
@@ -86,7 +88,7 @@ for tr in tools.findall(qn("w:tr")):
         set_cell_text(tcs[0], "Unit test case and statistics workbook")
 last = tools.findall(qn("w:tr"))[-1]
 row = copy.deepcopy(last)
-for tc, v in zip(row.findall(qn("w:tc")), ["IT and ST test case and statistics workbook (built from backend/bruno)",
+for tc, v in zip(row.findall(qn("w:tc")), ["Integration test case and statistics workbook (built from backend/bruno)",
                                            "Report-5.2_Test_Report.xlsx", "In-house", "v1.0"]):
     set_cell_text(tc, v)
 last.addnext(row)
@@ -100,8 +102,8 @@ while n is not None and n.tag == qn("w:p") and not text_of(n).startswith("1.1"):
     n = nxt
 set_par_text(plain(intro),
              "Test data is synthetic. UT and IT create what they need inside the test (in-memory fakes, or a fresh "
-             "Testcontainers schema migrated by Flyway) and never depend on rows left by another test. ST and AT run "
-             "on the seeded stack: backend/scripts/run-e2e.sh reloads the seed before each Bruno run, "
+             "Testcontainers schema migrated by Flyway) and never depend on rows left by another test. The Bruno "
+             "integration tests, ST and AT run on the seeded stack: backend/scripts/run-e2e.sh reloads the seed before each Bruno run, "
              "backend/bruno/notification-service/reset.sh clears notification logs, queues and MailHog, and every "
              "request that creates data sends a fresh Idempotency-Key or a time-stamped id, so a rerun never collides "
              "with an earlier one.")
@@ -152,17 +154,18 @@ tc_intro = find(d, "[Prepare the details on the test cases")
 set_par_text(plain(tc_intro), "The test cases are kept in two workbooks that follow the provided template:")
 set_par_text(plain(find(d, "Unit Test Cases: Report5_Unit Test.xls")), "Unit Test Cases: Report-5.1_Unit_Test.xlsx")
 set_par_text(plain(find(d, "Other Test Cases (IT, ST, AT)")),
-             "Other Test Cases (IT, ST): Report-5.2_Test_Report.xlsx, built from the Bruno collection backend/bruno "
-             "by tools/r5_2_test_report.py, so far for api-gateway, user-service and product-service; ITC rows are "
-             "integration tests, STC rows system tests, and rows without "
-             "a Bruno request yet are marked in Note. The other services add their sheets, and AT cases are added "
-             "after the mentor demo.")
+             "Other Test Cases (IT, ST): Report-5.2_Test_Report.xlsx, the same template as Report-5.1 filled from "
+             "the Bruno collection backend/bruno (scripts/unit-test-report/data_bruno.py), so far for api-gateway, "
+             "user-service and product-service. Every Bruno case is an integration test (ITC); Pre-conditions say "
+             "whether it calls the service directly or goes through the gateway, Note names the Bruno request and "
+             "an empty Note means the case has no request yet. The other services add their sheets; ST cases follow "
+             "the FE flows BF-01..BF-07, and AT cases are added after the mentor demo.")
 
 # ---------------------------------------------------------------- Change log
 fill_change_log(next_table(find(d, "Change Log", tag="w:p")),
                 ["24/11/2026", "M", "Hai Long",
                  "Section I: test strategy and tools corrected to match the code (IT mocks, MockMvc levels, Boundary "
-                 "type, Bruno levels, JMeter and Playwright planned). Section II: test data, test case workbooks "
+                 "type, Bruno cases are IT, JMeter and Playwright planned). Section II: test data, test case workbooks "
                  "(Report-5.2 added)"])
 
 d.save(DOC)
