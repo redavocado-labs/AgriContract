@@ -64,7 +64,12 @@ export class FileServiceClient implements DocumentFiles {
     if (response.status !== 200) {
       await response.body?.cancel().catch(() => undefined);
       if (response.status === 404) throw new FileNotReadyError(fileId);
-      if (response.status === 503 || response.status >= 500) {
+      // 408 and 429 are temporary as 5xx are; 401, 403 and the other 4xx are not.
+      if (
+        response.status === 408 ||
+        response.status === 429 ||
+        response.status >= 500
+      ) {
         throw new FileServiceUnavailableError(
           fileId,
           `HTTP_${response.status}`,
