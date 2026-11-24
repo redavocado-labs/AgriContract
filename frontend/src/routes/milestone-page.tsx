@@ -1,20 +1,22 @@
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { ContractsLayout } from "@/features/contracts/components/contracts-layout"
 import { useContract } from "@/features/contracts/hooks/use-contracts"
-import {
-  contractError,
-  participantRole,
-} from "@/features/contracts/types/presentation"
+import { contractError } from "@/features/contracts"
+import { participantRole } from "@/features/contracts/types/presentation"
 import { RemedyDecisionDetails } from "@/features/contracts/components/remedy-decision"
 import { BreachCasePanel } from "@/features/milestones/components/breach-case-panel"
 import { DisputeExitPanel } from "@/features/milestones/components/dispute-exit-panel"
+import { Banner } from "@/shared/ui/banner"
+import { displayKg } from "@/features/milestones"
 import type { MilestoneDetail } from "@/features/milestones/api/milestones"
-import { useMilestoneDetail } from "@/features/milestones/hooks/use-milestone"
+import {
+  EvidenceScanContext,
+  useMilestoneDetail,
+} from "@/features/milestones/hooks/use-milestone"
 import {
   fundingLabel,
   milestoneTimeline,
 } from "@/features/milestones/lib/presentation"
-import { displayKg } from "@/features/milestones/lib/milestone-consent"
 import {
   MilestoneBadge,
   Panel,
@@ -46,9 +48,10 @@ type Viewer = "BUYER" | "SELLER" | "ARBITRATOR" | "OPERATOR" | null
 
 export function MilestonePage() {
   const { id = "", milestoneId = "" } = useParams()
+  const userId = useAuthStore((state) => state.userId)
   return (
     <Milestone
-      key={`${id}/${milestoneId}`}
+      key={JSON.stringify([userId, id, milestoneId])}
       contractId={id}
       milestoneId={milestoneId}
     />
@@ -94,6 +97,11 @@ function Milestone({
   ]
   const loading = detail.isPending || (party && contract.isPending)
   const failure = detail.error ?? (party ? contract.error : null)
+  const blockingFailure =
+    failure && (!detail.data || (party && !contract.data) ||
+      [401, 403, 404].includes(parseApiError(failure).status))
+  const retry = () =>
+    void Promise.all([detail.refetch(), party && contract.refetch()])
   return (
     <ContractsLayout
       title={index ? `Đợt giao ${index}` : "Đợt giao"}
@@ -114,13 +122,8 @@ function Milestone({
             <Skeleton className="h-64" />
           </div>
         </div>
-      ) : failure ? (
-        <MilestoneFailure
-          error={failure}
-          retry={() =>
-            void Promise.all([detail.refetch(), party && contract.refetch()])
-          }
-        />
+      ) : blockingFailure ? (
+        <MilestoneFailure error={failure} retry={retry} />
       ) : (
         detail.data && (
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
@@ -134,19 +137,26 @@ function Milestone({
                   Tải lại trạng thái
                 </Button>
               </div>
-              <Action
-                detail={detail.data}
-                viewer={viewer}
-                active={contract.data?.status === "ACTIVE"}
-                hash={contract.data?.hash ?? null}
-                inspectionPending={
-                  contract.data?.terms.inspectionTerms != null &&
-                  typeof contract.data.terms.inspectionTerms === "object" &&
-                  "requirement" in contract.data.terms.inspectionTerms &&
-                  contract.data.terms.inspectionTerms.requirement ===
-                    "MANDATORY_BEFORE_SETTLEMENT"
-                }
-              />
+              {failure && (
+                <Banner variant="warning" actionLabel="Tải lại đợt giao" onAction={retry}>
+                  Chưa tải được trạng thái mới. {contractError(failure)}
+                </Banner>
+              )}
+              <EvidenceScanContext.Provider value={detail.evidenceScan}>
+                <Action
+                  detail={detail.data}
+                  viewer={viewer}
+                  active={contract.data?.status === "ACTIVE"}
+                  hash={contract.data?.hash ?? null}
+                  inspectionPending={
+                    contract.data?.terms.inspectionTerms != null &&
+                    typeof contract.data.terms.inspectionTerms === "object" &&
+                    "requirement" in contract.data.terms.inspectionTerms &&
+                    contract.data.terms.inspectionTerms.requirement ===
+                      "MANDATORY_BEFORE_SETTLEMENT"
+                  }
+                />
+              </EvidenceScanContext.Provider>
             </div>
             <aside className="min-w-0 space-y-5">
               <Summary detail={detail.data} />
@@ -264,7 +274,7 @@ function Action({
   const body = (() => {
     switch (m.status) {
       case "CREATED":
-        return <FundingPanel detail={detail} />
+        return <FundingPanel detail={detail} operator={viewer === "OPERATOR"} />
       case "IN_PROGRESS":
         return acting && viewer === "SELLER" ? (
           <SellerWeighPanel detail={detail} />

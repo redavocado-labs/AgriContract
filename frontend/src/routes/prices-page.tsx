@@ -1,231 +1,128 @@
 import { useState } from "react"
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ReferenceLine,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts"
+import { useQuery } from "@tanstack/react-query"
 
-import { cn } from "@/shared/lib/utils"
+import { getPriceItems, getPriceQuote } from "@/features/listings/api/public-catalog"
+import { parseApiError } from "@/shared/api/errors"
+import { EmptyState } from "@/shared/ui/empty-state"
 import { Footer } from "@/shared/ui/footer"
-import { PublicNav } from "@/shared/ui/public-nav"
-import { SegmentedControl } from "@/shared/ui/segmented-control"
-import { SelectDropdown } from "@/shared/ui/select-dropdown"
+import { KeyValueList } from "@/shared/ui/key-value-list"
+import { MoneyDisplay } from "@/shared/ui/money-display"
+import { StatusBadge } from "@/shared/ui/status-badge"
+import { PublicNav } from "./layouts/public-nav"
 
-// ─── Mock Data ───────────────────────────────────────────────────────────────
+const provinces = [
+  { slug: "dak-lak", label: "Đắk Lắk" },
+  { slug: "lam-dong", label: "Lâm Đồng" },
+  { slug: "dak-nong", label: "Đắk Nông" },
+  { slug: "gia-lai", label: "Gia Lai" },
+]
 
-const PRICE_DATA = {
-  currentPrice: "118.500 ₫/kg",
-  date: "08/07/2026",
-  trend: "+2,1% (90 ngày)",
-  source: "Nguồn: VNSAT",
-  average: 116200,
-  chart: [
-    { label: "Th4", value: 116400 },
-    { label: "Th5", value: 117000 },
-    { label: "Th6", value: 116800 },
-    { label: "Th7", value: 118500 },
-  ],
-  table: [
-    { date: "08/07", price: "118.500", change: "+0,8%", isPositive: true },
-    { date: "07/07", price: "117.600", change: "+0,3%", isPositive: true },
-    { date: "06/07", price: "117.200", change: "−0,5%", isPositive: false },
-    { date: "05/07", price: "117.800", change: "+1,2%", isPositive: true },
-    { date: "04/07", price: "116.400", change: "0,0%", isPositive: null },
-  ],
-}
+const dateTime = new Intl.DateTimeFormat("vi-VN", {
+  dateStyle: "short", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh",
+})
+const date = new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeZone: "Asia/Ho_Chi_Minh" })
 
-// ─── Component ───────────────────────────────────────────────────────────────
-
-function PricesPage() {
-  const [commodity, setCommodity] = useState<string | null>("coffee_robusta")
-  const [province, setProvince] = useState<string | null>("dak_lak")
-  const [timeRange, setTimeRange] = useState<string>("90")
-
-  const data = PRICE_DATA
+export function PricesPage() {
+  const [province, setProvince] = useState("dak-lak")
+  const [selectedItem, setSelectedItem] = useState("")
+  const items = useQuery({
+    queryKey: ["price-items", province],
+    queryFn: ({ signal }) => getPriceItems(province, signal),
+    retry: false,
+  })
+  const activeItem = items.data?.find((item) => item.itemSlug === selectedItem) ?? items.data?.[0]
+  const itemSlug = activeItem?.itemSlug ?? ""
+  const quote = useQuery({
+    queryKey: ["price-quote", province, itemSlug],
+    queryFn: ({ signal }) => getPriceQuote(province, itemSlug, signal),
+    enabled: Boolean(itemSlug),
+    retry: false,
+  })
+  const failure = quote.isError ? parseApiError(quote.error) : undefined
+  const missingQuote = failure?.status === 404 && failure.code === "PRICE_NOT_FOUND"
 
   return (
-    <div className="min-h-screen bg-page-bg text-text-primary flex flex-col">
+    <div className="flex min-h-screen flex-col bg-page-bg text-text-primary">
       <title>Bảng giá tham khảo — AgriContract</title>
       <PublicNav />
-
-      <div className="mx-auto w-full max-w-[1200px] px-8 pt-7 pb-20 flex-1">
-        <div className="mb-1 text-[22px] font-medium">Bảng giá tham khảo</div>
-        <div className="mb-5 text-sm text-text-secondary">
-          Giá tham khảo, không phải giá giao dịch trên nền tảng.
-        </div>
-
-        {/* Selectors */}
-        <div className="mb-5 flex flex-wrap items-center gap-2.5">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-text-secondary">Mặt hàng:</span>
-            <SelectDropdown
-              value={commodity}
-              onChange={setCommodity}
-              options={[
-                { value: "coffee_robusta", label: "Cà phê Robusta" },
-                { value: "coffee_arabica", label: "Cà phê Arabica" },
-                { value: "rubber", label: "Mủ cao su" },
-              ]}
-              className="w-[180px]"
-            />
-          </div>
-          <div className="flex items-center gap-2 ml-2">
-            <span className="text-sm text-text-secondary">Tỉnh:</span>
-            <SelectDropdown
+      <main className="mx-auto w-full max-w-[1000px] flex-1 space-y-5 px-4 py-8 sm:px-8">
+        <header>
+          <h1 className="text-2xl font-medium">Bảng giá tham khảo</h1>
+          <p className="mt-1 text-sm text-text-secondary">Giá tham khảo cho cà phê. Giá giao dịch do hai bên thỏa thuận trong hợp đồng.</p>
+        </header>
+        <div className="flex flex-wrap gap-4">
+          <label className="flex flex-wrap items-center gap-2 text-sm">
+            Tỉnh
+            <select
+              className="rounded-sm border border-border bg-surface px-3 py-2"
               value={province}
-              onChange={setProvince}
-              options={[
-                { value: "dak_lak", label: "Đắk Lắk" },
-                { value: "lam_dong", label: "Lâm Đồng" },
-                { value: "dak_nong", label: "Đắk Nông" },
-              ]}
-              className="w-[140px]"
-            />
-          </div>
-          <div className="flex-1" />
-          <SegmentedControl
-            value={timeRange}
-            onChange={setTimeRange}
-            options={[
-              { key: "30", label: "30 ngày" },
-              { key: "90", label: "90 ngày" },
-              { key: "365", label: "365 ngày" },
-            ]}
+              onChange={(event) => {
+                setProvince(event.target.value)
+                setSelectedItem("")
+              }}
+            >
+              {provinces.map(({ slug, label }) => <option key={slug} value={slug}>{label}</option>)}
+            </select>
+          </label>
+          {items.isSuccess && items.data.length > 0 && (
+            <label className="flex flex-wrap items-center gap-2 text-sm">
+              Mặt hàng
+              <select
+                className="max-w-full rounded-sm border border-border bg-surface px-3 py-2"
+                value={itemSlug}
+                onChange={(event) => setSelectedItem(event.target.value)}
+              >
+                {items.data.map((item) => <option key={item.itemSlug} value={item.itemSlug}>{item.itemName}</option>)}
+              </select>
+            </label>
+          )}
+        </div>
+
+        {items.isPending && <p role="status">Đang tải mặt hàng của tỉnh…</p>}
+        {items.isError && (
+          <EmptyState
+            role="alert"
+            variant="error"
+            title="Chưa tải được mặt hàng"
+            description="Vui lòng thử lại để tải danh sách mặt hàng."
+            actionLabel="Thử lại"
+            onAction={() => void items.refetch()}
           />
-        </div>
-
-        {/* Layout */}
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1.7fr_1fr]">
-          {/* Chart Card */}
-          <div className="rounded-xl border-[0.5px] border-border bg-surface p-6">
-            <div className="mb-5 flex items-end justify-between">
-              <div>
-                <div className="mb-1.5 text-[13px] text-text-secondary">
-                  Giá mới nhất · {data.date}
-                </div>
-                <div className="flex items-baseline gap-2.5">
-                  <div className="font-mono text-[26px] font-medium leading-none">
-                    {data.currentPrice}
-                  </div>
-                  <span className="inline-flex items-center gap-1 text-[13px] font-medium text-success">
-                    <span className="ms text-[16px]">arrow_upward</span> {data.trend}
-                  </span>
-                </div>
-              </div>
-              <span className="rounded-full bg-surface-muted px-2.5 py-1 text-[13px] font-medium text-text-secondary">
-                {data.source}
-              </span>
+        )}
+        {items.isSuccess && !activeItem && (
+          <EmptyState title="Chưa có giá cho tỉnh này" description="Chọn tỉnh khác để xem giá đã được ghi nhận." />
+        )}
+        {items.isSuccess && activeItem && quote.isPending && <p role="status">Đang tải giá tham khảo…</p>}
+        {items.isSuccess && activeItem && missingQuote && (
+          <EmptyState title="Chưa có giá cho mặt hàng này" description="Hệ thống chưa tìm thấy báo giá cho lựa chọn hiện tại." />
+        )}
+        {items.isSuccess && activeItem && quote.isError && !missingQuote && (
+          <EmptyState
+            role="alert"
+            variant="error"
+            title="Chưa tải được giá tham khảo"
+            description="Vui lòng thử lại để cập nhật báo giá."
+            actionLabel="Thử lại"
+            onAction={() => void quote.refetch()}
+          />
+        )}
+        {items.isSuccess && quote.isSuccess && (
+          <section className="space-y-4 rounded-xl border border-border bg-surface p-5">
+            <h2 className="text-lg font-medium">{quote.data.itemName} · {quote.data.province}</h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <MoneyDisplay amount={quote.data.price} unit="₫/kg" emphasis="large" />
+              {quote.data.stale && <StatusBadge variant="warning">Giá này đã cũ</StatusBadge>}
             </div>
-
-            {/* Recharts Area */}
-            <div className="h-[260px] w-full -ml-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data.chart} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.16} />
-                      <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-surface-muted)" />
-                  <XAxis
-                    dataKey="label"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: "var(--color-text-muted)" }}
-                    dy={10}
-                  />
-                  <YAxis
-                    domain={["dataMin - 2000", "dataMax + 2000"]}
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: "var(--color-text-muted)", fontFamily: "monospace" }}
-                    tickFormatter={(val) => `${val / 1000}k`}
-                  />
-                  <Tooltip
-                    contentStyle={{ borderRadius: "8px", border: "0.5px solid var(--color-border)", fontSize: "13px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-                    itemStyle={{ color: "var(--color-primary)", fontWeight: 500 }}
-                    formatter={(val) => [`${Number(val).toLocaleString("vi-VN")} ₫/kg`, "Giá"]}
-                  />
-                  <ReferenceLine y={data.average} stroke="var(--color-text-muted)" strokeDasharray="4 4" />
-                  <Area
-                    type="monotone"
-                    dataKey="value"
-                    stroke="var(--color-primary)"
-                    strokeWidth={2.5}
-                    fill="url(#priceGradient)"
-                    activeDot={{ r: 5, fill: "var(--color-primary)", stroke: "var(--color-surface)", strokeWidth: 2 }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="mt-3 border-t-[0.5px] border-border pt-3 text-[12px] text-text-muted">
-              Với gạo, có thêm bộ lọc <span className="text-text-secondary">giống lúa</span> (OM 18 ·
-              ST25 · IR 50404) — cùng tỉnh cùng ngày, khác giống thì giá khác hẳn.
-            </div>
-          </div>
-
-          {/* Table Card */}
-          <div className="overflow-hidden rounded-xl border-[0.5px] border-border bg-surface">
-            <div className="border-b-[0.5px] border-border px-5 py-3.5 text-[15px] font-medium">
-              Giá theo ngày
-            </div>
-            {/* Header */}
-            <div className="grid grid-cols-[1fr_1.2fr_0.9fr] gap-2 bg-surface-muted px-5 py-2.5 text-[13px] text-text-secondary">
-              <div>Ngày</div>
-              <div className="text-right">Giá (₫/kg)</div>
-              <div className="text-right">Thay đổi</div>
-            </div>
-            {/* Rows */}
-            <div className="flex flex-col">
-              {data.table.map((row, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    "grid grid-cols-[1fr_1.2fr_0.9fr] items-center gap-2 border-t-[0.5px] border-border px-5 py-[11px] text-sm",
-                    i % 2 === 1 ? "bg-page-bg/50" : ""
-                  )}
-                >
-                  <div className="font-mono text-[13px]">{row.date}</div>
-                  <div className="text-right font-mono">{row.price}</div>
-                  <div
-                    className={cn(
-                      "text-right text-[13px]",
-                      row.isPositive === true && "text-success",
-                      row.isPositive === false && "text-destructive",
-                      row.isPositive === null && "text-text-secondary"
-                    )}
-                  >
-                    {row.change}
-                  </div>
-                </div>
-              ))}
-            </div>
-            {/* Source */}
-            <div className="flex items-center gap-2 border-t-[0.5px] border-border px-5 py-[11px]">
-              <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-medium text-text-secondary">
-                VNSAT
-              </span>
-              <span className="text-xs text-text-muted">Cà phê thu thập tự động theo ngày</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-5 flex items-center gap-1.5 text-[12.5px] text-text-muted">
-          <span className="ms text-[16px]">info</span> Giá tham khảo, không phải giá giao dịch trên
-          nền tảng. Cao su và điều dùng giá nhập tay của quản trị viên.
-        </div>
-      </div>
-
+            <KeyValueList items={[
+              { label: "Nguồn", value: quote.data.source === "VNSAT_SCRAPE" ? "VNSAT" : (quote.data.referenceSource || "Điều phối viên nhập") },
+              { label: "Ngày ghi nhận giá", value: <time dateTime={quote.data.capturedAt}>{date.format(new Date(quote.data.capturedAt))}</time> },
+              { label: "Hệ thống cập nhật", value: <time dateTime={quote.data.ingestedAt}>{dateTime.format(new Date(quote.data.ingestedAt))}</time> },
+            ]} />
+          </section>
+        )}
+        <p className="text-sm text-text-secondary">Biểu đồ và lịch sử giá chưa khả dụng.</p>
+      </main>
       <Footer />
     </div>
   )
 }
-
-export { PricesPage }

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useState } from "react"
 import { Controller, useFieldArray, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -6,7 +6,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { ContractsLayout } from "@/features/contracts/components/contracts-layout"
 import { ContractFailure } from "@/features/contracts/components/contract-state"
 import { capabilities } from "@/features/contracts/api/capabilities"
-import { createContract } from "@/features/contracts/api/contracts"
+import { createContract, listContracts } from "@/features/contracts/api/contracts"
 import {
   offerDefaults,
   offerSchema,
@@ -14,15 +14,16 @@ import {
   type OfferOutput,
   type OfferValues,
 } from "@/features/contracts/schemas/offer"
-import { contractError } from "@/features/contracts/types/presentation"
+import { contractError } from "@/features/contracts"
 import {
   getListing,
   searchListings,
   type Listing,
 } from "@/features/listings/api/listings"
-import { useOrganizationPermissions } from "@/features/organization/hooks/use-organization-permissions"
-import { newIdempotencyKey } from "@/shared/api/client"
+import { canReserveListing } from "@/features/listings/presentation"
+import { useOrganizationPermissions } from "@/features/organization"
 import { parseApiError } from "@/shared/api/errors"
+import { useRecoverableWrite } from "@/shared/api/operation-recovery"
 import { useAuthStore } from "@/shared/auth/auth-store"
 import { Banner } from "@/shared/ui/banner"
 import { Button } from "@/shared/ui/button"
@@ -75,9 +76,11 @@ export function CreateContractPage() {
 
 function ListingPicker({ onPick }: { onPick: (id: string) => void }) {
   const [page, setPage] = useState(0)
+  const viewerId = useAuthStore((state) => state.userId)
   const query = useQuery({
-    queryKey: ["listings", page],
+    queryKey: ["listings", viewerId, page],
     queryFn: ({ signal }) => searchListings(page, signal),
+    enabled: !!viewerId,
     retry: false,
   })
   if (query.isPending)
@@ -102,7 +105,7 @@ function ListingPicker({ onPick }: { onPick: (id: string) => void }) {
       />
     )
   const listings = query.data.content.filter(
-    (item) => item.status === "ACTIVE" && item.commodity === "COFFEE"
+    (item) => item.sellerId !== viewerId && canReserveListing(item)
   )
   return (
     <section className="space-y-4">
@@ -155,9 +158,11 @@ function OfferForm({
   allowed: boolean
   onChangeListing: () => void
 }) {
+  const viewerId = useAuthStore((state) => state.userId)
   const listing = useQuery({
-    queryKey: ["listing", listingId],
+    queryKey: ["listing", viewerId, listingId],
     queryFn: ({ signal }) => getListing(listingId, signal),
+    enabled: !!viewerId,
     retry: false,
   })
   if (listing.isPending)
@@ -172,6 +177,15 @@ function OfferForm({
       <ContractFailure
         error={listing.error}
         retry={() => void listing.refetch()}
+      />
+    )
+  if (listing.data.sellerId === viewerId || !canReserveListing(listing.data))
+    return (
+      <EmptyState
+        title="Nguồn hàng này hiện chưa nhận đề nghị hợp đồng"
+        description="Nguồn hàng phải đang mở bán, còn đủ khối lượng tối thiểu và thuộc một bên bán khác."
+        actionLabel="Chọn nguồn hàng khác"
+        onAction={onChangeListing}
       />
     )
   return (
@@ -200,8 +214,7 @@ function OfferEditor({
   const cache = useQueryClient()
   const [error, setError] = useState("")
   const [stale, setStale] = useState(false)
-  // One key per submitted body; a retry after a lost 201 replays the same offer.
-  const key = useRef<{ body: string; key: string } | null>(null)
+  const operation = useRecoverableWrite("create-offer", listing.listingId)
   const {
     register,
     control,
@@ -217,34 +230,45 @@ function OfferEditor({
     (sum, m) => sum + (Number(m.committedQuantity) || 0),
     0
   )
-  const busy = isSubmitting
+  const busy = isSubmitting || operation.busy
   const submit = handleSubmit(async (values) => {
-    if (!userId) return
+    if (!userId || !allowed) return
     setError("")
     const request = {
       listingId: listing.listingId,
       listingVersionToken: listing.listingVersionToken,
       terms: offerTerms(values),
     }
-    const body = JSON.stringify(request)
-    if (key.current?.body !== body)
-      key.current = { body, key: newIdempotencyKey() }
+    let contract
     try {
-      const contract = await createContract(request, key.current.key, userId)
-      key.current = null
-      cache.setQueryData(["contract", userId, contract.id], contract)
-      await cache.invalidateQueries({ queryKey: ["contracts", userId] })
-      navigate(`/contracts/${encodeURIComponent(contract.id)}`)
+      contract = await operation.run({
+        binding: JSON.stringify(request),
+        reconcile: async () => {
+          // The list can be reviewed, but its rows cannot be attributed to this command.
+          await cache.fetchQuery({
+            queryKey: ["contracts", userId, "BUYER", "", 0],
+            queryFn: ({ signal }) => listContracts(userId, "BUYER", "", 0, signal),
+            retry: false,
+            staleTime: 0,
+          })
+          return "replay"
+        },
+        send: (key) => createContract(request, key, userId),
+      })
     } catch (failure) {
-      const { code, status } = parseApiError(failure)
+      const { code } = parseApiError(failure)
       setError(contractError(failure))
-      if (status >= 400 && status < 500) key.current = null
       if (
         code === "LISTING_VERSION_MISMATCH" ||
         code === "INSUFFICIENT_LISTING_QUANTITY"
       )
         setStale(true)
+      return
     }
+    if (useAuthStore.getState().userId !== userId) return
+    cache.setQueryData(["contract", userId, contract.id], contract)
+    void cache.invalidateQueries({ queryKey: ["contracts", userId] }).catch(() => {})
+    navigate(`/contracts/${encodeURIComponent(contract.id)}`)
   })
   return (
     <form
@@ -289,6 +313,13 @@ function OfferEditor({
             >
               Nguồn hàng vừa thay đổi hoặc không đủ số lượng. Tải lại rồi kiểm
               tra khối lượng các đợt trước khi gửi lại.
+            </Banner>
+          )}
+          {operation.pending && !operation.busy && (
+            <Banner variant="warning" role="status">
+              Chưa xác nhận được kết quả của đề nghị trước.{" "}
+              <Link to="/contracts" className="underline">Xem danh sách hợp đồng</Link>
+              {" "}để kiểm tra trước khi gửi lại.
             </Banner>
           )}
         </section>

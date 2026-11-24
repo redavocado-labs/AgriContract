@@ -1,35 +1,83 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom"
+import { lazy, Suspense } from "react"
+import { BrowserRouter, Link, Route, Routes, useLocation } from "react-router-dom"
+import { RenderErrorBoundary } from "@/shared/ui/render-error-boundary"
 
 import { AuthPage } from "@/routes/auth-page"
-import { ComponentShowcase } from "@/routes/component-showcase"
-import { EscrowPage } from "@/routes/escrow-page"
 import { HomePage } from "@/routes/home-page"
-import { HowItWorksPage } from "@/routes/how-it-works-page"
-import { ListingDetailPage } from "@/routes/listing-detail-page"
-import { MarketplacePage } from "@/routes/marketplace-page"
-import { MobileComponentShowcase } from "@/routes/mobile-component-showcase"
-import { PricesPage } from "@/routes/prices-page"
-import { PublicReputationPage } from "@/routes/public-reputation-page"
 import { ToastProvider } from "@/shared/ui/toast"
 import {
   RequireAuth,
   RequireRole,
 } from "@/features/auth/components/auth-guards"
-import { AccountPage } from "@/routes/account-page"
 import { APP_ROLES } from "@/shared/auth/auth-store"
 import { RequireOrganizationProfile } from "@/features/organization/components/organization-guards"
-import { OrganizationOnboardingPage } from "@/routes/organization-onboarding-page"
-import { ContractsPage } from "@/routes/contracts-page"
-import { ContractDetailPage } from "@/routes/contract-detail-page"
-import { CreateContractPage } from "@/routes/create-contract-page"
-import { MilestonePage } from "@/routes/milestone-page"
-import { RemedyRetryPage } from "@/routes/remedy-retry-page"
-import { DisputesPage } from "@/routes/disputes-page"
 
-function App() {
+const RemedyRetryPage = lazy(() =>
+  import("@/routes/remedy-retry-page").then((module) => ({ default: module.RemedyRetryPage }))
+)
+
+const EscrowPage = lazy(() =>
+  import("@/routes/escrow-page").then((module) => ({ default: module.EscrowPage }))
+)
+const HowItWorksPage = lazy(() =>
+  import("@/routes/how-it-works-page").then((module) => ({ default: module.HowItWorksPage }))
+)
+const ListingDetailPage = lazy(() =>
+  import("@/routes/listing-detail-page").then((module) => ({ default: module.ListingDetailPage }))
+)
+const MarketplacePage = lazy(() =>
+  import("@/routes/marketplace-page").then((module) => ({ default: module.MarketplacePage }))
+)
+const PricesPage = lazy(() =>
+  import("@/routes/prices-page").then((module) => ({ default: module.PricesPage }))
+)
+const PublicReputationPage = lazy(() =>
+  import("@/routes/public-reputation-page").then((module) => ({ default: module.PublicReputationPage }))
+)
+const AccountPage = lazy(() =>
+  import("@/routes/account-page").then((module) => ({ default: module.AccountPage }))
+)
+const OrganizationOnboardingPage = lazy(() =>
+  import("@/routes/organization-onboarding-page").then((module) => ({ default: module.OrganizationOnboardingPage }))
+)
+const ContractsPage = lazy(() =>
+  import("@/routes/contracts-page").then((module) => ({ default: module.ContractsPage }))
+)
+const ContractDetailPage = lazy(() =>
+  import("@/routes/contract-detail-page").then((module) => ({ default: module.ContractDetailPage }))
+)
+const CreateContractPage = lazy(() =>
+  import("@/routes/create-contract-page").then((module) => ({ default: module.CreateContractPage }))
+)
+const MilestonePage = lazy(() =>
+  import("@/routes/milestone-page").then((module) => ({ default: module.MilestonePage }))
+)
+const DisputesPage = lazy(() =>
+  import("@/routes/disputes-page").then((module) => ({ default: module.DisputesPage }))
+)
+
+const ComponentShowcase = import.meta.env.DEV
+  ? lazy(() => import("@/routes/component-showcase").then((module) => ({ default: module.ComponentShowcase })))
+  : undefined
+const MobileComponentShowcase = import.meta.env.DEV
+  ? lazy(() => import("@/routes/mobile-component-showcase").then((module) => ({ default: module.MobileComponentShowcase })))
+  : undefined
+
+function NotFound() {
   return (
-    <ToastProvider>
-      <BrowserRouter>
+    <main className="mx-auto max-w-xl space-y-4 px-6 py-16 text-text-primary">
+      <title>Không tìm thấy trang — AgriContract</title>
+      <h1 className="text-2xl font-semibold">Không tìm thấy trang</h1>
+      <Link className="text-primary underline" to="/">Về trang chủ</Link>
+    </main>
+  )
+}
+
+function RouteContent() {
+  const location = useLocation()
+  return (
+    <RenderErrorBoundary scope="route" resetKey={location.key}>
+      <Suspense fallback={<p className="px-6 py-12 text-text-secondary" role="status">Đang tải trang…</p>}>
         <Routes>
           <Route element={<RequireAuth />}>
             <Route
@@ -89,15 +137,27 @@ function App() {
             path="/forgot-password"
             element={<AuthPage defaultView="forgot_password" />}
           />
-          <Route path="/components" element={<ComponentShowcase />} />
-          <Route
-            path="/components/mobile"
-            element={<MobileComponentShowcase />}
-          />
+          {ComponentShowcase && MobileComponentShowcase && (
+            <>
+              <Route path="/components" element={<ComponentShowcase />} />
+              <Route path="/components/mobile" element={<MobileComponentShowcase />} />
+            </>
+          )}
+          <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
-    </ToastProvider>
+      </Suspense>
+    </RenderErrorBoundary>
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <RenderErrorBoundary scope="app">
+      <ToastProvider>
+        <BrowserRouter>
+          <RouteContent />
+        </BrowserRouter>
+      </ToastProvider>
+    </RenderErrorBoundary>
+  )
+}

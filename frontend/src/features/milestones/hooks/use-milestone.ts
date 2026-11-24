@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { newIdempotencyKey } from "@/shared/api/client"
 import { parseApiError } from "@/shared/api/errors"
+import { useRecoverableWrite } from "@/shared/api/operation-recovery"
 import { useAuthStore } from "@/shared/auth/auth-store"
 import type { FileUploadItem } from "@/shared/ui/file-upload"
-import { contractError } from "@/features/contracts/types/presentation"
+import { contractError } from "@/features/contracts"
 import {
   getBreachCase,
   getMilestoneDetail,
@@ -20,106 +21,182 @@ export const milestoneKey = (
   milestoneId: string
 ) => ["milestone", userId, contractId, milestoneId] as const
 
-const SCAN_POLL_MILLISECONDS = 2_000
-const SCAN_BUDGET_MILLISECONDS = 60_000
+const SCAN_BUDGET = 60_000
+const SCAN_INTERVAL = 2_000
 
-/** Poll at most one minute per batch of processing files. */
+interface EvidenceScanChecks {
+  track: (fileId: string) => () => void
+  timedOut: (fileId: string) => boolean
+  recheck: () => void
+  checking: boolean
+}
+
+export const EvidenceScanContext = createContext<EvidenceScanChecks | null>(null)
+
+/** Detail read model, with a separate budget for each observed or just-uploaded file. */
 export function useMilestoneDetail(contractId: string, milestoneId: string) {
   const { authenticated, status, userId } = useAuthStore()
-  const firstSeen = useRef(new Map<string, number>())
-  return useQuery({
+  const scope = authenticated && status === "ready" && userId && contractId && milestoneId
+    ? JSON.stringify([userId, contractId, milestoneId])
+    : null
+  const [tracked, setTracked] = useState<{
+    scope: string
+    files: Map<string, number>
+  } | null>(null)
+  const [budget, setBudget] = useState<{
+    scope: string
+    deadlines: Map<string, number>
+  } | null>(null)
+  const [elapsed, setElapsed] = useState(0)
+  const deadlines = scope && budget?.scope === scope ? budget.deadlines : undefined
+  const trackedFiles = scope && tracked?.scope === scope ? tracked.files : undefined
+  const hasScanBudgetAfter = (time: number) =>
+    deadlines && Array.from(deadlines.values()).some((deadline) => deadline > time)
+  const canRefreshMilestone = () => !deadlines?.size || !!hasScanBudgetAfter(Date.now())
+  const query = useQuery({
     queryKey: milestoneKey(userId, contractId, milestoneId),
     queryFn: ({ signal }) =>
       getMilestoneDetail(contractId, milestoneId, signal),
-    enabled:
-      authenticated && status === "ready" && !!contractId && !!milestoneId,
+    enabled: !!scope,
     retry: false,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: canRefreshMilestone,
+    refetchOnReconnect: canRefreshMilestone,
     refetchInterval: (query) => {
-      if (query.state.error) return false
-      const now = Date.now()
-      const files =
-        query.state.data?.evidence.filter(
-          (file) => file.status === "PROCESSING"
-        ) ?? []
-      for (const file of files)
-        if (!firstSeen.current.has(file.fileId))
-          firstSeen.current.set(file.fileId, now)
-      return files.some(
-        (file) =>
-          now - firstSeen.current.get(file.fileId)! < SCAN_BUDGET_MILLISECONDS
-      )
-        ? SCAN_POLL_MILLISECONDS
+      if ([401, 403, 404].includes(parseApiError(query.state.error).status))
+        return false
+      return hasScanBudgetAfter(Date.now() + SCAN_INTERVAL)
+        ? SCAN_INTERVAL
         : false
     },
   })
+  const evidence = query.data?.evidence
+  useEffect(() => {
+    if (!scope) {
+      setBudget(null)
+      setElapsed(0)
+      return
+    }
+    const waiting = new Set(trackedFiles?.keys())
+    for (const file of evidence ?? []) {
+      if (file.status === "PROCESSING") waiting.add(file.fileId)
+      else waiting.delete(file.fileId)
+    }
+    const newDeadline = Date.now() + SCAN_BUDGET
+    setBudget((previous) => ({
+      scope,
+      deadlines: new Map(
+        Array.from(waiting, (id) => [
+          id,
+          (previous?.scope === scope ? previous.deadlines.get(id) : undefined) ??
+            newDeadline,
+        ])
+      ),
+    }))
+  }, [scope, evidence, trackedFiles])
+  const nextDeadline = deadlines && Math.min(
+    ...Array.from(deadlines.values()).filter((deadline) => deadline > elapsed)
+  )
+  useEffect(() => {
+    if (nextDeadline === undefined || !Number.isFinite(nextDeadline)) return
+    const timeout = setTimeout(
+      () => setElapsed(nextDeadline),
+      Math.max(0, nextDeadline - Date.now())
+    )
+    return () => clearTimeout(timeout)
+  }, [nextDeadline])
+  const track = useCallback((fileId: string) => {
+    if (!scope) return () => {}
+    setTracked((previous) => {
+      const files = new Map(previous?.scope === scope ? previous.files : undefined)
+      files.set(fileId, (files.get(fileId) ?? 0) + 1)
+      return { scope, files }
+    })
+    return () => setTracked((previous) => {
+      if (previous?.scope !== scope) return previous
+      const files = new Map(previous.files)
+      const count = files.get(fileId) ?? 0
+      if (count <= 1) files.delete(fileId)
+      else files.set(fileId, count - 1)
+      return { scope, files }
+    })
+  }, [scope])
+  const evidenceScan: EvidenceScanChecks = {
+    track,
+    timedOut: (id) => (deadlines?.get(id) ?? Infinity) <= elapsed,
+    recheck: () => void query.refetch({ cancelRefetch: false }),
+    checking: query.isFetching,
+  }
+  return { ...query, evidenceScan }
 }
 
-export function useMilestoneBreachCase(detail: MilestoneDetail) {
-  const { userId, roles } = useAuthStore()
-  return useQuery({
-    queryKey: ["breach-case", detail.contractId, detail.breachCaseId, userId],
-    queryFn: ({ signal }) =>
-      getBreachCase(detail.contractId, detail.breachCaseId!, signal),
-    enabled: !!userId && !!detail.breachCaseId && canReadMilestoneCase(roles),
-    retry: false,
-  })
+function milestoneRevision(detail: MilestoneDetail) {
+  return [
+    detail.milestone.status,
+    detail.milestone.fundingStatus,
+    detail.sellerDeclaration?.declarationNumber,
+  ].join(":")
 }
 
-/**
- * One logical write with its Idempotency-Key: kept for a manual retry after a
- * network/5xx failure, dropped after success or a definite 4xx rejection.
- */
-export function useMilestoneCommand(detail: MilestoneDetail) {
+export function useMilestoneCommand(
+  detail: MilestoneDetail,
+  action:
+    | "seller-weigh"
+    | "buyer-receipt"
+    | "buyer-decision"
+    | "seller-response"
+    | "funding"
+    | "breach-contest"
+    | "dispute-exit"
+    | "dispute-otp"
+) {
   const userId = useAuthStore((state) => state.userId)
   const cache = useQueryClient()
-  const lock = useRef(false)
-  const key = useRef<{ fingerprint: string; key: string } | null>(null)
-  const [busy, setBusy] = useState(false)
+  const { contractId, milestone: { milestoneId } } = detail
+  const operation = useRecoverableWrite(action, JSON.stringify([contractId, milestoneId]))
+  const queryKey = milestoneKey(userId, contractId, milestoneId)
   const [error, setError] = useState("")
   async function run(
-    fingerprint: string,
-    action: (key: string) => Promise<void>,
-    refresh = true
+    fingerprint: string | null,
+    action: (key: string) => Promise<void>
   ) {
-    if (lock.current) return false
-    lock.current = true
-    if (key.current?.fingerprint !== fingerprint)
-      key.current = { fingerprint, key: newIdempotencyKey() }
-    setBusy(true)
+    if (!userId) return false
     setError("")
     try {
-      await action(key.current.key)
-      key.current = null
-      return true
+      await operation.run({
+        binding: fingerprint,
+        revision: milestoneRevision(detail),
+        reconcile: async ({ revision }) => {
+          const current = await cache.fetchQuery({
+            queryKey,
+            queryFn: ({ signal }) => getMilestoneDetail(contractId, milestoneId, signal),
+            retry: false,
+            staleTime: 0,
+          })
+          return revision === milestoneRevision(current) ? "replay" : "changed"
+        },
+        send: action,
+      })
+      return useAuthStore.getState().userId === userId
     } catch (failure) {
       setError(contractError(failure))
-      const { status } = parseApiError(failure)
-      if (status >= 400 && status < 500) key.current = null
       return false
     } finally {
-      if (refresh)
-        await Promise.all([
-          cache.invalidateQueries({
-            queryKey: milestoneKey(
-              userId,
-              detail.contractId,
-              detail.milestone.milestoneId
-            ),
-          }),
-          cache.invalidateQueries({
-            queryKey: ["contract", userId, detail.contractId],
-          }),
-          cache.invalidateQueries({
-            queryKey: ["breach-case", detail.contractId],
-          }),
-          cache.invalidateQueries({ queryKey: ["contracts", userId] }),
-        ])
-      lock.current = false
-      setBusy(false)
+      void Promise.allSettled([
+        cache.invalidateQueries({ queryKey }),
+        cache.invalidateQueries({ queryKey: ["contract", userId, contractId] }),
+        cache.invalidateQueries({ queryKey: ["breach-case", contractId] }),
+        cache.invalidateQueries({ queryKey: ["contracts", userId] }),
+      ])
     }
   }
-  return { run, busy, error, setError }
+  return {
+    run,
+    busy: operation.busy,
+    error: error || (operation.pending && !operation.busy
+      ? "Kết quả thao tác trước chưa được xác nhận. Hệ thống sẽ kiểm tra trạng thái đợt giao trước khi tiếp tục."
+      : ""),
+    setError,
+  }
 }
 
 const sizeLabel = (bytes: number) =>
@@ -137,86 +214,106 @@ export function useEvidenceSlot(
 ) {
   const userId = useAuthStore((state) => state.userId)
   const cache = useQueryClient()
-  const [local, setLocal] = useState<{
-    name: string
-    size: number
-    fileId?: string
-    file: File
-    key: string
-    error?: string
-  } | null>(null)
+  const scan = useContext(EvidenceScanContext)
+  const [local, setLocal] = useState<
+    | { file: File; key: string; fileId?: string; error?: string; retryable?: boolean }
+    | "removed"
+    | null
+  >(null)
   const [uploading, setUploading] = useState(false)
-  const fileId = local ? local.fileId : (initialFileId ?? undefined)
+  const uploadLock = useRef(false)
+  const selected = local === "removed" ? null : local
+  const fileId = local ? selected?.fileId : (initialFileId ?? undefined)
   const server = detail.evidence.find((file) => file.fileId === fileId)
-  async function upload(file: File, key: string) {
+  const track = scan?.track
+  useEffect(() => {
+    return fileId && track ? track(fileId) : undefined
+  }, [fileId, track])
+
+  const queryKey = milestoneKey(userId, detail.contractId, detail.milestone.milestoneId)
+  async function upload(file: File, key: string, retry = false) {
+    if (uploadLock.current) return
+    uploadLock.current = true
     setUploading(true)
-    setLocal({ name: file.name, size: file.size, file, key })
+    setLocal({ file, key })
     try {
+      if (retry) {
+        const current = await cache.fetchQuery({
+          queryKey,
+          queryFn: ({ signal }) =>
+            getMilestoneDetail(detail.contractId, detail.milestone.milestoneId, signal),
+          retry: false,
+          staleTime: 0,
+        })
+        if (current.milestone.status !== detail.milestone.status) {
+          setLocal({
+            file,
+            key,
+            error: "Đợt giao đã chuyển sang bước khác. Hãy kiểm tra trạng thái mới.",
+          })
+          return
+        }
+      }
+      const auth = useAuthStore.getState()
+      if (!userId || auth.userId !== userId || !auth.authenticated || auth.status !== "ready")
+        throw new Error("Phiên đăng nhập cần được xác thực lại.")
       const accepted = await uploadEvidence(
         detail.contractId,
         detail.milestone.milestoneId,
         file,
         key
       )
-      setLocal({
-        name: file.name,
-        size: file.size,
-        file,
-        key,
-        fileId: accepted.fileId,
-      })
-      await cache.invalidateQueries({
-        queryKey: milestoneKey(
-          userId,
-          detail.contractId,
-          detail.milestone.milestoneId
-        ),
-      })
+      setLocal({ file, key, fileId: accepted.fileId })
+      void cache.invalidateQueries({ queryKey }).catch(() => {})
     } catch (failure) {
+      const { status, code } = parseApiError(failure)
       setLocal({
-        name: file.name,
-        size: file.size,
         file,
         key,
         error: contractError(failure),
+        retryable:
+          code !== "IDEMPOTENCY_KEY_REUSED" &&
+          (!status || status === 408 || status === 429 || status >= 500),
       })
     } finally {
+      uploadLock.current = false
       setUploading(false)
     }
   }
-  const status = uploading
-    ? "processing"
-    : local?.error
-      ? "failed"
-      : server?.status === "READY"
-        ? "ready"
-        : server?.status === "FAILED"
-          ? "failed"
-          : fileId
-            ? "processing"
-            : null
+  let status: FileUploadItem["status"] | null = null
+  if (uploading) status = "uploading"
+  else if (selected?.error) status = "upload-failed"
+  else if (server?.status === "READY") status = "ready"
+  else if (server?.status === "FAILED") status = "rejected"
+  else if (fileId) status = scan?.timedOut(fileId) ? "scan-timeout" : "processing"
+
   const item: FileUploadItem | null = status
     ? {
-        key: fileId ?? local?.key,
-        name: local?.name ?? "Ảnh đã gửi trước đó",
-        sizeLabel: local ? sizeLabel(local.size) : undefined,
+        key: fileId ?? selected?.key,
+        name: selected?.file.name ?? "Ảnh đã gửi trước đó",
+        sizeLabel: selected ? sizeLabel(selected.file.size) : undefined,
         status,
         failureReason:
-          local?.error ??
+          selected?.error ??
           (server?.status === "FAILED"
             ? "ảnh không qua kiểm tra an toàn, hãy chọn ảnh khác"
             : undefined),
-        onRetry: local?.error
-          ? () => void upload(local.file, local.key)
+        onRetry: selected?.retryable
+          ? () => void upload(selected.file, selected.key, true)
           : undefined,
+        onRecheck: status === "scan-timeout" ? scan?.recheck : undefined,
+        checking: scan?.checking,
       }
     : null
   return {
     item,
     fileId: status === "ready" ? fileId : undefined,
-    pending: status === "processing",
+    uploading,
+    pending: status === "uploading" || status === "processing",
     select: (file: File) => void upload(file, newIdempotencyKey()),
-    clear: () => setLocal(null),
+    clear: () => {
+      if (!uploadLock.current) setLocal("removed")
+    },
   }
 }
 
@@ -245,4 +342,15 @@ export function useConsentHash(
     }
   }, [content])
   return content && hash?.content === content ? hash.hash : null
+}
+
+export function useMilestoneBreachCase(detail: MilestoneDetail) {
+  const { userId, roles } = useAuthStore()
+  return useQuery({
+    queryKey: ["breach-case", detail.contractId, detail.breachCaseId, userId],
+    queryFn: ({ signal }) =>
+      getBreachCase(detail.contractId, detail.breachCaseId!, signal),
+    enabled: !!userId && !!detail.breachCaseId && canReadMilestoneCase(roles),
+    retry: false,
+  })
 }

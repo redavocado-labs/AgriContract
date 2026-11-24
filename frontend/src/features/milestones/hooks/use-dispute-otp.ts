@@ -30,7 +30,7 @@ export function useDisputeOtp(
   hash: string
 ) {
   const fresh = useFreshLogin()
-  const command = useMilestoneCommand(detail)
+  const command = useMilestoneCommand(detail, "dispute-otp")
   const [challenge, setChallenge] = useState<Challenge>()
   const [resendAt, setResendAt] = useState(0)
   const [complete, setComplete] = useState(false)
@@ -71,8 +71,7 @@ export function useDisputeOtp(
           await fresh.handleStepUpError(error, step)
           throw error
         }
-      },
-      false
+      }
     )
   }
 

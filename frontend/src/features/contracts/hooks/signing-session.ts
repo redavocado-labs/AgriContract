@@ -46,8 +46,11 @@ export class SigningSession {
       this.resendAfter = Date.now() + 60_000
     } catch (error) {
       const parsed = parseApiError(error)
-      // Keep the logical key only for ambiguous transport/server failures.
-      if (parsed.status && parsed.status < 500) this.initiateKey = null
+      // Rate limits and an interrupted request do not resolve an earlier attempt.
+      if (
+        [400, 401, 403, 404, 422].includes(parsed.status) ||
+        ["OTP_RESEND_TOO_SOON", "OTP_RESEND_LIMIT_REACHED"].includes(parsed.code)
+      ) this.initiateKey = null
       if (parsed.code === "OTP_RESEND_TOO_SOON")
         this.resendAfter = Date.now() + 60_000
       if (parsed.code === "OTP_RESEND_LIMIT_REACHED")
@@ -58,7 +61,7 @@ export class SigningSession {
     }
   }
 
-  async verify(code: string) {
+  async verify(code: string, operationKey?: string) {
     if (this.busy || this.complete)
       throw new Error("Thao tác đang xử lý hoặc chữ ký đã được xác nhận.")
     if (!this.challenge) throw new Error("Bạn cần gửi mã OTP mới.")
@@ -68,14 +71,15 @@ export class SigningSession {
       throw new Error("Mã OTP đã hết hạn. Vui lòng gửi mã mới.")
     }
     this.busy = true
-    if (this.verifyOperation?.code !== code)
-      this.verifyOperation = { code, key: newIdempotencyKey() }
+    const key = operationKey ??
+      (this.verifyOperation?.code === code ? this.verifyOperation.key : newIdempotencyKey())
+    this.verifyOperation = { code, key }
     try {
       await verifySigning(
         this.id,
         this.challenge,
         code,
-        this.verifyOperation.key
+        key
       )
       this.complete = true
       this.challenge = null

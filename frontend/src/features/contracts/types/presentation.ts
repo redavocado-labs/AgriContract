@@ -1,9 +1,9 @@
 import { parseApiError } from "@/shared/api/errors"
 export { vietnamTime } from "@/shared/lib/vietnam-time"
 import { capabilities } from "../api/capabilities"
-import type { Contract, ParticipantRole } from "./contract"
+import type { Contract, ContractStatus, ParticipantRole } from "./contract"
 
-export const statusLabels: Record<string, string> = {
+const knownStatusLabels = {
   OFFERED: "Đã gửi đề nghị",
   NEGOTIATING: "Đang đàm phán",
   SIGNED: "Đã ký — chờ kích hoạt",
@@ -16,7 +16,8 @@ export const statusLabels: Record<string, string> = {
   ACTIVATION_REFUND_PENDING: "Đang hoàn cọc",
   REPLACEMENT_PENDING: "Đang thay thế",
   SUPERSEDE_REFUND_PENDING: "Đang hoàn tiền để thay thế",
-}
+} satisfies Record<ContractStatus, string>
+export const statusLabels: Record<string, string> = knownStatusLabels
 // Values the contract-service ContractStatus enum accepts as a list filter today.
 export const filterStatuses = [
   "OFFERED",
@@ -26,7 +27,11 @@ export const filterStatuses = [
   "SETTLED",
   "ACTIVATION_REFUND_PENDING",
   "ACTIVATION_FAILED",
-]
+] as const satisfies readonly ContractStatus[]
+export const filterStatusOptions = filterStatuses.map((value) => ({
+  value,
+  label: knownStatusLabels[value],
+}))
 export const PRE_SIGNATURE = ["OFFERED", "NEGOTIATING"]
 export function participantRole(
   contract: Contract,

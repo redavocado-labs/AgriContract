@@ -234,5 +234,8 @@ export async function createContract(
   const response = await apiClient.post("/api/v1/contracts", request, {
     headers: { "Idempotency-Key": key },
   })
-  return mapContract(response.data, userId)
+  const contract = mapContract(response.data, userId)
+  if (contract.listingId !== request.listingId || contract.buyerId !== userId)
+    throw new Error("Phản hồi không khớp đề nghị đã gửi.")
+  return contract
 }

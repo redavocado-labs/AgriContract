@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { apiClient } from "@/shared/api/client"
-import { milestoneSchema } from "@/features/contracts/api/contracts"
+import { milestoneSchema } from "@/features/contracts"
 import { remedyDecisionSchema } from "@/features/contracts/api/remedy"
 import type { Challenge } from "@/features/contracts/types/contract"
 import type { IssueType } from "../lib/milestone-consent"
@@ -252,6 +252,19 @@ export function respondToMilestoneFlag(
   key: string
 ) {
   return command(`${base(contractId, milestoneId)}/respond`, consent, key)
+}
+
+/** OPERATOR: retry a FUNDING_FAILED milestone lock. */
+export function retryMilestoneFunding(
+  contractId: string,
+  milestoneId: string,
+  key: string
+) {
+  return command(
+    `${base(contractId, milestoneId)}/funding/retry`,
+    undefined,
+    key
+  )
 }
 
 const breachPath = (contractId: string, breachCaseId: string) =>

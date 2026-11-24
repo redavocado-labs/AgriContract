@@ -294,8 +294,8 @@ export function initialDetails(): Detail[] {
     disputeExit: null,
     remedyDecision: null,
   }))
-  const decided = rows[2]
-  const waiting = rows[3]
+  const decided = rows[2]!
+  const waiting = rows[3]!
   rows.push(
     {
       ...decided,
@@ -326,12 +326,12 @@ export function initialDetails(): Detail[] {
       },
     },
     ...[PENDING_CONTRACT_ID, FINISHED_CONTRACT_ID].map((contractId) => ({
-      ...rows[0],
+      ...rows[0]!,
       contractId,
     }))
   )
   waiting.disputeExit = disputePositions(false)
-  rows[1].remedyDecision = inspectionRemedy(
+  rows[1]!.remedyDecision = inspectionRemedy(
     "FINALIZED",
     "916750000.00",
     "33250000.00",
@@ -420,7 +420,7 @@ export function initialBreachCases(): BreachCase[] {
   ]
   cases.push(
     {
-      ...cases[0],
+      ...cases[0]!,
       breachCaseId: BREACH_OPEN,
       milestoneId: mid(9),
       status: "RESOLVED",

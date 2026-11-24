@@ -2,7 +2,7 @@ import type { TimelineNode } from "@/shared/ui/milestone-timeline"
 import type {
   Milestone,
   MilestoneStatus,
-} from "@/features/contracts/types/contract"
+} from "@/features/contracts"
 import type { MilestoneDetail, SettlementPath } from "../api/milestones"
 import { displayKg } from "./milestone-consent"
 import { vietnamTime } from "@/shared/lib/vietnam-time"

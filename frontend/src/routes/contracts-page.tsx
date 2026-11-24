@@ -9,8 +9,7 @@ import {
   ContractLoading,
 } from "@/features/contracts/components/contract-state"
 import {
-  filterStatuses,
-  statusLabels,
+  filterStatusOptions,
   decimalMoney,
 } from "@/features/contracts/types/presentation"
 import type {
@@ -90,10 +89,7 @@ export function ContractsPage() {
           value={status || "ALL"}
           options={[
             { value: "ALL", label: "Tất cả trạng thái" },
-            ...filterStatuses.map((value) => ({
-              value,
-              label: statusLabels[value],
-            })),
+            ...filterStatusOptions,
           ]}
           onChange={(v) => {
             setStatus(v === "ALL" ? "" : (v ?? ""))

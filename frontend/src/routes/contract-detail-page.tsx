@@ -15,6 +15,8 @@ import { activationMessage } from "@/features/contracts/types/presentation"
 import { capabilities } from "@/features/contracts/api/capabilities"
 import { WithdrawOffer } from "@/features/contracts/components/withdraw-offer"
 import { ContractMilestones } from "@/features/milestones/components/contract-milestones"
+import { parseApiError } from "@/shared/api/errors"
+import { useAuthStore } from "@/shared/auth/auth-store"
 import { Banner } from "@/shared/ui/banner"
 import { Button } from "@/shared/ui/button"
 import { ContentHashDisplay } from "@/shared/ui/content-hash-display"
@@ -22,12 +24,16 @@ import { useToast } from "@/shared/ui/toast"
 
 export function ContractDetailPage() {
   const { id = "" } = useParams()
-  // Route key resets polling budget and memory-only signing state when the id changes.
-  return <Detail key={id} id={id} />
+  const userId = useAuthStore((state) => state.userId)
+  return <Detail key={JSON.stringify([userId, id])} id={id} />
 }
 function Detail({ id }: { id: string }) {
   const query = useContract(id)
   const contract = query.data
+  const readStatus = parseApiError(query.error).status
+  const showReadFailure =
+    query.isError &&
+    (contract?.status !== "SIGNED" || [401, 403, 404].includes(readStatus))
   const previous = useRef<{ hash: string | null; status: string } | null>(null)
   const [changed, setChanged] = useState(false)
   const toast = useToast()
@@ -43,7 +49,7 @@ function Detail({ id }: { id: string }) {
     <ContractsLayout title="Chi tiết hợp đồng">
       {query.isPending ? (
         <ContractLoading />
-      ) : query.isError ? (
+      ) : showReadFailure ? (
         <ContractFailure
           error={query.error}
           retry={() => void query.refetch()}
@@ -108,12 +114,19 @@ function Detail({ id }: { id: string }) {
                   : activationMessage(contract.status)}
               </Banner>
             )}
-            {contract.status === "SIGNED" && (
-              <p className="text-xs text-text-secondary">
-                Tự kiểm tra mỗi 5 giây khi trang mở, tối đa 2 phút; dừng khi có
-                lỗi hoặc trạng thái thay đổi. Sau đó dùng “Tải lại trạng thái”.
-                Không xác nhận khóa cọc từ phía trình duyệt.
+            {query.activationCheck === "pending" && (
+              <p role="status" className="text-xs text-text-secondary">
+                Tự kiểm tra trạng thái mỗi 5 giây, tối đa 2 phút.
               </p>
+            )}
+            {(query.activationCheck === "timed-out" ||
+              query.activationCheck === "interrupted") && (
+              <Banner variant="warning" role="status">
+                {query.activationCheck === "timed-out"
+                  ? "Đã hết thời gian kiểm tra tự động."
+                  : "Không tải được trạng thái mới từ máy chủ."}{" "}
+                Chưa có xác nhận kích hoạt. Dùng “Tải lại trạng thái” để kiểm tra.
+              </Banner>
             )}
             {contract.generation === "legacy" && (
               <Banner variant="info">

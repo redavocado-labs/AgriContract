@@ -1,9 +1,9 @@
-import { useRef, useState } from "react"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQueryClient } from "@tanstack/react-query"
-import { newIdempotencyKey } from "@/shared/api/client"
 import { parseApiError } from "@/shared/api/errors"
+import { useRecoverableWrite } from "@/shared/api/operation-recovery"
 import { useAuthStore } from "@/shared/auth/auth-store"
 import { Button } from "@/shared/ui/button"
 import { TextInput } from "@/shared/ui/text-input"
@@ -11,13 +11,13 @@ import { Banner } from "@/shared/ui/banner"
 import { MoneyDisplay } from "@/shared/ui/money-display"
 import { useToast } from "@/shared/ui/toast"
 import { negotiationSchema } from "../schemas/negotiation"
-import { patchTerms, termsInput } from "../api/contracts"
+import { getContract, patchTerms, termsInput } from "../api/contracts"
 import {
   canNegotiate,
   contractError,
   decimalMoney,
 } from "../types/presentation"
-import { useOrganizationPermissions } from "@/features/organization/hooks/use-organization-permissions"
+import { useOrganizationPermissions } from "@/features/organization"
 import type { Contract } from "../types/contract"
 
 export function NegotiationForm({ contract }: { contract: Contract }) {
@@ -29,9 +29,8 @@ export function NegotiationForm({ contract }: { contract: Contract }) {
   const [review, setReview] = useState<string | null>(null)
   const [error, setError] = useState("")
   const [frozen, setFrozen] = useState(false)
-  const [busy, setBusy] = useState(false)
-  // One key per logical save; a manual retry after a lost response reuses it.
-  const key = useRef<{ price: string; key: string } | null>(null)
+  const operation = useRecoverableWrite("update-terms", contract.id)
+  const { busy } = operation
   const allowed = canNegotiate(contract, canCreateOrSign) && !frozen
   const {
     register,
@@ -42,36 +41,39 @@ export function NegotiationForm({ contract }: { contract: Contract }) {
     defaultValues: { agreedPrice: original ?? "" },
   })
   async function save() {
-    if (!review || !userId || busy) return
-    if (key.current?.price !== review)
-      key.current = { price: review, key: newIdempotencyKey() }
-    setBusy(true)
+    if (!review || !userId || !allowed) return
     setError("")
+    const request = termsInput(contract.terms, review)
+    const queryKey = ["contract", userId, contract.id]
+    let updated
     try {
-      const updated = await patchTerms(
-        contract.id,
-        termsInput(contract.terms, review),
-        key.current.key,
-        userId
-      )
-      key.current = null
-      setReview(null)
-      cache.setQueryData(["contract", userId, contract.id], updated)
-      await cache.invalidateQueries({ queryKey: ["contracts", userId] })
-      toast.add({ title: "Đã lưu điều khoản mới", type: "success" })
+      updated = await operation.run({
+        binding: JSON.stringify(request),
+        reconcile: async () => {
+          const current = await cache.fetchQuery({
+            queryKey,
+            queryFn: ({ signal }) => getContract(contract.id, userId, signal),
+            retry: false,
+            staleTime: 0,
+          })
+          if (!canNegotiate(current, canCreateOrSign)) return "changed"
+          return current.hash === contract.hash ? "replay" : "unresolved"
+        },
+        send: (key) => patchTerms(contract.id, request, key, userId),
+      })
     } catch (failure) {
       const { code, status } = parseApiError(failure)
       setError(contractError(failure))
       if (code === "CONTRACT_TERMS_FROZEN") setFrozen(true)
-      // Only a definite rejection frees the key; a lost response keeps it for retry.
-      if (status >= 400 && status < 500) key.current = null
       if (status === 409)
-        await cache.invalidateQueries({
-          queryKey: ["contract", userId, contract.id],
-        })
-    } finally {
-      setBusy(false)
+        void cache.invalidateQueries({ queryKey }).catch(() => {})
+      return
     }
+    if (useAuthStore.getState().userId !== userId) return
+    setReview(null)
+    cache.setQueryData(queryKey, updated)
+    void cache.invalidateQueries({ queryKey: ["contracts", userId] }).catch(() => {})
+    toast.add({ title: "Đã lưu điều khoản mới", type: "success" })
   }
   return (
     <section className="space-y-4 rounded-md border border-border bg-surface p-4 sm:p-5">
@@ -91,6 +93,12 @@ export function NegotiationForm({ contract }: { contract: Contract }) {
       {frozen && (
         <Banner variant="info">
           Điều khoản đã khóa vì đã có chữ ký đầu tiên. Hãy ký hoặc rút đề nghị.
+        </Banner>
+      )}
+      {operation.pending && !busy && (
+        <Banner variant="warning" role="status">
+          Kết quả lần lưu trước chưa được xác nhận. Kiểm tra điều khoản hiện tại
+          trước khi gửi lại đúng thay đổi đã duyệt.
         </Banner>
       )}
       <form

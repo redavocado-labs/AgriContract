@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 import { cn } from "@/shared/lib/utils"
 import { buttonVariants } from "@/shared/ui/button"
 import { Footer } from "@/shared/ui/footer"
-import { PublicNav } from "@/shared/ui/public-nav"
+import { PublicNav } from "./layouts/public-nav"
 
 function EscrowPage() {
   return (
@@ -49,8 +49,8 @@ function EscrowPage() {
                   <span className="text-[14.5px] font-medium">Bên mua</span>
                 </div>
                 <div className="text-[12.5px] leading-[1.55] text-text-secondary">
-                  Khoá <b className="font-medium text-text-primary">100% tiền hàng</b> vào ký quỹ
-                  ngay khi hợp đồng có hiệu lực.
+                  Khoá <b className="font-medium text-text-primary">tiền cọc</b> để kích hoạt hợp đồng.
+                  Tiền hàng từng đợt được yêu cầu khoá trước ngày giao theo lịch đã ký.
                 </div>
               </div>
               <div className="rounded-xl border-[0.5px] border-dashed border-[#CBD5E1] bg-surface px-[18px] py-4">
@@ -117,7 +117,7 @@ function EscrowPage() {
                   </span>
                 </div>
                 <div className="text-[12.5px] leading-[1.55] text-text-secondary">
-                  Mỗi cột mốc giao xong, phần tiền tương ứng tự động chuyển cho bên bán.
+                  Khi cột mốc đủ điều kiện tất toán, hệ thống chuyển phần tiền bên bán được hưởng.
                 </div>
               </div>
               <div className="rounded-xl border-[0.5px] border-[#FDE68A] bg-[#FFFBEB] px-4 py-3.5">
@@ -126,7 +126,7 @@ function EscrowPage() {
                   <span className="text-[14px] font-medium">Tịch thu phạt nếu vi phạm</span>
                 </div>
                 <div className="text-[12.5px] leading-[1.55] text-text-secondary">
-                  Nếu một bên vi phạm, phần phạt được trích theo đúng mức đã ký từ trước.
+                  Khoản phạt được xử lý theo quyết định có hiệu lực và điều khoản hợp đồng.
                 </div>
               </div>
               <div className="rounded-xl border-[0.5px] border-border bg-page-bg px-4 py-3.5">
@@ -136,11 +136,11 @@ function EscrowPage() {
                     <span className="text-[14px] font-medium">Hoàn phần còn lại</span>
                   </div>
                   <span className="whitespace-nowrap rounded-full bg-surface-muted px-2 py-0.5 text-[11px] text-text-secondary">
-                    → Bên mua
+                    → Bên được hoàn
                   </span>
                 </div>
                 <div className="text-[12.5px] leading-[1.55] text-text-secondary">
-                  Khi tất toán, phần chưa dùng đến được trả lại đúng bên, tính pro-rata.
+                  Phần tiền được hoàn trả về đúng bên theo kết quả tất toán.
                 </div>
               </div>
             </div>
@@ -188,13 +188,12 @@ function EscrowPage() {
               <div className="mb-2.5 flex items-start gap-3">
                 <span className="ms mt-0.5 text-[22px] text-primary">help</span>
                 <div className="text-[16.5px] font-medium leading-[1.4]">
-                  Vì sao cả hai bên đều phải đặt cọc?
+                  Hai bên đặt cọc như thế nào?
                 </div>
               </div>
               <div className="text-[14px] leading-[1.65] text-text-secondary">
-                Bên mua khoá tiền hàng để bên bán yên tâm giao. Bên bán khoá cọc đảm bảo để bên mua
-                yên tâm hàng sẽ đến đúng cam kết. Cọc hai chiều khiến việc bỏ kèo trở nên đắt cho cả
-                hai — nên gần như không ai muốn.
+                Bên mua đặt cọc theo điều khoản đã ký. Bên bán chỉ đặt cọc nếu hai bên có thoả thuận.
+                Tiền hàng được khoá riêng trước từng đợt giao.
               </div>
             </div>
 
@@ -220,14 +219,12 @@ function EscrowPage() {
                 </div>
               </div>
               <div className="mb-3.5 text-[14px] leading-[1.65] text-text-secondary">
-                Bên bán nhận tiền cho từng đợt ngay khi giao xong, thay vì đợi đến cột mốc cuối. Vốn
-                lưu động được giải phóng sớm hơn nhiều.
+                Bên bán nhận phần tiền được hưởng khi từng đợt đủ điều kiện tất toán.
               </div>
               <div className="flex items-start gap-2 rounded-lg border-[0.5px] border-[#BBF7D0] bg-primary-tint/20 px-3 py-2.5">
                 <span className="ms mt-0.5 text-[17px] text-primary">insights</span>
                 <span className="text-[12.5px] leading-[1.55] text-text-secondary">
-                  Đối chiếu "tổng tiền đã khoá" với "tiền thực nhận" theo tháng cho thấy khoảng cách
-                  thu hẹp rõ rệt khi chia nhỏ đợt giao.
+                  Theo dõi trạng thái ký quỹ và tất toán theo từng đợt trong hợp đồng.
                 </span>
               </div>
             </div>
@@ -240,10 +237,8 @@ function EscrowPage() {
                 </div>
               </div>
               <div className="text-[14px] leading-[1.65] text-text-secondary">
-                Phần tiền đang tranh chấp bị giữ lại trong ký quỹ — không giải ngân cũng không hoàn
-                — cho tới khi có kết luận. Giám định độc lập phân xử, rồi hệ thống giải ngân hoặc
-                hoàn theo đúng phán quyết. Trong lúc chờ, con số hiển thị là tạm tính và ghi rõ có
-                thể điều chỉnh.
+                Hệ thống giải ngân hoặc hoàn tiền theo kết quả giải quyết tranh chấp. Nếu có giải ngân
+                tạm thời, phần còn lại tiếp tục được giữ cho đến khi có căn cứ xử lý.
               </div>
             </div>
           </div>
