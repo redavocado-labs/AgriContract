@@ -1,13 +1,8 @@
 package com.agricontract.reputation.infrastructure.persistence;
 
 import com.agricontract.reputation.application.port.LockEntryWriter;
-import com.agricontract.reputation.application.exception.ImmutableFactConflictException;
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
-import java.util.UUID;
-import java.util.Optional;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
@@ -34,57 +29,5 @@ public class JdbcLockEntryWriter implements LockEntryWriter {
                 e.repeatMultiplier(), e.trackMultiplier(), e.zeroProgressMultiplier(), e.durationDays(),
                 LocalDateTime.ofInstant(e.decidedAt(), ZoneOffset.UTC),
                 LocalDateTime.ofInstant(e.lockedUntil(), ZoneOffset.UTC));
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.MANDATORY)
-    public List<Existing> findBySourceOrDecision(UUID sourceEventId, UUID remedyDecisionId) {
-        return jdbc.query("""
-                SELECT l.source_event_id, l.remedy_decision_id, l.contract_id, l.user_id, l.penalized_role, l.decided_at,
-                       e.buyer_id, e.seller_id, e.breach_reason_code, e.settled_milestone_count
-                FROM lock_entry l LEFT JOIN remedy_lock_evidence e ON e.remedy_decision_id = l.remedy_decision_id
-                WHERE l.source_event_id = ? OR l.remedy_decision_id = ?
-                """, (rs, n) -> new Existing(UUID.fromString(rs.getString("source_event_id")),
-                UUID.fromString(rs.getString("remedy_decision_id")), UUID.fromString(rs.getString("contract_id")),
-                UUID.fromString(rs.getString("user_id")), rs.getString("penalized_role"),
-                rs.getObject("decided_at", LocalDateTime.class).toInstant(ZoneOffset.UTC),
-                nullableUuid(rs.getString("buyer_id")), nullableUuid(rs.getString("seller_id")),
-                rs.getString("breach_reason_code"), nullableInteger(rs.getString("settled_milestone_count"))),
-                sourceEventId.toString(), remedyDecisionId.toString());
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.MANDATORY)
-    public void recordEvidence(UUID decisionId, UUID buyerId, UUID sellerId, String reason, BigInteger settledMilestones) {
-        var existing = jdbc.query("SELECT buyer_id,seller_id,breach_reason_code,settled_milestone_count FROM remedy_lock_evidence WHERE remedy_decision_id=?",
-                (rs, row) -> List.of(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4)), decisionId.toString());
-        if (existing.isEmpty()) {
-            jdbc.update("INSERT INTO remedy_lock_evidence (remedy_decision_id,buyer_id,seller_id,breach_reason_code,settled_milestone_count) VALUES (?, ?, ?, ?, ?)", decisionId.toString(),
-                    buyerId.toString(), sellerId.toString(), reason, settledMilestones.toString());
-        } else if (existing.size() != 1 || !existing.getFirst().equals(List.of(buyerId.toString(), sellerId.toString(), reason, settledMilestones.toString()))) {
-            throw new ImmutableFactConflictException();
-        }
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.MANDATORY)
-    public Optional<UUID> decisionForEvent(UUID sourceEventId) {
-        return jdbc.query("SELECT remedy_decision_id FROM remedy_event_identity WHERE source_event_id = ?",
-                (rs, n) -> UUID.fromString(rs.getString(1)), sourceEventId.toString()).stream().findFirst();
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.MANDATORY)
-    public void recordEvent(UUID sourceEventId, UUID decisionId) {
-        jdbc.update("INSERT INTO remedy_event_identity (source_event_id, remedy_decision_id) VALUES (?, ?)",
-                sourceEventId.toString(), decisionId.toString());
-    }
-
-    private static UUID nullableUuid(String value) {
-        return value == null ? null : UUID.fromString(value);
-    }
-
-    private static BigInteger nullableInteger(String value) {
-        return value == null ? null : new BigInteger(value);
     }
 }

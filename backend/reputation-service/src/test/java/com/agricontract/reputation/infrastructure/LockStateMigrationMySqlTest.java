@@ -10,10 +10,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import org.flywaydb.core.Flyway;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -23,23 +23,26 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /** Exercises the real V2-to-V3 upgrade on a disposable MySQL database. */
 class LockStateMigrationMySqlTest {
-    static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.0.42")
-            .withDatabaseName("migration_test").withUsername("migration_user").withPassword("migration_password")
-            .withUrlParam("connectionTimeZone", "UTC").withUrlParam("forceConnectionTimeZoneToSession", "true");
+    static MySQLContainer<?> MYSQL;
     static JdbcTemplate jdbc;
 
-    @BeforeAll static void start() {
+    @BeforeEach void start(TestInfo test) {
+        MYSQL = new MySQLContainer<>("mysql:8.0.42")
+                .withDatabaseName("migration_test").withUsername("migration_user").withPassword("migration_password")
+                .withUrlParam("connectionTimeZone", "UTC").withUrlParam("forceConnectionTimeZoneToSession", "true");
         MYSQL.start();
         jdbc = new JdbcTemplate(new DriverManagerDataSource(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword()));
+        if (!test.getTestMethod().orElseThrow().getName().equals("freshDatabaseAppliesExactlyFiveMigrations")) {
+            flyway("2").migrate();
+        }
     }
-    @AfterAll static void stop() { MYSQL.stop(); }
+    @AfterEach void stop() { MYSQL.stop(); }
     static Flyway flyway(String target) {
         var config = Flyway.configure().dataSource(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword())
-                .locations("classpath:db/migration").cleanDisabled(false);
+                .locations("classpath:db/migration");
         if (target != null) config.target(target);
         return config.load();
     }
-    @BeforeEach void before() { flyway(null).clean(); flyway("2").migrate(); }
 
     record Lock(UUID entry, UUID decision, UUID source, UUID user, LocalDateTime until) {}
     Lock insert(UUID user, LocalDateTime until) {
@@ -117,38 +120,34 @@ class LockStateMigrationMySqlTest {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='lock_entry' AND column_name='decided_at'", Integer.class)).isZero();
     }
 
-    @Test void v7AddsDeliveryReceiptsAfterV6() {
-        flyway("6").migrate();
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='processed_event'", Integer.class)).isZero();
-        flyway("7").migrate();
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name IN ('processed_event','remedy_delivery_fingerprint')", Integer.class)).isEqualTo(2);
+    @Test void v5FinalSchemaSupportsUpgradeAndConstraints() {
+        flyway("3").migrate();
         flyway(null).migrate();
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='remedy_lock_evidence' AND column_name='decision_fingerprint'", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForList("SELECT version FROM flyway_schema_history WHERE success=1 ORDER BY installed_rank", String.class))
+                .containsExactly("1", "2", "3", "4", "5");
+        assertThat(jdbc.queryForObject("SELECT COLUMN_TYPE FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='remedy_lock_evidence' AND column_name='settled_milestone_count'", String.class)).isEqualTo("int");
+        assertThat(jdbc.queryForObject("SELECT IS_NULLABLE FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='remedy_lock_evidence' AND column_name='decision_fingerprint'", String.class)).isEqualTo("NO");
+        assertThat(jdbc.queryForObject("SELECT IS_NULLABLE FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='remedy_lock_evidence' AND column_name='breach_reason_code'", String.class)).isEqualTo("YES");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.key_column_usage WHERE table_schema=DATABASE() AND table_name='remedy_lock_evidence' AND referenced_table_name IS NOT NULL", Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name='lock_entry' AND index_name='idx_lock_user_decided'", Integer.class)).isEqualTo(2);
+        for (String table : new String[]{"user_lock_mutex", "remedy_event_identity", "processed_event", "remedy_delivery_fingerprint"}) {
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name=?", Integer.class, table)).isEqualTo(1);
+        }
+        for (String table : new String[]{"lock_entry", "user_lock_state"}) {
+            String column = table.equals("lock_entry") ? "locked_until" : "effective_locked_until";
+            assertThat(jdbc.queryForObject("SELECT COLUMN_TYPE FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name=? AND column_name=?", String.class, table, column)).isEqualTo("datetime(6)");
+        }
+        String decision = UUID.randomUUID().toString();
+        jdbc.update("INSERT INTO remedy_lock_evidence VALUES (?,?,?,NULL,?,?)", decision, UUID.randomUUID().toString(), UUID.randomUUID().toString(), Integer.MAX_VALUE, "a".repeat(64));
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO remedy_lock_evidence VALUES (?,?,?,NULL,0,?)", decision, UUID.randomUUID().toString(), UUID.randomUUID().toString(), "a".repeat(64))).hasRootCauseInstanceOf(java.sql.SQLException.class);
+        assertThatThrownBy(() -> jdbc.update("UPDATE remedy_lock_evidence SET settled_milestone_count=-1 WHERE remedy_decision_id=?", decision)).hasRootCauseInstanceOf(java.sql.SQLException.class);
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO remedy_event_identity VALUES (?,?)", UUID.randomUUID().toString(), UUID.randomUUID().toString())).hasRootCauseInstanceOf(java.sql.SQLException.class);
+        jdbc.update("INSERT INTO remedy_event_identity VALUES (?,?)", UUID.randomUUID().toString(), decision);
+        assertThatThrownBy(() -> jdbc.update("UPDATE remedy_lock_evidence SET decision_fingerprint=NULL WHERE remedy_decision_id=?", decision)).hasRootCauseInstanceOf(java.sql.SQLException.class);
     }
 
-    @Test void v7PreservesExistingEvidenceAndAcceptsLargeCounts() {
-        flyway("6").migrate();
-        var decision = UUID.randomUUID();
-        LocalDateTime now = jdbc.queryForObject("SELECT UTC_TIMESTAMP()", LocalDateTime.class);
-        jdbc.update("""
-                INSERT INTO lock_entry (entry_id,source_event_id,remedy_decision_id,contract_id,user_id,penalized_role,
-                repeat_offense_multiplier,track_record_multiplier,zero_progress_multiplier,lock_duration_days,locked_until,decided_at)
-                VALUES (?,?,?,?,?,'BUYER',1,1,1,30,?,?)
-                """, UUID.randomUUID().toString(), UUID.randomUUID().toString(), decision.toString(),
-                UUID.randomUUID().toString(), UUID.randomUUID().toString(), now.plusDays(1), now);
-        jdbc.update("INSERT INTO remedy_lock_evidence VALUES (?,?,?,?,?)", decision.toString(), UUID.randomUUID().toString(),
-                UUID.randomUUID().toString(), "SHORTFALL", 2147483647);
-        flyway("7").migrate();
-        assertThat(jdbc.queryForObject("SELECT settled_milestone_count FROM remedy_lock_evidence WHERE remedy_decision_id=?",
-                String.class, decision.toString())).isEqualTo("2147483647");
-        assertThat(jdbc.queryForObject("SELECT locked_until FROM lock_entry WHERE remedy_decision_id=?",
-                LocalDateTime.class, decision.toString())).isEqualTo(now.plusDays(1));
-        jdbc.update("UPDATE remedy_lock_evidence SET settled_milestone_count='2147483648' WHERE remedy_decision_id=?", decision.toString());
-        assertThatThrownBy(() -> jdbc.update("UPDATE remedy_lock_evidence SET settled_milestone_count='-1' WHERE remedy_decision_id=?",
-                decision.toString())).hasRootCauseInstanceOf(java.sql.SQLException.class)
-                .rootCause().extracting("errorCode").isEqualTo(3819);
-        assertThatThrownBy(() -> flyway(null).migrate()).isInstanceOf(org.flywaydb.core.api.FlywayException.class);
-        assertThat(jdbc.queryForObject("SELECT settled_milestone_count FROM remedy_lock_evidence WHERE remedy_decision_id=?",
-                String.class, decision.toString())).isEqualTo("2147483648");
+    @Test void freshDatabaseAppliesExactlyFiveMigrations() {
+        flyway(null).migrate();
+        assertThat(jdbc.queryForList("SELECT version FROM flyway_schema_history WHERE success=1 ORDER BY installed_rank", String.class)).containsExactly("1", "2", "3", "4", "5");
     }
 }

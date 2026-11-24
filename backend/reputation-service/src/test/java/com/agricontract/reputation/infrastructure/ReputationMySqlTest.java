@@ -65,6 +65,7 @@ class ReputationMySqlTest {
     @Autowired LockEntryWriter lockWriter;
     @Autowired ProcessLockoutUseCase processLockout;
     @Autowired LockHistoryReader lockHistory;
+    @Autowired com.agricontract.reputation.application.port.RemedyDecisionLedger decisionLedger;
     @Autowired LockEventPublisher lockPublisher;
     @Autowired JdbcTemplate runtime;
     @Autowired PlatformTransactionManager transactions;
@@ -87,21 +88,31 @@ class ReputationMySqlTest {
         return new ProcessLockoutCommand(source, decision, id(), buyer, seller, role, reason, eligible,
                 settled, decided, id().toString());
     }
+    static boolean execute(ProcessLockoutUseCase useCase, ProcessLockoutCommand command) {
+        String input = java.util.Arrays.asList(command.remedyDecisionId(), command.contractId(), command.buyerId(),
+                command.sellerId(), command.finalBreachingRole(), command.breachReasonCode(), command.reputationEligible(),
+                command.settledMilestoneCount(), command.decidedAt()).toString();
+        try {
+            String fingerprint = java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+            return useCase.execute(command, fingerprint);
+        } catch (java.security.NoSuchAlgorithmException e) { throw new AssertionError(e); }
+    }
     @Test void productionUseCasePersistsSellerAndDeduplicatesDecision() throws Exception {
         UUID buyer = id(), seller = id();
         Instant decided = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
         var command = remedy(id(), id(), buyer, seller, Role.SELLER, "QUALITY_BELOW_COMMITTED", true, 0, decided);
-        assertThat(processLockout.execute(command)).isTrue();
-        assertThat(processLockout.execute(command)).isFalse();
+        assertThat(execute(processLockout, command)).isTrue();
+        assertThat(execute(processLockout, command)).isFalse();
         var anotherEvent = new ProcessLockoutCommand(id(), command.remedyDecisionId(), command.contractId(),
                 buyer, seller, command.finalBreachingRole(), command.breachReasonCode(), true, 0, decided, command.correlationId());
-        assertThat(processLockout.execute(anotherEvent)).isFalse();
+        assertThat(execute(processLockout, anotherEvent)).isFalse();
         var reusedSource = new ProcessLockoutCommand(anotherEvent.sourceEventId(), id(), command.contractId(),
                 buyer, seller, command.finalBreachingRole(), command.breachReasonCode(), true, 0, decided, command.correlationId());
-        assertThatThrownBy(() -> processLockout.execute(reusedSource)).isInstanceOf(ImmutableFactConflictException.class);
+        assertThatThrownBy(() -> execute(processLockout, reusedSource)).isInstanceOf(ImmutableFactConflictException.class);
         var conflicting = new ProcessLockoutCommand(id(), command.remedyDecisionId(), command.contractId(),
                 buyer, seller, command.finalBreachingRole(), "SHORTFALL", true, 0, decided, command.correlationId());
-        assertThatThrownBy(() -> processLockout.execute(conflicting)).isInstanceOf(ImmutableFactConflictException.class);
+        assertThatThrownBy(() -> execute(processLockout, conflicting)).isInstanceOf(ImmutableFactConflictException.class);
         var row = runtime.queryForMap("SELECT * FROM lock_entry");
         assertThat(row.get("user_id")).isEqualTo(seller.toString());
         assertThat(row.get("penalized_role")).isEqualTo("SELLER");
@@ -116,10 +127,10 @@ class ReputationMySqlTest {
     @Test void productionUseCaseHandlesBuyerIneligibleAndExpired() {
         UUID buyer = id(), seller = id();
         Instant old = Instant.parse("2020-01-01T00:00:00Z");
-        assertThat(processLockout.execute(remedy(id(), id(), buyer, seller, Role.BUYER, "FUNDING_FAILURE", false, 0, old))).isFalse();
-        assertThat(processLockout.execute(remedy(id(), id(), buyer, seller, null, null, false, 0, old))).isFalse();
-        assertThat(processLockout.execute(remedy(id(), id(), buyer, seller, null, "FUNDING_FAILURE", true, 0, old))).isFalse();
-        assertThat(processLockout.execute(remedy(id(), id(), buyer, seller, Role.BUYER, "FUNDING_FAILURE", true, 0, old))).isTrue();
+        assertThat(execute(processLockout, remedy(id(), id(), buyer, seller, Role.BUYER, "FUNDING_FAILURE", false, 0, old))).isFalse();
+        assertThat(execute(processLockout, remedy(id(), id(), buyer, seller, null, null, false, 0, old))).isFalse();
+        assertThat(execute(processLockout, remedy(id(), id(), buyer, seller, null, "FUNDING_FAILURE", true, 0, old))).isFalse();
+        assertThat(execute(processLockout, remedy(id(), id(), buyer, seller, Role.BUYER, "FUNDING_FAILURE", true, 0, old))).isTrue();
         var row = runtime.queryForMap("SELECT * FROM lock_entry");
         assertThat(row.get("user_id")).isEqualTo(buyer.toString());
         assertThat(((Number) row.get("lock_duration_days")).intValue()).isEqualTo(45);
@@ -127,12 +138,32 @@ class ReputationMySqlTest {
         assertThat(runtime.queryForObject("SELECT COUNT(*) FROM event_outbox", Long.class)).isZero();
         assertThat(runtime.queryForObject("SELECT COUNT(*) FROM lock_event_receipt", Long.class)).isZero();
     }
+    @Test void unknownEligibleReasonLogsDecisionAndUsesStrategicPolicy() {
+        var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(ProcessLockoutUseCase.class);
+        var appender = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        appender.start();
+        logger.addAppender(appender);
+        var command = remedy(id(), id(), id(), id(), Role.SELLER, "PRODUCTION_SHOCK_NON_FM", true, 0, Instant.now());
+        try {
+            assertThat(execute(processLockout, command)).isTrue();
+            assertThat(runtime.queryForObject("SELECT lock_duration_days FROM lock_entry", Integer.class)).isEqualTo(45);
+            assertThat(appender.list).anySatisfy(event -> {
+                assertThat(event.getLevel()).isEqualTo(ch.qos.logback.classic.Level.WARN);
+                assertThat(event.getFormattedMessage()).contains("event=reputation_unknown_eligible_breach_reason",
+                        "remedyDecisionId=" + command.remedyDecisionId(), "breachReasonCode=PRODUCTION_SHOCK_NON_FM")
+                        .doesNotContain(command.buyerId().toString(), command.sellerId().toString());
+            });
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+    }
     @Test void productionUseCaseKeepsExistingProjectionForExpiredDecision() {
         UUID buyer = id(), seller = id();
         Instant now = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
-        assertThat(processLockout.execute(remedy(id(), id(), buyer, seller, Role.SELLER, "SHORTFALL", true, 0, now))).isTrue();
+        assertThat(execute(processLockout, remedy(id(), id(), buyer, seller, Role.SELLER, "SHORTFALL", true, 0, now))).isTrue();
         var before = runtime.queryForMap("SELECT * FROM user_lock_state WHERE user_id=?", seller.toString());
-        assertThat(processLockout.execute(remedy(id(), id(), buyer, seller, Role.SELLER, "SHORTFALL", true, 0,
+        assertThat(execute(processLockout, remedy(id(), id(), buyer, seller, Role.SELLER, "SHORTFALL", true, 0,
                 Instant.parse("2020-01-01T00:00:00Z")))).isTrue();
         assertThat(runtime.queryForMap("SELECT * FROM user_lock_state WHERE user_id=?", seller.toString())).isEqualTo(before);
         assertThat(runtime.queryForObject("SELECT COUNT(*) FROM event_outbox", Long.class)).isEqualTo(1);
@@ -141,7 +172,7 @@ class ReputationMySqlTest {
     @Test void productionUseCasePreservesExpiryMicroseconds() {
         Instant decided = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS).plusNanos(123456000);
         var command = remedy(id(), id(), id(), id(), Role.SELLER, "SHORTFALL", true, 0, decided);
-        assertThat(processLockout.execute(command)).isTrue();
+        assertThat(execute(processLockout, command)).isTrue();
         LocalDateTime expected = LocalDateTime.ofInstant(decided.plusSeconds(3 * 86400L), ZoneOffset.UTC);
         assertThat(runtime.queryForObject("SELECT locked_until FROM lock_entry", LocalDateTime.class)).isEqualTo(expected);
         assertThat(runtime.queryForObject("SELECT effective_locked_until FROM user_lock_state", LocalDateTime.class)).isEqualTo(expected);
@@ -153,7 +184,7 @@ class ReputationMySqlTest {
             ADMIN.update("INSERT INTO completed_contract_fact VALUES (?,?,?,?,?)", id().toString(), id().toString(),
                     seller.toString(), LocalDateTime.ofInstant(decided.minusSeconds(60 + i), ZoneOffset.UTC), id().toString());
         }
-        assertThat(processLockout.execute(remedy(id(), id(), id(), seller, Role.SELLER, "SHORTFALL", true, 0, decided))).isTrue();
+        assertThat(execute(processLockout, remedy(id(), id(), id(), seller, Role.SELLER, "SHORTFALL", true, 0, decided))).isTrue();
         var row = runtime.queryForMap("SELECT * FROM lock_entry");
         assertThat((BigDecimal) row.get("track_record_multiplier")).isEqualByComparingTo("0.7");
         assertThat(((Number) row.get("lock_duration_days")).intValue()).isEqualTo(3);
@@ -161,8 +192,8 @@ class ReputationMySqlTest {
     @Test void productionUseCasePublishesEffectiveMaximumForOverlappingLocks() throws Exception {
         UUID buyer = id(), seller = id();
         Instant decided = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS).minusSeconds(2);
-        assertThat(processLockout.execute(remedy(id(), id(), buyer, seller, Role.SELLER, "SIDE_SELLING", true, 0, decided))).isTrue();
-        assertThat(processLockout.execute(remedy(id(), id(), buyer, seller, Role.SELLER, "SHORTFALL", true, 1, decided.plusSeconds(1)))).isTrue();
+        assertThat(execute(processLockout, remedy(id(), id(), buyer, seller, Role.SELLER, "SIDE_SELLING", true, 0, decided))).isTrue();
+        assertThat(execute(processLockout, remedy(id(), id(), buyer, seller, Role.SELLER, "SHORTFALL", true, 1, decided.plusSeconds(1)))).isTrue();
         var envelopes = runtime.queryForList("SELECT envelope FROM event_outbox ORDER BY id", String.class);
         assertThat(envelopes).hasSize(2);
         var first = json.readTree(envelopes.get(0));
@@ -178,17 +209,17 @@ class ReputationMySqlTest {
         };
         var boundary = new LockEventLifecycle(new SpringTransactionRunner(transactions),
                 new JdbcLockStateStore(runtime), failsAfterWrite);
-        var useCase = new ProcessLockoutUseCase(boundary, lockHistory, lockWriter);
+        var useCase = new ProcessLockoutUseCase(boundary, lockHistory, lockWriter, decisionLedger, new SpringTransactionRunner(transactions));
         var command = remedy(id(), id(), id(), id(), Role.BUYER, "FUNDING_FAILURE", true, 1, Instant.now());
-        assertThatThrownBy(() -> useCase.execute(command)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> execute(useCase, command)).isInstanceOf(IllegalStateException.class);
         for (String table : List.of("remedy_event_identity", "remedy_lock_evidence", "lock_entry", "user_lock_state", "lock_event_receipt", "event_outbox")) {
             assertThat(runtime.queryForObject("SELECT COUNT(*) FROM " + table, Long.class)).as(table).isZero();
         }
-        assertThat(processLockout.execute(command)).isTrue();
+        assertThat(execute(processLockout, command)).isTrue();
     }
     @Test void productionUseCaseSerializesDuplicateDeliveries() throws Exception {
         var command = remedy(id(), id(), id(), id(), Role.BUYER, "FUNDING_FAILURE", true, 1, Instant.now());
-        assertThat(race(() -> processLockout.execute(command), () -> processLockout.execute(command)))
+        assertThat(race(() -> execute(processLockout, command), () -> execute(processLockout, command)))
                 .containsExactlyInAnyOrder(true, false);
         assertThat(runtime.queryForObject("SELECT COUNT(*) FROM lock_entry", Long.class)).isEqualTo(1);
         assertThat(runtime.queryForObject("SELECT COUNT(*) FROM event_outbox", Long.class)).isEqualTo(1);
@@ -213,11 +244,11 @@ class ReputationMySqlTest {
         };
         var boundary = new LockEventLifecycle(new SpringTransactionRunner(transactions),
                 new JdbcLockStateStore(runtime), blockingPublisher);
-        var firstUseCase = new ProcessLockoutUseCase(boundary, lockHistory, lockWriter);
+        var firstUseCase = new ProcessLockoutUseCase(boundary, lockHistory, lockWriter, decisionLedger, new SpringTransactionRunner(transactions));
         try (var pool = Executors.newFixedThreadPool(2)) {
-            var a = pool.submit(() -> firstUseCase.execute(first));
+            var a = pool.submit(() -> execute(firstUseCase, first));
             assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
-            var b = pool.submit(() -> processLockout.execute(second));
+            var b = pool.submit(() -> execute(processLockout, second));
             try {
                 assertThatThrownBy(() -> b.get(200, TimeUnit.MILLISECONDS)).isInstanceOf(TimeoutException.class);
             } finally {
@@ -343,7 +374,7 @@ class ReputationMySqlTest {
         for (String sql : List.of("INSERT INTO lock_override_event (event_id) VALUES ('x')", "SELECT * FROM flyway_schema_history")) {
             assertPermissionDenied(sql);
         }
-        assertThat(ADMIN.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE success=1", Integer.class)).isEqualTo(8);
+        assertThat(ADMIN.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE success=1", Integer.class)).isEqualTo(5);
         assertThat(runtime.queryForObject("SELECT CURRENT_USER()", String.class)).isEqualTo("reputation_runtime@%");
     }
     @Test void runtimeCanInsertLockButCannotChangeTheLedger() {

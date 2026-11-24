@@ -7,13 +7,13 @@ import com.agricontract.reputation.application.dto.ProcessLockoutCommand;
 import com.agricontract.reputation.application.exception.ImmutableFactConflictException;
 import com.agricontract.reputation.application.port.TransactionRunner;
 import com.agricontract.reputation.application.usecase.ProcessLockoutUseCase;
+import com.agricontract.reputation.infrastructure.persistence.RemedyDeliveryReceipt;
 import com.agricontract.reputation.domain.RemedyAttribution.Role;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.math.BigInteger;
 import java.math.BigDecimal;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -73,10 +73,7 @@ public class RemedyFinalizedConsumer {
             String decisionFingerprint = decisionFingerprint(message.getBody(), envelope, command.settledMilestoneCount());
             transactions.inTransaction(() -> {
                 if (receipts.claim(envelope.eventId(), fingerprint)) {
-                    if (receipts.claimDecision(command, decisionFingerprint)) {
-                        process.execute(command);
-                    }
-                    receipts.rememberEvent(envelope.eventId(), command.remedyDecisionId());
+                    process.execute(command, decisionFingerprint);
                 }
             });
         } catch (InvalidEventPayloadException | ImmutableFactConflictException e) {
@@ -101,19 +98,17 @@ public class RemedyFinalizedConsumer {
         }
     }
 
-    private static BigInteger milestoneCount(byte[] body) {
+    private static int milestoneCount(byte[] body) {
         try {
             var count = CANONICAL.readTree(body).path("payload").path("settledMilestoneCount");
-            if (!count.isNumber()) throw invalid();
-            var result = count.decimalValue().toBigIntegerExact();
-            if (result.signum() < 0) throw invalid();
-            return result;
-        } catch (java.io.IOException | ArithmeticException e) {
+            if (!count.isIntegralNumber() || !count.canConvertToInt() || count.intValue() < 0) throw invalid();
+            return count.intValue();
+        } catch (java.io.IOException e) {
             throw invalid();
         }
     }
 
-    ProcessLockoutCommand command(EventEnvelope envelope, BigInteger count) {
+    ProcessLockoutCommand command(EventEnvelope envelope, int count) {
         Map<String, Object> p = envelope.payload();
         if (!p.keySet().equals(FIELDS)) throw invalid();
         UUID decision = id(p.get("remedyDecisionId"));
@@ -184,7 +179,7 @@ public class RemedyFinalizedConsumer {
     /** All frozen payload fields and occurredAt define the decision; envelope delivery metadata does not.
      * Arrays retain their contract List order, nulls remain explicit, and UUIDs and numbers are normalized.
      */
-    private static String decisionFingerprint(byte[] body, EventEnvelope envelope, BigInteger count) {
+    private static String decisionFingerprint(byte[] body, EventEnvelope envelope, int count) {
         try {
             var payload = (ObjectNode) CANONICAL.readTree(body).get("payload");
             for (String field : List.of("remedyDecisionId", "attributionDecisionId", "breachCaseId", "contractId", "buyerId", "sellerId")) {

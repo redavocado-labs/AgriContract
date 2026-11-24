@@ -1,11 +1,8 @@
 package com.agricontract.reputation.application.port;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.time.Instant;
 import java.util.UUID;
-import java.util.List;
-import java.util.Optional;
 
 /** Insert-only lock evidence; the caller owns the surrounding transaction. */
 public interface LockEntryWriter {
@@ -15,13 +12,4 @@ public interface LockEntryWriter {
 
     void insert(Entry entry);
 
-    record Existing(UUID sourceEventId, UUID remedyDecisionId, UUID contractId, UUID userId,
-                    String penalizedRole, Instant decidedAt, UUID buyerId, UUID sellerId,
-                    String reason, BigInteger settledMilestones) { }
-
-    List<Existing> findBySourceOrDecision(UUID sourceEventId, UUID remedyDecisionId);
-
-    void recordEvidence(UUID decisionId, UUID buyerId, UUID sellerId, String reason, BigInteger settledMilestones);
-    Optional<UUID> decisionForEvent(UUID sourceEventId);
-    void recordEvent(UUID sourceEventId, UUID decisionId);
 }
