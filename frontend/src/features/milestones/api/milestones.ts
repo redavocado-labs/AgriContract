@@ -61,14 +61,14 @@ const disputeExit = z.object({
   sellerPositionRefundAmount: positionAmount.optional(),
   concedeAllowed: z.boolean(),
   settlementAllowed: z.boolean(),
-  openProposal: z.object({
-    agreedSellerEntitlementAmount: positionAmount,
-    agreedBuyerRefundAmount: positionAmount.optional(),
-    proposedByRole: partyRole,
-    proposedAt: instant,
-  }).nullable(),
-  freeCancelUntil: instant.nullish(),
-  inspectionFeePartyLabel: z.string().nullish(),
+  openProposal: z
+    .object({
+      agreedSellerEntitlementAmount: positionAmount,
+      agreedBuyerRefundAmount: positionAmount.optional(),
+      proposedByRole: partyRole,
+      proposedAt: instant,
+    })
+    .nullable(),
 })
 export const milestoneDetailSchema = z.object({
   contractId: z.string().min(1),
@@ -327,7 +327,11 @@ export function contestBreachCase(
   )
 }
 
-export function addContestEvidence(breach: BreachCase, fileIds: string[], key: string) {
+export function addContestEvidence(
+  breach: BreachCase,
+  fileIds: string[],
+  key: string
+) {
   return command(
     `${breachPath(breach.contractId, breach.breachCaseId)}/contest/evidence`,
     { fileIds },
@@ -336,8 +340,7 @@ export function addContestEvidence(breach: BreachCase, fileIds: string[], key: s
 }
 
 export type DisputeExitIntent =
-  | { kind: "concede" }
-  | { kind: "settlement"; amount: string }
+  { kind: "concede" } | { kind: "settlement"; amount: string }
 
 const disputePath = (detail: MilestoneDetail) =>
   `${base(detail.contractId, detail.milestone.milestoneId)}/dispute`
@@ -353,14 +356,18 @@ export async function initiateDisputeExit(
     {
       consentStatementVersion: consent.statementVersion,
       presentedContentHash: consent.presentedContentHash,
-      ...(intent.kind === "settlement" && { agreedSellerEntitlementAmount: intent.amount }),
+      ...(intent.kind === "settlement" && {
+        agreedSellerEntitlementAmount: intent.amount,
+      }),
     },
     { headers: { "Idempotency-Key": key } }
   )
-  return z.object({
-    otpId: z.uuid(),
-    expiresAt: z.iso.datetime({ offset: true }),
-  }).parse(data)
+  return z
+    .object({
+      otpId: z.uuid(),
+      expiresAt: z.iso.datetime({ offset: true }),
+    })
+    .parse(data)
 }
 
 export function verifyDisputeExit(
@@ -380,10 +387,16 @@ export function verifyDisputeExit(
   )
 }
 
-export async function endSettlementProposal(detail: MilestoneDetail, key: string) {
-  const { status } = await apiClient.delete(`${disputePath(detail)}/settlement`, {
-    headers: { "Idempotency-Key": key },
-  })
+export async function endSettlementProposal(
+  detail: MilestoneDetail,
+  key: string
+) {
+  const { status } = await apiClient.delete(
+    `${disputePath(detail)}/settlement`,
+    {
+      headers: { "Idempotency-Key": key },
+    }
+  )
   if (status !== 204) throw new Error("Chưa nhận được xác nhận từ máy chủ.")
 }
 

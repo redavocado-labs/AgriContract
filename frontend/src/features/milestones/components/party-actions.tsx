@@ -451,7 +451,13 @@ export function BuyerDecisionPanel({
         : null
   const hash = useConsentHash(parts)
   async function submit() {
-    if (!parts || !accepted || closed || (mode === "confirm" && inspectionPending)) return
+    if (
+      !parts ||
+      !accepted ||
+      closed ||
+      (mode === "confirm" && inspectionPending)
+    )
+      return
     const consent = await milestoneConsent(parts)
     const ok = await command.run(consent.presentedContentHash, (key) =>
       parts.action === "CONFIRM_CLEAN_RECEIPT"
@@ -506,13 +512,15 @@ export function BuyerDecisionPanel({
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2">
-            {!inspectionPending && <ChoiceCard
-              icon="check_circle"
-              title="Hàng đạt, xác nhận đúng"
-              text="Đợt được tất toán ngay theo khối lượng tính tiền."
-              selected={mode === "confirm"}
-              onClick={() => choose("confirm")}
-            />}
+            {!inspectionPending && (
+              <ChoiceCard
+                icon="check_circle"
+                title="Hàng đạt, xác nhận đúng"
+                text="Đợt được tất toán ngay theo khối lượng tính tiền."
+                selected={mode === "confirm"}
+                onClick={() => choose("confirm")}
+              />
+            )}
             <ChoiceCard
               icon="flag"
               title="Báo vấn đề"
