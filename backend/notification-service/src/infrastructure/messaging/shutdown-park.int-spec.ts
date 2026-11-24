@@ -28,6 +28,7 @@ import {
   NotifyEscrowLegAlertUseCase,
   NotifyEscrowRemedyLegAlertUseCase,
   NotifyEscrowRemedyRejectedUseCase,
+  NotifyMilestoneFundingStatusUseCase,
   NotifyContractAnchorUseCase,
 } from '../../application/use-cases';
 import { validate } from '../../config/env.validation';
@@ -140,6 +141,7 @@ describe('shutdown park on real MySQL', () => {
         sender,
         'ops@agricontract.test',
       ),
+      milestoneFundingStatus: new NotifyMilestoneFundingStatusUseCase(sender),
     });
     const consumer = new NotificationEventConsumer(amqp, routes, commands);
     await consumer.onModuleInit();

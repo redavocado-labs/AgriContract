@@ -19,6 +19,7 @@ import {
   NotifyEscrowRemedyRejectedUseCase,
   NotifyLevel15AssignmentWaitingUseCase,
   NotifyLevel15InspectorAssignmentUseCase,
+  NotifyMilestoneFundingStatusUseCase,
   NotifyUserKycResultUseCase,
   NotifyUserLockChangedUseCase,
 } from './application/use-cases';
@@ -95,6 +96,7 @@ const USE_CASES = {
     useCaseOf(NotifyActivationCancelRequestedUseCase),
     useCaseOf(NotifyContractActivationFailedUseCase),
     useCaseOf(NotifyContractTerminatedUseCase),
+    useCaseOf(NotifyMilestoneFundingStatusUseCase),
     useCaseOf(NotifyUserKycResultUseCase),
     useCaseOf(NotifyUserLockChangedUseCase),
     useCaseOf(NotifyLevel15InspectorAssignmentUseCase),
@@ -176,6 +178,7 @@ const USE_CASES = {
         NotifyEscrowLegAlertUseCase,
         NotifyEscrowRemedyLegAlertUseCase,
         NotifyEscrowRemedyRejectedUseCase,
+        NotifyMilestoneFundingStatusUseCase,
       ],
       useFactory: (
         contractAnchor: NotifyContractAnchorUseCase,
@@ -189,6 +192,7 @@ const USE_CASES = {
         escrowLegAlert: NotifyEscrowLegAlertUseCase,
         escrowRemedyLegAlert: NotifyEscrowRemedyLegAlertUseCase,
         escrowRemedyRejected: NotifyEscrowRemedyRejectedUseCase,
+        milestoneFundingStatus: NotifyMilestoneFundingStatusUseCase,
       ) =>
         commandRoutes({
           contractAnchor,
@@ -202,6 +206,7 @@ const USE_CASES = {
           escrowLegAlert,
           escrowRemedyLegAlert,
           escrowRemedyRejected,
+          milestoneFundingStatus,
         }),
     },
     {

@@ -54,6 +54,24 @@ export const COMMAND_KINDS = {
     notificationType: 'USER_LOCK_CHANGED',
     templateVersion: 'user-lock-changed/v1',
   },
+  // notification.milestone_funding_status_requested (milestone-escrow §6b):
+  // one kind per statusType, each its own template (design §4), to every
+  // recipient the command names.
+  milestoneFundingReminder: {
+    eventType: 'notification.milestone_funding_status_requested',
+    notificationType: 'MILESTONE_FUNDING_REMINDER',
+    templateVersion: 'milestone-funding-reminder/v1',
+  },
+  milestoneFundingFailed: {
+    eventType: 'notification.milestone_funding_status_requested',
+    notificationType: 'MILESTONE_FUNDING_FAILED',
+    templateVersion: 'milestone-funding-failed/v1',
+  },
+  milestoneFundingCureDeadline: {
+    eventType: 'notification.milestone_funding_status_requested',
+    notificationType: 'MILESTONE_FUNDING_CURE_DEADLINE',
+    templateVersion: 'milestone-funding-cure-deadline/v1',
+  },
   // notification.level1_5_assignment_waiting_requested (D49): one kind per
   // stage, each its own template, all to the configured operator address.
   // Every stage is a new command with its own eventId, so the kinds do not

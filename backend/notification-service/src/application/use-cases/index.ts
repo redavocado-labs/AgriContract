@@ -14,3 +14,4 @@ export { NotifyLevel15InspectorAssignmentUseCase } from './notify-level15-inspec
 export { NotifyEscrowLegAlertUseCase } from './notify-escrow-leg-alert.use-case';
 export { NotifyEscrowRemedyLegAlertUseCase } from './notify-escrow-remedy-leg-alert.use-case';
 export { NotifyEscrowRemedyRejectedUseCase } from './notify-escrow-remedy-rejected.use-case';
+export { NotifyMilestoneFundingStatusUseCase } from './notify-milestone-funding-status.use-case';
