@@ -140,7 +140,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ImportAutoConfiguration({JacksonAutoConfiguration.class, EventingAutoConfiguration.class})
-@Import({com.agricontract.contract.application.service.ContractCompletion.class, BusinessCalendarConfiguration.class, SpringTransactionRunner.class, MilestoneFunding.class,
+@Import({com.agricontract.contract.application.service.MilestoneSummaries.class, com.agricontract.contract.infrastructure.persistence.remedy.JdbcRemedyDecisionRepository.class, com.agricontract.contract.application.service.ContractCompletion.class, BusinessCalendarConfiguration.class, SpringTransactionRunner.class, MilestoneFunding.class,
         JdbcMilestoneRepository.class, JdbcInspectionReportRepository.class, JdbcBreachCaseRepository.class,
         ReviewBreachCaseUseCase.class, ResolveBreachCaseUseCase.class, JdbcRemedyDecisionRepository.class,
         RemedySettlement.class, FlagMilestoneUseCase.class, RespondToMilestoneFlagUseCase.class,
@@ -271,9 +271,22 @@ class DisputeExitIntegrationTest {
         assertThat(before.disputeExit()).isNotNull();
         assertThat(before.disputeExit().buyerPositionAmount()).isEqualTo("147000000.00");
         assertThat(before.disputeExit().sellerPositionAmount()).isEqualTo("150000000.00");
+        assertThat(before.disputeExit().buyerPositionRefundAmount()).as("D99").isEqualTo("3000000.00");
+        assertThat(before.disputeExit().sellerPositionRefundAmount()).as("D99").isEqualTo("0.00");
         assertThat(before.disputeExit().settlementAllowed()).isFalse();
+        assertThat(before.remedyDecision()).isNull();
 
         concede(first, SELLER);
+
+        var decided = detailOf(first, BUYER, "BUYER").remedyDecision();
+        assertThat(decided).as("D99: the milestone carries its decision").isNotNull();
+        assertThat(decided.status()).isEqualTo("FINALIZED");
+        assertThat(decided.decisionSource()).isEqualTo("MUTUAL");
+        assertThat(decided.finalBreachingRole()).isNull();
+        assertThat(decided.penaltyDebtAmount()).isEqualTo("0.00");
+        assertThat(decided.remedyLegs()).extracting(l -> l.remedyType(), l -> l.amount()).containsExactly(
+                org.assertj.core.groups.Tuple.tuple("PAYMENT_SETTLEMENT", "147000000.00"),
+                org.assertj.core.groups.Tuple.tuple("PAYMENT_REFUND", "3000000.00"));
 
         Milestone settled = reload(first);
         assertThat(settled.status()).isEqualTo(MilestoneStatus.SETTLED);
@@ -340,6 +353,8 @@ class DisputeExitIntegrationTest {
         assertThat(openProposals(first)).isEqualTo(1);
         assertThat(detailOf(first, SELLER, "SELLER").disputeExit().openProposal().proposedByRole())
                 .isEqualTo("BUYER");
+        assertThat(detailOf(first, SELLER, "SELLER").disputeExit().openProposal().agreedBuyerRefundAmount())
+                .as("D99: batch 150,000,000 minus the agreed 100,000,000").isEqualTo("50000000.00");
 
         concede(first, SELLER);
 
