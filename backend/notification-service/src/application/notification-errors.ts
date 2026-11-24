@@ -116,6 +116,21 @@ export class DocumentFileMismatchError extends NotificationError {
   }
 }
 
+/**
+ * Not retryable: `otsProof` is not a usable proof (empty, not base64, or
+ * over the size cap), so there is nothing to attach. The route dead-letters
+ * it at once, unsent: a settlement email without its proof would not be
+ * the evidence email the design promises. `reason` never quotes the value.
+ */
+export class OtsProofInvalidError extends NotificationError {
+  constructor(
+    readonly eventId: string,
+    readonly reason: string,
+  ) {
+    super(`Event ${eventId}: otsProof is not a usable proof (${reason})`);
+  }
+}
+
 const SAFE_CODE = /^[A-Za-z][A-Za-z0-9_/.-]{0,63}$/;
 
 /**
