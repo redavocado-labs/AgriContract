@@ -1,6 +1,6 @@
 import type { RemedyDecision } from "../api/remedy"
 import { DataTable, type DataTableColumn } from "@/shared/ui/data-table"
-import { KeyValueList } from "@/shared/ui/key-value-list"
+import { KeyValueList, type KeyValueItem } from "@/shared/ui/key-value-list"
 import { MoneyDisplay } from "@/shared/ui/money-display"
 import { RecordCard } from "@/shared/ui/record-card"
 import { StatusBadge } from "@/shared/ui/status-badge"
@@ -53,6 +53,41 @@ export function RemedyDecisionDetails({
   title?: string
 }) {
   const pending = decision.status === "PENDING_CONTEST"
+  const items: KeyValueItem[] = [
+    ...(decision.finalBreachingRole
+      ? [
+          {
+            label: "Bên bị quy lỗi",
+            value: roleLabel[decision.finalBreachingRole],
+          },
+        ]
+      : []),
+    ...(decision.inspectionFeeParty
+      ? [
+          {
+            label: "Bên chịu phí giám định",
+            value: roleLabel[decision.inspectionFeeParty],
+          },
+        ]
+      : []),
+    ...(/[1-9]/.test(decision.penaltyAmount)
+      ? [
+          {
+            label: "Tiền phạt",
+            value: <MoneyDisplay amount={decision.penaltyAmount} />,
+          },
+        ]
+      : []),
+    ...(/[1-9]/.test(decision.penaltyDebtAmount)
+      ? [
+          {
+            label: "Khoản phạt chưa thu được, dùng làm bằng chứng",
+            stackOnNarrow: true,
+            value: <MoneyDisplay amount={decision.penaltyDebtAmount} />,
+          },
+        ]
+      : []),
+  ]
   return (
     <section className="space-y-4 rounded-md border border-border bg-surface p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -61,42 +96,7 @@ export function RemedyDecisionDetails({
           {pending ? "Chờ hết hạn phản đối" : "Đã chốt quyết định"}
         </StatusBadge>
       </div>
-      <KeyValueList
-        items={[
-          ...(decision.finalBreachingRole
-            ? [
-                {
-                  label: "Bên bị quy lỗi",
-                  value: roleLabel[decision.finalBreachingRole],
-                },
-              ]
-            : []),
-          ...(decision.inspectionFeeParty
-            ? [
-                {
-                  label: "Bên chịu phí giám định",
-                  value: roleLabel[decision.inspectionFeeParty],
-                },
-              ]
-            : []),
-          ...(/[1-9]/.test(decision.penaltyAmount)
-            ? [
-                {
-                  label: "Tiền phạt",
-                  value: <MoneyDisplay amount={decision.penaltyAmount} />,
-                },
-              ]
-            : []),
-          ...(/[1-9]/.test(decision.penaltyDebtAmount)
-            ? [
-                {
-                  label: "Khoản phạt chưa thu được, dùng làm bằng chứng",
-                  value: <MoneyDisplay amount={decision.penaltyDebtAmount} />,
-                },
-              ]
-            : []),
-        ]}
-      />
+      {items.length > 0 && <KeyValueList items={items} />}
       {decision.remedyLegs.length > 0 && (
         <>
           <DataTable

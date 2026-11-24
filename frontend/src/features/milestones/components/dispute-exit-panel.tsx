@@ -88,10 +88,12 @@ export function DisputeExitPanel({
         items={[
           {
             label: "Tiền bên bán nhận theo vị thế bên mua",
+            stackOnNarrow: true,
             value: <MoneyDisplay amount={exit.buyerPositionAmount} />,
           },
           {
             label: "Tiền bên bán nhận theo vị thế bên bán",
+            stackOnNarrow: true,
             value: <MoneyDisplay amount={exit.sellerPositionAmount} />,
           },
         ]}
@@ -105,6 +107,7 @@ export function DisputeExitPanel({
             items={[
               {
                 label: "Bên bán nhận",
+                stackOnNarrow: true,
                 value: (
                   <MoneyDisplay
                     amount={proposal.agreedSellerEntitlementAmount}
@@ -115,6 +118,7 @@ export function DisputeExitPanel({
                 ? [
                     {
                       label: "Bên mua được hoàn",
+                      stackOnNarrow: true,
                       value: (
                         <MoneyDisplay
                           amount={proposal.agreedBuyerRefundAmount}
@@ -123,7 +127,11 @@ export function DisputeExitPanel({
                     },
                   ]
                 : []),
-              { label: "Đề xuất lúc", value: vietnamTime(proposal.proposedAt) },
+              {
+                label: "Đề xuất lúc",
+                stackOnNarrow: true,
+                value: vietnamTime(proposal.proposedAt),
+              },
             ]}
           />
           <Button

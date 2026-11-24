@@ -190,20 +190,36 @@ function Value({ field, value }: { field: string; value: unknown }) {
   if (typeof value === "boolean") return <span>{value ? "Có" : "Không"}</span>
   if (typeof value === "string" && /Date|Deadline$/.test(field))
     return <span>{vietnamTime(value)}</span>
-  return <span>{values[String(value)] ?? String(value)}</span>
+  return (
+    <span className="[overflow-wrap:anywhere]">
+      {values[String(value)] ?? String(value)}
+    </span>
+  )
 }
 export function ContractTerms({ contract }: { contract: Contract }) {
   return (
     <section className="space-y-4" aria-label="Điều khoản hợp đồng">
       <h2 className="text-lg">Điều khoản hiện hành</h2>
       <KeyValueList
-        className="[&>div]:flex-col [&>div]:items-start [&>div]:gap-2 sm:[&>div]:flex-row [&>div>span]:min-w-0 [&>div>span]:break-all"
         items={[
-          { label: "Bên mua", value: contract.buyerName ?? contract.buyerId },
-          { label: "Bên bán", value: contract.sellerName ?? contract.sellerId },
-          { label: "Mã nguồn hàng", value: contract.listingId },
+          {
+            label: "Bên mua",
+            stackOnNarrow: true,
+            value: contract.buyerName ?? contract.buyerId,
+          },
+          {
+            label: "Bên bán",
+            stackOnNarrow: true,
+            value: contract.sellerName ?? contract.sellerId,
+          },
+          {
+            label: "Mã nguồn hàng",
+            stackOnNarrow: true,
+            value: contract.listingId,
+          },
           {
             label: "Khối lượng đã giữ (kg)",
+            stackOnNarrow: true,
             value: contract.reservedQuantity ?? "Chưa được cung cấp",
           },
         ]}

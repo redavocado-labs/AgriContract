@@ -64,6 +64,7 @@ function RetryForm({ initialId }: { initialId: string }) {
         </p>
         <TextInput
           id="remedy-contract-id"
+          className="font-mono text-[11px] min-[360px]:text-sm"
           label="Mã hợp đồng"
           value={id}
           required
