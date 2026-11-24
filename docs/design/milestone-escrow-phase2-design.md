@@ -595,6 +595,13 @@ Sai lúc → 409 `DISPUTE_EXIT_NOT_ALLOWED`. Vị thế khi đợt `AWAITING_SEL
 
 **Read model (D92).** `MilestoneDetailResponse.disputeExit` (null khi đợt không ở lúc nào trong bảng "Khi nào mở"): `buyerPositionAmount`, `sellerPositionAmount` (chuỗi tiền, server tính), `concedeAllowed`, `settlementAllowed`, `openProposal` (`agreedSellerEntitlementAmount`, `proposedByRole`, `proposedAt`, hoặc null). FE không tự tính khoảng.
 
+**Bổ sung read model (24/11/2026, D99) — để FE BF-04 chạy trên BE thật:**
+- `disputeExit` trả kèm số hoàn cho buyer của từng vị thế (`buyerPositionRefundAmount`, `sellerPositionRefundAmount`) và của đề xuất đang mở (`openProposal.agreedBuyerRefundAmount`), đều = tiền đợt đã khoá − phần seller nhận, server tính. FE điền [X]/[Y] của câu `CONCEDE_DISPUTE`/`SETTLE_DISPUTE` thẳng từ đây, không tự trừ tiền.
+- `getContract` trả **danh sách đợt thật** (`milestones`, như spec đã có) thay cho mảng rỗng.
+- `getContract.terminalDecision` (có từ lúc ra quyết định tiền cuối — hoàn tất #238 hoặc chấm dứt BF-05 — và giữ lại làm bằng chứng): `targetStatus`, `moneyCleared` (= hợp đồng đã ở `targetStatus`, tức escrow đã báo tiền về hết §6.8), `remedyDecision`. FE dùng để hiện "Đang chờ trả cọc/tiền về" hoặc "Đã hoàn tất".
+- `getMilestoneDetail.remedyDecision`: quyết định chế tài hiện hành của đợt (bản mới nhất của vụ vi phạm, không tính bản `SUPERSEDED`) — loại lệnh tiền, số tiền, bên nhận, khoản phạt, nợ phạt (chỉ là bằng chứng, D94), bên chịu phí giám định; `PENDING_CONTEST` trong hạn phản đối rồi `FINALIZED`. Schema chung `RemedyDecisionView`. Không thêm endpoint.
+- Consent milestone giữ nguyên D84/D92: câu cố định trong design, FE hiển thị nguyên văn và tự tính `presentedContentHash`, không có API trả câu consent. Quyền thao tác FE suy từ trạng thái + role + các hạn server trả; server vẫn là bên chặn (409).
+
 **Known limitation:** bị ép ngoài nền tảng (buyer doạ không mua mùa sau để seller concede hoặc thoả thuận) thì hệ thống không phát hiện được, giống `MUTUAL_TERMINATION`. Thiết kế chỉ giới hạn thiệt hại: từ chối là mặc định và an toàn, con số thoả thuận bị kẹp trong khoảng hai vị thế, thoả thuận không có lỗi nên không dùng để hạ uy tín được, OTP + statement để lại bằng chứng seller đã thấy rõ mình đồng ý cái gì.
 
 ## 4. Business Rules — Delta 1 vs Delta 2

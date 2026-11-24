@@ -1529,6 +1529,19 @@ components:
             depositLockFailedAt: {type: string, format: date-time, description: First escrow.deposit_lock_failed of the contract (UTC).}
             oneSidedCancelAllowedFrom: {type: string, format: date-time, description: depositLockFailedAt + 5 business days; from then one party's request is enough. Never moved by RetryDepositLock.}
             cancelRequestedBy: {type: array, uniqueItems: true, maxItems: 2, items: {enum: [BUYER, SELLER]}}
+        terminalDecision:
+          description: >-
+            D99 (24/11/2026). Present from the moment the contract's final money decision is made (normal completion
+            #238, D94; termination in BF-05) and kept afterwards as evidence. The contract stays ACTIVE until escrow
+            reports the contract lock cleared (milestone-escrow 6.8); moneyCleared is true once status equals
+            targetStatus.
+          type: object
+          required: [targetStatus, moneyCleared, remedyDecision]
+          additionalProperties: false
+          properties:
+            targetStatus: {enum: [SETTLED, TERMINATED]}
+            moneyCleared: {type: boolean}
+            remedyDecision: {$ref: '#/components/schemas/RemedyDecisionView'}
     MilestoneResponse:
       type: object
       required: [milestoneId, milestoneIndex, status, fundingStatus, fundingScheduledDate, committedQuantity, batchAmount, effectiveUnitPrice, acceptedPriceAdjustment, expectedDeliveryDate, graceDays, fundingDelayBusinessDays, effectiveDeliveryDeadline]
@@ -1851,6 +1864,32 @@ components:
         penaltyEligible: {type: boolean}
         reputationEligible: {type: boolean}
         remedyLegs: {type: array, items: {$ref: '#/components/schemas/RemedyLeg'}}
+    RemedyDecisionView:
+      type: object
+      description: >-
+        D99. A RemedyDecision as the parties read it on the contract and milestone screens. penaltyDebtAmount is the
+        part of the contractual penalty the seller deposit could not cover: evidence for arbitration or court, never
+        collected by the platform (D94). inspectionFeeParty records who bears the Level 1.5 fee; there is no money leg
+        for it.
+      required: [remedyDecisionId, status, decisionSource, finalBreachingRole, breachReasonCode, qualityDisposition, penaltyAmount, penaltyDebtAmount, inspectionFeeParty, settledMilestoneCount, createdAt, finalizedAt, remedyLegs]
+      additionalProperties: false
+      properties:
+        remedyDecisionId: {type: string, format: uuid}
+        status: {enum: [PENDING_CONTEST, FINALIZED]}
+        decisionSource: {enum: [SYSTEM, ARBITRATOR, INSPECTOR_L1_5, INSPECTOR_L2, MUTUAL]}
+        finalBreachingRole:
+          oneOf: [{enum: [BUYER, SELLER]}, {type: 'null'}]
+        breachReasonCode: {$ref: '#/components/schemas/NullableBreachReasonCode'}
+        qualityDisposition:
+          oneOf: [{enum: [CONFORMING, PARTIALLY_CONFORMING, NON_CONFORMING]}, {type: 'null'}]
+        penaltyAmount: {type: string, pattern: '^[0-9]+\.[0-9]{2}$', maxLength: 19}
+        penaltyDebtAmount: {type: string, pattern: '^[0-9]+\.[0-9]{2}$', maxLength: 19}
+        inspectionFeeParty:
+          oneOf: [{enum: [BUYER, SELLER, SPLIT]}, {type: 'null'}]
+        settledMilestoneCount: {type: integer, minimum: 0}
+        createdAt: {type: string, format: date-time}
+        finalizedAt: {type: [string, 'null'], format: date-time}
+        remedyLegs: {type: array, items: {$ref: '#/components/schemas/RemedyLeg'}}
     RemedyLeg:
       type: object
       required: [remedyLegId, remedyType, fundType, role, amount]
@@ -1996,7 +2035,7 @@ components:
       additionalProperties: false
     MilestoneDetailResponse:
       type: object
-      required: [contractId, milestone, sellerDeclaration, buyerReceipt, flag, evidence, settlement, breachCaseId, disputeExit]
+      required: [contractId, milestone, sellerDeclaration, buyerReceipt, flag, evidence, settlement, breachCaseId, disputeExit, remedyDecision]
       additionalProperties: false
       description: D84. Read model for the BF-04 screens; nested blocks are null until their step has happened.
       properties:
@@ -2018,24 +2057,30 @@ components:
         disputeExit:
           oneOf: [{$ref: '#/components/schemas/MilestoneDisputeExitView'}, {type: 'null'}]
           description: D92. Present while the milestone is at a moment where a concession or a settlement can end the dispute (milestone-escrow 3.4); null otherwise.
+        remedyDecision:
+          oneOf: [{$ref: '#/components/schemas/RemedyDecisionView'}, {type: 'null'}]
+          description: "D99. The milestone's current remedy decision (the latest of its breach case that is not SUPERSEDED: PENDING_CONTEST during the contest window, then FINALIZED); null when the milestone has none."
     MilestoneDisputeExitView:
       type: object
-      required: [buyerPositionAmount, sellerPositionAmount, concedeAllowed, settlementAllowed, openProposal]
+      required: [buyerPositionAmount, buyerPositionRefundAmount, sellerPositionAmount, sellerPositionRefundAmount, concedeAllowed, settlementAllowed, openProposal]
       additionalProperties: false
       description: D92. Server-computed positions (milestone-escrow 3.4 table) bounding a settlement, both ends included; the FE fills the CONCEDE_DISPUTE and SETTLE_DISPUTE statements from them.
       properties:
         buyerPositionAmount: {type: string, pattern: '^[0-9]+\.[0-9]{2}$', description: Seller entitlement in VND under the buyer's position (lower bound).}
+        buyerPositionRefundAmount: {type: string, pattern: '^[0-9]+\.[0-9]{2}$', description: "D99. What goes back to the buyer under the buyer's position (the locked batch minus buyerPositionAmount), server-computed so the FE fills [Y] of CONCEDE_DISPUTE without arithmetic."}
         sellerPositionAmount: {type: string, pattern: '^[0-9]+\.[0-9]{2}$', description: Seller entitlement in VND under the seller's position (upper bound).}
+        sellerPositionRefundAmount: {type: string, pattern: '^[0-9]+\.[0-9]{2}$', description: "D99. What goes back to the buyer under the seller's position (the locked batch minus sellerPositionAmount)."}
         concedeAllowed: {type: boolean}
         settlementAllowed: {type: boolean, description: False while the flag waits for the seller's response.}
         openProposal:
           oneOf: [{$ref: '#/components/schemas/MilestoneSettlementProposalView'}, {type: 'null'}]
     MilestoneSettlementProposalView:
       type: object
-      required: [agreedSellerEntitlementAmount, proposedByRole, proposedAt]
+      required: [agreedSellerEntitlementAmount, agreedBuyerRefundAmount, proposedByRole, proposedAt]
       additionalProperties: false
       properties:
         agreedSellerEntitlementAmount: {type: string, pattern: '^[0-9]+\.[0-9]{2}$'}
+        agreedBuyerRefundAmount: {type: string, pattern: '^[0-9]+\.[0-9]{2}$', description: D99. The locked batch minus agreedSellerEntitlementAmount, server-computed.}
         proposedByRole: {enum: [BUYER, SELLER]}
         proposedAt: {type: string, format: date-time}
     MilestoneSellerDeclarationView:
