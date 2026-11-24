@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import type { Locator, Page, Response } from "@playwright/test"
+import { expect, type Locator, type Page, type Response } from "@playwright/test"
 import {
   buyerId,
   contractDto,
@@ -526,8 +526,8 @@ test("FE-015 an explicit retry after evidence upload 503 keeps the original key 
   assert.equal(keys.length, 1)
   assert.equal(await exactButton(page, review).isDisabled(), true)
   await retry.click()
-  await page.getByText(/Sẵn sàng/).waitFor()
-  assert.equal(await exactButton(page, review).isEnabled(), true)
+  await expect(exactButton(page, review)).toBeEnabled()
+  await page.getByRole("status").filter({ hasText: "Sẵn sàng" }).waitFor()
   assert.equal(keys.length, 2)
   assert.match(keys[0] ?? "", /^[0-9a-f-]{36}$/)
   assert.equal(keys[0], keys[1])
