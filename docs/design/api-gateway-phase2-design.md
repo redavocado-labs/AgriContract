@@ -87,7 +87,8 @@ Public policy match theo **method + exact path pattern**, không dùng prefix r�
 | `/api/v1/admin/prices/**` hoặc `POST /api/v1/prices/manual` | OPERATOR | pricing-service |
 | `/api/v1/admin/analytics/**`, `/api/v1/analytics/**` | ADMIN | analytics-service |
 | `/api/v1/admin/security/**` | ADMIN | bank-service — đọc lịch sử `system_lock`/`used_nonce`, admin security workflow; **không** được emergency unlock |
-| `/api/v1/admin/audit/**` | ADMIN | audit-service — verify status, export bằng chứng per-contract (VIAC/toà), trigger EUDR report. **Mới 17/07/2026** — trước đây `AUDIT_SERVICE_URL` có trong config nhưng không route nào dùng tường minh |
+| `/api/v1/admin/audit/**` | ADMIN | audit-service — verify status, export bằng chứng per-contract (VIAC/toà), trigger EUDR report. **Mới 17/07/2026** — trước đây `AUDIT_SERVICE_URL` có trong config nhưng không route nào dùng tường minh. **24/11/2026 (D97):** gồm nhật ký theo hợp đồng, chuỗi toàn hệ thống và kiểm chuỗi (hash-chain §4.6) |
+| `/api/v1/audit/**` | BUYER, SELLER | audit-service — nhật ký bằng chứng + kiểm chuỗi của hợp đồng mình (hash-chain §4.6, D97, 24/11/2026). Service kiểm người gọi là bên của hợp đồng; ADMIN dùng `/api/v1/admin/audit/**` |
 | Approve replay DLQ nhóm tiền/security/evidence | ADMIN (propose: OPERATOR) | theo service sở hữu queue — governance §8b |
 | `/api/v1/inspector/**` | INSPECTOR | inspection-service |
 
