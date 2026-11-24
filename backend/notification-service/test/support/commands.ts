@@ -8,6 +8,7 @@ import type {
   EscrowRemedyRejectedRequestedCommand,
   Level15AssignmentWaitingRequestedCommand,
   Level15InspectorAssignmentRequestedCommand,
+  MilestoneFundingStatusRequestedCommand,
   NotificationRecipient,
   UserKycResultRequestedCommand,
   UserLockChangedRequestedCommand,
@@ -747,5 +748,78 @@ export function remedyRejectedCommand(): EscrowRemedyRejectedRequestedCommand {
     remedyDecisionId: REMEDY_DECISION_ID,
     reason: REMEDY_REJECTED_REASON,
     rejectedAt: '2026-11-24T08:00:00Z',
+  };
+}
+
+/*
+ * `notification.milestone_funding_status_requested`, as contract-service is
+ * to write it (milestone-escrow §6b): escrow ran out of lock retries for the
+ * second milestone, statusType FUNDING_FAILED, to the buyer, the seller and
+ * an operator, with the end of the cure window and escrow's reason.
+ */
+export const FUNDING_CONTRACT_ID = '4d3c2b1a-0f9e-4d8c-8b7a-6f5e4d3c2b1a';
+export const FUNDING_MILESTONE_ID = '5e4d3c2b-1a0f-4e9d-9c8b-7a6f5e4d3c2b';
+const FUNDING_EVENT_ID = '6f5e4d3c-2b1a-4f0e-8d9c-8b7a6f5e4d3c';
+
+export const FUNDING_RECIPIENTS: NotificationRecipient[] = [
+  {
+    userId: '7a6f5e4d-3c2b-4a1f-9e0d-9c8b7a6f5e4d',
+    email: 'buyer@funding.test',
+    role: 'BUYER',
+  },
+  {
+    userId: '8b7a6f5e-4d3c-4b2a-8f1e-0d9c8b7a6f5e',
+    email: 'seller@funding.test',
+    role: 'SELLER',
+  },
+  { userId: null, email: 'ops@funding.test', role: 'OPERATOR' },
+];
+
+export const FUNDING_REASON = 'Insufficient funds in the buyer account';
+
+export function fundingEnvelope(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    eventId: FUNDING_EVENT_ID,
+    eventType: 'notification.milestone_funding_status_requested',
+    eventVersion: 1,
+    occurredAt: '2026-12-01T02:00:00.125Z',
+    producer: 'contract-service',
+    aggregateId: FUNDING_CONTRACT_ID,
+    correlationId: '9c8b7a6f-5e4d-4c3b-9a2f-1e0d9c8b7a6f',
+    causationId: 'a0d9c8b7-a6f5-4e4d-8c3b-2a1f0e9d8c7b',
+    payload: fundingPayload(),
+    ...overrides,
+  };
+}
+
+export function fundingPayload(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    contractId: FUNDING_CONTRACT_ID,
+    milestoneId: FUNDING_MILESTONE_ID,
+    recipients: FUNDING_RECIPIENTS.map((r) => ({ ...r })),
+    statusType: 'FUNDING_FAILED',
+    deadline: '2026-12-04T16:59:59.999Z',
+    reason: FUNDING_REASON,
+    ...overrides,
+  };
+}
+
+export const fundingBody = (overrides: Record<string, unknown> = {}): Buffer =>
+  Buffer.from(JSON.stringify(fundingEnvelope(overrides)));
+
+/** The command the parser is expected to produce from `fundingEnvelope()`. */
+export function fundingCommand(): MilestoneFundingStatusRequestedCommand {
+  return {
+    eventId: FUNDING_EVENT_ID,
+    contractId: FUNDING_CONTRACT_ID,
+    milestoneId: FUNDING_MILESTONE_ID,
+    recipients: FUNDING_RECIPIENTS.map((r) => ({ ...r })),
+    statusType: 'FUNDING_FAILED',
+    deadline: '2026-12-04T16:59:59.999Z',
+    reason: FUNDING_REASON,
   };
 }
