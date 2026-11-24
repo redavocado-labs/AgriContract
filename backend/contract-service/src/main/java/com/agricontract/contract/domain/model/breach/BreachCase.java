@@ -109,6 +109,9 @@ public record BreachCase(String breachCaseId, String contractId, String mileston
         Objects.requireNonNull(source, "decisionSource");
         Objects.requireNonNull(now, "now");
         Objects.requireNonNull(actorId, "actorId");
+        if (source == DecisionSource.SYSTEM) {
+            throw new IllegalArgumentException("SYSTEM never resolves a breach case");
+        }
         if (status != BreachCaseStatus.UNDER_REVIEW) {
             throw notAllowed("A breach case can only be resolved while UNDER_REVIEW (" + status + ").");
         }

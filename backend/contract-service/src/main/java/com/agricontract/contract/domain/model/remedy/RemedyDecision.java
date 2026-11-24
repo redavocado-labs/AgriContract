@@ -19,7 +19,10 @@ import java.util.Objects;
  * penaltyDebtAmount are evidence of the contractual penalty: the part the seller deposit could not cover is a debt that
  * is not collected, and has no leg.
  *
- * @param breachCaseId          null only for a system-decided remedy (#240, not built yet)
+ * @param breachCaseId          null only for a decision of the system: the normal completion of the contract (#238,
+ *                              D94), later a Basket A attribution (#240)
+ * @param milestoneId           null only for a contract-level decision (normal completion: the deposits), which then
+ *                              has no breach case either
  * @param settledMilestoneCount milestones of the contract already SETTLED when the decision was made (D55)
  * @param inspectionFeeParty    who bears the Level 1.5 inspection fee (D92), null for no fee
  */
@@ -32,7 +35,9 @@ public record RemedyDecision(String remedyDecisionId, String contractId, String 
     public RemedyDecision {
         Objects.requireNonNull(remedyDecisionId, "remedyDecisionId");
         Objects.requireNonNull(contractId, "contractId");
-        Objects.requireNonNull(milestoneId, "milestoneId");
+        if (milestoneId == null && breachCaseId != null) {
+            throw new IllegalArgumentException("a decision on a breach case is a milestone decision");
+        }
         Objects.requireNonNull(status, "status");
         Objects.requireNonNull(decisionSource, "decisionSource");
         Objects.requireNonNull(penaltyAmount, "penaltyAmount");
@@ -56,6 +61,19 @@ public record RemedyDecision(String remedyDecisionId, String contractId, String 
         this(remedyDecisionId, contractId, breachCaseId, milestoneId, status, finalBreachingRole, breachReasonCode,
                 qualityDisposition, decisionSource, penaltyAmount, penaltyDebtAmount, settledMilestoneCount, legs,
                 createdAt, finalizedAt, null);
+    }
+
+    /** A decision on the whole contract (the deposits), not on one milestone: affectedMilestoneIds is empty. */
+    public boolean contractLevel() {
+        return milestoneId == null;
+    }
+
+    /**
+     * attributionDecisionId of remedy.finalized (D94): the breach case id when there is a case (the attribution lives
+     * on the case, #135), else the decision's own id; there is no separate AttributionDecision record.
+     */
+    public String attributionDecisionId() {
+        return breachCaseId != null ? breachCaseId : remedyDecisionId;
     }
 
     /** penaltyEligible of remedy.finalized: only a decision with fault carries a penalty. */

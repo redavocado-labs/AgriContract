@@ -48,6 +48,10 @@ public record BreachCaseResolutionRequest(SignerRole finalBreachingRole, Decisio
             throw new IllegalArgumentException("decisionSource is required");
         }
         DecisionSource decisionSource = enumValue(DecisionSource.class, source, "decisionSource");
+        if (decisionSource == DecisionSource.SYSTEM) {
+            throw new IllegalArgumentException("decisionSource must be one of ARBITRATOR, INSPECTOR_L1_5, INSPECTOR_L2,"
+                    + " MUTUAL");
+        }
         JsonNode refs = root.get("evidenceRefs");
         if (!refs.isArray()) {
             throw new IllegalArgumentException("evidenceRefs must be an array of strings");

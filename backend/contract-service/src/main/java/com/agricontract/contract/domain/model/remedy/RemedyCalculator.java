@@ -138,6 +138,46 @@ public final class RemedyCalculator {
                 now, pending ? null : now, inspectionFeeParty);
     }
 
+    /**
+     * #238, D94: the SYSTEM no-fault decision of a contract whose milestones are all SETTLED. It returns what is left
+     * of each deposit to its owner: PAYMENT_REFUND/BUYER_DEPOSIT to the buyer and PAYMENT_SETTLEMENT/SELLER_DEPOSIT to
+     * the seller, each the signed deposit minus what the earlier decisions forfeited from it; nothing left, no leg.
+     * FINALIZED at once (no fault, no contest window), no breach case, no milestone, no penalty.
+     *
+     * @param buyerDepositForfeited  DEPOSIT_FORFEITURE legs already taken from the buyer deposit
+     * @param sellerDepositForfeited DEPOSIT_FORFEITURE legs already taken from the seller deposit
+     * @param milestoneCount         the contract's milestones, all SETTLED (settledMilestoneCount, D55)
+     */
+    public RemedyDecision normalCompletion(String contractId, ContractTermsSnapshot terms,
+                                           VndAmount buyerDepositForfeited, VndAmount sellerDepositForfeited,
+                                           int milestoneCount, Instant now) {
+        Objects.requireNonNull(contractId, "contractId");
+        Objects.requireNonNull(now, "now");
+        if (milestoneCount <= 0) {
+            throw new IllegalArgumentException("a contract completes only with at least one settled milestone");
+        }
+        VndAmount buyerLeft = left(terms.buyerDepositAmount(), buyerDepositForfeited, "buyer");
+        VndAmount sellerLeft = left(terms.sellerDepositAmount(), sellerDepositForfeited, "seller");
+        List<RemedyLeg> legs = new ArrayList<>();
+        if (buyerLeft.value().signum() > 0) {
+            legs.add(leg(RemedyType.PAYMENT_REFUND, RemedyFundType.BUYER_DEPOSIT, SignerRole.BUYER, buyerLeft));
+        }
+        if (sellerLeft.value().signum() > 0) {
+            legs.add(leg(RemedyType.PAYMENT_SETTLEMENT, RemedyFundType.SELLER_DEPOSIT, SignerRole.SELLER, sellerLeft));
+        }
+        return new RemedyDecision(ids.get(), contractId, null, null, RemedyStatus.FINALIZED, null, null, null,
+                DecisionSource.SYSTEM, zero(), zero(), milestoneCount, legs, now, now, null);
+    }
+
+    private static VndAmount left(VndAmount deposit, VndAmount forfeited, String owner) {
+        BigDecimal left = deposit.value().subtract(forfeited.value());
+        if (left.signum() < 0) {
+            throw new IllegalStateException("The " + owner + " deposit " + deposit.wire() + " lost more ("
+                    + forfeited.wire() + ") than it held");
+        }
+        return new VndAmount(left);
+    }
+
     /** sellerPenaltyRate x effectiveUnitPrice x committedQuantity of the milestone, whole dong, HALF_UP once. */
     static VndAmount penalty(Milestone milestone, ContractTermsSnapshot terms) {
         BigDecimal rate = terms.negotiated().sellerPenaltyRate();
