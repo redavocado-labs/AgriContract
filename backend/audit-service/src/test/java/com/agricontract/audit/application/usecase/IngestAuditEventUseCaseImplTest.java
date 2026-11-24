@@ -77,6 +77,16 @@ class IngestAuditEventUseCaseImplTest {
         }
 
         @Override
+        public List<StoredAuditRecord> findNewestFirst(SubjectType subjectType, int offset, int limit) {
+            return List.of();
+        }
+
+        @Override
+        public long count(SubjectType subjectType) {
+            return 0;
+        }
+
+        @Override
         public Optional<StoredAuditRecord> findBySourceEventId(String sourceEventId) {
             return chained.stream().filter(c -> c.record().sourceEventId().equals(sourceEventId)).findFirst()
                     .map(c -> new StoredAuditRecord(c.record().recordId(), 1, c.recordHash(), c.prevHashGlobal(),
