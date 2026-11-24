@@ -37,10 +37,17 @@ export function useMilestoneDetail(contractId: string, milestoneId: string) {
     refetchInterval: (query) => {
       if (query.state.error) return false
       const now = Date.now()
-      const files = query.state.data?.evidence.filter((file) => file.status === "PROCESSING") ?? []
+      const files =
+        query.state.data?.evidence.filter(
+          (file) => file.status === "PROCESSING"
+        ) ?? []
       for (const file of files)
-        if (!firstSeen.current.has(file.fileId)) firstSeen.current.set(file.fileId, now)
-      return files.some((file) => now - firstSeen.current.get(file.fileId)! < SCAN_BUDGET_MILLISECONDS)
+        if (!firstSeen.current.has(file.fileId))
+          firstSeen.current.set(file.fileId, now)
+      return files.some(
+        (file) =>
+          now - firstSeen.current.get(file.fileId)! < SCAN_BUDGET_MILLISECONDS
+      )
         ? SCAN_POLL_MILLISECONDS
         : false
     },
@@ -51,7 +58,8 @@ export function useMilestoneBreachCase(detail: MilestoneDetail) {
   const userId = useAuthStore((state) => state.userId)
   return useQuery({
     queryKey: ["breach-case", detail.contractId, detail.breachCaseId, userId],
-    queryFn: ({ signal }) => getBreachCase(detail.contractId, detail.breachCaseId!, signal),
+    queryFn: ({ signal }) =>
+      getBreachCase(detail.contractId, detail.breachCaseId!, signal),
     enabled: !!userId && !!detail.breachCaseId,
     retry: false,
   })
@@ -92,10 +100,18 @@ export function useMilestoneCommand(detail: MilestoneDetail) {
       if (refresh)
         await Promise.all([
           cache.invalidateQueries({
-            queryKey: milestoneKey(userId, detail.contractId, detail.milestone.milestoneId),
+            queryKey: milestoneKey(
+              userId,
+              detail.contractId,
+              detail.milestone.milestoneId
+            ),
           }),
-          cache.invalidateQueries({ queryKey: ["contract", userId, detail.contractId] }),
-          cache.invalidateQueries({ queryKey: ["breach-case", detail.contractId] }),
+          cache.invalidateQueries({
+            queryKey: ["contract", userId, detail.contractId],
+          }),
+          cache.invalidateQueries({
+            queryKey: ["breach-case", detail.contractId],
+          }),
           cache.invalidateQueries({ queryKey: ["contracts", userId] }),
         ])
       lock.current = false
