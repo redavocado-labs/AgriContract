@@ -278,6 +278,74 @@ class Level15ReportPersistenceTest {
         }
     }
 
+    @Test void cancellationWhileConfirmationReadsFilePreventsReportAndReceipt() throws Exception {
+        jdbc.update("UPDATE level1_5_inspection_assignment SET free_cancel_until=? WHERE commission_id=?",
+                Timestamp.from(NOW.plusSeconds(3600)), commission);
+        when(users.loadInspectorEmail(actor)).thenReturn("inspector@example.com");
+        var entered = new CountDownLatch(1);
+        var resume = new CountDownLatch(1);
+        var core = new ConfirmLevel15Report(service, lifecycleRepository, lifecycle, runner, canonicalizer,
+                () -> NOW.minusSeconds(60), (assignment, file) -> {
+                    new TransactionTemplate(transactions).executeWithoutResult(s -> fileBindings.bind(file, assignment, NOW));
+                    entered.countDown();
+                    try { if (!resume.await(10, TimeUnit.SECONDS)) throw new IllegalStateException("file wait timed out"); }
+                    catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new IllegalStateException(e); }
+                    return new byte[]{1};
+                }, confirmationWrites, clock, Duration.ofMinutes(30));
+        try (var pool = Executors.newSingleThreadExecutor()) {
+            var submit = pool.submit(() -> {
+                authenticate(actor, "INSPECTOR");
+                try { return core.confirmIdempotent(contract, milestone, id(), "{}", result(), "cancel-first", eligibilityGate, submissionReceipts); }
+                finally { SecurityContextHolder.clearContext(); }
+            });
+            try {
+                assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+                lifecycle.cancel(contract, milestone, NOW, id(), id());
+            } finally { resume.countDown(); }
+            assertThatThrownBy(() -> submit.get(30, TimeUnit.SECONDS)).hasCauseInstanceOf(InspectionAssignmentAccessDeniedException.class);
+        }
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspection_report WHERE l15_commission_id=?", Integer.class, commission)).isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspector_signature WHERE contract_id=?", Integer.class, contract)).isZero();
+        assertThat(submissionReceipts.find(actor, "cancel-first")).isEmpty();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM event_outbox WHERE aggregate_id=? AND event_type='notification.level1_5_inspector_assignment_requested'", Integer.class, milestone)).isEqualTo(1);
+    }
+
+    @Test void confirmationHoldingMilestoneLockMakesConcurrentCancellationNoop() throws Exception {
+        jdbc.update("UPDATE level1_5_inspection_assignment SET free_cancel_until=? WHERE commission_id=?",
+                Timestamp.from(NOW.plusSeconds(3600)), commission);
+        var entered = new CountDownLatch(1);
+        var resume = new CountDownLatch(1);
+        var delayedWrites = new ConfirmLevel15Report.ConfirmationWrites() {
+            public void insertSignature(ReportIdentity i, Instant a, Instant s, String h) {
+                entered.countDown();
+                try { if (!resume.await(10, TimeUnit.SECONDS)) throw new IllegalStateException("confirmation wait timed out"); }
+                catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new IllegalStateException(e); }
+                confirmationWrites.insertSignature(i, a, s, h);
+            }
+            public void appendConfirmed(ReportIdentity i, InspectionSettlementResultV1 r, ReportEvidence e) {
+                confirmationWrites.appendConfirmed(i, r, e);
+            }
+        };
+        var core = confirmation(NOW.minusSeconds(60), delayedWrites);
+        try (var pool = Executors.newFixedThreadPool(2)) {
+            var submit = pool.submit(() -> {
+                authenticate(actor, "INSPECTOR");
+                try { return core.confirmIdempotent(contract, milestone, id(), "{}", result(), "confirm-first", eligibilityGate, submissionReceipts); }
+                finally { SecurityContextHolder.clearContext(); }
+            });
+            assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+            var cancel = pool.submit(() -> lifecycle.cancel(contract, milestone, NOW.plusSeconds(1), id(), id()));
+            resume.countDown();
+            String report = submit.get(30, TimeUnit.SECONDS);
+            cancel.get(30, TimeUnit.SECONDS);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM inspector_signature WHERE report_id=?", Integer.class, report)).isEqualTo(1);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM event_outbox WHERE aggregate_id=? AND event_type='inspection.report_confirmed'", Integer.class, report)).isEqualTo(1);
+        }
+        assertThat(jdbc.queryForObject("SELECT ended_at FROM level1_5_inspection_assignment WHERE commission_id=?", Timestamp.class, commission).toInstant()).isEqualTo(NOW);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM event_outbox WHERE aggregate_id=? AND event_type='notification.level1_5_inspector_assignment_requested'", Integer.class, milestone)).isZero();
+        assertThat(submissionReceipts.find(actor, "confirm-first")).isPresent();
+    }
+
     @Test void concurrentConfirmationsCannotCreateTwoReportsOrEvents() throws Exception {
         var barrier = new CountDownLatch(2);
         var core = new ConfirmLevel15Report(service, lifecycleRepository, lifecycle, runner, canonicalizer,

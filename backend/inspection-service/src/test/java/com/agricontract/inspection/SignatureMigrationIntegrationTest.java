@@ -47,8 +47,8 @@ class SignatureMigrationIntegrationTest {
         assertThat(jdbc.queryForList("SELECT version,checksum FROM flyway_schema_history WHERE version IN ('1','2','3','4','5','6') ORDER BY installed_rank"))
                 .isEqualTo(throughV6);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM level1_5_report_file", Integer.class)).isZero();
-        var latest = Flyway.configure().dataSource(url, MYSQL.getUsername(), MYSQL.getPassword()).load();
-        assertThat(latest.migrate().migrationsExecuted).isEqualTo(1);
-        latest.validate();
+        var v8 = Flyway.configure().dataSource(url, MYSQL.getUsername(), MYSQL.getPassword()).target("8").load();
+        assertThat(v8.migrate().migrationsExecuted).isEqualTo(1);
+        v8.validate();
     }
 }
