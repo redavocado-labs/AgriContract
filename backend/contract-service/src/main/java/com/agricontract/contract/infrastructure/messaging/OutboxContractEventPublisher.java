@@ -54,6 +54,8 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
     static final String CONTRACT_ACTIVATED = "contract.activated";
     static final String ACTIVATION_FAILED_REQUESTED = "notification.contract_activation_failed_requested";
     static final String DEPOSIT_LOCK_RETRY_REQUESTED = "contract.deposit_lock_retry_requested";
+    static final String REMEDY_RETRY_REQUESTED = "contract.remedy_retry_requested";
+    static final String CONTRACT_SETTLED = "contract.settled";
     static final String ACTIVATION_REFUND_REQUESTED = "contract.activation_refund_requested";
     static final String ACTIVATION_CANCEL_REQUESTED = "notification.activation_cancel_requested";
     static final String ACTIVATION_FAILED = "contract.activation_failed";
@@ -218,6 +220,40 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
 
         outbox.append(new EventEnvelope(UUID.randomUUID(), DEPOSIT_LOCK_RETRY_REQUESTED, 1, requestedAt, PRODUCER,
                 contractId, contractId, null, null, payload));
+    }
+
+    /** golden-flow-events.yaml contractRemedyRetryRequested (D93), to escrow-service. */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void remedyRetryRequested(Contract contract, String operatorUserId, Instant requestedAt) {
+        String contractId = uuid(contract.getContractId().value(), "contractId");
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("contractId", contractId);
+        payload.put("operatorUserId", uuid(operatorUserId, "operatorUserId"));
+        payload.put("requestedAt", requestedAt.toString());
+
+        outbox.append(new EventEnvelope(UUID.randomUUID(), REMEDY_RETRY_REQUESTED, 1, requestedAt, PRODUCER,
+                contractId, contractId, null, null, payload));
+    }
+
+    /**
+     * golden-flow-events.yaml contractSettled (D93): lifecycle and positive history only, never money. Written only by
+     * the commit of a SETTLED contract on escrow.contract_lock_cleared.
+     */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void contractSettled(Contract contract, Instant settledAt, String correlationId, String causationId) {
+        if (contract.getStatus() != ContractStatus.SETTLED) {
+            throw new IllegalStateException("contract.settled for contract " + contract.getContractId().value()
+                    + " in status " + contract.getStatus());
+        }
+        String contractId = uuid(contract.getContractId().value(), "contractId");
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("contractId", contractId);
+        payload.put("buyerId", uuid(contract.getBuyerId(), "buyerId"));
+        payload.put("sellerId", uuid(contract.getSellerId(), "sellerId"));
+        outbox.append(new EventEnvelope(UUID.randomUUID(), CONTRACT_SETTLED, 1, settledAt, PRODUCER, contractId,
+                correlationId, causationId, null, payload));
     }
 
     /** golden-flow-events.yaml contractActivationRefundRequested, to escrow-service. */
