@@ -69,6 +69,7 @@ export interface Contract {
   reservedQuantity?: string
   milestones: Milestone[]
   activationRecovery?: ActivationRecovery
+  completion?: { status: "PENDING_MONEY" }
 }
 export interface ContractPage {
   content: Contract[]
