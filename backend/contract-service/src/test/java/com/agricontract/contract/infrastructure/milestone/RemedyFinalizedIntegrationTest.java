@@ -123,10 +123,13 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ImportAutoConfiguration({JacksonAutoConfiguration.class, EventingAutoConfiguration.class})
-@Import({com.agricontract.contract.application.service.ContractCompletion.class,
+@Import({com.agricontract.contract.application.service.MilestoneSummaries.class, com.agricontract.contract.infrastructure.persistence.remedy.JdbcRemedyDecisionRepository.class, com.agricontract.contract.application.service.ContractCompletion.class,
         com.agricontract.contract.application.usecase.SendMilestoneRemindersUseCase.class,
         com.agricontract.contract.application.usecase.RecordMilestoneFundingResultUseCase.class,
-        com.agricontract.contract.application.usecase.CommitTerminalAfterLockClearedUseCase.class, com.agricontract.contract.application.service.Level15Inspections.class, com.agricontract.contract.application.service.DisputeExitStep.class, com.agricontract.contract.application.service.MilestoneContestStep.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcLevel15RequestRepository.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcLevel15AssignmentRepository.class, com.agricontract.contract.infrastructure.persistence.dispute.JdbcSettlementProposalRepository.class, com.agricontract.contract.infrastructure.persistence.breach.JdbcBreachCaseRepository.class, com.agricontract.contract.infrastructure.persistence.remedy.JdbcRemedyDecisionRepository.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcInspectionReportRepository.class,
+        com.agricontract.contract.application.usecase.CommitTerminalAfterLockClearedUseCase.class,
+        com.agricontract.contract.application.usecase.GetContractUseCase.class,
+        com.agricontract.contract.infrastructure.persistence.activation.JdbcActivationRecoveryRepository.class,
+        com.agricontract.contract.infrastructure.persistence.activation.JdbcActivationCancelRequestRepository.class, com.agricontract.contract.application.service.Level15Inspections.class, com.agricontract.contract.application.service.DisputeExitStep.class, com.agricontract.contract.application.service.MilestoneContestStep.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcLevel15RequestRepository.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcLevel15AssignmentRepository.class, com.agricontract.contract.infrastructure.persistence.dispute.JdbcSettlementProposalRepository.class, com.agricontract.contract.infrastructure.persistence.breach.JdbcBreachCaseRepository.class, com.agricontract.contract.infrastructure.persistence.remedy.JdbcRemedyDecisionRepository.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcInspectionReportRepository.class,
         BusinessCalendarConfiguration.class, SpringTransactionRunner.class, MilestoneFunding.class,
         JdbcMilestoneRepository.class, JdbcInspectionReportRepository.class, JdbcBreachCaseRepository.class, ReviewBreachCaseUseCase.class, ResolveBreachCaseUseCase.class, com.agricontract.contract.infrastructure.persistence.remedy.JdbcRemedyDecisionRepository.class, com.agricontract.contract.application.service.RemedySettlement.class,
         GetBreachCaseUseCase.class, ListBreachCasesForArbitrationUseCase.class, FlagMilestoneUseCase.class,
@@ -211,6 +214,7 @@ class RemedyFinalizedIntegrationTest {
     @Autowired com.agricontract.contract.application.usecase.SendMilestoneRemindersUseCase reminders;
     @Autowired com.agricontract.contract.application.usecase.RecordMilestoneFundingResultUseCase fundingResults;
     @Autowired com.agricontract.contract.application.usecase.CommitTerminalAfterLockClearedUseCase commitTerminal;
+    @Autowired com.agricontract.contract.application.usecase.GetContractUseCase getContract;
     @Autowired ContestBreachDecisionUseCase contestUc;
     @Autowired ExpireContestWindowsUseCase expireWindows;
     @Autowired GetBreachCaseUseCase getCase;
@@ -656,6 +660,15 @@ class RemedyFinalizedIntegrationTest {
         assertThat(waiting.getPendingTerminalDecisionId()).isEqualTo(decisionId);
         assertThat(waiting.getPendingTerminalStatus().name()).isEqualTo("SETTLED");
         assertThat(events("contract.settled")).isEmpty();
+        // D99: the contract detail lists its milestones and shows the deposit return as waiting for the money.
+        var view = getContract.execute(id(), BUYER, false).coffee();
+        assertThat(view.milestones()).extracting(m -> m.milestone().milestoneIndex()).containsExactly(1, 2);
+        assertThat(view.milestones()).allMatch(m -> m.milestone().status() == MilestoneStatus.SETTLED);
+        assertThat(view.terminalDecision().moneyCleared()).isFalse();
+        assertThat(view.terminalDecision().targetStatus().name()).isEqualTo("SETTLED");
+        assertThat(view.terminalDecision().remedyDecision().remedyDecisionId()).isEqualTo(decisionId);
+        assertThat(detail.execute(id(), first.milestoneId(), BUYER, java.util.Set.of("BUYER")).remedyDecision()
+                .status().name()).as("D99: the first milestone's penalty decision").isEqualTo("FINALIZED");
 
         // The same confirm again: no second decision, no second event.
         confirm.execute(confirmClean(second, key));
@@ -671,6 +684,7 @@ class RemedyFinalizedIntegrationTest {
             return null;
         });
         assertThat(contracts.findById(contract.getContractId()).orElseThrow().getStatus().name()).isEqualTo("SETTLED");
+        assertThat(getContract.execute(id(), SELLER, false).coffee().terminalDecision().moneyCleared()).isTrue();
         assertThat(events("contract.settled")).hasSize(1);
         FrozenSchemas.assertEvent("contractSettled", events("contract.settled").get(0));
     }

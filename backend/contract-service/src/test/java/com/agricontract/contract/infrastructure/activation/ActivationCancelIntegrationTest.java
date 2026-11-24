@@ -96,7 +96,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ImportAutoConfiguration({JacksonAutoConfiguration.class, EventingAutoConfiguration.class})
-@Import({SpringTransactionRunner.class, ActivationCancelUseCases.class, ActivationRefundStarter.class, StartDueOneSidedCancelsUseCase.class,
+@Import({com.agricontract.contract.application.service.MilestoneSummaries.class, com.agricontract.contract.infrastructure.persistence.remedy.JdbcRemedyDecisionRepository.class, com.agricontract.contract.infrastructure.persistence.milestone.JdbcMilestoneRepository.class, SpringTransactionRunner.class, ActivationCancelUseCases.class, ActivationRefundStarter.class, StartDueOneSidedCancelsUseCase.class,
         CompleteActivationFailureUseCase.class, RecordDepositLockFailureUseCase.class, RetryDepositLockUseCase.class,
         GetContractUseCase.class, InitiateSignUseCase.class, VerifyOtpAndSignUseCase.class, SignerEligibility.class,
         OtpChallengeIssuer.class, SigningConsentRecorder.class, JdbcOtpChallengeRepository.class,
