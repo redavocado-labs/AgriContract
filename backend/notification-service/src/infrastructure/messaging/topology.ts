@@ -87,9 +87,6 @@ export type RoutingKey = (typeof TOPOLOGY)[number]['routingKeys'][number];
  * `notification.milestone_funding_status_requested` (milestone-escrow §6b)
  * tells the recipients it names about the buyer's funding of a milestone:
  * reminder, failed lock, end of the cure window. Same exchange, same DLX.
- * contract-service does not publish it yet; should it declare this queue
- * ahead as it does the others, the names and options here are the ones to
- * copy byte for byte.
  *
  * `notification.contract_document_ready_requested` (design §3.3) mails both
  * parties the final signed contract PDF, read from file-service. Same
