@@ -121,10 +121,20 @@ export function InspectionPendingPanel({
   const flag = detail.flag
   const breach = useMilestoneBreachCase(detail)
   const canRead = useAuthStore((state) => canReadMilestoneCase(state.roles))
-  const reported = !!breach.data?.computedResolution
+  const resolved = breach.data?.status === "RESOLVED"
+  const reinspection = resolved && breach.data?.contestStatus === "CONTESTED"
+  const decided = resolved && !reinspection
+  const reported = !!breach.data?.computedResolution && !reinspection
+  const title = decided
+    ? "Đã có quyết định"
+    : reinspection
+      ? "Chờ giám định lại"
+      : reported
+        ? "Chờ trọng tài duyệt"
+        : "Đang giám định độc lập"
   return (
     <Panel
-      title="Đang giám định độc lập"
+      title={title}
       description={
         flag
           ? `Báo ${issueTypeLabel[flag.issueType].toLowerCase()}, ${flag.contestedBy === "SYSTEM" ? "tự chuyển giám định vì bên bán không phản hồi" : "bên bán đã phản đối"} lúc ${vietnamTime(flag.contestedAt ?? flag.flaggedAt)}.`
@@ -132,10 +142,14 @@ export function InspectionPendingPanel({
       }
     >
       <Banner variant="info">
-        Tiền đợt vẫn được giữ. Kết quả giám định Level 1.5 là căn cứ tất toán;
-        trọng tài chỉ duyệt kết quả hệ thống tính từ báo cáo, không tự đổi số.
+        {decided
+          ? "Xem quyết định và hạn phản đối trong hồ sơ tranh chấp bên dưới."
+          : reinspection
+            ? "Đã ghi nhận phản đối. Đợt đang chờ kết quả giám định lần hai."
+            : "Tiền đợt vẫn được giữ. Trọng tài duyệt kết quả hệ thống tính từ báo cáo giám định Level 1.5."}
       </Banner>
       {canRead &&
+        !decided &&
         (breach.isLoading ? (
           <Skeleton className="h-40" />
         ) : (

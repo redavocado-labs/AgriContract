@@ -16,7 +16,7 @@ export const milestoneStatusLabel: Record<MilestoneStatus, string> = {
   SELLER_WEIGHED: "Đã cân, đang vận chuyển",
   BUYER_RECEIVED: "Đã nhận, chờ xác nhận",
   AWAITING_SELLER_RESPONSE: "Chờ bên bán phản hồi",
-  CONTESTED: "Đang giám định",
+  CONTESTED: "Đang tranh chấp",
   FORCE_MAJEURE_PENDING_REVIEW: "Chờ xét bất khả kháng",
   SETTLED: "Đã tất toán",
 }
