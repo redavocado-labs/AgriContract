@@ -145,6 +145,25 @@ public class JdbcAuditRecordRepository implements AuditRecordRepository {
         return jdbc.query(SUBJECT_PAGE, ROW, subjectType.name(), subjectId, afterSeq, limit);
     }
 
+    @Override
+    public List<StoredAuditRecord> findNewestFirst(SubjectType subjectType, int offset, int limit) {
+        if (subjectType == null) {
+            return jdbc.query("SELECT " + COLUMNS + " FROM audit_record ORDER BY global_seq DESC LIMIT ? OFFSET ?",
+                    ROW, limit, offset);
+        }
+        return jdbc.query("SELECT " + COLUMNS + " FROM audit_record WHERE subject_type = ?"
+                + " ORDER BY global_seq DESC LIMIT ? OFFSET ?", ROW, subjectType.name(), limit, offset);
+    }
+
+    @Override
+    public long count(SubjectType subjectType) {
+        Long count = subjectType == null
+                ? jdbc.queryForObject("SELECT COUNT(*) FROM audit_record", Long.class)
+                : jdbc.queryForObject("SELECT COUNT(*) FROM audit_record WHERE subject_type = ?", Long.class,
+                        subjectType.name());
+        return count == null ? 0 : count;
+    }
+
     private static String writeContent(Map<String, Object> content) {
         try {
             return JSON.writeValueAsString(content);

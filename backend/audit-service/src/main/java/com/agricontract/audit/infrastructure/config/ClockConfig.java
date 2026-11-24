@@ -3,6 +3,7 @@ package com.agricontract.audit.infrastructure.config;
 import com.agricontract.audit.application.port.TransactionRunner;
 import com.agricontract.audit.application.usecase.IngestAuditEventUseCase;
 import com.agricontract.audit.application.usecase.IngestAuditEventUseCaseImpl;
+import com.agricontract.audit.application.usecase.ReadAuditTrailUseCase;
 import com.agricontract.audit.application.usecase.VerifyAuditChainUseCase;
 import com.agricontract.audit.application.usecase.VerifyAuditChainUseCaseImpl;
 import com.agricontract.audit.domain.repository.AuditRecordRepository;
@@ -29,5 +30,12 @@ public class ClockConfig {
     @Bean
     VerifyAuditChainUseCase verifyAuditChainUseCase(AuditRecordRepository records) {
         return new VerifyAuditChainUseCaseImpl(records);
+    }
+
+    @Bean
+    ReadAuditTrailUseCase readAuditTrailUseCase(AuditRecordRepository records, VerifyAuditChainUseCase verify,
+                                                IngestAuditEventUseCase ingest, TransactionRunner transactions,
+                                                Clock clock) {
+        return new ReadAuditTrailUseCase(records, verify, ingest, transactions, clock);
     }
 }

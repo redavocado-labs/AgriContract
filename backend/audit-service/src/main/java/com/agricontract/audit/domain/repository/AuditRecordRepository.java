@@ -32,4 +32,10 @@ public interface AuditRecordRepository {
 
     /** Same as {@link #findAfter} restricted to one subject. */
     List<StoredAuditRecord> findAfter(SubjectType subjectType, String subjectId, long afterSeq, int limit);
+
+    /** D97: one page of the global chain, newest first (global_seq descending), optionally one subject type. */
+    List<StoredAuditRecord> findNewestFirst(SubjectType subjectType, int offset, int limit);
+
+    /** D97: how many records {@link #findNewestFirst} pages over. */
+    long count(SubjectType subjectType);
 }
