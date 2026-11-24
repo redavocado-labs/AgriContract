@@ -21,6 +21,7 @@ import {
   LEVEL15_INSPECTOR_STAGES,
   LEVEL15_WAITING_STAGES,
   LOCK_ACTIONS,
+  SECURITY_LOCK_ACTIONS,
   MILESTONE_FUNDING_STATUS_TYPES,
   MILESTONE_STATUS_TYPES,
   QUALITY_DISPOSITIONS,
@@ -39,6 +40,11 @@ import {
   type EscrowLegAlertRequestedCommand,
   type EscrowRemedyLegAlertRequestedCommand,
   type EscrowRemedyRejectedRequestedCommand,
+  type AuditDigestRequestedCommand,
+  type AuditFailureRequestedCommand,
+  type SecurityLockChangedRequestedCommand,
+  type ReconciliationMismatchRequestedCommand,
+  type VerifierKeyAnchorRequestedCommand,
   type Level15AssignmentWaitingRequestedCommand,
   type Level15InspectorAssignmentRequestedCommand,
   type MilestoneFundingStatusRequestedCommand,
@@ -205,6 +211,11 @@ class CommandReader {
       );
     }
     return value;
+  }
+
+  /** A `{type: string, minLength: 1}` with no upper bound; the value is not quoted. */
+  nonEmptyText(field: string): string {
+    return this.string(field);
   }
 
   /**
@@ -1351,6 +1362,158 @@ export function parseEscrowRemedyRejectedRequested(
       ESCROW_REMEDY_REJECTED_REASON_MAX_LENGTH,
     ),
     rejectedAt: payload.dateTime('rejectedAt'),
+  };
+}
+
+export const AUDIT_DIGEST_REQUESTED = 'notification.audit_digest_requested';
+
+/** Payload properties of `auditDigestRequested`, all required. */
+export const AUDIT_DIGEST_FIELDS = ['recipients', 'recordHash'] as const;
+
+/**
+ * audit-service's weekly digest (hash-chain design §5.1). Any recipient role
+ * the contract allows parses: who may receive it is the use case's check.
+ */
+export function parseAuditDigestRequested(
+  body: Buffer,
+): AuditDigestRequestedCommand {
+  const { envelope, payload } = readCommand(
+    body,
+    AUDIT_DIGEST_REQUESTED,
+    'audit-service',
+  );
+  payload.only(AUDIT_DIGEST_FIELDS);
+
+  return {
+    eventId: envelope.eventId,
+    recipients: payload.recipients(),
+    recordHash: payload.hash('recordHash'),
+  };
+}
+
+export const AUDIT_FAILURE_REQUESTED = 'notification.audit_failure_requested';
+
+/** Payload properties of `auditFailureRequested`, all required. */
+export const AUDIT_FAILURE_FIELDS = ['recipients', 'failureSummary'] as const;
+
+/**
+ * audit-service's integrity alert (hash-chain design §5.2). `failureSummary`
+ * is any JSON object, as the contract declares it; recipient roles are the
+ * use case's check.
+ */
+export function parseAuditFailureRequested(
+  body: Buffer,
+): AuditFailureRequestedCommand {
+  const { envelope, payload } = readCommand(
+    body,
+    AUDIT_FAILURE_REQUESTED,
+    'audit-service',
+  );
+  payload.only(AUDIT_FAILURE_FIELDS);
+
+  return {
+    eventId: envelope.eventId,
+    recipients: payload.recipients(),
+    failureSummary: payload.object('failureSummary'),
+  };
+}
+
+export const SECURITY_LOCK_CHANGED_REQUESTED =
+  'notification.security_lock_changed_requested';
+
+/** Payload properties of `securityLockChangedRequested`, all required. */
+export const SECURITY_LOCK_CHANGED_FIELDS = [
+  'recipients',
+  'action',
+  'reason',
+  'timestamp',
+] as const;
+
+/**
+ * bank-service's kill-switch email (bank design §3.5.4). `reason` is any
+ * string, the empty one included, as a bare `{type: string}` is declared;
+ * recipient roles are the use case's check.
+ */
+export function parseSecurityLockChangedRequested(
+  body: Buffer,
+): SecurityLockChangedRequestedCommand {
+  const { envelope, payload } = readCommand(
+    body,
+    SECURITY_LOCK_CHANGED_REQUESTED,
+    'bank-service',
+  );
+  payload.only(SECURITY_LOCK_CHANGED_FIELDS);
+
+  return {
+    eventId: envelope.eventId,
+    recipients: payload.recipients(),
+    action: payload.enumValue('action', SECURITY_LOCK_ACTIONS),
+    reason: payload.text('reason'),
+    timestamp: payload.dateTime('timestamp'),
+  };
+}
+
+export const RECONCILIATION_MISMATCH_REQUESTED =
+  'notification.reconciliation_mismatch_requested';
+
+/** Payload properties of `reconciliationMismatchRequested`, all required. */
+export const RECONCILIATION_MISMATCH_FIELDS = [
+  'contractId',
+  'recipients',
+  'mismatchSummary',
+] as const;
+
+/**
+ * bank-service's ledger/audit reconciliation alert (bank design §5b.1).
+ * `mismatchSummary` is any JSON object; recipient roles are the use case's
+ * check.
+ */
+export function parseReconciliationMismatchRequested(
+  body: Buffer,
+): ReconciliationMismatchRequestedCommand {
+  const { envelope, payload } = readCommand(
+    body,
+    RECONCILIATION_MISMATCH_REQUESTED,
+    'bank-service',
+  );
+  payload.only(RECONCILIATION_MISMATCH_FIELDS);
+
+  return {
+    eventId: envelope.eventId,
+    contractId: payload.uuid('contractId'),
+    recipients: payload.recipients(),
+    mismatchSummary: payload.object('mismatchSummary'),
+  };
+}
+
+export const VERIFIER_KEY_ANCHOR_REQUESTED =
+  'notification.verifier_key_anchor_requested';
+
+/** Payload properties of `verifierKeyAnchorRequested`, all required. */
+export const VERIFIER_KEY_ANCHOR_FIELDS = [
+  'recipientEmail',
+  'publicKeyFingerprint',
+] as const;
+
+/**
+ * bank-service's key-fingerprint email to the External Verifier (bank design
+ * §3.5.6): one address, no `payload.recipients`. The fingerprint is any
+ * non-empty string.
+ */
+export function parseVerifierKeyAnchorRequested(
+  body: Buffer,
+): VerifierKeyAnchorRequestedCommand {
+  const { envelope, payload } = readCommand(
+    body,
+    VERIFIER_KEY_ANCHOR_REQUESTED,
+    'bank-service',
+  );
+  payload.only(VERIFIER_KEY_ANCHOR_FIELDS);
+
+  return {
+    eventId: envelope.eventId,
+    recipientEmail: payload.email('recipientEmail'),
+    publicKeyFingerprint: payload.nonEmptyText('publicKeyFingerprint'),
   };
 }
 
