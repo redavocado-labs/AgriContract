@@ -145,4 +145,26 @@ public interface ContractEventPublisher {
      * RemedyDecision becomes FINALIZED, in that transaction, once.
      */
     void remedyFinalized(Contract contract, RemedyDecision decision, Instant at);
+
+    // ---- notification commands of BF-04 (D96), each written in the transaction of the change it reports ----
+
+    /**
+     * notification.milestone_status_requested: the recipients come from {@code status}; deadline is the UTC deadline
+     * of the action asked for (FLAGGED: the seller response window), null when none.
+     */
+    void milestoneStatusRequested(Contract contract, Milestone milestone, MilestoneStatusMail status, Instant deadline,
+                                  Instant at);
+
+    /** notification.breach_notice_requested: a BreachCase was opened; both parties are told, the formal notice. */
+    void breachNoticeRequested(Contract contract, BreachCase breachCase);
+
+    /** notification.remedy_finalized_requested: next to every remedy.finalized, the same decision, to both parties. */
+    void remedyFinalizedRequested(Contract contract, RemedyDecision decision, Instant at);
+
+    /**
+     * notification.milestone_funding_status_requested. operatorEmail is added as an OPERATOR recipient when the status
+     * asks for it and it is not null.
+     */
+    void milestoneFundingStatusRequested(Contract contract, Milestone milestone, FundingStatusMail status,
+                                         Instant deadline, String reason, String operatorEmail, Instant at);
 }

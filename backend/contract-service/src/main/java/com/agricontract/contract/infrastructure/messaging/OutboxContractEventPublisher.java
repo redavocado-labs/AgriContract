@@ -1,6 +1,8 @@
 package com.agricontract.contract.infrastructure.messaging;
 
 import com.agricontract.contract.application.port.ContractEventPublisher;
+import com.agricontract.contract.application.port.FundingStatusMail;
+import com.agricontract.contract.application.port.MilestoneStatusMail;
 import com.agricontract.contract.domain.model.Contract;
 import com.agricontract.contract.domain.model.activation.ActivationRecovery;
 import com.agricontract.contract.domain.model.breach.BreachCase;
@@ -74,6 +76,10 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
     static final String INSPECTION_LEVEL1_5_CANCELLED = "inspection.level1_5_cancelled";
     static final String MILESTONE_DISPUTE_RESOLVED = "milestone.dispute_resolved";
     static final String REMEDY_FINALIZED = "remedy.finalized";
+    static final String MILESTONE_STATUS_REQUESTED = "notification.milestone_status_requested";
+    static final String BREACH_NOTICE_REQUESTED = "notification.breach_notice_requested";
+    static final String REMEDY_FINALIZED_REQUESTED = "notification.remedy_finalized_requested";
+    static final String MILESTONE_FUNDING_STATUS_REQUESTED = "notification.milestone_funding_status_requested";
 
     private static final Pattern UUID_TEXT =
             Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -650,10 +656,36 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public void remedyFinalized(Contract contract, RemedyDecision decision, Instant at) {
+        Map<String, Object> payload = remedyPayload(contract, decision, REMEDY_FINALIZED);
+        outbox.append(new EventEnvelope(UUID.randomUUID(), REMEDY_FINALIZED, 1, at, PRODUCER,
+                (String) payload.get("remedyDecisionId"), (String) payload.get("contractId"), null, null, payload));
+    }
+
+    /**
+     * notification-commands.yaml remedyFinalizedRequested (D96): the decision of remedy.finalized as it went out,
+     * without settledMilestoneCount (not in the command), with both parties as recipients.
+     */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void remedyFinalizedRequested(Contract contract, RemedyDecision decision, Instant at) {
+        Map<String, Object> payload = remedyPayload(contract, decision, REMEDY_FINALIZED_REQUESTED);
+        payload.remove("settledMilestoneCount");
+        Map<String, Object> ordered = new LinkedHashMap<>();
+        payload.forEach((k, v) -> {
+            ordered.put(k, v);
+            if ("affectedMilestoneIds".equals(k)) {
+                ordered.put("recipients", parties(contract, List.of(SignerRole.BUYER, SignerRole.SELLER)));
+            }
+        });
+        outbox.append(new EventEnvelope(UUID.randomUUID(), REMEDY_FINALIZED_REQUESTED, 1, at, PRODUCER,
+                (String) payload.get("remedyDecisionId"), (String) payload.get("contractId"), null, null, ordered));
+    }
+
+    private Map<String, Object> remedyPayload(Contract contract, RemedyDecision decision, String type) {
         if (decision.status() != RemedyStatus.FINALIZED
                 || (decision.breachCaseId() == null) != decision.contractLevel()
                 || !decision.contractId().equals(contract.getContractId().value())) {
-            throw new IllegalStateException("remedy.finalized for remedy decision " + decision.remedyDecisionId()
+            throw new IllegalStateException(type + " for remedy decision " + decision.remedyDecisionId()
                     + " in status " + decision.status());
         }
         String contractId = uuid(contract.getContractId().value(), "contractId");
@@ -689,8 +721,111 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
         payload.put("reputationEligible", decision.reputationEligible());
         payload.put("remedyLegs", legs);
 
-        outbox.append(new EventEnvelope(UUID.randomUUID(), REMEDY_FINALIZED, 1, at, PRODUCER, decisionId, contractId,
-                null, null, payload));
+        return payload;
+    }
+
+    /** notification-commands.yaml milestoneStatusRequested (D96); statusData is what the template shows. */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void milestoneStatusRequested(Contract contract, Milestone milestone, MilestoneStatusMail status,
+                                         Instant deadline, Instant at) {
+        if (!milestone.contractId().equals(contract.getContractId().value())) {
+            throw new IllegalStateException(MILESTONE_STATUS_REQUESTED + " for milestone " + milestone.milestoneId()
+                    + " of another contract");
+        }
+        String contractId = uuid(contract.getContractId().value(), "contractId");
+        String milestoneId = uuid(milestone.milestoneId(), "milestoneId");
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("milestoneIndex", milestone.milestoneIndex());
+        data.put("committedQuantityKg", SellerWeight.plain(milestone.committedQuantity()));
+        switch (status) {
+            case WEIGHED, BUYER_RECEIVE_REMINDER -> {
+                if (milestone.sellerWeighing() == null) {
+                    throw new IllegalStateException(status + " for milestone " + milestoneId + " not weighed");
+                }
+                data.put("declarationNumber", milestone.sellerWeighing().declarationCount());
+                data.put("sellerDeclaredWeightKg", SellerWeight.plain(milestone.sellerWeighing().declaredWeight()));
+            }
+            case CONFIRMED -> {
+                MilestoneSettlement settlement = requireSettled(contract, milestone, MILESTONE_STATUS_REQUESTED);
+                data.put("settlementPath", settlement.path().name());
+                data.put("billableQuantityKg", SellerWeight.plain(settlement.billableQuantityKg()));
+                data.put("sellerAmount", settlement.sellerAmount().wire());
+                data.put("buyerRefundAmount", settlement.buyerRefundAmount().wire());
+            }
+            case FLAGGED -> {
+                if (milestone.flag() == null) {
+                    throw new IllegalStateException("FLAGGED for milestone " + milestoneId + " with no flag");
+                }
+                data.put("issueType", milestone.flag().issueType().name());
+            }
+        }
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("contractId", contractId);
+        payload.put("milestoneId", milestoneId);
+        payload.put("recipients", parties(contract, status.recipients()));
+        payload.put("statusType", status.name());
+        payload.put("deadline", deadline == null ? null : deadline.toString());
+        payload.put("statusData", data);
+        outbox.append(new EventEnvelope(UUID.randomUUID(), MILESTONE_STATUS_REQUESTED, 1, at, PRODUCER, milestoneId,
+                contractId, null, null, payload));
+    }
+
+    /** notification-commands.yaml breachNoticeRequested (D96): both parties, evidenceRefs = the case's files. */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void breachNoticeRequested(Contract contract, BreachCase breachCase) {
+        if (!breachCase.contractId().equals(contract.getContractId().value())) {
+            throw new IllegalStateException(BREACH_NOTICE_REQUESTED + " for case " + breachCase.breachCaseId()
+                    + " of another contract");
+        }
+        String breachCaseId = uuid(breachCase.breachCaseId(), "breachCaseId");
+        String contractId = uuid(contract.getContractId().value(), "contractId");
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("breachCaseId", breachCaseId);
+        payload.put("contractId", contractId);
+        payload.put("recipients", parties(contract, List.of(SignerRole.BUYER, SignerRole.SELLER)));
+        payload.put("breachReasonCode", breachCase.breachReasonCode().name());
+        payload.put("severity", breachCase.severity().name());
+        payload.put("evidenceRefs", List.copyOf(breachCase.evidenceFileIds()));
+        outbox.append(new EventEnvelope(UUID.randomUUID(), BREACH_NOTICE_REQUESTED, 1, breachCase.reportedAt(),
+                PRODUCER, breachCaseId, contractId, null, null, payload));
+    }
+
+    /** notification-commands.yaml milestoneFundingStatusRequested (D96). */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void milestoneFundingStatusRequested(Contract contract, Milestone milestone, FundingStatusMail status,
+                                                Instant deadline, String reason, String operatorEmail, Instant at) {
+        if (!milestone.contractId().equals(contract.getContractId().value())) {
+            throw new IllegalStateException(MILESTONE_FUNDING_STATUS_REQUESTED + " for milestone "
+                    + milestone.milestoneId() + " of another contract");
+        }
+        String contractId = uuid(contract.getContractId().value(), "contractId");
+        String milestoneId = uuid(milestone.milestoneId(), "milestoneId");
+        List<Map<String, Object>> recipients = new java.util.ArrayList<>(parties(contract, status.recipients()));
+        if (status.operator() && operatorEmail != null && !operatorEmail.isBlank()) {
+            Map<String, Object> operator = new LinkedHashMap<>();
+            operator.put("userId", null);
+            operator.put("email", operatorEmail);
+            operator.put("role", "OPERATOR");
+            recipients.add(operator);
+        }
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("contractId", contractId);
+        payload.put("milestoneId", milestoneId);
+        payload.put("recipients", recipients);
+        payload.put("statusType", status.name());
+        payload.put("deadline", deadline == null ? null : deadline.toString());
+        payload.put("reason", reason);
+        outbox.append(new EventEnvelope(UUID.randomUUID(), MILESTONE_FUNDING_STATUS_REQUESTED, 1, at, PRODUCER,
+                milestoneId, contractId, null, null, payload));
+    }
+
+    private static List<Map<String, Object>> parties(Contract contract, List<SignerRole> roles) {
+        return roles.stream().map(role -> role == SignerRole.BUYER
+                ? recipient(contract.getBuyerId(), contract.getBuyerEmail(), "BUYER")
+                : recipient(contract.getSellerId(), contract.getSellerEmail(), "SELLER")).toList();
     }
 
     private static MilestoneSettlement requireSettled(Contract contract, Milestone milestone, String eventType) {
