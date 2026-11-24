@@ -26,10 +26,13 @@ import lombok.Getter;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -59,6 +62,14 @@ public class Contract {
     @Getter(AccessLevel.NONE)
     private BigDecimal reservedQuantity;
     private ContractStatus status;
+    /**
+     * D93: the final remedy decision whose cleared lock ends this contract, and the status it then takes. Both null
+     * or both set; kept after the commit as evidence of the decision that closed the contract.
+     */
+    private String pendingTerminalDecisionId;
+    private ContractStatus pendingTerminalStatus;
+    /** When the contract became SETTLED (D93: escrow.contract_lock_cleared); null before. */
+    private Instant settledAt;
     /** Optimistic-lock version as loaded; null for a contract not stored yet. */
     private Long version;
     /** signedContentHash per party that has signed, loaded from the signature table (the only source). */
@@ -109,6 +120,28 @@ public class Contract {
         contract.status = status;
         contract.signedHashes.putAll(signedHashes);
 
+        return contract;
+    }
+
+    /** With the D93 terminal guard columns (#139), as stored. */
+    public static Contract reconstitute(
+            ContractId contractId, String listingId,
+            String buyerId, String sellerId,
+            String productName, String buyerOrgName, String sellerOrgName,
+            String buyerEmail, String sellerEmail,
+            ContractTerms terms, CanonicalTerms coffeeTerms, ContractStatus status,
+            Map<SignerRole, String> signedHashes, Long version, BigDecimal reservedQuantity,
+            String pendingTerminalDecisionId, ContractStatus pendingTerminalStatus, Instant settledAt) {
+        if ((pendingTerminalDecisionId == null) != (pendingTerminalStatus == null)) {
+            throw new IllegalStateException("Contract " + contractId.value()
+                    + " has a pending terminal decision without its status, or the reverse");
+        }
+        Contract contract = reconstitute(contractId, listingId, buyerId, sellerId, productName, buyerOrgName,
+                sellerOrgName, buyerEmail, sellerEmail, terms, coffeeTerms, status, signedHashes, version,
+                reservedQuantity);
+        contract.pendingTerminalDecisionId = pendingTerminalDecisionId;
+        contract.pendingTerminalStatus = pendingTerminalStatus;
+        contract.settledAt = settledAt;
         return contract;
     }
 
@@ -435,6 +468,54 @@ public class Contract {
                     "Activation can only fail after the refund started, not in " + this.status + ".");
         }
         this.status = ContractStatus.ACTIVATION_FAILED;
+    }
+
+    /**
+     * D93: the final remedy decision is made; the contract stays ACTIVE until escrow confirms that every leg of it
+     * completed and the contract lock is 0.00 ({@link #commitTerminal}). Only SETTLED for now (TERMINATED is BF-05).
+     * The same decision again is a no-op; another decision while one is pending is a bug of the caller.
+     */
+    public void awaitTerminal(String remedyDecisionId, ContractStatus target) {
+        Objects.requireNonNull(remedyDecisionId, "remedyDecisionId");
+        if (target != ContractStatus.SETTLED) {
+            throw new IllegalArgumentException("Only SETTLED can wait for a cleared lock, not " + target);
+        }
+        if (remedyDecisionId.equalsIgnoreCase(this.pendingTerminalDecisionId) && target == this.pendingTerminalStatus) {
+            return;
+        }
+        if (this.status != ContractStatus.ACTIVE) {
+            throw new IllegalStateException("Contract " + this.contractId.value() + " is " + this.status
+                    + "; only an ACTIVE contract waits for a terminal decision");
+        }
+        if (this.pendingTerminalDecisionId != null) {
+            throw new IllegalStateException("Contract " + this.contractId.value() + " already waits for decision "
+                    + this.pendingTerminalDecisionId + " (" + this.pendingTerminalStatus + "), not "
+                    + remedyDecisionId + " (" + target + ")");
+        }
+        this.pendingTerminalDecisionId = remedyDecisionId.toLowerCase(Locale.ROOT);
+        this.pendingTerminalStatus = target;
+    }
+
+    /**
+     * D93, escrow.contract_lock_cleared: commits the pending terminal status when its decision is among the cleared
+     * ones (a list, since an earlier penalty leg may complete after the final deposit return). Anything else leaves
+     * the contract unchanged. The pending columns are kept as evidence.
+     */
+    public TerminalCommitResult commitTerminal(Collection<String> clearedDecisionIds, Instant now) {
+        Objects.requireNonNull(clearedDecisionIds, "clearedDecisionIds");
+        Objects.requireNonNull(now, "now");
+        if (this.status != ContractStatus.ACTIVE) {
+            return TerminalCommitResult.NOT_ACTIVE;
+        }
+        if (this.pendingTerminalDecisionId == null) {
+            return TerminalCommitResult.NOTHING_PENDING;
+        }
+        if (clearedDecisionIds.stream().noneMatch(this.pendingTerminalDecisionId::equalsIgnoreCase)) {
+            return TerminalCommitResult.PENDING_NOT_CLEARED;
+        }
+        this.status = this.pendingTerminalStatus;
+        this.settledAt = now;
+        return TerminalCommitResult.COMMITTED;
     }
 
     public List<DomainEvent> pullDomainEvents() {
