@@ -1,4 +1,9 @@
 import type {
+  AuditDigestRequestedCommand,
+  AuditFailureRequestedCommand,
+  ReconciliationMismatchRequestedCommand,
+  SecurityLockChangedRequestedCommand,
+  VerifierKeyAnchorRequestedCommand,
   ActivationCancelRequestedCommand,
   BreachNoticeRequestedCommand,
   ContractActivationFailedRequestedCommand,
@@ -1218,5 +1223,243 @@ export function milestoneAnchorCommand(): MilestoneAnchorRequestedCommand {
       lockedAmount: '110400000.00',
       actualAmount: '105800000.00',
     },
+  };
+}
+
+/*
+ * #278: the integrity and security commands of audit-service and
+ * bank-service. They go to staff contacts, never to a contract's parties:
+ * the Admin, and the Software Buyer contacts, one of which acts as the
+ * External Verifier (hash-chain design §4.4). Contacts without a platform
+ * account carry userId null, as the contract allows.
+ */
+export const INTEGRITY_ADMIN: NotificationRecipient = {
+  userId: '0e1d2c3b-4a59-4687-9a6b-5c4d3e2f1a0b',
+  email: 'admin@integrity.test',
+  role: 'ADMIN',
+};
+export const INTEGRITY_SOFTWARE_BUYERS: NotificationRecipient[] = [
+  {
+    userId: null,
+    email: 'audit-1@software-buyer.test',
+    role: 'SOFTWARE_BUYER',
+  },
+  {
+    userId: null,
+    email: 'audit-2@software-buyer.test',
+    role: 'SOFTWARE_BUYER',
+  },
+];
+export const VERIFIER_EMAIL = 'verifier@software-buyer.test';
+const VERIFIER_RECIPIENT: NotificationRecipient = {
+  userId: null,
+  email: VERIFIER_EMAIL,
+  role: 'SOFTWARE_BUYER',
+};
+
+const integrityEnvelope =
+  (
+    eventId: string,
+    eventType: string,
+    producer: string,
+    aggregateId: string,
+    payload: () => Record<string, unknown>,
+  ) =>
+  (overrides: Record<string, unknown> = {}): Record<string, unknown> => ({
+    eventId,
+    eventType,
+    eventVersion: 1,
+    occurredAt: '2026-11-29T19:30:00Z',
+    producer,
+    aggregateId,
+    correlationId: '5a4b3c2d-1e0f-4a9b-8c7d-6e5f4a3b2c1e',
+    causationId: null,
+    payload: payload(),
+    ...overrides,
+  });
+
+const toBody =
+  (envelope: (o?: Record<string, unknown>) => Record<string, unknown>) =>
+  (overrides: Record<string, unknown> = {}): Buffer =>
+    Buffer.from(JSON.stringify(envelope(overrides)));
+
+/** The chain head of a passed weekly check. */
+export const DIGEST_RECORD_HASH =
+  '9c1f2e3d4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0';
+const AUDIT_DIGEST_EVENT_ID = '6d5c4b3a-2f1e-4d0c-9b8a-7f6e5d4c3b2a';
+
+export function auditDigestPayload(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    recipients: INTEGRITY_SOFTWARE_BUYERS.map((r) => ({ ...r })),
+    recordHash: DIGEST_RECORD_HASH,
+    ...overrides,
+  };
+}
+
+export const auditDigestEnvelope = integrityEnvelope(
+  AUDIT_DIGEST_EVENT_ID,
+  'notification.audit_digest_requested',
+  'audit-service',
+  'GLOBAL',
+  auditDigestPayload,
+);
+export const auditDigestBody = toBody(auditDigestEnvelope);
+
+export function auditDigestCommand(): AuditDigestRequestedCommand {
+  return {
+    eventId: AUDIT_DIGEST_EVENT_ID,
+    recipients: INTEGRITY_SOFTWARE_BUYERS.map((r) => ({ ...r })),
+    recordHash: DIGEST_RECORD_HASH,
+  };
+}
+
+/** Where a failed weekly check found its first mismatch, as audit-service might say it. */
+export const FAILURE_SUMMARY: Record<string, unknown> = {
+  status: 'WEEKLY_VERIFY_FAILED',
+  firstMismatch: {
+    recordId: '7e6d5c4b-3a2f-4e1d-8c0b-9a8f7e6d5c4b',
+    position: 1042,
+    sourceType: 'MILESTONE_SETTLED',
+  },
+  anchoredHashFound: true,
+};
+const AUDIT_FAILURE_EVENT_ID = '7f6e5d4c-3b2a-4e1f-8d0c-9b8a7f6e5d4c';
+
+export function auditFailurePayload(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    recipients: [INTEGRITY_ADMIN, ...INTEGRITY_SOFTWARE_BUYERS].map((r) => ({
+      ...r,
+    })),
+    failureSummary: structuredClone(FAILURE_SUMMARY),
+    ...overrides,
+  };
+}
+
+export const auditFailureEnvelope = integrityEnvelope(
+  AUDIT_FAILURE_EVENT_ID,
+  'notification.audit_failure_requested',
+  'audit-service',
+  'GLOBAL',
+  auditFailurePayload,
+);
+export const auditFailureBody = toBody(auditFailureEnvelope);
+
+export function auditFailureCommand(): AuditFailureRequestedCommand {
+  return {
+    eventId: AUDIT_FAILURE_EVENT_ID,
+    recipients: [INTEGRITY_ADMIN, ...INTEGRITY_SOFTWARE_BUYERS].map((r) => ({
+      ...r,
+    })),
+    failureSummary: structuredClone(FAILURE_SUMMARY),
+  };
+}
+
+export const SECURITY_LOCK_REASON = 'Audit hash mismatch on contract 3f1b9c7e';
+const SECURITY_LOCK_EVENT_ID = '8a7f6e5d-4c3b-4a2f-9e1d-0c9b8a7f6e5d';
+
+export function securityLockPayload(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    recipients: [INTEGRITY_ADMIN, VERIFIER_RECIPIENT].map((r) => ({ ...r })),
+    action: 'LOCKED',
+    reason: SECURITY_LOCK_REASON,
+    timestamp: '2026-11-29T19:29:58.250Z',
+    ...overrides,
+  };
+}
+
+export const securityLockEnvelope = integrityEnvelope(
+  SECURITY_LOCK_EVENT_ID,
+  'notification.security_lock_changed_requested',
+  'bank-service',
+  'SYSTEM_LOCK',
+  securityLockPayload,
+);
+export const securityLockBody = toBody(securityLockEnvelope);
+
+export function securityLockCommand(): SecurityLockChangedRequestedCommand {
+  return {
+    eventId: SECURITY_LOCK_EVENT_ID,
+    recipients: [INTEGRITY_ADMIN, VERIFIER_RECIPIENT].map((r) => ({ ...r })),
+    action: 'LOCKED',
+    reason: SECURITY_LOCK_REASON,
+    timestamp: '2026-11-29T19:29:58.250Z',
+  };
+}
+
+export const MISMATCH_CONTRACT_ID = '9b8a7f6e-5d4c-4b3a-8f2e-1d0c9b8a7f6e';
+/** A settled milestone whose ledger released less than its anchored record says. */
+export const MISMATCH_SUMMARY: Record<string, unknown> = {
+  milestoneId: 'ac9b8a7f-6e5d-4c4b-9a3f-2e1d0c9b8a7f',
+  sourceType: 'MILESTONE_SETTLED',
+  auditSettledAmount: '105800000.00',
+  ledgerReleasedAmount: '105000000.00',
+  difference: '800000.00',
+};
+const RECONCILIATION_EVENT_ID = 'bdac9b8a-7f6e-4d5c-8b4a-3f2e1d0c9b8a';
+
+export function reconciliationPayload(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    contractId: MISMATCH_CONTRACT_ID,
+    recipients: [{ ...INTEGRITY_ADMIN }],
+    mismatchSummary: structuredClone(MISMATCH_SUMMARY),
+    ...overrides,
+  };
+}
+
+export const reconciliationEnvelope = integrityEnvelope(
+  RECONCILIATION_EVENT_ID,
+  'notification.reconciliation_mismatch_requested',
+  'bank-service',
+  MISMATCH_CONTRACT_ID,
+  reconciliationPayload,
+);
+export const reconciliationBody = toBody(reconciliationEnvelope);
+
+export function reconciliationCommand(): ReconciliationMismatchRequestedCommand {
+  return {
+    eventId: RECONCILIATION_EVENT_ID,
+    contractId: MISMATCH_CONTRACT_ID,
+    recipients: [{ ...INTEGRITY_ADMIN }],
+    mismatchSummary: structuredClone(MISMATCH_SUMMARY),
+  };
+}
+
+/** SHA-256 of a public key, as bank-service's keyId (bank design §3.5.2). */
+export const VERIFIER_KEY_FINGERPRINT =
+  'b5e3c1a9f7d5b3e1c9a7f5d3b1e9c7a5f3d1b9e7c5a3f1d9b7e5c3a1f9d7b5e3';
+const VERIFIER_KEY_EVENT_ID = 'cebdac9b-8a7f-4e6d-9c5b-4a3f2e1d0c9b';
+
+export function verifierKeyPayload(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    recipientEmail: VERIFIER_EMAIL,
+    publicKeyFingerprint: VERIFIER_KEY_FINGERPRINT,
+    ...overrides,
+  };
+}
+
+export const verifierKeyEnvelope = integrityEnvelope(
+  VERIFIER_KEY_EVENT_ID,
+  'notification.verifier_key_anchor_requested',
+  'bank-service',
+  'EXTERNAL_VERIFIER_KEY',
+  verifierKeyPayload,
+);
+export const verifierKeyBody = toBody(verifierKeyEnvelope);
+
+export function verifierKeyCommand(): VerifierKeyAnchorRequestedCommand {
+  return {
+    eventId: VERIFIER_KEY_EVENT_ID,
+    recipientEmail: VERIFIER_EMAIL,
+    publicKeyFingerprint: VERIFIER_KEY_FINGERPRINT,
   };
 }

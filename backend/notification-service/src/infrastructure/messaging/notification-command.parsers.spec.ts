@@ -61,6 +61,22 @@ import {
   milestoneAnchorBody,
   milestoneAnchorCommand,
   milestoneAnchorPayload,
+  auditDigestBody,
+  auditDigestCommand,
+  auditDigestPayload,
+  auditFailureBody,
+  auditFailureCommand,
+  auditFailurePayload,
+  DIGEST_RECORD_HASH,
+  securityLockBody,
+  securityLockCommand,
+  securityLockPayload,
+  reconciliationBody,
+  reconciliationCommand,
+  reconciliationPayload,
+  verifierKeyBody,
+  verifierKeyCommand,
+  verifierKeyPayload,
 } from '../../../test/support/commands';
 import {
   parseActivationCancelRequested,
@@ -95,6 +111,16 @@ import {
   MILESTONE_ANCHOR_FIELDS,
   parseMilestoneAnchorRequested,
   parseMilestoneFundingStatusRequested,
+  AUDIT_DIGEST_FIELDS,
+  parseAuditDigestRequested,
+  AUDIT_FAILURE_FIELDS,
+  parseAuditFailureRequested,
+  SECURITY_LOCK_CHANGED_FIELDS,
+  parseSecurityLockChangedRequested,
+  RECONCILIATION_MISMATCH_FIELDS,
+  parseReconciliationMismatchRequested,
+  VERIFIER_KEY_ANCHOR_FIELDS,
+  parseVerifierKeyAnchorRequested,
 } from './notification-command.parsers';
 
 /** Delivers a message built from `overrides` on the envelope. */
@@ -1682,5 +1708,334 @@ describe('parseMilestoneAnchorRequested', () => {
     expect(
       message(() => parseMilestoneAnchorRequested(anchorBody())),
     ).toContain("is not this queue's command");
+  });
+});
+
+describe('parseAuditDigestRequested', () => {
+  const parseDigest = (
+    payload: Record<string, unknown> = auditDigestPayload(),
+  ) => parseAuditDigestRequested(auditDigestBody({ payload }));
+
+  it('reads the envelope eventId and every payload field', () => {
+    expect(parseDigest()).toEqual(auditDigestCommand());
+  });
+
+  // Who may receive it is the use case's rule, not the contract's.
+  it('accepts any recipient role, as the contract does', () => {
+    const recipients = [
+      { userId: null, email: 'buyer@integrity.test', role: 'BUYER' },
+    ];
+
+    expect(parseDigest(auditDigestPayload({ recipients }))).toMatchObject({
+      recipients,
+    });
+  });
+
+  it.each([
+    [
+      'recordHash',
+      'A'.repeat(64),
+      'field "recordHash" must be 64 lowercase hex characters',
+    ],
+    ['recipients', [], 'field "recipients"'],
+    [
+      'contractId',
+      DISPUTE_MILESTONE_ID,
+      'unknown payload property "contractId"',
+    ],
+  ])(
+    'rejects %s = %p as an invalid payload, without retrying',
+    (field, value, reason) => {
+      const text = message(() =>
+        parseDigest(auditDigestPayload({ [field]: value })),
+      );
+
+      expect(text).toContain('Malformed notification.audit_digest_requested');
+      expect(text).toContain(reason);
+    },
+  );
+
+  it.each(AUDIT_DIGEST_FIELDS)('rejects a missing %s', (field) => {
+    const payload = auditDigestPayload();
+    delete payload[field];
+
+    expect(message(() => parseDigest(payload))).toContain(`"${field}"`);
+  });
+
+  it('rejects a command from another producer', () => {
+    expect(
+      message(() =>
+        parseAuditDigestRequested(
+          auditDigestBody({ producer: 'bank-service' }),
+        ),
+      ),
+    ).toContain('producer must be "audit-service"');
+  });
+
+  it('rejects the audit failure alert, whose eventType is not this queue’s', () => {
+    expect(
+      message(() => parseAuditDigestRequested(auditFailureBody())),
+    ).toContain("is not this queue's command");
+  });
+});
+
+describe('parseAuditFailureRequested', () => {
+  const parseFailure = (
+    payload: Record<string, unknown> = auditFailurePayload(),
+  ) => parseAuditFailureRequested(auditFailureBody({ payload }));
+
+  it('reads the envelope eventId and every payload field', () => {
+    expect(parseFailure()).toEqual(auditFailureCommand());
+  });
+
+  it.each([
+    ['an empty failureSummary', { failureSummary: {} }],
+    ['a failureSummary of any shape', { failureSummary: { at: [1, 'x'] } }],
+  ])('accepts %s, as the contract does', (_case, patch) => {
+    expect(parseFailure(auditFailurePayload(patch))).toMatchObject(patch);
+  });
+
+  it.each([
+    [
+      'failureSummary',
+      null,
+      'field "failureSummary" must be a JSON object, got null',
+    ],
+    [
+      'failureSummary',
+      'chain broken',
+      'field "failureSummary" must be a JSON object, got a string',
+    ],
+    ['recipients', [], 'field "recipients"'],
+    ['recordHash', DIGEST_RECORD_HASH, 'unknown payload property "recordHash"'],
+  ])(
+    'rejects %s = %p as an invalid payload, without retrying',
+    (field, value, reason) => {
+      const text = message(() =>
+        parseFailure(auditFailurePayload({ [field]: value })),
+      );
+
+      expect(text).toContain('Malformed notification.audit_failure_requested');
+      expect(text).toContain(reason);
+    },
+  );
+
+  it.each(AUDIT_FAILURE_FIELDS)('rejects a missing %s', (field) => {
+    const payload = auditFailurePayload();
+    delete payload[field];
+
+    expect(message(() => parseFailure(payload))).toContain(`"${field}"`);
+  });
+
+  it('never quotes a recipient address', () => {
+    const recipients = [
+      { userId: null, email: 'not an address', role: 'ADMIN' },
+    ];
+
+    const text = message(() =>
+      parseFailure(auditFailurePayload({ recipients })),
+    );
+
+    expect(text).toContain('recipients[0].email must be an email address');
+    expect(text).not.toContain('not an address');
+  });
+
+  it('rejects a command from another producer', () => {
+    expect(
+      message(() =>
+        parseAuditFailureRequested(
+          auditFailureBody({ producer: 'bank-service' }),
+        ),
+      ),
+    ).toContain('producer must be "audit-service"');
+  });
+});
+
+describe('parseSecurityLockChangedRequested', () => {
+  const parseLock = (
+    payload: Record<string, unknown> = securityLockPayload(),
+  ) => parseSecurityLockChangedRequested(securityLockBody({ payload }));
+
+  it('reads the envelope eventId and every payload field', () => {
+    expect(parseLock()).toEqual(securityLockCommand());
+  });
+
+  it.each([
+    ['an unlock', { action: 'UNLOCKED' }],
+    // A bare {type: string}: the empty reason is the contract's to allow.
+    ['an empty reason', { reason: '' }],
+    ['an instant with an offset', { timestamp: '2026-11-30T02:29:58+07:00' }],
+  ])('accepts %s, as the contract does', (_case, patch) => {
+    expect(parseLock(securityLockPayload(patch))).toMatchObject(patch);
+  });
+
+  it.each([
+    ['action', 'PAUSED', 'field "action" must be one of LOCKED, UNLOCKED'],
+    ['reason', null, 'field "reason" must be a string, got null'],
+    ['timestamp', '2026-11-29', 'RFC 3339'],
+    ['recipients', [], 'field "recipients"'],
+    ['sourceEventId', 'e-1', 'unknown payload property "sourceEventId"'],
+  ])(
+    'rejects %s = %p as an invalid payload, without retrying',
+    (field, value, reason) => {
+      const text = message(() =>
+        parseLock(securityLockPayload({ [field]: value })),
+      );
+
+      expect(text).toContain(
+        'Malformed notification.security_lock_changed_requested',
+      );
+      expect(text).toContain(reason);
+    },
+  );
+
+  it('never quotes the reason, which is free text', () => {
+    const text = message(() =>
+      parseLock(securityLockPayload({ reason: 42, action: 'secret' })),
+    );
+
+    expect(text).not.toContain('secret');
+  });
+
+  it.each(SECURITY_LOCK_CHANGED_FIELDS)('rejects a missing %s', (field) => {
+    const payload = securityLockPayload();
+    delete payload[field];
+
+    expect(message(() => parseLock(payload))).toContain(`"${field}"`);
+  });
+
+  it('rejects a command from another producer', () => {
+    expect(
+      message(() =>
+        parseSecurityLockChangedRequested(
+          securityLockBody({ producer: 'audit-service' }),
+        ),
+      ),
+    ).toContain('producer must be "bank-service"');
+  });
+});
+
+describe('parseReconciliationMismatchRequested', () => {
+  const parseMismatch = (
+    payload: Record<string, unknown> = reconciliationPayload(),
+  ) => parseReconciliationMismatchRequested(reconciliationBody({ payload }));
+
+  it('reads the envelope eventId and every payload field', () => {
+    expect(parseMismatch()).toEqual(reconciliationCommand());
+  });
+
+  it('accepts an empty mismatchSummary, as the contract does', () => {
+    expect(
+      parseMismatch(reconciliationPayload({ mismatchSummary: {} })),
+    ).toMatchObject({ mismatchSummary: {} });
+  });
+
+  it.each([
+    ['contractId', 'contract-1', 'field "contractId" must be a UUID'],
+    [
+      'mismatchSummary',
+      [],
+      'field "mismatchSummary" must be a JSON object, got an array',
+    ],
+    ['recipients', [], 'field "recipients"'],
+    [
+      'milestoneId',
+      DISPUTE_MILESTONE_ID,
+      'unknown payload property "milestoneId"',
+    ],
+  ])(
+    'rejects %s = %p as an invalid payload, without retrying',
+    (field, value, reason) => {
+      const text = message(() =>
+        parseMismatch(reconciliationPayload({ [field]: value })),
+      );
+
+      expect(text).toContain(
+        'Malformed notification.reconciliation_mismatch_requested',
+      );
+      expect(text).toContain(reason);
+    },
+  );
+
+  it.each(RECONCILIATION_MISMATCH_FIELDS)('rejects a missing %s', (field) => {
+    const payload = reconciliationPayload();
+    delete payload[field];
+
+    expect(message(() => parseMismatch(payload))).toContain(`"${field}"`);
+  });
+
+  it('rejects the security lock email, whose eventType is not this queue’s', () => {
+    expect(
+      message(() => parseReconciliationMismatchRequested(securityLockBody())),
+    ).toContain("is not this queue's command");
+  });
+});
+
+describe('parseVerifierKeyAnchorRequested', () => {
+  const parseKey = (payload: Record<string, unknown> = verifierKeyPayload()) =>
+    parseVerifierKeyAnchorRequested(verifierKeyBody({ payload }));
+
+  it('reads the envelope eventId and every payload field', () => {
+    expect(parseKey()).toEqual(verifierKeyCommand());
+  });
+
+  it('accepts a one-character fingerprint, as the contract does', () => {
+    expect(
+      parseKey(verifierKeyPayload({ publicKeyFingerprint: 'x' })),
+    ).toMatchObject({ publicKeyFingerprint: 'x' });
+  });
+
+  it.each([
+    [
+      'publicKeyFingerprint',
+      '',
+      'field "publicKeyFingerprint" must be a non-empty string, got a string',
+    ],
+    [
+      'publicKeyFingerprint',
+      42,
+      'field "publicKeyFingerprint" must be a non-empty string, got a number',
+    ],
+    [
+      'recipientEmail',
+      'verifier',
+      'field "recipientEmail" must be an email address',
+    ],
+    ['recipients', [], 'unknown payload property "recipients"'],
+  ])(
+    'rejects %s = %p as an invalid payload, without retrying',
+    (field, value, reason) => {
+      const text = message(() =>
+        parseKey(verifierKeyPayload({ [field]: value })),
+      );
+
+      expect(text).toContain(
+        'Malformed notification.verifier_key_anchor_requested',
+      );
+      expect(text).toContain(reason);
+    },
+  );
+
+  it('never quotes the address', () => {
+    expect(
+      message(() => parseKey(verifierKeyPayload({ recipientEmail: 'v @x' }))),
+    ).not.toContain('v @x');
+  });
+
+  it.each(VERIFIER_KEY_ANCHOR_FIELDS)('rejects a missing %s', (field) => {
+    const payload = verifierKeyPayload();
+    delete payload[field];
+
+    expect(message(() => parseKey(payload))).toContain(`"${field}"`);
+  });
+
+  it('rejects a command from another producer', () => {
+    expect(
+      message(() =>
+        parseVerifierKeyAnchorRequested(
+          verifierKeyBody({ producer: 'audit-service' }),
+        ),
+      ),
+    ).toContain('producer must be "bank-service"');
   });
 });

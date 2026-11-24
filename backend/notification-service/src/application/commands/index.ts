@@ -89,6 +89,15 @@ export {
   ESCROW_REMEDY_REJECTED_REASON_MAX_LENGTH,
   type EscrowRemedyRejectedRequestedCommand,
 } from './escrow-remedy-rejected-requested.command';
+export type { AuditDigestRequestedCommand } from './audit-digest-requested.command';
+export type { AuditFailureRequestedCommand } from './audit-failure-requested.command';
+export {
+  SECURITY_LOCK_ACTIONS,
+  type SecurityLockAction,
+  type SecurityLockChangedRequestedCommand,
+} from './security-lock-changed-requested.command';
+export type { ReconciliationMismatchRequestedCommand } from './reconciliation-mismatch-requested.command';
+export type { VerifierKeyAnchorRequestedCommand } from './verifier-key-anchor-requested.command';
 export { RECIPIENT_ROLES } from './notification-recipient';
 export type {
   NotificationRecipient,
