@@ -55,6 +55,9 @@ const MilestonePage = lazy(() =>
 const DisputesPage = lazy(() =>
   import("@/routes/disputes-page").then((module) => ({ default: module.DisputesPage }))
 )
+const AdminAuditPage = lazy(() =>
+  import("@/routes/admin-audit-page").then((module) => ({ default: module.AdminAuditPage }))
+)
 
 const ComponentShowcase = import.meta.env.DEV
   ? lazy(() => import("@/routes/component-showcase").then((module) => ({ default: module.ComponentShowcase })))
@@ -98,6 +101,9 @@ function RouteContent() {
             </Route>
             <Route element={<RequireRole roles={["OPERATOR"]} />}>
               <Route path="/operations/remedy" element={<RemedyRetryPage />} />
+            </Route>
+            <Route element={<RequireRole roles={["ADMIN"]} />}>
+              <Route path="/admin/audit" element={<AdminAuditPage />} />
             </Route>
             <Route element={<RequireRole roles={["ARBITRATOR"]} />}>
               <Route path="/disputes" element={<DisputesPage />} />
