@@ -643,20 +643,22 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
     }
 
     /**
-     * golden-flow-events.yaml remedyFinalized (#137): the legs of a FINALIZED RemedyDecision on a milestone dispute.
-     * attributionDecisionId is the BreachCase id (the AttributionDecision is the case's decision).
+     * golden-flow-events.yaml remedyFinalized: the legs of a FINALIZED RemedyDecision, on a milestone dispute (#137)
+     * or on the whole contract for its normal completion (#238, D94: no breach case, affectedMilestoneIds empty).
+     * attributionDecisionId is the BreachCase id when there is a case, else the decision's own id (D94).
      */
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public void remedyFinalized(Contract contract, RemedyDecision decision, Instant at) {
-        if (decision.status() != RemedyStatus.FINALIZED || decision.breachCaseId() == null
+        if (decision.status() != RemedyStatus.FINALIZED
+                || (decision.breachCaseId() == null) != decision.contractLevel()
                 || !decision.contractId().equals(contract.getContractId().value())) {
             throw new IllegalStateException("remedy.finalized for remedy decision " + decision.remedyDecisionId()
                     + " in status " + decision.status());
         }
         String contractId = uuid(contract.getContractId().value(), "contractId");
         String decisionId = uuid(decision.remedyDecisionId(), "remedyDecisionId");
-        String breachCaseId = uuid(decision.breachCaseId(), "breachCaseId");
+        String breachCaseId = decision.breachCaseId() == null ? null : uuid(decision.breachCaseId(), "breachCaseId");
         List<Map<String, Object>> legs = new java.util.ArrayList<>();
         for (RemedyLeg leg : decision.legs()) {
             Map<String, Object> l = new LinkedHashMap<>();
@@ -669,12 +671,13 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
         }
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("remedyDecisionId", decisionId);
-        payload.put("attributionDecisionId", breachCaseId);
+        payload.put("attributionDecisionId", uuid(decision.attributionDecisionId(), "attributionDecisionId"));
         payload.put("breachCaseId", breachCaseId);
         payload.put("contractId", contractId);
         payload.put("buyerId", uuid(contract.getBuyerId(), "buyerId"));
         payload.put("sellerId", uuid(contract.getSellerId(), "sellerId"));
-        payload.put("affectedMilestoneIds", List.of(uuid(decision.milestoneId(), "milestoneId")));
+        payload.put("affectedMilestoneIds",
+                decision.contractLevel() ? List.of() : List.of(uuid(decision.milestoneId(), "milestoneId")));
         payload.put("settledMilestoneCount", decision.settledMilestoneCount());
         payload.put("finalBreachingRole",
                 decision.finalBreachingRole() == null ? null : decision.finalBreachingRole().name());

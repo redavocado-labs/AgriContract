@@ -4,6 +4,7 @@ import com.agricontract.calendar.VietnamBusinessDays;
 import com.agricontract.contract.application.port.ContractEventPublisher;
 import com.agricontract.contract.application.port.MilestoneFlagSettings;
 import com.agricontract.contract.application.port.TransactionRunner;
+import com.agricontract.contract.application.service.ContractCompletion;
 import com.agricontract.contract.application.service.MilestoneContestStep;
 import com.agricontract.contract.domain.model.Contract;
 import com.agricontract.contract.domain.model.milestone.ContestedBy;
@@ -40,6 +41,7 @@ public class SellerSilenceMilestonesUseCase {
     private final MilestoneRepository milestones;
     private final ContractRepository contracts;
     private final MilestoneContestStep contestStep;
+    private final ContractCompletion completion;
     private final ContractEventPublisher events;
     private final MilestoneFlagSettings settings;
     private final VietnamBusinessDays calendar;
@@ -91,6 +93,7 @@ public class SellerSilenceMilestonesUseCase {
         log.info("event=milestone_settled contractId={} milestoneId={} path={} sellerAmount={} buyerRefundAmount={}",
                 contractId, milestoneId, settlement.path(), settlement.sellerAmount().wire(),
                 settlement.buyerRefundAmount().wire());
+        completion.afterSettled(contract, now);
         return true;
     }
 }
