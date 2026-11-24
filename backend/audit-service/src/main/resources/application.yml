@@ -25,6 +25,9 @@ agricontract:
 audit:
   dlq-monitor:
     interval-ms: 300000
+gateway:
+  # D97: /api/** is reached only through the gateway, which sends this secret with the user identity.
+  internal-secret: ${GATEWAY_INTERNAL_SECRET}
 server:
   port: ${SERVER_PORT:8092}
 management:
