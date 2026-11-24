@@ -50,6 +50,7 @@ export function ResolutionReview({
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
+  const lock = useRef(false)
   const keys = useRef<{ review: string; resolve: string } | null>(null)
   const resolution = breachCase.computedResolution
   const milestone = useQuery({
@@ -68,7 +69,8 @@ export function ResolutionReview({
     retry: false,
   })
   async function approve() {
-    if (!resolution || busy) return
+    if (!resolution || lock.current || breachCase.status === "RESOLVED") return
+    lock.current = true
     keys.current ??= {
       review: newIdempotencyKey(),
       resolve: newIdempotencyKey(),
@@ -96,9 +98,13 @@ export function ResolutionReview({
       const { status } = parseApiError(failure)
       if (status >= 400 && status < 500) keys.current = null
     } finally {
+      await Promise.all([
+        cache.invalidateQueries({ queryKey: ["arbitration"] }),
+        cache.invalidateQueries({ queryKey: ["breach-case", breachCase.contractId] }),
+        cache.invalidateQueries({ queryKey: ["milestone"] }),
+      ])
+      lock.current = false
       setBusy(false)
-      await cache.invalidateQueries({ queryKey: ["arbitration"] })
-      await cache.invalidateQueries({ queryKey: ["breach-case"] })
     }
   }
   const d = milestone.data

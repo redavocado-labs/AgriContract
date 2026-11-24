@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom"
+import { Link, useNavigate, useParams } from "react-router-dom"
 import { ContractsLayout } from "@/features/contracts/components/contracts-layout"
 import { useContract } from "@/features/contracts/hooks/use-contracts"
 import {
@@ -6,6 +6,9 @@ import {
   participantRole,
 } from "@/features/contracts/types/presentation"
 import { useOrganizationPermissions } from "@/features/organization/hooks/use-organization-permissions"
+import { RemedyDecisionDetails } from "@/features/contracts/components/remedy-decision"
+import { BreachCasePanel } from "@/features/milestones/components/breach-case-panel"
+import { DisputeExitPanel } from "@/features/milestones/components/dispute-exit-panel"
 import type { MilestoneDetail } from "@/features/milestones/api/milestones"
 import { useMilestoneDetail } from "@/features/milestones/hooks/use-milestone"
 import {
@@ -124,9 +127,19 @@ function Milestone({
         detail.data && (
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
             <div className="min-w-0 space-y-5">
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  disabled={detail.isFetching}
+                  onClick={() => void detail.refetch()}
+                >
+                  Tải lại trạng thái
+                </Button>
+              </div>
               <Action
                 detail={detail.data}
                 viewer={viewer}
+                hash={contract.data?.hash ?? null}
                 inspectionPending={
                   contract.data?.terms.inspectionTerms != null &&
                   typeof contract.data.terms.inspectionTerms === "object" &&
@@ -235,10 +248,12 @@ function Summary({ detail }: { detail: MilestoneDetail }) {
 function Action({
   detail,
   viewer,
+  hash,
   inspectionPending,
 }: {
   detail: MilestoneDetail
   viewer: Viewer
+  hash: string | null
   inspectionPending: boolean
 }) {
   const { canCreateOrSign } = useOrganizationPermissions()
@@ -281,7 +296,10 @@ function Action({
         )
       case "BUYER_RECEIVED":
         return acting && viewer === "BUYER" ? (
-          <BuyerDecisionPanel detail={detail} inspectionPending={inspectionPending} />
+          <BuyerDecisionPanel
+            detail={detail}
+            inspectionPending={inspectionPending}
+          />
         ) : (
           <WaitingPanel
             detail={detail}
@@ -354,6 +372,23 @@ function Action({
     <>
       {notice}
       {body}
+      {detail.remedyDecision && (
+        <RemedyDecisionDetails decision={detail.remedyDecision} />
+      )}
+      {viewer === "OPERATOR" && (
+        <Link
+          className="text-sm text-primary underline"
+          to={`/operations/remedy?contractId=${encodeURIComponent(detail.contractId)}`}
+        >
+          Gửi lại lệnh tiền lỗi
+        </Link>
+      )}
+      {party && detail.breachCaseId && (
+        <BreachCasePanel detail={detail} role={viewer} canAct={acting} />
+      )}
+      {party && acting && detail.disputeExit && (
+        <DisputeExitPanel detail={detail} hash={hash} role={viewer} />
+      )}
     </>
   )
 }

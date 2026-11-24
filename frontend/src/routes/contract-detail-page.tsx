@@ -7,6 +7,7 @@ import {
   ContractFailure,
   ContractLoading,
 } from "@/features/contracts/components/contract-state"
+import { RemedyDecisionDetails } from "@/features/contracts/components/remedy-decision"
 import { ContractTerms } from "@/features/contracts/components/contract-terms"
 import { SigningPanel } from "@/features/contracts/components/signing-panel"
 import { NegotiationForm } from "@/features/contracts/components/negotiation-form"
@@ -76,9 +77,37 @@ function Detail({ id }: { id: string }) {
                 hợp đồng do máy chủ phát hành.
               </Banner>
             )}
-            <Banner variant={contract.status === "ACTIVE" ? "success" : "info"}>
-              {activationMessage(contract.status)}
-            </Banner>
+            {contract.terminalDecision ? (
+              <>
+                <Banner
+                  variant={
+                    contract.terminalDecision.moneyCleared ? "success" : "info"
+                  }
+                >
+                  {contract.terminalDecision.moneyCleared
+                    ? contract.terminalDecision.targetStatus === "SETTLED"
+                      ? "Đã hoàn tất"
+                      : "Đã chấm dứt hợp đồng"
+                    : "Đang chờ trả cọc/tiền về"}
+                </Banner>
+                <RemedyDecisionDetails
+                  decision={contract.terminalDecision.remedyDecision}
+                  title="Quyết định tiền cuối hợp đồng"
+                />
+              </>
+            ) : (
+              <Banner
+                variant={
+                  contract.status === "ACTIVE" || contract.status === "SETTLED"
+                    ? "success"
+                    : "info"
+                }
+              >
+                {contract.status === "SETTLED"
+                  ? "Đã hoàn tất"
+                  : activationMessage(contract.status)}
+              </Banner>
+            )}
             {contract.status === "SIGNED" && (
               <p className="text-xs text-text-secondary">
                 Tự kiểm tra mỗi 5 giây khi trang mở, tối đa 2 phút; dừng khi có
