@@ -60,4 +60,11 @@ export interface NotificationLogRepository {
    * an address, a secret or an OTP (design §3.1).
    */
   markFailed(key: NotificationKey, failureReason: string): Promise<void>;
+
+  /**
+   * Whether the email of `key` is already SENT. A read, not a claim: a
+   * caller uses it to skip work before sending (reading an attachment), and
+   * still claims before it sends, so a race only costs that work.
+   */
+  isSent(key: NotificationKey): Promise<boolean>;
 }

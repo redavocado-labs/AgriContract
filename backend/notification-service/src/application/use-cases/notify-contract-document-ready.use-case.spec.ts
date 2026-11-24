@@ -117,6 +117,30 @@ describe('NotifyContractDocumentReadyUseCase', () => {
     expect(email.sent).toHaveLength(2);
   });
 
+  it('a redelivery after everyone is SENT returns without reading the file, even if file-service now fails', async () => {
+    const { email, files, useCase } = setup();
+    await useCase.execute(documentReadyCommand());
+    files.answers = [new FileNotReadyError(DOCUMENT_FILE_ID)];
+
+    await useCase.execute(documentReadyCommand());
+
+    expect(files.reads).toEqual([DOCUMENT_FILE_ID]);
+    expect(email.sent).toHaveLength(2);
+  });
+
+  it('a redelivery reads the file again only for whoever is not SENT, and mails only them', async () => {
+    const { email, files, useCase } = setup();
+    email.failFor.add(ANCHOR_RECIPIENTS[1].email);
+    await expect(useCase.execute(documentReadyCommand())).rejects.toThrow();
+    email.failFor.clear();
+    email.sent.length = 0;
+
+    await useCase.execute(documentReadyCommand());
+
+    expect(files.reads).toHaveLength(2);
+    expect(email.sent.map((m) => m.to)).toEqual([ANCHOR_RECIPIENTS[1].email]);
+  });
+
   it('a file that is not READY yet rethrows, mails nobody, and the redelivery sends', async () => {
     const { email, files, useCase } = setup();
     files.answers = [new FileNotReadyError(DOCUMENT_FILE_ID)];

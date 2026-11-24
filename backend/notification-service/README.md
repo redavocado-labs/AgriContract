@@ -111,68 +111,6 @@ and its addresses sit in `payload.recipients`, so the publisher — contract-ser
   characters, so the mail goes out as 7bit. `test/contract/contract-activation-failed-requested.contract.spec.ts`
   checks the parser against the contract in both directions.
 
-### Final signed contract PDF (Phase 2, `notification.contract_document_ready_requested`)
-
-| | |
-| --- | --- |
-| Queue | `notification-svc.notification.contract_document_ready_requested` (DLX `notification-svc.contracts.dlx`) |
-| Exchange, routing key | `agricontract.contracts`, `notification.contract_document_ready_requested` |
-| Recipients | every entry of `payload.recipients` (buyer and seller), `recipient_user_id` = its `userId` |
-| Row per email | `notification_type = CONTRACT_FINAL_PDF`, `template_version = contract-final-pdf/v1`, **`event_id` = `documentId`** |
-
-- The canonical Phase 2 final-contract email (design §3.3). The PDF is not in the command: it is read from
-  file-service by the trusted `fileId` (`GET /internal/v1/files/{fileId}` on `FILE_SERVICE_URL`, default
-  `http://localhost:8089`, compose `http://file-service:8089`, with `SERVICE_INTERNAL_SECRET`), once per delivery
-  and before anyone is mailed, and attached as `contract-<contractId>.pdf` with the content type file-service
-  recorded.
-- **The bytes must hash to `documentFileHash`** or nobody is mailed: a different SHA-256 is dead-lettered at once
-  (`DocumentFileMismatchError`). file-service already cuts a response short when the stored bytes differ from its
-  record; a body shorter than its Content-Length is treated as unavailable and retried, never attached.
-- file-service answers 404 for unknown, not READY, FAILED and deleted alike: retried (3 attempts), then the DLQ.
-  503, 5xx, a timeout (30 s) or a refused connection: retried. 401 (secret differs), another 4xx or a file over
-  10 MiB: dead-lettered at once (`FileServiceRejectedError`). No log line quotes a response or the secret.
-- **Dedup by `documentId`** (design §5, the contract's `x-deduplication-key`
-  `documentId + recipient.email + CONTRACT_FINAL_PDF`): the row's event key is the document, so a second command
-  for the same document never sends the PDF twice to the same address.
-- The body gives contract, document, template code and version, `generatedAt` in Vietnam time and UTC, the file
-  id, name, size and `documentFileHash` of the attachment, and `sourceContentHash`. The row keeps the text, not the
-  PDF, so the text is what identifies the attachment (design §3.3: size + SHA-256; no migration needed).
-- contract-service does not publish it yet; this service declares the queue, its DLQ and the DLX.
-  `test/contract/contract-document-ready-requested.contract.spec.ts` checks the parser against the contract in
-  both directions; `notify-contract-document-ready.int-spec.ts` sends it through MySQL, MailHog and a stand-in
-  file-service over HTTP and checks the SHA-256 of the attachment that arrived.
-
-### Milestone funding (Phase 2, `notification.milestone_funding_status_requested`)
-
-| | |
-| --- | --- |
-| Queue | `notification-svc.notification.milestone_funding_status_requested` (DLX `notification-svc.contracts.dlx`) |
-| Exchange, routing key | `agricontract.contracts`, `notification.milestone_funding_status_requested` |
-| Recipients | every entry of `payload.recipients` (the publisher picks buyer, seller, operator), `recipient_user_id` = its `userId` |
-| Row per email | one kind per `statusType`: |
-| | `FUNDING_REMINDER` → `MILESTONE_FUNDING_REMINDER`, `milestone-funding-reminder/v1` |
-| | `FUNDING_FAILED` → `MILESTONE_FUNDING_FAILED`, `milestone-funding-failed/v1` |
-| | `FUNDING_CURE_DEADLINE` → `MILESTONE_FUNDING_CURE_DEADLINE`, `milestone-funding-cure-deadline/v1` |
-
-- The buyer's money for a milestone is locked in escrow before the seller has to prepare it (milestone-escrow
-  design §6b). `FUNDING_REMINDER`: have the money ready. `FUNDING_FAILED`: escrow ran out of lock retries; nothing
-  is taken, nobody is in breach yet, the buyer has a cure window and an operator can retry the lock.
-  `FUNDING_CURE_DEADLINE`: the end of that window, after which the platform records a funding breach by the buyer
-  unless the failure was the bank's or the platform's.
-- Every mail gives `contractId`, `milestoneId`, the `deadline` in Vietnam time and UTC when there is one (a cure
-  deadline without one says so) and the `reason` word-wrapped to 72 columns when it is not blank. The text then
-  depends on the recipient's role: the buyer is told what to do, the seller that its delivery clock is paused and
-  what it may do after the deadline, anyone else (an operator) the facts and the retry.
-- `deadline` and `reason` are optional and nullable with any `statusType`: which status carries them is the
-  publisher's rule.
-- contract-service does not publish it yet; this service declares the queue, its DLQ and the DLX, so its
-  publish routes once both run. Should contract-service declare it ahead as it does the others, it copies these
-  names and options byte for byte.
-- Same claim, dedup, redelivery and dead-letter rules as the signed-contract email; fixed lines stay within 76
-  characters. `test/contract/milestone-funding-status-requested.contract.spec.ts` checks the parser against the
-  contract in both directions; `notify-milestone-funding-status.int-spec.ts` sends each status through MySQL and
-  MailHog.
-
 ### Offer withdrawn (Phase 2, D43, `notification.contract_terminated_requested`)
 
 | | |
