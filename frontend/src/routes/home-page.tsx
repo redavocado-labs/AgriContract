@@ -11,9 +11,10 @@ function Hero() {
   return (
     <div className="bg-primary text-white">
       <div className="mx-auto grid max-w-[1160px] items-center gap-8 px-4 py-10 sm:px-10 lg:grid-cols-[1.15fr_1fr] lg:gap-14 lg:pt-[72px] lg:pb-[76px]">
-        <div>
-          <div className="mb-[22px] inline-flex items-center gap-2 rounded-full bg-white/[0.12] px-3 py-1.5 text-[12.5px] text-primary-tint">
-            <span className="ms text-base" aria-hidden="true">verified_user</span> Nền tảng hợp đồng nông sản có ký quỹ
+        <div className="min-w-0">
+          <div className="mb-[22px] inline-flex max-w-full items-center gap-2 rounded-full bg-white/[0.12] px-3 py-1.5 text-[12px] text-primary-tint sm:text-[12.5px]">
+            <span className="ms shrink-0 text-base" aria-hidden="true">verified_user</span>
+            <span>Nền tảng hợp đồng nông sản có ký quỹ</span>
           </div>
           <h1 className="mb-5 text-[32px] leading-[1.18] font-medium tracking-[-0.015em] sm:text-[42px]">
             Mua bán nông sản kỳ hạn, không lo bẻ kèo.
@@ -25,20 +26,20 @@ function Hero() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               to="/register"
-              className="rounded-[9px] bg-white px-6 py-[13px] text-[15px] font-medium text-primary"
+              className="max-w-full rounded-[9px] bg-white px-4 py-[13px] text-[15px] font-medium text-primary sm:px-6"
             >
               Đăng ký doanh nghiệp
             </Link>
             <Link
               to="/listing"
-              className="inline-flex items-center gap-2 rounded-[9px] border border-white/35 px-6 py-[13px] text-[15px] font-medium text-white hover:bg-white/10"
+              className="inline-flex max-w-full items-center gap-2 rounded-[9px] border border-white/35 px-4 py-[13px] text-[15px] font-medium text-white hover:bg-white/10 sm:px-6"
             >
               Xem sàn nguồn hàng <span className="ms text-lg" aria-hidden="true">arrow_forward</span>
             </Link>
           </div>
         </div>
 
-        <div className="rounded-2xl bg-surface px-6 py-[22px] text-text-primary shadow-[0_20px_50px_rgba(15,23,42,0.18)]">
+        <div className="min-w-0 rounded-2xl bg-surface px-5 py-[22px] text-text-primary shadow-[0_20px_50px_rgba(15,23,42,0.18)] sm:px-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <span className="text-[13px] font-medium text-text-secondary">Hợp đồng minh hoạ</span>
             <StatusBadge variant="info">Đang thực hiện</StatusBadge>
