@@ -1,0 +1,10 @@
+# Overrides of docker-compose.yml for the E2E run (#149), applied with
+#   docker compose -f docker-compose.yml -f e2e/compose.e2e.yml up -d
+# Only timings change: a new plot has no forest-baseline result in compose (no baseline is loaded), so it waits
+# PLOT_GEO_VERIFICATION_TIMEOUT_HOURS before it may back a listing. 0 and a short sweep make it UNVERIFIED at once,
+# as product-service's application.yml suggests for local and Bruno runs.
+services:
+  product-service:
+    environment:
+      PLOT_GEO_VERIFICATION_TIMEOUT_HOURS: "0"
+      PLOT_GEO_VERIFICATION_TIMEOUT_CHECK_MS: "2000"
