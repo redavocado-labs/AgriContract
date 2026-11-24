@@ -32,6 +32,11 @@ import {
 
 type AnyAuditRecord = PartyAuditRecord | AdminAuditRecord
 
+function shortAuditTime(value?: string | null): string {
+  if (!value) return "—"
+  return vietnamTime(value).replace(" (giờ Việt Nam)", "")
+}
+
 function isAdminRecord(record: AnyAuditRecord): record is AdminAuditRecord {
   return "globalSeq" in record
 }
@@ -323,14 +328,14 @@ export function AuditRecordList({
         <table className="w-full border-collapse text-left text-sm">
           <thead>
             <tr className="bg-surface-muted text-[13px] font-medium text-text-secondary">
-              <th className="px-4 py-2.5">{isGlobal ? "Seq" : "#"}</th>
-              {mode === "admin-contract" && <th className="px-4 py-2.5">Seq</th>}
-              <th className="px-4 py-2.5">Thời điểm</th>
-              {isGlobal && <th className="px-4 py-2.5">Chủ thể</th>}
-              <th className="px-4 py-2.5">Sự kiện</th>
-              <th className="px-4 py-2.5">Mã</th>
-              {isAdmin && <th className="px-4 py-2.5">Nối cùng chủ thể</th>}
-              {isAdmin && <th className="px-4 py-2.5">Nối toàn hệ thống</th>}
+              <th className="px-3 py-2.5">{isGlobal ? "Seq" : "#"}</th>
+              {mode === "admin-contract" && <th className="px-3 py-2.5">Seq</th>}
+              <th className="px-3 py-2.5">Thời điểm (VN)</th>
+              {isGlobal && <th className="px-3 py-2.5">Chủ thể</th>}
+              <th className="px-3 py-2.5">Sự kiện</th>
+              <th className="px-3 py-2.5">Mã</th>
+              {isAdmin && <th className="px-3 py-2.5">Nối cùng chủ thể</th>}
+              {isAdmin && <th className="px-3 py-2.5">Nối toàn hệ thống</th>}
             </tr>
           </thead>
           <tbody>
@@ -349,20 +354,20 @@ export function AuditRecordList({
                     unreadable && !broken && "bg-danger-tint/40 text-danger"
                   )}
                 >
-                  <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">
+                  <td className="px-3 py-3 font-mono text-xs whitespace-nowrap">
                     {orderLabel}
                   </td>
                   {mode === "admin-contract" && (
-                    <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">
+                    <td className="px-3 py-3 font-mono text-xs whitespace-nowrap">
                       {adminRow?.globalSeq}
                     </td>
                   )}
-                  <td className="px-4 py-3 text-xs whitespace-nowrap text-text-secondary">
-                    {row.createdAt ? vietnamTime(row.createdAt) : "—"}
+                  <td className="px-3 py-3 text-xs whitespace-nowrap text-text-secondary">
+                    {shortAuditTime(row.createdAt)}
                   </td>
                   {isGlobal && adminRow && (
                     <td
-                      className="px-4 py-3 text-xs whitespace-nowrap"
+                      className="px-3 py-3 text-xs whitespace-nowrap"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {adminRow.subjectType === "CONTRACT" &&
@@ -380,7 +385,7 @@ export function AuditRecordList({
                       )}
                     </td>
                   )}
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-3">
                     {unreadable ? (
                       <span className="font-medium text-danger">
                         Bản ghi không đọc được
@@ -391,15 +396,15 @@ export function AuditRecordList({
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="px-3 py-3 whitespace-nowrap">
                     <HashCell hash={row.recordHash} />
                   </td>
                   {isAdmin && adminRow && (
                     <>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-3 py-3 whitespace-nowrap">
                         <HashCell hash={adminRow.prevHashSubject} />
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-3 py-3 whitespace-nowrap">
                         <HashCell hash={adminRow.prevHashGlobal} />
                       </td>
                     </>
