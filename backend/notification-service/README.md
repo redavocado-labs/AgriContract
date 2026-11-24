@@ -111,6 +111,37 @@ and its addresses sit in `payload.recipients`, so the publisher — contract-ser
   characters, so the mail goes out as 7bit. `test/contract/contract-activation-failed-requested.contract.spec.ts`
   checks the parser against the contract in both directions.
 
+### Milestone funding (Phase 2, `notification.milestone_funding_status_requested`)
+
+| | |
+| --- | --- |
+| Queue | `notification-svc.notification.milestone_funding_status_requested` (DLX `notification-svc.contracts.dlx`) |
+| Exchange, routing key | `agricontract.contracts`, `notification.milestone_funding_status_requested` |
+| Recipients | every entry of `payload.recipients` (the publisher picks buyer, seller, operator), `recipient_user_id` = its `userId` |
+| Row per email | one kind per `statusType`: |
+| | `FUNDING_REMINDER` → `MILESTONE_FUNDING_REMINDER`, `milestone-funding-reminder/v1` |
+| | `FUNDING_FAILED` → `MILESTONE_FUNDING_FAILED`, `milestone-funding-failed/v1` |
+| | `FUNDING_CURE_DEADLINE` → `MILESTONE_FUNDING_CURE_DEADLINE`, `milestone-funding-cure-deadline/v1` |
+
+- The buyer's money for a milestone is locked in escrow before the seller has to prepare it (milestone-escrow
+  design §6b). `FUNDING_REMINDER`: have the money ready. `FUNDING_FAILED`: escrow ran out of lock retries; nothing
+  is taken, nobody is in breach yet, the buyer has a cure window and an operator can retry the lock.
+  `FUNDING_CURE_DEADLINE`: the end of that window, after which the platform records a funding breach by the buyer
+  unless the failure was the bank's or the platform's.
+- Every mail gives `contractId`, `milestoneId`, the `deadline` in Vietnam time and UTC when there is one (a cure
+  deadline without one says so) and the `reason` word-wrapped to 72 columns when it is not blank. The text then
+  depends on the recipient's role: the buyer is told what to do, the seller that its delivery clock is paused and
+  what it may do after the deadline, anyone else (an operator) the facts and the retry.
+- `deadline` and `reason` are optional and nullable with any `statusType`: which status carries them is the
+  publisher's rule.
+- contract-service does not publish it yet; this service declares the queue, its DLQ and the DLX, so its
+  publish routes once both run. Should contract-service declare it ahead as it does the others, it copies these
+  names and options byte for byte.
+- Same claim, dedup, redelivery and dead-letter rules as the signed-contract email; fixed lines stay within 76
+  characters. `test/contract/milestone-funding-status-requested.contract.spec.ts` checks the parser against the
+  contract in both directions; `notify-milestone-funding-status.int-spec.ts` sends each status through MySQL and
+  MailHog.
+
 ### Offer withdrawn (Phase 2, D43, `notification.contract_terminated_requested`)
 
 | | |
