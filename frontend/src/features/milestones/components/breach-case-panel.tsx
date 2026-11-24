@@ -93,15 +93,20 @@ function BreachDetail({
           items={[
             {
               label: "Mã báo cáo giám định",
+              stackOnNarrow: true,
               value: (
-                <span className="break-all font-mono">
+                <span className="font-mono text-xs @sm:text-sm">
                   {report.inspectionReportId}
                 </span>
               ),
             },
             {
-              label: "Khối lượng được chấp nhận",
-              value: `${displayKg(report.acceptedQuantityKg)} kg`,
+              label: "Khối lượng chấp nhận",
+              value: (
+                <span className="whitespace-nowrap">
+                  {displayKg(report.acceptedQuantityKg)} kg
+                </span>
+              ),
             },
             ...(report.qualityDisposition
               ? [
@@ -112,12 +117,24 @@ function BreachDetail({
                 ]
               : []),
             {
-              label: "Tiền bên bán nhận theo báo cáo",
-              value: <MoneyDisplay amount={report.sellerEntitlementAmount} />,
+              label: "Tiền bên bán nhận",
+              stackOnNarrow: true,
+              value: (
+                <MoneyDisplay
+                  className="text-sm @sm:text-base"
+                  amount={report.sellerEntitlementAmount}
+                />
+              ),
             },
             {
-              label: "Tiền bên mua được hoàn theo báo cáo",
-              value: <MoneyDisplay amount={report.buyerRefundAmount} />,
+              label: "Tiền bên mua được hoàn",
+              stackOnNarrow: true,
+              value: (
+                <MoneyDisplay
+                  className="text-sm @sm:text-base"
+                  amount={report.buyerRefundAmount}
+                />
+              ),
             },
           ]}
         />
@@ -127,6 +144,7 @@ function BreachDetail({
           items={[
             {
               label: "Thời điểm quyết định",
+              stackOnNarrow: true,
               value: vietnamTime(breach.resolvedAt),
             },
             {

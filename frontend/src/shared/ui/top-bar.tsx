@@ -26,8 +26,8 @@ function TopBar({
       )}
       {...props}
     >
-      <div className="flex h-9 max-w-70 flex-1 items-center rounded-sm border-[0.5px] border-border px-3 text-sm text-text-muted">
-        {searchPlaceholder}
+      <div className="flex h-9 min-w-24 max-w-70 flex-1 items-center rounded-sm border-[0.5px] border-border px-3 text-sm text-text-muted">
+        <span className="truncate">{searchPlaceholder}</span>
       </div>
       <span className="relative flex shrink-0">
         <span className="ms text-[22px] text-text-secondary">
