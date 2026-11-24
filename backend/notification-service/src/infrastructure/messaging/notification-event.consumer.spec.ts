@@ -27,6 +27,8 @@ import {
   inspectorEnvelope,
   legAlertCommand,
   legAlertEnvelope,
+  fundingCommand,
+  fundingEnvelope,
   remedyLegAlertCommand,
   remedyLegAlertEnvelope,
   remedyRejectedCommand,
@@ -86,6 +88,7 @@ const HANDLERS = [
   'escrowLegAlert',
   'escrowRemedyLegAlert',
   'escrowRemedyRejected',
+  'milestoneFundingStatus',
   'categoryApproved',
   'categoryRejected',
 ] as const;
@@ -504,6 +507,12 @@ describe('NotificationEventConsumer', () => {
   });
 
   it.each([
+    [
+      'milestoneFundingStatus',
+      'notification-svc.notification.milestone_funding_status_requested',
+      fundingEnvelope,
+      fundingCommand,
+    ],
     [
       'escrowRemedyLegAlert',
       'notification-svc.notification.escrow_remedy_leg_alert_requested',

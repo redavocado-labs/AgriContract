@@ -3,6 +3,7 @@ import { COMMAND_KINDS } from '../notification-command-kinds';
 import { OperatorEmailNotConfiguredError } from '../notification-errors';
 import type { NotificationSender } from '../notification-sender';
 import { vietnamTime } from '../vietnam-time';
+import { wrap } from '../wrap';
 
 /*
  * `notification.escrow_remedy_rejected_requested` -> the Operator (design §4,
@@ -77,27 +78,4 @@ export function escrowRemedyRejectedBody(
     'contract stays ACTIVE. It needs a developer to find the error.',
     '',
   ].join('\n');
-}
-
-/**
- * Greedy word wrap that keeps the reason's own line breaks; a word longer
- * than the width stays whole on its own line rather than being cut.
- */
-export function wrap(text: string, width: number): string[] {
-  const lines: string[] = [];
-  for (const paragraph of text.split(/\r?\n/)) {
-    let line = '';
-    for (const word of paragraph.split(/\s+/).filter((w) => w !== '')) {
-      if (line === '') {
-        line = word;
-      } else if (line.length + 1 + word.length <= width) {
-        line = `${line} ${word}`;
-      } else {
-        lines.push(line);
-        line = word;
-      }
-    }
-    lines.push(line);
-  }
-  return lines;
 }

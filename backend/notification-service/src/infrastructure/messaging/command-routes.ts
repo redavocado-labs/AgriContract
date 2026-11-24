@@ -11,6 +11,7 @@ import {
   type NotifyEscrowRemedyRejectedUseCase,
   type NotifyLevel15AssignmentWaitingUseCase,
   type NotifyLevel15InspectorAssignmentUseCase,
+  type NotifyMilestoneFundingStatusUseCase,
   type NotifyUserKycResultUseCase,
   type NotifyUserLockChangedUseCase,
 } from '../../application/use-cases';
@@ -25,6 +26,7 @@ import {
   parseEscrowRemedyRejectedRequested,
   parseLevel15AssignmentWaitingRequested,
   parseLevel15InspectorAssignmentRequested,
+  parseMilestoneFundingStatusRequested,
   parseUserKycResultRequested,
   parseUserLockChangedRequested,
   unsupportedCommand,
@@ -51,6 +53,7 @@ export interface CommandUseCases {
   escrowLegAlert: NotifyEscrowLegAlertUseCase;
   escrowRemedyLegAlert: NotifyEscrowRemedyLegAlertUseCase;
   escrowRemedyRejected: NotifyEscrowRemedyRejectedUseCase;
+  milestoneFundingStatus: NotifyMilestoneFundingStatusUseCase;
 }
 
 /**
@@ -81,6 +84,8 @@ export function commandRoutes(u: CommandUseCases): CommandRoutes {
       }
       await u.contractTerminated.execute(command);
     },
+    'notification.milestone_funding_status_requested': (b) =>
+      u.milestoneFundingStatus.execute(parseMilestoneFundingStatusRequested(b)),
     'notification.user_kyc_result_requested': (b) =>
       u.userKycResult.execute(parseUserKycResultRequested(b)),
     'notification.user_lock_changed_requested': (b) =>

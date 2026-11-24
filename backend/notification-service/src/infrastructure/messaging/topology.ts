@@ -17,6 +17,7 @@ export const TOPOLOGY = [
       'notification.activation_cancel_requested',
       'notification.contract_activation_failed_requested',
       'notification.contract_terminated_requested',
+      'notification.milestone_funding_status_requested',
     ],
   },
   {
@@ -82,6 +83,13 @@ export type RoutingKey = (typeof TOPOLOGY)[number]['routingKeys'][number];
  * offer was withdrawn; the other termination types come with #278. Declared
  * ahead the same way (TERMINATED_REQUESTED_QUEUE), same DLX.
  *
+ * `notification.milestone_funding_status_requested` (milestone-escrow §6b)
+ * tells the recipients it names about the buyer's funding of a milestone:
+ * reminder, failed lock, end of the cure window. Same exchange, same DLX.
+ * contract-service does not publish it yet; should it declare this queue
+ * ahead as it does the others, the names and options here are the ones to
+ * copy byte for byte.
+ *
  * `notification.user_kyc_result_requested` tells a user the KYC decision on
  * their organisation; its one address is `payload.recipientEmail`. It rides
  * user-service's exchange, agricontract.user, in a row of its own. Unlike
@@ -125,6 +133,7 @@ export const COMMAND_ROUTING_KEYS = [
   'notification.activation_cancel_requested',
   'notification.contract_activation_failed_requested',
   'notification.contract_terminated_requested',
+  'notification.milestone_funding_status_requested',
   'notification.user_kyc_result_requested',
   'notification.user_lock_changed_requested',
   'notification.level1_5_assignment_waiting_requested',

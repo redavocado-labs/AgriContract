@@ -21,6 +21,7 @@ import {
   NotifyEscrowLegAlertUseCase,
   NotifyEscrowRemedyLegAlertUseCase,
   NotifyEscrowRemedyRejectedUseCase,
+  NotifyMilestoneFundingStatusUseCase,
   NotifyContractAnchorUseCase,
   NotifyCategoryApprovedUseCase,
   NotifyCategoryRejectedUseCase,
@@ -132,6 +133,7 @@ async function harness(
       sender,
       operatorEmail,
     ),
+    milestoneFundingStatus: new NotifyMilestoneFundingStatusUseCase(sender),
   });
   const consumer = new NotificationEventConsumer(amqp, routes, commands);
   await consumer.onModuleInit();
