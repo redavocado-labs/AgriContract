@@ -114,6 +114,16 @@ const errorMessages: Record<string, string> = {
     "Tổng khối lượng các đợt khác số lượng đã giữ hàng. Hai bên cần sửa lịch giao trước khi ký.",
   DELIVERY_SCHEDULE_TOO_SOON:
     "Có đợt giao quá sát ngày để kịp khoá tiền. Hai bên sửa lịch giao rồi ký lại.",
+  DISPUTE_EXIT_NOT_ALLOWED: "Giai đoạn hiện tại đã đóng thao tác kết thúc tranh chấp.",
+  SETTLEMENT_PROPOSAL_CONFLICT: "Đề xuất đã thay đổi hoặc không còn khả dụng. Vui lòng tải lại.",
+  BREACH_CASE_ACTION_NOT_ALLOWED: "Hồ sơ hiện tại không cho phép thao tác này. Tải lại để kiểm tra trạng thái và hạn phản đối.",
+  OTP_CHALLENGE_NOT_FOUND: "Không tìm thấy yêu cầu OTP. Vui lòng gửi mã mới.",
+  OTP_CONTRACT_MISMATCH: "Mã OTP thuộc yêu cầu khác. Vui lòng gửi mã mới.",
+  OTP_LOCKED: "Đã hết số lần thử. Vui lòng gửi mã mới.",
+  BREACH_CASE_NOT_FOUND: "Không tìm thấy hồ sơ tranh chấp này.",
+  MILESTONE_NOT_FOUND: "Không tìm thấy đợt giao này.",
+  EVIDENCE_NOT_FOUND: "Không tìm thấy tệp bằng chứng này.",
+  REMEDY_RETRY_NOT_ALLOWED: "Trạng thái hợp đồng hiện tại không cho phép gửi lại lệnh tiền.",
   MILESTONE_ACTION_NOT_ALLOWED:
     "Đợt giao đã chuyển sang bước khác hoặc đã hết hạn thao tác. Tải lại để xem trạng thái mới.",
   WEIGH_CORRECTION_CLOSED:
@@ -141,7 +151,7 @@ const errorMessages: Record<string, string> = {
     "Điều khoản đã thay đổi. Mã OTP cũ không còn sử dụng được.",
   CONSENT_STATEMENT_OUTDATED:
     "Cam kết đã có phiên bản mới. Vui lòng tải lại trước khi tiếp tục.",
-  STEP_UP_REQUIRED: "Bạn cần đăng nhập lại để xác nhận thao tác ký.",
+  STEP_UP_REQUIRED: "Bạn cần đăng nhập lại để xác nhận thao tác này.",
   SIGNER_NOT_VERIFIED: "Hồ sơ chưa được xác minh nên chưa thể ký.",
   SIGNER_AUTHORIZATION_EXPIRED: "Ủy quyền đại diện đã hết hạn.",
   SIGNER_LOCKED: "Tài khoản ký đang bị khóa.",

@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { apiClient } from "@/shared/api/client"
 import { milestoneSchema } from "@/features/contracts/api/contracts"
+import type { Challenge } from "@/features/contracts/types/contract"
 import type { IssueType } from "../lib/milestone-consent"
 
 const money = z.string().regex(/^\d+\.00$/)
@@ -50,6 +51,31 @@ const settlement = z.object({
   buyerRefundAmount: money,
   settledAt: instant,
 })
+const partyRole = z.enum(["BUYER", "SELLER"])
+const disputeExit = z.object({
+  buyerPositionAmount: money,
+  sellerPositionAmount: money,
+  concedeAllowed: z.boolean(),
+  settlementAllowed: z.boolean(),
+  openProposal: z.object({
+    agreedSellerEntitlementAmount: money,
+    proposedByRole: partyRole,
+    proposedAt: instant,
+  }).nullable(),
+  freeCancelUntil: instant.nullish(),
+  inspectionFeePartyLabel: z.string().nullish(),
+})
+const remedy = z.object({
+  legs: z.array(z.object({
+    remedyLegId: z.string(),
+    type: z.string(),
+    amount: money,
+    recipientRole: partyRole,
+  })),
+  penaltyClaimAmount: money.nullish(),
+})
+export type Remedy = z.infer<typeof remedy>
+
 export const milestoneDetailSchema = z.object({
   contractId: z.string().min(1),
   milestone: milestoneSchema,
@@ -59,6 +85,8 @@ export const milestoneDetailSchema = z.object({
   evidence: z.array(evidence),
   settlement: settlement.nullable(),
   breachCaseId: z.string().nullable(),
+  disputeExit: disputeExit.nullish(),
+  remedy: remedy.nullish(),
 })
 export type MilestoneDetail = z.infer<typeof milestoneDetailSchema>
 export type EvidenceView = z.infer<typeof evidence>
@@ -254,7 +282,10 @@ export async function getBreachCase(
   const { data } = await apiClient.get(breachPath(contractId, breachCaseId), {
     signal,
   })
-  return breachCaseSchema.parse(data)
+  const detail = breachCaseSchema.parse(data)
+  if (detail.contractId !== contractId || detail.breachCaseId !== breachCaseId)
+    throw new Error("Phản hồi không khớp hồ sơ tranh chấp yêu cầu.")
+  return detail
 }
 
 export async function listArbitrationQueue(page: number, signal?: AbortSignal) {
@@ -298,6 +329,87 @@ export function approveComputedResolution(
       decisionSource: resolution.decisionSource,
       evidenceRefs: [resolution.inspectionReportId],
     },
+    key
+  )
+}
+
+export function contestBreachCase(
+  breach: BreachCase,
+  reason: string,
+  evidenceFileIds: string[],
+  key: string
+) {
+  return command(
+    `${breachPath(breach.contractId, breach.breachCaseId)}/contest`,
+    { reason, evidenceFileIds },
+    key
+  )
+}
+
+export function addContestEvidence(breach: BreachCase, fileIds: string[], key: string) {
+  return command(
+    `${breachPath(breach.contractId, breach.breachCaseId)}/contest/evidence`,
+    { fileIds },
+    key
+  )
+}
+
+export type DisputeExitIntent =
+  | { kind: "concede" }
+  | { kind: "settlement"; amount: string }
+
+const disputePath = (detail: MilestoneDetail) =>
+  `${base(detail.contractId, detail.milestone.milestoneId)}/dispute`
+
+export async function initiateDisputeExit(
+  detail: MilestoneDetail,
+  intent: DisputeExitIntent,
+  consent: ConsentInput,
+  key: string
+): Promise<Challenge> {
+  const { data } = await apiClient.post(
+    `${disputePath(detail)}/${intent.kind}/initiate`,
+    {
+      consentStatementVersion: consent.statementVersion,
+      presentedContentHash: consent.presentedContentHash,
+      ...(intent.kind === "settlement" && { agreedSellerEntitlementAmount: intent.amount }),
+    },
+    { headers: { "Idempotency-Key": key } }
+  )
+  return z.object({
+    otpId: z.uuid(),
+    expiresAt: z.iso.datetime({ offset: true }),
+  }).parse(data)
+}
+
+export function verifyDisputeExit(
+  detail: MilestoneDetail,
+  intent: DisputeExitIntent,
+  challenge: Challenge,
+  otpCode: string,
+  key: string
+) {
+  if (Date.parse(challenge.expiresAt) <= Date.now())
+    throw new Error("Mã OTP đã hết hạn. Vui lòng gửi mã mới.")
+  if (!/^\d{6}$/.test(otpCode)) throw new Error("Nhập đủ 6 chữ số OTP.")
+  return command(
+    `${disputePath(detail)}/${intent.kind}/verify`,
+    { otpId: challenge.otpId, otpCode },
+    key
+  )
+}
+
+export async function endSettlementProposal(detail: MilestoneDetail, key: string) {
+  const { status } = await apiClient.delete(`${disputePath(detail)}/settlement`, {
+    headers: { "Idempotency-Key": key },
+  })
+  if (status !== 204) throw new Error("Chưa nhận được xác nhận từ máy chủ.")
+}
+
+export function retryRemedyLegs(contractId: string, key: string) {
+  return command(
+    `/api/v1/contracts/${encodeURIComponent(contractId)}/remedy/retry-legs`,
+    undefined,
     key
   )
 }
