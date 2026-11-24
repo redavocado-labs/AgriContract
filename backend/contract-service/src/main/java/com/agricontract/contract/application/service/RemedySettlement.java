@@ -19,7 +19,8 @@ import java.time.Instant;
 /**
  * What happens when a RemedyDecision is FINALIZED (#137): the contested milestone becomes SETTLED on the money of the
  * decision's MILESTONE_PAYMENT legs, then remedy.finalized and milestone.dispute_resolved are written, in that order,
- * to the outbox. milestone.settled is never written on this path, and the contract status does not change. Runs inside
+ * to the outbox. milestone.settled is never written on this path. A last milestone completes the contract (#238), which
+ * stays ACTIVE until its lock is cleared. Runs inside
  * the caller's transaction, under the contract, case and milestone row locks.
  */
 @Slf4j
@@ -29,6 +30,7 @@ public class RemedySettlement {
     private final MilestoneRepository milestones;
     private final ContractEventPublisher events;
     private final TransactionRunner transactions;
+    private final ContractCompletion completion;
 
     public void settleAndPublish(Contract contract, RemedyDecision finalized, Milestone milestone,
                                  BreachCaseComputedResolution computed, Instant now) {
@@ -45,5 +47,6 @@ public class RemedySettlement {
         log.info("event=remedy_finalized contractId={} remedyDecisionId={} milestoneId={} finalBreachingRole={}"
                         + " legs={}", contract.getContractId().value(), finalized.remedyDecisionId(),
                 milestone.milestoneId(), finalized.finalBreachingRole(), finalized.legs().size());
+        completion.afterSettled(contract, now);
     }
 }

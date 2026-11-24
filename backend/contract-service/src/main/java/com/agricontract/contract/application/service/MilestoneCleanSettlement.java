@@ -20,7 +20,7 @@ import java.time.Instant;
  * The settle step shared by the buyer's confirm and the auto-confirm job (D77, D78). Runs inside the caller's
  * transaction, under the contract and milestone row locks: the milestone becomes SETTLED with its settlement, and
  * milestone.settled and milestone.buyer_confirmed are written to the outbox, each exactly once because a second settle
- * is refused by the milestone.
+ * is refused by the milestone. A last milestone completes the contract (#238).
  */
 @Slf4j
 @Service
@@ -30,6 +30,7 @@ public class MilestoneCleanSettlement {
     private final InspectionReportRepository inspectionReports;
     private final ContractEventPublisher events;
     private final TransactionRunner transactions;
+    private final ContractCompletion completion;
 
     /** True when the contract requires an inspection report before the milestones settle (D77). */
     public static boolean requiresInspection(Contract contract) {
@@ -61,6 +62,7 @@ public class MilestoneCleanSettlement {
         log.info("event=milestone_settled contractId={} milestoneId={} path={} sellerAmount={} buyerRefundAmount={}",
                 contract.getContractId().value(), milestone.milestoneId(), path, settlement.sellerAmount().wire(),
                 settlement.buyerRefundAmount().wire());
+        completion.afterSettled(contract, now);
         return settlement;
     }
 }

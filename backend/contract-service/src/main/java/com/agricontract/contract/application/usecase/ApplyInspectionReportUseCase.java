@@ -3,6 +3,7 @@ package com.agricontract.contract.application.usecase;
 import com.agricontract.contract.application.dto.InspectionReportCommands;
 import com.agricontract.contract.application.port.ContractEventPublisher;
 import com.agricontract.contract.application.port.TransactionRunner;
+import com.agricontract.contract.application.service.ContractCompletion;
 import com.agricontract.contract.application.service.MilestoneCleanSettlement;
 import com.agricontract.contract.application.service.MilestoneContestStep;
 import com.agricontract.contract.domain.model.Contract;
@@ -75,6 +76,7 @@ public class ApplyInspectionReportUseCase {
     private final MilestoneContestStep contestStep;
     private final ContractEventPublisher events;
     private final Level15Inspections level15;
+    private final ContractCompletion completion;
     private final SettlementProposalRepository proposals;
     private final TransactionRunner transactions;
     private final Clock clock;
@@ -237,6 +239,7 @@ public class ApplyInspectionReportUseCase {
         log.info("event=milestone_settled contractId={} milestoneId={} path={} sellerAmount={} buyerRefundAmount={}",
                 contract.getContractId().value(), milestone.milestoneId(), settlement.path(),
                 settlement.sellerAmount().wire(), settlement.buyerRefundAmount().wire());
+        completion.afterSettled(contract, now);
     }
 
     /**
