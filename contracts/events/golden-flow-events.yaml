@@ -631,6 +631,51 @@ $defs:
         x-publisher: bank-service
         x-consumers: [escrow-service]
         x-source: bank-service-phase2-design.md section 3; SDS Event Catalog 4.2
+  escrowContractLockCleared:
+    allOf:
+      - $ref: "./event-envelope.yaml"
+      - type: object
+        properties:
+          eventType: {const: escrow.contract_lock_cleared}
+          producer: {const: escrow-service}
+          payload:
+            type: object
+            required: [contractId, remedyDecisionIds, clearedAt]
+            properties:
+              contractId: {$ref: "#/$defs/uuid"}
+              remedyDecisionIds:
+                description: Every ACCEPTED remedy decision of the contract; all of their legs are COMPLETED.
+                type: array
+                minItems: 1
+                uniqueItems: true
+                items: {$ref: "#/$defs/uuid"}
+              clearedAt: {type: string, format: date-time}
+            additionalProperties: false
+        x-publisher: escrow-service
+        x-consumers: [contract-service]
+        x-source: milestone-escrow-phase2-design.md sections 6.8 and 7.2 (D93)
+        x-verification-matrix: [8]
+        x-terminal-guard: Published when a remedy leg turns COMPLETED and leaves the contract with no SENT or FAILED remedy leg and a bank-ledger remaining lock of exactly 0.00. A FAILED leg or an unreadable ledger publishes nothing. contract-service commits SETTLED/TERMINATED only when its pending final decision is in remedyDecisionIds; otherwise it ignores the event. Not a money trigger.
+  contractRemedyRetryRequested:
+    allOf:
+      - $ref: "./event-envelope.yaml"
+      - type: object
+        properties:
+          eventType: {const: contract.remedy_retry_requested}
+          producer: {const: contract-service}
+          payload:
+            type: object
+            required: [contractId, operatorUserId, requestedAt]
+            properties:
+              contractId: {$ref: "#/$defs/uuid"}
+              operatorUserId: {$ref: "#/$defs/uuid"}
+              requestedAt: {type: string, format: date-time}
+            additionalProperties: false
+        x-publisher: contract-service
+        x-consumers: [escrow-service]
+        x-source: milestone-escrow-phase2-design.md sections 6.8 and 7.2 (RetryRemedyLegs, D93)
+        x-verification-matrix: [8]
+        x-semantics: OPERATOR RetryRemedyLegs on an ACTIVE contract after a remedy leg ran out of retries. Escrow starts a new retry cycle for every FAILED remedy leg of the contract with the leg's original requestEventId (D27); COMPLETED legs are never resent; no FAILED leg is a no-op. Amounts, payees and the decision never change.
   contractSettled:
     allOf:
       - $ref: "./event-envelope.yaml"
@@ -650,7 +695,7 @@ $defs:
         x-consumers: [reputation-service, analytics-service]
         x-source: milestone-escrow-phase2-design.md section 7.2; existing ContractSettledEvent
         x-verification-matrix: [8]
-        x-side-effect-boundary: Lifecycle/positive-history event only. Normal completion first emits the existing SYSTEM/no-fault remedy.finalized owner-return legs; this event is published only after all expected legs reconcile and remaining lock is zero, and must not be consumed by escrow-service for money.
+        x-side-effect-boundary: Lifecycle/positive-history event only. Normal completion first emits the existing SYSTEM/no-fault remedy.finalized owner-return legs; this event is published only after escrow.contract_lock_cleared names the normal-completion decision (D93), and must not be consumed by escrow-service for money.
   contractTerminated:
     allOf:
       - $ref: "./event-envelope.yaml"
