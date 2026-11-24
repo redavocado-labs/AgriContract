@@ -18,7 +18,8 @@ import org.springframework.context.annotation.Configuration;
  * lock its deposits. Each queue is declared exactly as its owner will declare it (same name, DLX and DLQ), so the
  * owner's own declaration later is a no-op and the messages kept here are consumed then:
  * <ul>
- *   <li>notification-service (#278, and #234 for {@code notification.contract_activation_failed_requested}):
+ *   <li>notification-service (#278, and #234 for {@code notification.contract_activation_failed_requested}; D96 for
+ *       the BF-04 milestone status, breach notice, remedy finalized and funding status commands):
  *       {@code notification-svc.<routingKey>}, DLX {@code notification-svc.contracts.dlx} (topology.ts);</li>
  *   <li>product-service: {@code product-svc.<routingKey>}, DLX {@code agricontract.product.dlx} (RabbitMQConfig);</li>
  *   <li>analytics-service (not in compose yet): {@code analytics-svc.<eventType>}, DLX {@code agricontract.analytics.dlx}
@@ -44,6 +45,12 @@ public class ConsumerQueuesDeclaredAhead {
     static final String ANCHOR_REQUESTED_KEY = "notification.contract_anchor_requested";
     static final String ANCHOR_REQUESTED_QUEUE = "notification-svc." + ANCHOR_REQUESTED_KEY;
     static final String NOTIFICATION_DLX = "notification-svc.contracts.dlx";
+
+    /** D96, BF-04 mail commands; notification-service consumes them in #132, #147, #277. */
+    static final String MILESTONE_STATUS_KEY = "notification.milestone_status_requested";
+    static final String BREACH_NOTICE_KEY = "notification.breach_notice_requested";
+    static final String REMEDY_FINALIZED_REQUESTED_KEY = "notification.remedy_finalized_requested";
+    static final String FUNDING_STATUS_KEY = "notification.milestone_funding_status_requested";
 
     static final String ACTIVATED_KEY = "contract.activated";
     static final String ACTIVATED_QUEUE = "product-svc." + ACTIVATED_KEY;
@@ -105,6 +112,86 @@ public class ConsumerQueuesDeclaredAhead {
     @Bean
     Binding anchorRequestedDlqBinding() {
         return BindingBuilder.bind(anchorRequestedDlq()).to(notificationContractsDlx()).with(ANCHOR_REQUESTED_KEY);
+    }
+
+    @Bean
+    Queue milestoneStatusQueue() {
+        return QueueBuilder.durable("notification-svc." + MILESTONE_STATUS_KEY).deadLetterExchange(NOTIFICATION_DLX).build();
+    }
+
+    @Bean
+    Queue milestoneStatusDlq() {
+        return QueueBuilder.durable("notification-svc." + MILESTONE_STATUS_KEY + ".dlq").build();
+    }
+
+    @Bean
+    Binding milestoneStatusBinding() {
+        return BindingBuilder.bind(milestoneStatusQueue()).to(CONTRACTS).with(MILESTONE_STATUS_KEY);
+    }
+
+    @Bean
+    Binding milestoneStatusDlqBinding() {
+        return BindingBuilder.bind(milestoneStatusDlq()).to(notificationContractsDlx()).with(MILESTONE_STATUS_KEY);
+    }
+
+    @Bean
+    Queue breachNoticeQueue() {
+        return QueueBuilder.durable("notification-svc." + BREACH_NOTICE_KEY).deadLetterExchange(NOTIFICATION_DLX).build();
+    }
+
+    @Bean
+    Queue breachNoticeDlq() {
+        return QueueBuilder.durable("notification-svc." + BREACH_NOTICE_KEY + ".dlq").build();
+    }
+
+    @Bean
+    Binding breachNoticeBinding() {
+        return BindingBuilder.bind(breachNoticeQueue()).to(CONTRACTS).with(BREACH_NOTICE_KEY);
+    }
+
+    @Bean
+    Binding breachNoticeDlqBinding() {
+        return BindingBuilder.bind(breachNoticeDlq()).to(notificationContractsDlx()).with(BREACH_NOTICE_KEY);
+    }
+
+    @Bean
+    Queue remedyFinalizedRequestedQueue() {
+        return QueueBuilder.durable("notification-svc." + REMEDY_FINALIZED_REQUESTED_KEY).deadLetterExchange(NOTIFICATION_DLX).build();
+    }
+
+    @Bean
+    Queue remedyFinalizedRequestedDlq() {
+        return QueueBuilder.durable("notification-svc." + REMEDY_FINALIZED_REQUESTED_KEY + ".dlq").build();
+    }
+
+    @Bean
+    Binding remedyFinalizedRequestedBinding() {
+        return BindingBuilder.bind(remedyFinalizedRequestedQueue()).to(CONTRACTS).with(REMEDY_FINALIZED_REQUESTED_KEY);
+    }
+
+    @Bean
+    Binding remedyFinalizedRequestedDlqBinding() {
+        return BindingBuilder.bind(remedyFinalizedRequestedDlq()).to(notificationContractsDlx()).with(REMEDY_FINALIZED_REQUESTED_KEY);
+    }
+
+    @Bean
+    Queue fundingStatusQueue() {
+        return QueueBuilder.durable("notification-svc." + FUNDING_STATUS_KEY).deadLetterExchange(NOTIFICATION_DLX).build();
+    }
+
+    @Bean
+    Queue fundingStatusDlq() {
+        return QueueBuilder.durable("notification-svc." + FUNDING_STATUS_KEY + ".dlq").build();
+    }
+
+    @Bean
+    Binding fundingStatusBinding() {
+        return BindingBuilder.bind(fundingStatusQueue()).to(CONTRACTS).with(FUNDING_STATUS_KEY);
+    }
+
+    @Bean
+    Binding fundingStatusDlqBinding() {
+        return BindingBuilder.bind(fundingStatusDlq()).to(notificationContractsDlx()).with(FUNDING_STATUS_KEY);
     }
 
     @Bean
