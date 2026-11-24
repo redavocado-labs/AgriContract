@@ -28,6 +28,8 @@ oneOf:
   - {$ref: "#/$defs/level15AssignmentWaitingRequested"}
   - {$ref: "#/$defs/level15InspectorAssignmentRequested"}
   - {$ref: "#/$defs/escrowLegAlertRequested"}
+  - {$ref: "#/$defs/escrowRemedyLegAlertRequested"}
+  - {$ref: "#/$defs/escrowRemedyRejectedRequested"}
 $defs:
   uuid: {type: string, format: uuid}
   nullableUuid:
