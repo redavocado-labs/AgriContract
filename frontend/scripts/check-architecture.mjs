@@ -5,6 +5,7 @@ import ts from "typescript"
 // APIs through their own index.ts. Routes can compose feature internals directly.
 const featureDependencies = new Map([
   ["arbitration", ["contracts", "milestones"]],
+  ["audit", []],
   ["auth", ["organization"]],
   ["contracts", ["auth", "organization"]],
   ["milestones", ["auth", "contracts"]],
