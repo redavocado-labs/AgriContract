@@ -7,7 +7,7 @@ const featureDependencies = new Map([
   ["arbitration", ["contracts", "milestones"]],
   ["auth", ["organization"]],
   ["contracts", ["auth", "organization"]],
-  ["milestones", ["contracts"]],
+  ["milestones", ["auth", "contracts"]],
 ])
 
 const root = process.cwd()

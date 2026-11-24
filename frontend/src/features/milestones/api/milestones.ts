@@ -1,8 +1,10 @@
 import { z } from "zod"
 import { apiClient } from "@/shared/api/client"
-import { milestoneSchema } from "@/features/contracts"
-import { remedyDecisionSchema } from "@/features/contracts/api/remedy"
-import type { Challenge } from "@/features/contracts/types/contract"
+import {
+  milestoneSchema,
+  remedyDecisionSchema,
+  type Challenge,
+} from "@/features/contracts"
 import type { IssueType } from "../lib/milestone-consent"
 
 const money = z.string().regex(/^\d+\.00$/)

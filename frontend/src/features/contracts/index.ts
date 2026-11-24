@@ -1,3 +1,10 @@
 export { milestoneSchema } from "./api/contracts"
-export type { Contract, Milestone, MilestoneStatus } from "./types/contract"
+export { remedyDecisionSchema } from "./api/remedy"
+export type {
+  Challenge,
+  Contract,
+  Milestone,
+  MilestoneStatus,
+  ParticipantRole,
+} from "./types/contract"
 export { contractError } from "./types/presentation"

@@ -11,7 +11,7 @@ import {
   settlementStatement,
 } from "../lib/dispute-consent"
 import { ConsentCheckbox, Panel, ServerDeadline } from "./milestone-parts"
-import type { ParticipantRole } from "@/features/contracts/types/contract"
+import type { ParticipantRole } from "@/features/contracts"
 import { vietnamTime } from "@/shared/lib/vietnam-time"
 import { Banner } from "@/shared/ui/banner"
 import { Button } from "@/shared/ui/button"

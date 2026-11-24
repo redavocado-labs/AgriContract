@@ -1,7 +1,7 @@
 import type {
   MilestoneStatus,
   ParticipantRole,
-} from "@/features/contracts/types/contract"
+} from "@/features/contracts"
 import type { BreachCase } from "../api/milestones"
 
 export function contestAction(
