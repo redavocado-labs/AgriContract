@@ -4,3 +4,5 @@ escrow:
   deposit-lock:
     retry-backoff: [PT10S, PT20S, PT30S]
     retry-poll-interval: PT2S
+  clearance:
+    check-interval: PT10S

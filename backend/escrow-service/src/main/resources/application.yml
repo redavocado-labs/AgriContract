@@ -39,6 +39,10 @@ escrow:
   deposit-lock:
     retry-backoff: [PT5M, PT30M, PT2H]
     retry-poll-interval: PT30S
+  # escrow.contract_lock_cleared (#609, D93): how often the contracts whose remedy or settlement leg completed are
+  # checked against the bank ledger.
+  clearance:
+    check-interval: PT30S
 
 # bank-service ledger read for the remedy conservation check (#249); X-Internal-Secret is service.internal-secret.
 bank-service:

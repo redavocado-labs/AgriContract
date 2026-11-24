@@ -6,6 +6,7 @@ import com.agricontract.escrow.domain.model.EscrowMilestone;
 import com.agricontract.escrow.domain.model.Money;
 import com.agricontract.escrow.domain.model.RetrySchedule;
 import com.agricontract.escrow.domain.model.SettlementLeg;
+import com.agricontract.escrow.domain.repository.ContractClearanceRepository;
 import com.agricontract.escrow.domain.repository.EscrowMilestoneRepository;
 import com.agricontract.escrow.domain.repository.SettlementLegRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ import java.util.List;
 /**
  * A bank result for a milestone settlement leg (#248), under the milestone's row lock then its legs':
  * <ul>
- *   <li>completed: the leg is COMPLETED; the result that completes the last leg moves the milestone to SETTLED. A
+ *   <li>completed: the leg is COMPLETED and the contract is queued for the clearance check (#609); the result that completes the last leg moves the milestone to SETTLED. A
  *       duplicate result changes nothing.</li>
  *   <li>refused: the same command is resent per the deposit-lock schedule (same eventId, D27); with no resend left
  *       the leg stays FAILED, the milestone SETTLING, and the error log alerts OPERATOR: the money is still locked.</li>
@@ -34,6 +35,7 @@ public class RecordSettlementLegResultUseCase {
 
     private final EscrowMilestoneRepository milestones;
     private final SettlementLegRepository settlementLegs;
+    private final ContractClearanceRepository clearances;
     private final RetrySchedule retrySchedule;
     private final Clock clock;
 
@@ -66,6 +68,7 @@ public class RecordSettlementLegResultUseCase {
                 return;
             }
             settlementLegs.update(leg);
+            clearances.request(leg.getContractId(), now);
             log.info("event=settlement_leg_completed contractId={} milestoneId={} entryType={} amount={}"
                             + " ledgerEntryId={}", leg.getContractId(), leg.getMilestoneId(), leg.getType(),
                     leg.getAmount().amount().toPlainString(), command.ledgerEntryId());
