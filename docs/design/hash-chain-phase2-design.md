@@ -74,6 +74,7 @@ Cả 3 dùng chung schema `AuditRecord` §3 — `content` mang payload đã ký 
 | `BREACH_REPORTED` (**mới 19/07/2026**) | `breach.reported` | contract-service (milestone-escrow §6.4 — thời điểm mở cáo buộc + notice là bằng chứng then chốt khi tranh cãi wrongful termination / cure deadline; trước đây `milestone.flagged` bị coi "không đáng vào chain" — với attribution model, mốc cáo buộc thành evidence bắt buộc) |
 | `REMEDY_FINALIZED` (**mới 19/07/2026**) | `remedy.finalized` | contract-service (kết luận attribution + remedyLegs — chính là RemedyDecision mà escrow/reputation thực thi theo; phải bất biến + timestamp độc lập để defensible trước VIAC/toà) |
 | `CONTRACT_TERMINATED` (**mới 19/07/2026**) | `contract.terminated` | contract-service (terminationType + finalBreachingRole — gồm cả `MUTUAL_REPLACEMENT` với cặp con trỏ supersede: chain chứng minh được hợp đồng cũ đóng sạch và hợp đồng mới nối đúng) |
+| `AUDIT_VIEWED` (**mới 24/11/2026, D97**) | không có event — audit-service tự ghi khi ADMIN lấy bản ghi qua `/api/v1/admin/audit/**` (§4.6); `subject_type = SYSTEM`, không OTS-anchor riêng | audit-service |
 
 `STRUCTURING_REPORT` và `AML_RISK_CLEARED` là 2 giá trị trước đây chỉ được nhắc ở bank/reputation mà chưa vào catalog này — đã gom về. `CONTRACT_DOCUMENT_GENERATED` commit tách biệt hash nội dung pháp lý (`sourceContentHash`) và hash bytes PDF (`documentFileHash`); audit-service không coi hai hash là cùng một giá trị. Record cấp hệ thống/cấp cặp (key registration, security lock, AML) dùng `subject_type = SYSTEM | USER_PAIR` (**sửa 18/07/2026** — bỏ hẳn contractId sentinel; sentinel làm per-contract chain lẫn semantic, giờ mỗi subject có chain riêng sạch sẽ qua `prev_hash_subject`). OTS policy: 2 nhóm security (`EXTERNAL_VERIFIER_*`, `SECURITY_*`) anchor như event ✅ (§2.3); `STRUCTURING_REPORT`/`AML_RISK_CLEARED` cũng anchor — cùng tiêu chí "quyết định có thể bị tranh chấp". **3 source_type attribution (19/07/2026)** — `BREACH_REPORTED`/`REMEDY_FINALIZED`/`CONTRACT_TERMINATED` — anchor như event ✅ theo đúng tiêu chí đó: đây là các mốc sẽ bị tranh chấp trực diện nhất (ai cáo buộc lúc nào, kết luận ra sao, hợp đồng chấm dứt kiểu gì); `subject_type = CONTRACT`.
 
@@ -234,6 +235,24 @@ _Tầng 2 (weekly, luôn chạy):_ `VerifyChainJob` mỗi Chủ Nhật tự tạ
 For reconciliation-relevant records, `content` is a typed projection rather than an open JSON object: `{contractId, milestoneId?, settledAmount, seizedAmount, sourceEventId?, releaseLegs[], refundLegs[]}`. Each leg carries `{entryType, amount, sourceEventId}`. Level 2 records copy the explicit seller-release/buyer-refund legs from the canonical event; `milestone.settled` maps `actualAmount` to `settledAmount`; `milestone.cancelled_with_penalty` maps its penalty leg to `seizedAmount`. Zero is represented in audit projection where needed, but bank commands with zero are omitted.
 
 
+### 4.6 Xem nhật ký bằng chứng trên FE — bên của hợp đồng và ADMIN (mới, 24/11/2026, D97)
+
+**Vì sao:** "bằng chứng không ai sửa được" chỉ thuyết phục khi người dùng tự nhìn và tự kiểm được. §4.4 cho External Verifier kiểm bằng API; mục này cho buyer/seller kiểm hợp đồng của chính họ và cho ADMIN (người giữ quyền audit/security, data-governance §5) kiểm toàn bộ, ngay trên FE. API: `golden-flow-api.yaml` `/api/v1/audit/**` và `/api/v1/admin/audit/**`, audit-service serve, chỉ đọc (trừ dòng ghi vết bên dưới).
+
+**Buyer/seller — tab "Bằng chứng" trong chi tiết hợp đồng:**
+- Chỉ hợp đồng mình là một bên: audit-service so `X-User-Id` với `buyerId`/`sellerId` trong bản ghi `CONTRACT_SIGNED` của hợp đồng (đã có trong chain, không gọi contract-service). Không phải bên của hợp đồng, hoặc hợp đồng chưa có bản ghi nào → 404 `AUDIT_TRAIL_NOT_FOUND`, không lộ hợp đồng có tồn tại hay không.
+- Thấy mọi bản ghi có `subject = (CONTRACT, contractId)`, cũ trước mới sau: loại, thời điểm, `recordHash`, `content` (đã minimal hoá §3 — chỉ ID, số liệu, hash; mọi thứ trong đó 2 bên vốn đã thấy trên màn hợp đồng). **Không** thấy `prevHashSubject`/`prevHashGlobal`, `globalSeq`, hay bản ghi của chủ thể khác (USER_PAIR — AML; SYSTEM — khoá bảo mật, key verifier, lượt xem của ADMIN).
+- `currentRecordHash` (bản ghi mới nhất) làm nổi để chép và đối chiếu với email bằng chứng (§4.1).
+- Nút "Kiểm tra lại" → `GET .../verification` scope `CONTRACT`: tính lại `recordHash` từng bản ghi theo công thức §3 và so `prevHashSubject` với `recordHash` của bản ghi trước cùng chủ thể. Trả `INTACT`, hoặc `BROKEN` + bản ghi đầu tiên hỏng + lý do (`RECORD_HASH_MISMATCH` = nội dung bị sửa; `SUBJECT_LINK_BROKEN` = mắt xích đứt, có dòng bị xoá/chèn).
+- Lượt xem: chỉ log ứng dụng của audit-service (`event=audit_trail_viewed`), không ghi vào chain — họ xem dữ liệu của chính họ, ghi vào chain chỉ làm phình.
+
+**ADMIN — menu "Nhật ký bằng chứng":**
+- Theo hợp đồng: như bên của hợp đồng, thêm `prevHashSubject`, `prevHashGlobal`, `globalSeq`, `sourceEventId`.
+- Toàn hệ thống: mọi bản ghi mọi chủ thể, mới nhất trước, phân trang, lọc theo `subjectType`. Nút "Kiểm tra toàn chuỗi" → scope `GLOBAL`: duyệt theo `globalSeq`, tính lại hash và so `prevHashGlobal` (`GLOBAL_LINK_BROKEN`). Cùng logic với `VerifyChainJob` (§5) — viết một lần, job #257 gọi lại.
+- **Ghi vết lượt xem vào chain:** mỗi lần ADMIN lấy bản ghi (theo hợp đồng hoặc toàn hệ thống), audit-service ghi một bản ghi `AUDIT_VIEWED` (`subject_type = SYSTEM`, `subject_id = "SYSTEM"`, `source_event_type = audit.viewed`, `source_event_id` = UUID mới, `content = {adminUserId, scope: CONTRACT|GLOBAL, contractId?, subjectTypeFilter?, page?}`) trong cùng transaction trước khi trả kết quả. Lý do khác log thường của data-governance §8: người cần đề phòng ở đây chính là ADMIN, mà log ứng dụng thì ADMIN sửa/xoá được không dấu vết; bản ghi trong chain thì runtime account không xoá được (chỉ `INSERT, SELECT`), còn root xoá thì gãy chuỗi. Bản ghi này thuộc chủ thể SYSTEM nên không chen vào chuỗi của hợp đồng mà buyer/seller xem. Gọi `verification` không ghi vết (không lộ nội dung).
+
+**Giới hạn (ghi trên màn):** kiểm chuỗi phát hiện sửa nội dung và xoá/chèn ở giữa; **xoá các bản ghi mới nhất** chỉ bắt được khi so với anchor OpenTimestamps (§4.3). Khi chưa có anchor phủ bản ghi mới nhất (#256 chưa làm), kết quả trả `anchorStatus = NOT_ANCHORED` và màn ghi "chưa đóng dấu thời gian".
+
 ## 5. Weekly Verify Job
 
 **Chốt (02/07/2026):** không chỉ verify lúc export EUDR report (quá hiếm, phát hiện muộn) — thêm `@Scheduled` job chạy **định kỳ hàng tuần, 2-3h sáng Chủ Nhật** (giờ traffic thấp nhất, cùng convention với Outbox Poller chạy nền).
@@ -317,6 +336,8 @@ Toàn bộ thiết kế 3 lớp (hash chain + multi-location + email anchor) đ�
 **Cập nhật (06/10/2026):** ingest `contract.document_generated` thành `CONTRACT_DOCUMENT_GENERATED`; record commit riêng `sourceContentHash` và `documentFileHash`. Final email được phát sau document READY, không coi PDF hash là content hash.
 
 Hash Chain — **ĐÓNG SESSION HOÀN TOÀN**: 3 lớp gốc + lớp External Verifier (§2.3/§4.4) đều đã đóng, sẵn sàng đưa vào Architecture/SDS/TechnicalSpec chính thức.
+
+**Bổ sung 24/11/2026 (D97):** §4.6 — buyer/seller xem và kiểm chuỗi của hợp đồng mình, ADMIN xem và kiểm toàn bộ trên FE; lượt xem của ADMIN ghi vào chain (`AUDIT_VIEWED`, §2.4).
 
 ---
 

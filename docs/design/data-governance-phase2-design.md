@@ -106,6 +106,8 @@ Muốn gian phải mua **hai người khác nhau đúng cặp**, cả 2 để v�
 | Unlock sớm / clear `ELEVATED_RISK` | ❌ | Propose | Approve/Reject | ❌ |
 | Replay DLQ nhóm tiền/security/evidence (§8b) | ❌ | Propose | ❌ | Approve |
 | Export bằng chứng (`/admin/audit/**`), đọc `/admin/security/**`, analytics | ❌ | ❌ | ❌ | ✅ |
+| Xem + kiểm chuỗi nhật ký bằng chứng của hợp đồng mình (`/api/v1/audit/**`, hash-chain §4.6, D97) | ✅ (bên của hợp đồng) | ❌ | ❌ | ❌ (dùng `/admin/audit/**`) |
+| Xem nhật ký bằng chứng mọi hợp đồng + chuỗi toàn hệ thống, kiểm toàn chuỗi (D97) — mỗi lượt xem ghi `AUDIT_VIEWED` vào chain | ❌ | ❌ | ❌ | ✅ |
 | Quản lý role/account (Keycloak) | ❌ | ❌ | ❌ | ✅ |
 | Sửa ledger / hợp đồng đã ký / `audit_record` / `Signature` | ❌ | ❌ | ❌ | ❌ |
 | Emergency lock/unlock hệ thống | ❌ | ❌ | ❌ | ❌ (chỉ External Verifier — bank §3.5) |
@@ -169,7 +171,7 @@ Hệ thống bảo toàn bằng chứng và nâng chất lượng bằng chứng
 | Message broker (chứa email routing) | TTL ≤ 14 ngày | PII trong broker là chấp nhận có chủ đích | Broker tự expire |
 | Analytics warehouse | Backup daily như MySQL khác (**sửa 18/07/2026** — catch-up queue chỉ bù outage ngắn, cold rebuild chưa hỗ trợ nên mất DB = mất lịch sử dashboard) | Read model | Ẩn danh hoá dimension theo nguồn |
 
-**Read-audit cho Restricted (bổ sung — control rẻ hơn compartment hoá):** mỗi lần OPERATOR/ARBITRATOR/ADMIN **mở** hồ sơ KYC, ledger detail, hay AML record → ghi log `{actorId, role, resourceType, resourceId, timestamp, caseContext?}` tại service sở hữu. Không cần chain, log thường + retention 2 năm là đủ deterrence; "mọi staff biết hết" được trị bằng vết đọc, không phải bằng phân quyền đọc phức tạp.
+**Read-audit cho Restricted (bổ sung — control rẻ hơn compartment hoá):** mỗi lần OPERATOR/ARBITRATOR/ADMIN **mở** hồ sơ KYC, ledger detail, hay AML record → ghi log `{actorId, role, resourceType, resourceId, timestamp, caseContext?}` tại service sở hữu. Không cần chain, log thường + retention 2 năm. **Ngoại lệ (24/11/2026, D97):** ADMIN xem nhật ký bằng chứng (`/admin/audit/**`) ghi `AUDIT_VIEWED` vào chính chain (hash-chain §4.6), vì người cần đề phòng là ADMIN và log thường ADMIN sửa được là đủ deterrence; "mọi staff biết hết" được trị bằng vết đọc, không phải bằng phân quyền đọc phức tạp.
 
 ## 8b. DLQ & Event Replay Runbook (mới, 18/07/2026)
 
