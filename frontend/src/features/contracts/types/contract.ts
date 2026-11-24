@@ -1,3 +1,5 @@
+import type { TerminalDecision } from "../api/remedy"
+
 export type ParticipantRole = "BUYER" | "SELLER"
 export type Fields = Record<string, unknown>
 
@@ -69,7 +71,7 @@ export interface Contract {
   reservedQuantity?: string
   milestones: Milestone[]
   activationRecovery?: ActivationRecovery
-  completion?: { status: "PENDING_MONEY" }
+  terminalDecision?: TerminalDecision
 }
 export interface ContractPage {
   content: Contract[]
