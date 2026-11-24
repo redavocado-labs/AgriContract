@@ -30,6 +30,7 @@ import {
   type ContractTerminatedRequestedCommand,
   type RemedyLeg,
   type ContractAnchorRequestedCommand,
+  type ContractDocumentReadyRequestedCommand,
   type EscrowLegAlertRequestedCommand,
   type EscrowRemedyLegAlertRequestedCommand,
   type EscrowRemedyRejectedRequestedCommand,
@@ -559,6 +560,66 @@ export function parseActivationCancelRequested(
       CANCEL_REQUESTER_ROLES,
     ),
     oneSidedCancelAllowedFrom: payload.dateTime('oneSidedCancelAllowedFrom'),
+  };
+}
+
+export const CONTRACT_DOCUMENT_READY_REQUESTED =
+  'notification.contract_document_ready_requested';
+
+/** Payload properties of `contractDocumentReadyRequested`, all required. */
+export const CONTRACT_DOCUMENT_READY_FIELDS = [
+  'documentId',
+  'contractId',
+  'recipients',
+  'fileId',
+  'sourceContentHash',
+  'documentFileHash',
+  'templateCode',
+  'templateVersion',
+  'generatedAt',
+] as const;
+
+/** The contract's `templateCode` pattern. */
+const TEMPLATE_CODE = /^VN_COFFEE_[A-Z0-9_]+$/;
+
+/**
+ * contract-service's final-document email (design §3.3). The hashes are the
+ * contract's lowercase SHA-256 hex; `templateVersion` is any non-empty
+ * string. The PDF itself is not in the command: the use case reads it from
+ * file-service by `fileId`.
+ */
+export function parseContractDocumentReadyRequested(
+  body: Buffer,
+): ContractDocumentReadyRequestedCommand {
+  const { envelope, payload } = readCommand(
+    body,
+    CONTRACT_DOCUMENT_READY_REQUESTED,
+    'contract-service',
+  );
+  payload.only(CONTRACT_DOCUMENT_READY_FIELDS);
+
+  const templateCode = payload.text('templateCode');
+  if (!TEMPLATE_CODE.test(templateCode)) {
+    throw payload.error(
+      'field "templateCode" must match ^VN_COFFEE_[A-Z0-9_]+$',
+    );
+  }
+  const templateVersion = payload.text('templateVersion');
+  if (templateVersion === '') {
+    throw payload.error('field "templateVersion" must not be empty');
+  }
+
+  return {
+    eventId: envelope.eventId,
+    documentId: payload.uuid('documentId'),
+    contractId: payload.uuid('contractId'),
+    recipients: payload.recipients(),
+    fileId: payload.uuid('fileId'),
+    sourceContentHash: payload.hash('sourceContentHash'),
+    documentFileHash: payload.hash('documentFileHash'),
+    templateCode,
+    templateVersion,
+    generatedAt: payload.dateTime('generatedAt'),
   };
 }
 
