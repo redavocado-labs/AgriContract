@@ -160,6 +160,37 @@ public class JdbcMilestoneRepository implements MilestoneRepository {
                 String.class, limit);
     }
 
+    @Override
+    public List<String> findIdsWeighedNotReceiveRemindedOfActiveContracts(int limit) {
+        return jdbc.queryForList("SELECT m.milestone_id FROM milestone m JOIN contracts c ON c.contract_id ="
+                        + " m.contract_id WHERE m.status = 'SELLER_WEIGHED' AND m.buyer_receive_reminded_at IS NULL"
+                        + " AND c.status = 'ACTIVE' ORDER BY m.seller_first_declared_at, m.milestone_id LIMIT ?",
+                String.class, limit);
+    }
+
+    @Override
+    public List<String> findIdsNotFundingRemindedOfActiveContracts(LocalDate scheduledUpTo, int limit) {
+        return jdbc.queryForList("SELECT m.milestone_id FROM milestone m JOIN contracts c ON c.contract_id ="
+                        + " m.contract_id WHERE m.funding_status = 'NOT_REQUESTED' AND m.funding_reminded_at IS NULL"
+                        + " AND m.funding_scheduled_date <= ? AND c.status = 'ACTIVE' ORDER BY m.funding_scheduled_date,"
+                        + " m.milestone_id LIMIT ?",
+                String.class, scheduledUpTo, limit);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public boolean claimBuyerReceiveReminder(String milestoneId, java.time.Instant at) {
+        return jdbc.update("UPDATE milestone SET buyer_receive_reminded_at = ? WHERE milestone_id = ?"
+                + " AND buyer_receive_reminded_at IS NULL", java.sql.Timestamp.from(at), milestoneId) == 1;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public boolean claimFundingReminder(String milestoneId, java.time.Instant at) {
+        return jdbc.update("UPDATE milestone SET funding_reminded_at = ? WHERE milestone_id = ?"
+                + " AND funding_reminded_at IS NULL", java.sql.Timestamp.from(at), milestoneId) == 1;
+    }
+
     private static MilestoneFlag flag(ResultSet rs) throws SQLException {
         String issueType = rs.getString("flag_issue_type");
         if (issueType == null) {

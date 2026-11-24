@@ -35,4 +35,19 @@ public interface MilestoneRepository {
 
     /** Ids of AWAITING_SELLER_RESPONSE milestones of ACTIVE contracts, oldest flag first (D82 seller-silence candidates). */
     List<String> findIdsAwaitingSellerResponseOfActiveContracts(int limit);
+
+    /** D96: SELLER_WEIGHED milestones of ACTIVE contracts not yet given the receive reminder, oldest weigh first. */
+    List<String> findIdsWeighedNotReceiveRemindedOfActiveContracts(int limit);
+
+    /**
+     * D96: milestones of ACTIVE contracts not funding-requested yet and not yet given the funding reminder, whose
+     * funding date is on or before {@code scheduledUpTo}, earliest first.
+     */
+    List<String> findIdsNotFundingRemindedOfActiveContracts(LocalDate scheduledUpTo, int limit);
+
+    /** Sets buyer_receive_reminded_at once; false when it was already set (another poll reminded it). */
+    boolean claimBuyerReceiveReminder(String milestoneId, java.time.Instant at);
+
+    /** Sets funding_reminded_at once; false when it was already set. */
+    boolean claimFundingReminder(String milestoneId, java.time.Instant at);
 }
