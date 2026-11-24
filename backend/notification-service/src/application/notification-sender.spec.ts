@@ -79,6 +79,31 @@ describe('NotificationSender.send (plan §4.3)', () => {
     });
   });
 
+  it('hands attachments to the email port, and keeps only the text in the log', async () => {
+    const attachment = {
+      filename: 'contract.pdf',
+      contentType: 'application/pdf',
+      content: Buffer.from('%PDF-1.7'),
+    };
+
+    await sender.send('evt-1', KIND, 'a@example.test', 'S', 'B', null, [
+      attachment,
+    ]);
+
+    expect(email.sent).toEqual([
+      {
+        to: 'a@example.test',
+        subject: 'S',
+        body: 'B',
+        attachments: [attachment],
+      },
+    ]);
+    expect(logs.get(KEY)).toMatchObject({
+      status: NotificationStatus.SENT,
+      body: 'B',
+    });
+  });
+
   it('skips a recipient already SENT for this event', async () => {
     await sender.send('evt-1', KIND, 'a@example.test', 'S', 'B');
     email.sent.length = 0;

@@ -62,6 +62,60 @@ export class OperatorEmailNotConfiguredError extends NotificationError {
   }
 }
 
+/**
+ * Retryable: file-service answered 404 for a document the command says is
+ * ready. Unknown, PROCESSING, FAILED and deleted all look the same (the
+ * contract gives one 404 for all), so the message is retried and, if the
+ * file never becomes READY, dead-lettered after the last attempt.
+ */
+export class FileNotReadyError extends NotificationError {
+  constructor(readonly fileId: string) {
+    super(
+      `File ${fileId} is not READY in file-service (unknown, not ready or deleted)`,
+    );
+  }
+}
+
+/** Retryable: file-service could not be reached or answered 503; `code` names the cause. */
+export class FileServiceUnavailableError extends NotificationError {
+  constructor(
+    readonly fileId: string,
+    readonly code: string,
+  ) {
+    super(`File ${fileId}: file-service unavailable (${code})`);
+  }
+}
+
+/**
+ * Not retryable: file-service refused the read in a way no redelivery can
+ * change (401: SERVICE_INTERNAL_SECRET differs; another status the contract
+ * does not list; a file over the size cap). The route dead-letters it at once.
+ */
+export class FileServiceRejectedError extends NotificationError {
+  constructor(
+    readonly fileId: string,
+    readonly code: string,
+  ) {
+    super(`File ${fileId}: file-service refused the read (${code})`);
+  }
+}
+
+/**
+ * Not retryable: the bytes file-service returned do not hash to the
+ * command's `documentFileHash`, so sending them would mail a PDF whose hash
+ * contradicts the email. The route dead-letters it at once, unsent.
+ */
+export class DocumentFileMismatchError extends NotificationError {
+  constructor(
+    readonly eventId: string,
+    readonly fileId: string,
+  ) {
+    super(
+      `Event ${eventId}: file ${fileId} does not hash to the documentFileHash of the command`,
+    );
+  }
+}
+
 const SAFE_CODE = /^[A-Za-z][A-Za-z0-9_/.-]{0,63}$/;
 
 /**

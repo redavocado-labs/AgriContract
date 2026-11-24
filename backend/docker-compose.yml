@@ -688,6 +688,9 @@ services:
       # remedy decision rejected by escrow, D93). Dev default lands in MailHog; unset in the app = those alerts
       # are dead-lettered.
       OPERATOR_EMAIL: ${OPERATOR_EMAIL:-operator@agricontract.local}
+      # GET /internal/v1/files/{fileId}: the final contract PDF the document-ready email attaches (design §3.3).
+      # Not in depends_on: file-service down only delays those emails (retried, then DLQ), never the others.
+      FILE_SERVICE_URL: http://file-service:8089
     # Local only, for Bruno and manual tests of the OTP endpoint; the gateway never routes /internal/**.
     ports:
       - "8085:8085"

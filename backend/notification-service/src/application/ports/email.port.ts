@@ -3,11 +3,20 @@ export const EMAIL_PORT = Symbol('EMAIL_PORT');
 /** The EmailPort of the synchronous OTP endpoint: same server, short timeouts. */
 export const OTP_EMAIL_PORT = Symbol('OTP_EMAIL_PORT');
 
+/** A file sent with an email, as bytes already in memory. */
+export interface EmailAttachment {
+  filename: string;
+  contentType: string;
+  content: Buffer;
+}
+
 export interface EmailMessage {
   to: string;
   subject: string;
   /** Plain text, as the Java service sends. */
   body: string;
+  /** Sent after the text, in this order; none when absent or empty. */
+  attachments?: EmailAttachment[];
 }
 
 /**
