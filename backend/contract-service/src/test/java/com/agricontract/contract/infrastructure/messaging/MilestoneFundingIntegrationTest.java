@@ -72,7 +72,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ImportAutoConfiguration({JacksonAutoConfiguration.class, EventingAutoConfiguration.class})
-@Import({BusinessCalendarConfiguration.class, SpringTransactionRunner.class, MilestoneFunding.class,
+@Import({com.agricontract.contract.infrastructure.config.MilestoneDeliveryConfiguration.class,
+        BusinessCalendarConfiguration.class, SpringTransactionRunner.class, MilestoneFunding.class,
         JdbcMilestoneRepository.class, RequestDueMilestoneFundingUseCase.class,
         RecordMilestoneFundingResultUseCase.class, MilestoneFundingResultConsumer.class,
         OutboxContractEventPublisher.class, ContractRepositoryImpl.class, JdbcSignatureRepository.class,
