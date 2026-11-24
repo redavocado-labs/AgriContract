@@ -4,6 +4,11 @@ import { NotificationSender } from './application/notification-sender';
 import type { AppConfig } from './config/env.validation';
 import { EMAIL_PORT, type EmailPort } from './application/ports/email.port';
 import {
+  DOCUMENT_FILES,
+  type DocumentFiles,
+} from './application/ports/document-files.port';
+import { FileServiceClient } from './infrastructure/files/file-service.client';
+import {
   NOTIFICATION_LOG_REPOSITORY,
   type NotificationLogRepository,
 } from './application/ports/notification-log.repository';
@@ -13,6 +18,7 @@ import {
   NotifyActivationCancelRequestedUseCase,
   NotifyContractActivationFailedUseCase,
   NotifyContractAnchorUseCase,
+  NotifyContractDocumentReadyUseCase,
   NotifyContractTerminatedUseCase,
   NotifyEscrowLegAlertUseCase,
   NotifyEscrowRemedyLegAlertUseCase,
@@ -97,6 +103,21 @@ const USE_CASES = {
     useCaseOf(NotifyContractActivationFailedUseCase),
     useCaseOf(NotifyContractTerminatedUseCase),
     useCaseOf(NotifyMilestoneFundingStatusUseCase),
+    {
+      provide: DOCUMENT_FILES,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService<AppConfig, true>) =>
+        new FileServiceClient(
+          config.get('fileServiceUrl', { infer: true }),
+          config.get('serviceInternalSecret', { infer: true }),
+        ),
+    },
+    {
+      provide: NotifyContractDocumentReadyUseCase,
+      inject: [NotificationSender, DOCUMENT_FILES],
+      useFactory: (sender: NotificationSender, files: DocumentFiles) =>
+        new NotifyContractDocumentReadyUseCase(sender, files),
+    },
     useCaseOf(NotifyUserKycResultUseCase),
     useCaseOf(NotifyUserLockChangedUseCase),
     useCaseOf(NotifyLevel15InspectorAssignmentUseCase),
@@ -179,6 +200,7 @@ const USE_CASES = {
         NotifyEscrowRemedyLegAlertUseCase,
         NotifyEscrowRemedyRejectedUseCase,
         NotifyMilestoneFundingStatusUseCase,
+        NotifyContractDocumentReadyUseCase,
       ],
       useFactory: (
         contractAnchor: NotifyContractAnchorUseCase,
@@ -193,6 +215,7 @@ const USE_CASES = {
         escrowRemedyLegAlert: NotifyEscrowRemedyLegAlertUseCase,
         escrowRemedyRejected: NotifyEscrowRemedyRejectedUseCase,
         milestoneFundingStatus: NotifyMilestoneFundingStatusUseCase,
+        contractDocumentReady: NotifyContractDocumentReadyUseCase,
       ) =>
         commandRoutes({
           contractAnchor,
@@ -207,6 +230,7 @@ const USE_CASES = {
           escrowRemedyLegAlert,
           escrowRemedyRejected,
           milestoneFundingStatus,
+          contractDocumentReady,
         }),
     },
     {

@@ -6,7 +6,12 @@ import {
   type AmqpMessageLike,
 } from '@agricontract/eventing';
 import type { Channel } from 'amqplib';
-import { ClaimWaitAbortedError } from '../../application/notification-errors';
+import {
+  ClaimWaitAbortedError,
+  DocumentFileMismatchError,
+  FileNotReadyError,
+  FileServiceRejectedError,
+} from '../../application/notification-errors';
 import {
   anchorCommand,
   anchorEnvelope,
@@ -27,6 +32,8 @@ import {
   inspectorEnvelope,
   legAlertCommand,
   legAlertEnvelope,
+  documentReadyCommand,
+  documentReadyEnvelope,
   fundingCommand,
   fundingEnvelope,
   remedyLegAlertCommand,
@@ -89,6 +96,7 @@ const HANDLERS = [
   'escrowRemedyLegAlert',
   'escrowRemedyRejected',
   'milestoneFundingStatus',
+  'contractDocumentReady',
   'categoryApproved',
   'categoryRejected',
 ] as const;
@@ -508,6 +516,12 @@ describe('NotificationEventConsumer', () => {
 
   it.each([
     [
+      'contractDocumentReady',
+      'notification-svc.notification.contract_document_ready_requested',
+      documentReadyEnvelope,
+      documentReadyCommand,
+    ],
+    [
       'milestoneFundingStatus',
       'notification-svc.notification.milestone_funding_status_requested',
       fundingEnvelope,
@@ -575,6 +589,51 @@ describe('NotificationEventConsumer', () => {
       expect(service[handler]).not.toHaveBeenCalled();
     }
     expect(channel.nacked).toEqual([{ msg, requeue: false }]);
+  });
+
+  it.each([
+    [
+      'a PDF that does not hash to documentFileHash',
+      new DocumentFileMismatchError('e1', 'f1'),
+      [{ requeue: false }],
+    ],
+    [
+      'a read file-service refuses for good',
+      new FileServiceRejectedError('f1', 'HTTP_401'),
+      [{ requeue: false }],
+    ],
+  ])(
+    'dead-letters the document-ready email at once on %s',
+    async (_case, error, nacks) => {
+      const { consumer, service, open } = setup();
+      service.contractDocumentReady.mockRejectedValue(error);
+      await consumer.onModuleInit();
+      const channel = new FakeChannel();
+      await open(channel);
+
+      const msg = channel.deliver(
+        'notification-svc.notification.contract_document_ready_requested',
+        documentReadyEnvelope(),
+      );
+      await flush();
+
+      expect(channel.nacked).toEqual(nacks.map((n) => ({ msg, ...n })));
+      expect(channel.acked).toEqual([]);
+    },
+  );
+
+  it('keeps a not-READY document retryable: the route rethrows it unchanged, not as NonRetryableError', async () => {
+    const execute = jest.fn().mockRejectedValue(new FileNotReadyError('f1'));
+    const routes = commandRoutes({
+      contractDocumentReady: { execute },
+    } as unknown as CommandUseCases);
+
+    await expect(
+      routes['notification.contract_document_ready_requested'](
+        Buffer.from(JSON.stringify(documentReadyEnvelope())),
+      ),
+    ).rejects.toBeInstanceOf(FileNotReadyError);
+    expect(execute).toHaveBeenCalledTimes(1);
   });
 
   it('dead-letters a Level 1.5 waiting alert delivered to the escrow leg alert queue', async () => {

@@ -54,6 +54,14 @@ export const COMMAND_KINDS = {
     notificationType: 'USER_LOCK_CHANGED',
     templateVersion: 'user-lock-changed/v1',
   },
+  // notification.contract_document_ready_requested (design §3.3): the final
+  // signed contract PDF. Its rows are keyed by documentId, not eventId
+  // (design §5: documentId + recipient + CONTRACT_FINAL_PDF).
+  contractFinalPdf: {
+    eventType: 'notification.contract_document_ready_requested',
+    notificationType: 'CONTRACT_FINAL_PDF',
+    templateVersion: 'contract-final-pdf/v1',
+  },
   // notification.milestone_funding_status_requested (milestone-escrow §6b):
   // one kind per statusType, each its own template (design §4), to every
   // recipient the command names.

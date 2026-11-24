@@ -22,6 +22,7 @@ import {
   NotifyEscrowRemedyLegAlertUseCase,
   NotifyEscrowRemedyRejectedUseCase,
   NotifyMilestoneFundingStatusUseCase,
+  NotifyContractDocumentReadyUseCase,
   NotifyContractAnchorUseCase,
   NotifyCategoryApprovedUseCase,
   NotifyCategoryRejectedUseCase,
@@ -134,6 +135,9 @@ async function harness(
       operatorEmail,
     ),
     milestoneFundingStatus: new NotifyMilestoneFundingStatusUseCase(sender),
+    contractDocumentReady: new NotifyContractDocumentReadyUseCase(sender, {
+      readReady: () => Promise.reject(new Error('no file-service here')),
+    }),
   });
   const consumer = new NotificationEventConsumer(amqp, routes, commands);
   await consumer.onModuleInit();

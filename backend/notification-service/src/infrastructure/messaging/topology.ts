@@ -18,6 +18,7 @@ export const TOPOLOGY = [
       'notification.contract_activation_failed_requested',
       'notification.contract_terminated_requested',
       'notification.milestone_funding_status_requested',
+      'notification.contract_document_ready_requested',
     ],
   },
   {
@@ -90,6 +91,10 @@ export type RoutingKey = (typeof TOPOLOGY)[number]['routingKeys'][number];
  * ahead as it does the others, the names and options here are the ones to
  * copy byte for byte.
  *
+ * `notification.contract_document_ready_requested` (design §3.3) mails both
+ * parties the final signed contract PDF, read from file-service. Same
+ * exchange, same DLX, and likewise not yet published nor declared ahead.
+ *
  * `notification.user_kyc_result_requested` tells a user the KYC decision on
  * their organisation; its one address is `payload.recipientEmail`. It rides
  * user-service's exchange, agricontract.user, in a row of its own. Unlike
@@ -134,6 +139,7 @@ export const COMMAND_ROUTING_KEYS = [
   'notification.contract_activation_failed_requested',
   'notification.contract_terminated_requested',
   'notification.milestone_funding_status_requested',
+  'notification.contract_document_ready_requested',
   'notification.user_kyc_result_requested',
   'notification.user_lock_changed_requested',
   'notification.level1_5_assignment_waiting_requested',

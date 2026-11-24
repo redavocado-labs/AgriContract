@@ -1,10 +1,15 @@
 import { NonRetryableError } from '@agricontract/eventing';
-import { OperatorEmailNotConfiguredError } from '../../application/notification-errors';
+import {
+  DocumentFileMismatchError,
+  FileServiceRejectedError,
+  OperatorEmailNotConfiguredError,
+} from '../../application/notification-errors';
 import {
   unsupportedTermination,
   type NotifyActivationCancelRequestedUseCase,
   type NotifyContractActivationFailedUseCase,
   type NotifyContractAnchorUseCase,
+  type NotifyContractDocumentReadyUseCase,
   type NotifyContractTerminatedUseCase,
   type NotifyEscrowLegAlertUseCase,
   type NotifyEscrowRemedyLegAlertUseCase,
@@ -20,6 +25,7 @@ import {
   parseActivationCancelRequested,
   parseContractActivationFailedRequested,
   parseContractAnchorRequested,
+  parseContractDocumentReadyRequested,
   parseContractTerminatedRequested,
   parseEscrowLegAlertRequested,
   parseEscrowRemedyLegAlertRequested,
@@ -54,6 +60,7 @@ export interface CommandUseCases {
   escrowRemedyLegAlert: NotifyEscrowRemedyLegAlertUseCase;
   escrowRemedyRejected: NotifyEscrowRemedyRejectedUseCase;
   milestoneFundingStatus: NotifyMilestoneFundingStatusUseCase;
+  contractDocumentReady: NotifyContractDocumentReadyUseCase;
 }
 
 /**
@@ -84,6 +91,10 @@ export function commandRoutes(u: CommandUseCases): CommandRoutes {
       }
       await u.contractTerminated.execute(command);
     },
+    'notification.contract_document_ready_requested': (b) =>
+      documentMail(() =>
+        u.contractDocumentReady.execute(parseContractDocumentReadyRequested(b)),
+      ),
     'notification.milestone_funding_status_requested': (b) =>
       u.milestoneFundingStatus.execute(parseMilestoneFundingStatusRequested(b)),
     'notification.user_kyc_result_requested': (b) =>
@@ -113,6 +124,26 @@ export function commandRoutes(u: CommandUseCases): CommandRoutes {
         u.escrowRemedyRejected.execute(parseEscrowRemedyRejectedRequested(b)),
       ),
   };
+}
+
+/**
+ * Sends the final-document email. A PDF that does not hash to the command's
+ * documentFileHash, or a read file-service refuses for good (401, size cap),
+ * cannot get better on redelivery: straight to the DLQ, unsent. Not READY and
+ * unavailable stay retryable.
+ */
+async function documentMail(send: () => Promise<void>): Promise<void> {
+  try {
+    await send();
+  } catch (err) {
+    if (
+      err instanceof DocumentFileMismatchError ||
+      err instanceof FileServiceRejectedError
+    ) {
+      throw new NonRetryableError(err.message);
+    }
+    throw err;
+  }
 }
 
 /**
