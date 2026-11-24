@@ -269,6 +269,36 @@ and its addresses sit in `payload.recipients`, so the publisher — contract-ser
   `test/contract/escrow-leg-alert-requested.contract.spec.ts` checks the parser against the contract in both
   directions; `notify-escrow-leg-alert.int-spec.ts` sends every stage through MySQL and MailHog.
 
+### Escrow remedy alerts (Phase 2, `notification.escrow_remedy_leg_alert_requested` and `notification.escrow_remedy_rejected_requested`, D93)
+
+| | |
+| --- | --- |
+| Queues | `notification-svc.notification.escrow_remedy_leg_alert_requested`, `notification-svc.notification.escrow_remedy_rejected_requested` (DLX `notification-svc.escrow.dlx`) |
+| Exchange, routing keys | `agricontract.escrow`, the two eventTypes |
+| Recipients | `OPERATOR_EMAIL` (design §7 `notification.operatorEmail`) alone: neither command names anybody |
+| Row per email | `recipient_user_id` null (an address, not an account): |
+| | remedy leg alert → `ESCROW_REMEDY_LEG_FAILED`, `escrow-remedy-leg-failed/v1` |
+| | remedy rejected → `ESCROW_REMEDY_REJECTED`, `escrow-remedy-rejected/v1` |
+
+- escrow-service publishes both (#609, milestone-escrow design §6.8, the terminal money guard). The contract
+  stays `ACTIVE` until every remedy leg has completed, so each alert is about a contract that cannot settle or
+  terminate yet.
+- **Remedy leg alert**, once per leg the bank refused with no resend left: `contractId`, `remedyDecisionId`,
+  `remedyLegId`, the payee `party`, `amount` (grouped as text, + `VND`), `bankCommandEventId` to grep the bank
+  log for, and `since` in Vietnam time and UTC. It tells the operator to fix the cause (kill switch, bank error),
+  then press resend: `POST /api/v1/contracts/{contractId}/remedy/retry-legs`, which resends every failed leg of
+  the contract with its original bank command id; amount and payee cannot be changed there.
+- **Remedy rejected**, once per decision escrow refused as a whole (its legs exceed the money still locked, so
+  no bank command went out): `contractId`, `remedyDecisionId`, `rejectedAt` and escrow's `reason` (1 to 500
+  characters, word-wrapped to 72 columns). It says there is no platform action and it needs a developer. A
+  `reason` out of bounds is dead-lettered with its length in the log, never its words.
+- Strict parsers: a missing or extra payload field (`recipients`, or the deposit alert's `legStatus`/`stage`)
+  is dead-lettered at once. **`OPERATOR_EMAIL` unset or blank**: dead-lettered at once, as the alerts above.
+- Same claim, dedup (by `eventId`), redelivery and dead-letter rules as the other commands; fixed lines stay
+  within 76 characters. `test/contract/escrow-remedy-leg-alert-requested.contract.spec.ts` and
+  `escrow-remedy-rejected-requested.contract.spec.ts` check the parsers against the contract in both
+  directions; `notify-escrow-remedy-alerts.int-spec.ts` sends both through MySQL and MailHog.
+
 ### OTP email endpoint (Phase 2, #114)
 
 `POST /internal/v1/notifications/otp-email` (`golden-flow-api.yaml` `sendOtpEmail`, design §2.2): contract-service
