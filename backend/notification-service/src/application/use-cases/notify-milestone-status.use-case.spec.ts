@@ -128,11 +128,23 @@ describe('milestoneStatusText', () => {
         '',
         'Receive the goods, weigh them and record your weight on',
         'AgriContract. Then, within your confirm window, either confirm the',
-        'milestone or flag an issue with its quantity or quality. Until you',
-        'record your weight the seller may correct the declaration; you get',
-        'an email for each one.',
+        'milestone or flag an issue with its quantity or quality.',
+        'The seller may correct the declaration within one hour of the first',
+        'one, and only until you record your weight; you get an email for',
+        'each correction.',
         '',
       ].join('\n'),
+    );
+  });
+
+  it('milestone-weighed/v1 states both D75 limits on a correction: one hour from the first declaration, and only until the buyer records', () => {
+    const body = text({});
+
+    expect(body).toContain(
+      'The seller may correct the declaration within one hour of the first\none, and only until you record your weight',
+    );
+    expect(body).not.toContain(
+      'Until you\nrecord your weight the seller may correct',
     );
   });
 
