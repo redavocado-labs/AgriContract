@@ -15,7 +15,14 @@ import {
   daysLeft,
   milestoneTimeline,
 } from "../src/features/milestones/lib/presentation"
-import { initialBreachCases, initialDetails } from "../src/mocks/bf04-fixtures"
+import { terminalDecisionSchema } from "@/features/contracts/api/remedy"
+import { contractError } from "@/features/contracts/types/presentation"
+import { contestAction } from "@/features/milestones/lib/contest"
+import {
+  initialBreachCases,
+  initialDetails,
+  terminalDecision,
+} from "../src/mocks/bf04-fixtures"
 
 const milestoneId = "5F0C9A1E-3B2D-4C8E-9F10-2A3B4C5D6E7F"
 
@@ -73,6 +80,7 @@ describe("milestone consent recipe (design §3.2.3, D84)", () => {
       buyerReceivedWeight: 9650.25,
       issueType: "QUALITY",
     })
+    expect(flag.statementVersion).toBe("1.1")
     expect(flag.presentedContentHash).toBe(
       "f5ee4f84874e6cc2427c80285d34b9c780f2d0cd3efc8b55f10a968e69b2a16e"
     )
@@ -86,7 +94,9 @@ describe("milestone consent recipe (design §3.2.3, D84)", () => {
     )
     expect(
       milestoneStatement("FLAG_MILESTONE_ISSUE", { issueType: "QUALITY" })
-    ).toContain("có vấn đề về chất lượng.")
+    ).toContain(
+      "Tôi cam kết giữ riêng lô hàng này, không sử dụng hay trộn với hàng khác, cho tới khi giám định xong."
+    )
     expect(
       milestoneStatement("FLAG_MILESTONE_ISSUE", { issueType: "QUANTITY" })
     ).toContain("có vấn đề về khối lượng.")
@@ -142,5 +152,109 @@ describe("BF-04 read model", () => {
     const now = Date.parse("2026-11-22T00:00:00Z")
     expect(daysLeft("2026-11-24T05:00:00Z", now)).toBe(2)
     expect(daysLeft("2026-11-22T05:00:00Z", now)).toBe(0)
+  })
+})
+
+describe("D99 and contest eligibility", () => {
+  const initial = initialDetails()
+  const openContest = initialBreachCases().find(
+    (item) => item.contestStatus === "OPEN"
+  )!
+
+  it("parses server positions and refunds without normalizing monetary strings", () => {
+    const candidate = initial.find((item) => item.disputeExit?.openProposal)!
+    const detail = milestoneDetailSchema.parse(candidate)
+    expect(detail.disputeExit?.buyerPositionRefundAmount).toBe("37050000.00")
+    expect(detail.disputeExit?.openProposal?.agreedBuyerRefundAmount).toBe(
+      "25000000.00"
+    )
+    expect(
+      milestoneDetailSchema.safeParse({
+        ...candidate,
+        disputeExit: {
+          ...candidate.disputeExit,
+          sellerPositionRefundAmount: 0,
+        },
+      }).success
+    ).toBe(false)
+  })
+
+  it("accepts D84/D92 responses during D99 rollout and real settlement wire paths", () => {
+    const candidate = initial.find(
+      (item) => item.settlement?.path === "DISPUTE_RESOLVED"
+    )!
+    expect(
+      milestoneDetailSchema.parse({
+        ...candidate,
+        remedyDecision: undefined,
+      }).settlement?.path
+    ).toBe("DISPUTE_RESOLVED")
+    expect(
+      milestoneDetailSchema.parse({
+        ...candidate,
+        settlement: { ...candidate.settlement, path: "INSPECTED_CONFORMING" },
+      }).settlement?.path
+    ).toBe("INSPECTED_CONFORMING")
+  })
+
+  it("uses the server's money clearance and validates the remedy legs", () => {
+    expect(
+      terminalDecisionSchema.parse(terminalDecision(false)).moneyCleared
+    ).toBe(false)
+    expect(terminalDecisionSchema.parse(terminalDecision(true))).toMatchObject({
+      moneyCleared: true,
+      targetStatus: "SETTLED",
+      remedyDecision: {
+        status: "FINALIZED",
+        remedyLegs: [{ role: "BUYER" }, { role: "SELLER" }],
+      },
+    })
+  })
+
+  it("uses the supplied deadline, the affected party, and the second report state", () => {
+    const deadline = Date.parse(openContest.contestDeadline!)
+    expect(
+      contestAction(openContest, "CONTESTED", "SELLER", deadline - 1)
+    ).toBe("contest")
+    expect(
+      contestAction(openContest, "CONTESTED", "SELLER", deadline)
+    ).toBeNull()
+    expect(
+      contestAction(openContest, "CONTESTED", "BUYER", deadline - 1)
+    ).toBeNull()
+    const contested = { ...openContest, contestStatus: "CONTESTED" as const }
+    expect(contestAction(contested, "CONTESTED", "SELLER", deadline + 1)).toBe(
+      "evidence"
+    )
+    expect(
+      contestAction(
+        { ...contested, status: "UNDER_REVIEW" },
+        "CONTESTED",
+        "SELLER",
+        deadline + 1
+      )
+    ).toBeNull()
+    expect(
+      contestAction(contested, "SETTLED", "SELLER", deadline + 1)
+    ).toBeNull()
+  })
+
+  it.each([
+    ["REMEDY_RETRY_NOT_ALLOWED", "gửi lại lệnh tiền"],
+    ["INSPECTION_REPORT_PENDING", "báo cáo giám định"],
+    ["BREACH_CASE_ACTION_NOT_ALLOWED", "hạn phản đối"],
+    ["CONSENT_STATEMENT_OUTDATED", "phiên bản mới"],
+    ["SETTLEMENT_PROPOSAL_CONFLICT", "Đề xuất đã thay đổi"],
+    ["DISPUTE_EXIT_NOT_ALLOWED", "kết thúc tranh chấp"],
+  ])("maps %s to a specific Vietnamese message", (code, message) => {
+    expect(
+      contractError({
+        isAxiosError: true,
+        response: {
+          status: 409,
+          data: { status: 409, code, message: "server" },
+        },
+      })
+    ).toContain(message)
   })
 })
