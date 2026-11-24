@@ -11,6 +11,7 @@ import {
   ESCROW_LEG_ALERT_STAGES,
   ESCROW_LEG_KINDS,
   ESCROW_LEG_STATUSES,
+  ESCROW_REMEDY_REJECTED_REASON_MAX_LENGTH,
   FAILED_LEGS,
   FUND_TYPES,
   KYC_RESULTS,
@@ -29,6 +30,8 @@ import {
   type RemedyLeg,
   type ContractAnchorRequestedCommand,
   type EscrowLegAlertRequestedCommand,
+  type EscrowRemedyLegAlertRequestedCommand,
+  type EscrowRemedyRejectedRequestedCommand,
   type Level15AssignmentWaitingRequestedCommand,
   type Level15InspectorAssignmentRequestedCommand,
   type NotificationRecipient,
@@ -173,6 +176,21 @@ class CommandReader {
     if (typeof value !== 'string') {
       throw this.error(
         `field "${field}" must be a string, got ${describe(value)}`,
+      );
+    }
+    return value;
+  }
+
+  /**
+   * A `{type: string, minLength: 1, maxLength}`: lengths in code points, as
+   * JSON Schema counts them. The bad value is not quoted: it is free text.
+   */
+  boundedText(field: string, maxLength: number): string {
+    const value = this.text(field);
+    const length = [...value].length;
+    if (length < 1 || length > maxLength) {
+      throw this.error(
+        `field "${field}" must be 1 to ${maxLength} characters, got ${length}`,
       );
     }
     return value;
@@ -844,6 +862,86 @@ export function parseEscrowLegAlertRequested(
     bankCommandEventId: payload.uuid('bankCommandEventId'),
     since: payload.dateTime('since'),
     stage: payload.enumValue('stage', ESCROW_LEG_ALERT_STAGES),
+  };
+}
+
+export const ESCROW_REMEDY_LEG_ALERT_REQUESTED =
+  'notification.escrow_remedy_leg_alert_requested';
+
+/** Payload properties of `escrowRemedyLegAlertRequested`, all required. */
+export const ESCROW_REMEDY_LEG_ALERT_FIELDS = [
+  'contractId',
+  'remedyDecisionId',
+  'remedyLegId',
+  'party',
+  'amount',
+  'bankCommandEventId',
+  'since',
+] as const;
+
+/**
+ * escrow-service's staff alert for a remedy leg out of resends (D93): no
+ * recipient in the payload, the address is this service's own
+ * `notification.operatorEmail`. `party` is the payee.
+ */
+export function parseEscrowRemedyLegAlertRequested(
+  body: Buffer,
+): EscrowRemedyLegAlertRequestedCommand {
+  const { envelope, payload } = readCommand(
+    body,
+    ESCROW_REMEDY_LEG_ALERT_REQUESTED,
+    'escrow-service',
+  );
+  payload.only(ESCROW_REMEDY_LEG_ALERT_FIELDS);
+
+  return {
+    eventId: envelope.eventId,
+    contractId: payload.uuid('contractId'),
+    remedyDecisionId: payload.uuid('remedyDecisionId'),
+    remedyLegId: payload.uuid('remedyLegId'),
+    party: payload.enumValue('party', PARTY_ROLES),
+    amount: payload.money('amount'),
+    bankCommandEventId: payload.uuid('bankCommandEventId'),
+    since: payload.dateTime('since'),
+  };
+}
+
+export const ESCROW_REMEDY_REJECTED_REQUESTED =
+  'notification.escrow_remedy_rejected_requested';
+
+/** Payload properties of `escrowRemedyRejectedRequested`, all required. */
+export const ESCROW_REMEDY_REJECTED_FIELDS = [
+  'contractId',
+  'remedyDecisionId',
+  'reason',
+  'rejectedAt',
+] as const;
+
+/**
+ * escrow-service's staff alert for a whole remedy decision it refused (D93):
+ * no recipient in the payload, the address is this service's own
+ * `notification.operatorEmail`. `reason` is escrow's free text, 1 to 500
+ * characters; an error names its length, never its words.
+ */
+export function parseEscrowRemedyRejectedRequested(
+  body: Buffer,
+): EscrowRemedyRejectedRequestedCommand {
+  const { envelope, payload } = readCommand(
+    body,
+    ESCROW_REMEDY_REJECTED_REQUESTED,
+    'escrow-service',
+  );
+  payload.only(ESCROW_REMEDY_REJECTED_FIELDS);
+
+  return {
+    eventId: envelope.eventId,
+    contractId: payload.uuid('contractId'),
+    remedyDecisionId: payload.uuid('remedyDecisionId'),
+    reason: payload.boundedText(
+      'reason',
+      ESCROW_REMEDY_REJECTED_REASON_MAX_LENGTH,
+    ),
+    rejectedAt: payload.dateTime('rejectedAt'),
   };
 }
 

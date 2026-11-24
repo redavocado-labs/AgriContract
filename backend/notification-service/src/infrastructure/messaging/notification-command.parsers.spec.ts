@@ -35,6 +35,12 @@ import {
   legAlertBody,
   legAlertCommand,
   legAlertPayload,
+  remedyLegAlertBody,
+  remedyLegAlertCommand,
+  remedyLegAlertPayload,
+  remedyRejectedBody,
+  remedyRejectedCommand,
+  remedyRejectedPayload,
 } from '../../../test/support/commands';
 import {
   parseActivationCancelRequested,
@@ -53,6 +59,10 @@ import {
   parseLevel15InspectorAssignmentRequested,
   ESCROW_LEG_ALERT_FIELDS,
   parseEscrowLegAlertRequested,
+  ESCROW_REMEDY_LEG_ALERT_FIELDS,
+  parseEscrowRemedyLegAlertRequested,
+  ESCROW_REMEDY_REJECTED_FIELDS,
+  parseEscrowRemedyRejectedRequested,
 } from './notification-command.parsers';
 
 /** Delivers a message built from `overrides` on the envelope. */
@@ -929,6 +939,173 @@ describe('parseEscrowLegAlertRequested', () => {
   it('rejects the Level 1.5 waiting alert, whose eventType is not this queue’s', () => {
     expect(
       message(() => parseEscrowLegAlertRequested(waitingBody())),
+    ).toContain("is not this queue's command");
+  });
+});
+
+describe('parseEscrowRemedyLegAlertRequested', () => {
+  const parseRemedyLegAlert = (
+    payload: Record<string, unknown> = remedyLegAlertPayload(),
+  ) => parseEscrowRemedyLegAlertRequested(remedyLegAlertBody({ payload }));
+
+  it('reads the envelope eventId and every payload field', () => {
+    expect(parseRemedyLegAlert()).toEqual(remedyLegAlertCommand());
+  });
+
+  it.each([
+    ['the buyer as payee', { party: 'BUYER' }],
+    ['a zero amount', { amount: '0.00' }],
+    ['the largest amount', { amount: '9999999999999999.99' }],
+    ['an instant with an offset', { since: '2026-11-24T15:14:59+07:00' }],
+  ])('accepts %s, as the contract does', (_case, patch) => {
+    expect(parseRemedyLegAlert(remedyLegAlertPayload(patch))).toMatchObject(
+      patch,
+    );
+  });
+
+  it.each([
+    ['party', 'INSPECTOR', 'field "party" must be one of BUYER, SELLER'],
+    ['party', 'seller', 'field "party" must be one of BUYER, SELLER'],
+    ['amount', '45000000', 'field "amount" must be a decimal string'],
+    ['amount', 45000000, 'field "amount" must be a decimal string'],
+    ['amount', '-1.00', 'field "amount" must be a decimal string'],
+    ['amount', '10000000000000000.00', 'at most 19 characters'],
+    ['since', '2026-11-24', 'RFC 3339'],
+    ['contractId', 'contract-1', 'field "contractId" must be a UUID'],
+    [
+      'remedyDecisionId',
+      'decision-1',
+      'field "remedyDecisionId" must be a UUID',
+    ],
+    ['remedyLegId', 42, 'field "remedyLegId" must be a non-empty string'],
+    [
+      'bankCommandEventId',
+      'bank-cmd-1',
+      'field "bankCommandEventId" must be a UUID',
+    ],
+    ['recipients', [], 'unknown payload property "recipients"'],
+    // Fields of the deposit leg alert are not this command's.
+    ['legStatus', 'FAILED', 'unknown payload property "legStatus"'],
+    ['stage', 'RETURN_EXHAUSTED', 'unknown payload property "stage"'],
+  ])(
+    'rejects %s = %p as an invalid payload, without retrying',
+    (field, value, reason) => {
+      const text = message(() =>
+        parseRemedyLegAlert(remedyLegAlertPayload({ [field]: value })),
+      );
+
+      expect(text).toContain(
+        'Malformed notification.escrow_remedy_leg_alert_requested',
+      );
+      expect(text).toContain(reason);
+    },
+  );
+
+  it.each(ESCROW_REMEDY_LEG_ALERT_FIELDS)('rejects a missing %s', (field) => {
+    const payload = remedyLegAlertPayload();
+    delete payload[field];
+
+    expect(message(() => parseRemedyLegAlert(payload))).toContain(`"${field}"`);
+  });
+
+  it('rejects a command from another producer', () => {
+    expect(
+      message(() =>
+        parseEscrowRemedyLegAlertRequested(
+          remedyLegAlertBody({ producer: 'contract-service' }),
+        ),
+      ),
+    ).toContain('producer must be "escrow-service"');
+  });
+
+  it('rejects the deposit leg alert, whose eventType is not this queue’s', () => {
+    expect(
+      message(() => parseEscrowRemedyLegAlertRequested(legAlertBody())),
+    ).toContain("is not this queue's command");
+  });
+});
+
+describe('parseEscrowRemedyRejectedRequested', () => {
+  const parseRemedyRejected = (
+    payload: Record<string, unknown> = remedyRejectedPayload(),
+  ) => parseEscrowRemedyRejectedRequested(remedyRejectedBody({ payload }));
+
+  it('reads the envelope eventId and every payload field', () => {
+    expect(parseRemedyRejected()).toEqual(remedyRejectedCommand());
+  });
+
+  it.each([
+    ['a one-character reason', { reason: 'x' }],
+    ['a 500-character reason', { reason: 'r'.repeat(500) }],
+    // JSON Schema counts code points: these 500 are 1000 UTF-16 units.
+    ['500 characters outside the BMP', { reason: '\u{1F4B8}'.repeat(500) }],
+    ['a reason over several lines', { reason: 'first line\nsecond line' }],
+    ['an instant with an offset', { rejectedAt: '2026-11-24T15:00:00+07:00' }],
+  ])('accepts %s, as the contract does', (_case, patch) => {
+    expect(parseRemedyRejected(remedyRejectedPayload(patch))).toMatchObject(
+      patch,
+    );
+  });
+
+  it.each([
+    ['reason', '', 'field "reason" must be 1 to 500 characters, got 0'],
+    [
+      'reason',
+      'r'.repeat(501),
+      'field "reason" must be 1 to 500 characters, got 501',
+    ],
+    ['reason', 42, 'field "reason" must be a string, got a number'],
+    ['reason', null, 'field "reason" must be a string, got null'],
+    ['rejectedAt', '2026-11-24', 'RFC 3339'],
+    ['contractId', 'contract-1', 'field "contractId" must be a UUID'],
+    [
+      'remedyDecisionId',
+      'decision-1',
+      'field "remedyDecisionId" must be a UUID',
+    ],
+    ['recipients', [], 'unknown payload property "recipients"'],
+  ])(
+    'rejects %s = %p as an invalid payload, without retrying',
+    (field, value, reason) => {
+      const text = message(() =>
+        parseRemedyRejected(remedyRejectedPayload({ [field]: value })),
+      );
+
+      expect(text).toContain(
+        'Malformed notification.escrow_remedy_rejected_requested',
+      );
+      expect(text).toContain(reason);
+    },
+  );
+
+  it('never quotes the reason, which is free text', () => {
+    const reason = 'secret words '.repeat(40);
+
+    expect(
+      message(() => parseRemedyRejected(remedyRejectedPayload({ reason }))),
+    ).not.toContain('secret');
+  });
+
+  it.each(ESCROW_REMEDY_REJECTED_FIELDS)('rejects a missing %s', (field) => {
+    const payload = remedyRejectedPayload();
+    delete payload[field];
+
+    expect(message(() => parseRemedyRejected(payload))).toContain(`"${field}"`);
+  });
+
+  it('rejects a command from another producer', () => {
+    expect(
+      message(() =>
+        parseEscrowRemedyRejectedRequested(
+          remedyRejectedBody({ producer: 'contract-service' }),
+        ),
+      ),
+    ).toContain('producer must be "escrow-service"');
+  });
+
+  it('rejects the remedy leg alert, whose eventType is not this queue’s', () => {
+    expect(
+      message(() => parseEscrowRemedyRejectedRequested(remedyLegAlertBody())),
     ).toContain("is not this queue's command");
   });
 });

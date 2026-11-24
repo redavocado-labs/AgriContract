@@ -4,6 +4,8 @@ import type {
   ContractAnchorRequestedCommand,
   ContractTerminatedRequestedCommand,
   EscrowLegAlertRequestedCommand,
+  EscrowRemedyLegAlertRequestedCommand,
+  EscrowRemedyRejectedRequestedCommand,
   Level15AssignmentWaitingRequestedCommand,
   Level15InspectorAssignmentRequestedCommand,
   NotificationRecipient,
@@ -631,5 +633,119 @@ export function legAlertCommand(): EscrowLegAlertRequestedCommand {
     bankCommandEventId: LEG_ALERT_BANK_COMMAND_ID,
     since: '2026-11-21T03:00:00Z',
     stage: 'STUCK',
+  };
+}
+
+/*
+ * `notification.escrow_remedy_leg_alert_requested`, as escrow-service is to
+ * write it (#609, D93): the seller's payout of a finalized remedy decision
+ * was refused by the bank with no resend left. No recipient: it goes to the
+ * configured operator address.
+ */
+export const REMEDY_CONTRACT_ID = '7e6d5c4b-3a29-4817-a6f5-e4d3c2b1a098';
+export const REMEDY_DECISION_ID = '8f7e6d5c-4b3a-4928-b7a6-f5e4d3c2b1a0';
+export const REMEDY_LEG_ID = '9a8f7e6d-5c4b-4a39-88b7-a6f5e4d3c2b1';
+export const REMEDY_BANK_COMMAND_ID = 'a09f8e7d-6c5b-4a4b-99c8-b7a6f5e4d3c2';
+const REMEDY_LEG_ALERT_EVENT_ID = 'b1a09f8e-7d6c-4b5a-8ad9-c8b7a6f5e4d3';
+const REMEDY_REJECTED_EVENT_ID = 'c2b1a09f-8e7d-4c6b-9bea-d9c8b7a6f5e4';
+
+export function remedyLegAlertEnvelope(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    eventId: REMEDY_LEG_ALERT_EVENT_ID,
+    eventType: 'notification.escrow_remedy_leg_alert_requested',
+    eventVersion: 1,
+    occurredAt: '2026-11-24T08:15:00.250Z',
+    producer: 'escrow-service',
+    aggregateId: REMEDY_LEG_ID,
+    correlationId: 'd3c2b1a0-9f8e-4d7c-8cfb-e0d9c8b7a6f5',
+    causationId: 'e4d3c2b1-a09f-4e8d-9d0c-f1e0d9c8b7a6',
+    payload: remedyLegAlertPayload(),
+    ...overrides,
+  };
+}
+
+export function remedyLegAlertPayload(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    contractId: REMEDY_CONTRACT_ID,
+    remedyDecisionId: REMEDY_DECISION_ID,
+    remedyLegId: REMEDY_LEG_ID,
+    party: 'SELLER',
+    amount: '45000000.00',
+    bankCommandEventId: REMEDY_BANK_COMMAND_ID,
+    since: '2026-11-24T08:14:59Z',
+    ...overrides,
+  };
+}
+
+export const remedyLegAlertBody = (
+  overrides: Record<string, unknown> = {},
+): Buffer => Buffer.from(JSON.stringify(remedyLegAlertEnvelope(overrides)));
+
+/** The command the parser is expected to produce from `remedyLegAlertEnvelope()`. */
+export function remedyLegAlertCommand(): EscrowRemedyLegAlertRequestedCommand {
+  return {
+    eventId: REMEDY_LEG_ALERT_EVENT_ID,
+    contractId: REMEDY_CONTRACT_ID,
+    remedyDecisionId: REMEDY_DECISION_ID,
+    remedyLegId: REMEDY_LEG_ID,
+    party: 'SELLER',
+    amount: '45000000.00',
+    bankCommandEventId: REMEDY_BANK_COMMAND_ID,
+    since: '2026-11-24T08:14:59Z',
+  };
+}
+
+/*
+ * `notification.escrow_remedy_rejected_requested`, as escrow-service is to
+ * write it (#609, D93): it refused the same decision as a whole, because its
+ * legs exceed the money still locked.
+ */
+export const REMEDY_REJECTED_REASON =
+  'Remedy legs total 160000000.00 but only 150000000.00 is still locked for the contract';
+
+export function remedyRejectedEnvelope(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    eventId: REMEDY_REJECTED_EVENT_ID,
+    eventType: 'notification.escrow_remedy_rejected_requested',
+    eventVersion: 1,
+    occurredAt: '2026-11-24T08:00:01.125Z',
+    producer: 'escrow-service',
+    aggregateId: REMEDY_DECISION_ID,
+    correlationId: 'f5e4d3c2-b1a0-4f9e-8e1d-a2f1e0d9c8b7',
+    payload: remedyRejectedPayload(),
+    ...overrides,
+  };
+}
+
+export function remedyRejectedPayload(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    contractId: REMEDY_CONTRACT_ID,
+    remedyDecisionId: REMEDY_DECISION_ID,
+    reason: REMEDY_REJECTED_REASON,
+    rejectedAt: '2026-11-24T08:00:00Z',
+    ...overrides,
+  };
+}
+
+export const remedyRejectedBody = (
+  overrides: Record<string, unknown> = {},
+): Buffer => Buffer.from(JSON.stringify(remedyRejectedEnvelope(overrides)));
+
+/** The command the parser is expected to produce from `remedyRejectedEnvelope()`. */
+export function remedyRejectedCommand(): EscrowRemedyRejectedRequestedCommand {
+  return {
+    eventId: REMEDY_REJECTED_EVENT_ID,
+    contractId: REMEDY_CONTRACT_ID,
+    remedyDecisionId: REMEDY_DECISION_ID,
+    reason: REMEDY_REJECTED_REASON,
+    rejectedAt: '2026-11-24T08:00:00Z',
   };
 }
