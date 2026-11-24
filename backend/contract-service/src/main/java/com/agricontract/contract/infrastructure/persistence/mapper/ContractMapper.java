@@ -42,6 +42,9 @@ public class ContractMapper {
                 .signedContentHash(coffeeTerms == null ? null : coffeeTerms.signedContentHash())
                 .reservedQuantity(contract.getStoredReservedQuantity())
                 .status(contract.getStatus())
+                .pendingTerminalDecisionId(contract.getPendingTerminalDecisionId())
+                .pendingTerminalStatus(contract.getPendingTerminalStatus())
+                .settledAt(contract.getSettledAt())
                 .build();
     }
 
@@ -71,7 +74,10 @@ public class ContractMapper {
                 e.getStatus(),
                 signedHashes,
                 e.getVersion(),
-                e.getReservedQuantity()
+                e.getReservedQuantity(),
+                e.getPendingTerminalDecisionId(),
+                e.getPendingTerminalStatus(),
+                e.getSettledAt()
         );
     }
 }

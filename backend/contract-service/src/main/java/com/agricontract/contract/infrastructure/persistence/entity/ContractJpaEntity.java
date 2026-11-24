@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -90,6 +91,17 @@ public class ContractJpaEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private ContractStatus status;
+
+    /** D93 (#139): the final remedy decision this ACTIVE contract waits for; kept after the commit. */
+    @Column(name = "pending_terminal_decision_id", columnDefinition = "CHAR(36)")
+    private String pendingTerminalDecisionId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pending_terminal_status", length = 20)
+    private ContractStatus pendingTerminalStatus;
+
+    @Column(name = "settled_at")
+    private Instant settledAt;
 
     /** Phase 1 only, kept for old rows and never written: signatures live in the signature table (#97). */
     @Column(columnDefinition = "TEXT", insertable = false, updatable = false)
