@@ -61,6 +61,7 @@ public class ContractCompletion {
                 remedyDecisions.depositForfeited(contractId, RemedyFundType.SELLER_DEPOSIT), all.size(), now);
         remedyDecisions.insert(decision);
         events.remedyFinalized(contract, decision, now);
+        events.remedyFinalizedRequested(contract, decision, now);
         contract.awaitTerminal(decision.remedyDecisionId(), ContractStatus.SETTLED);
         contracts.save(contract);
         log.info("event=contract_completion_decided contractId={} remedyDecisionId={} milestones={} legs={}",

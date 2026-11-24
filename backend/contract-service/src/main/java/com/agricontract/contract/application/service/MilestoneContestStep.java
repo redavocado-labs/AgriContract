@@ -49,6 +49,7 @@ public class MilestoneContestStep {
         breachCases.insert(breachCase);
         milestones.update(milestone);
         events.breachReported(breachCase);
+        events.breachNoticeRequested(contract, breachCase);
         level15.request(contract, milestone, InspectionRequestReason.DISPUTE_ROUTED, actorId, now);
         log.info("event=milestone_contested contractId={} milestoneId={} by={} breachCaseId={}",
                 contract.getContractId().value(), milestone.milestoneId(), by, breachCase.breachCaseId());
@@ -69,6 +70,7 @@ public class MilestoneContestStep {
         breachCases.insert(breachCase);
         milestones.update(milestone);
         events.breachReported(breachCase);
+        events.breachNoticeRequested(contract, breachCase);
         log.info("event=milestone_contested contractId={} milestoneId={} by=INSPECTION breachCaseId={}",
                 contract.getContractId().value(), milestone.milestoneId(), breachCase.breachCaseId());
         return breachCase;
@@ -86,6 +88,7 @@ public class MilestoneContestStep {
                 evidenceOf(milestone), now);
         breachCases.insert(breachCase);
         events.breachReported(breachCase);
+        events.breachNoticeRequested(contract, breachCase);
         return breachCase;
     }
 

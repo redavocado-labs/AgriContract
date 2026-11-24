@@ -160,6 +160,7 @@ public class DisputeExitStep {
                 decision.buyerRefund(), now);
         milestones.update(milestone);
         events.remedyFinalized(contract, decision, now);
+        events.remedyFinalizedRequested(contract, decision, now);
         if (type == DisputeExitType.CONCEDE) {
             events.milestoneDisputeResolved(contract, milestone, agreed.prevailingRole());
             proposals.lapseOpen(milestone.milestoneId(), now);

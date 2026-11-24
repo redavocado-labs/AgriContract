@@ -10,6 +10,7 @@ import com.agricontract.contract.domain.model.milestone.SettlementPath;
 import com.agricontract.contract.domain.model.terms.InspectionRequirement;
 import com.agricontract.contract.domain.repository.InspectionReportRepository;
 import com.agricontract.contract.domain.repository.MilestoneRepository;
+import com.agricontract.contract.application.port.MilestoneStatusMail;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -59,6 +60,7 @@ public class MilestoneCleanSettlement {
         events.milestoneSettled(contract, milestone);
         events.milestoneBuyerConfirmed(contract, milestone,
                 path == SettlementPath.CLEAN_CONFIRMED ? "BUYER" : "SYSTEM_TIMEOUT");
+        events.milestoneStatusRequested(contract, milestone, MilestoneStatusMail.CONFIRMED, null, now);
         log.info("event=milestone_settled contractId={} milestoneId={} path={} sellerAmount={} buyerRefundAmount={}",
                 contract.getContractId().value(), milestone.milestoneId(), path, settlement.sellerAmount().wire(),
                 settlement.buyerRefundAmount().wire());
