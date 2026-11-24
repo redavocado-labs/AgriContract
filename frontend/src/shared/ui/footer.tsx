@@ -2,16 +2,15 @@ import { Link } from "react-router-dom"
 
 function Footer() {
   return (
-    <div className="bg-text-primary text-text-muted">
-      <div className="mx-auto flex max-w-[1160px] flex-wrap items-start justify-between gap-6 px-10 py-10">
+    <footer className="bg-text-primary text-slate-300">
+      <div className="mx-auto flex max-w-[1160px] flex-wrap items-start justify-between gap-6 px-4 py-10 sm:px-10">
         <div>
           <div className="mb-1.5 text-base font-medium text-white">AgriContract</div>
           <div className="max-w-[320px] text-[13px] leading-[1.6]">
-            Hợp đồng nông sản minh bạch, thanh toán an toàn qua ký quỹ. Cà phê · gạo · cao su ·
-            điều.
+            Giao dịch cà phê theo hợp đồng có ký quỹ.
           </div>
         </div>
-        <div className="flex gap-14 text-[13.5px]">
+        <div className="flex flex-wrap gap-x-14 gap-y-6 text-[13.5px]">
           <div className="flex flex-col gap-2.5">
             <span className="text-[#E2E8F0]">Sản phẩm</span>
             <Link to="/listing" className="hover:text-white">Sàn nguồn hàng</Link>
@@ -27,12 +26,12 @@ function Footer() {
         </div>
       </div>
       <div className="border-t-[0.5px] border-white/[0.08]">
-        <div className="mx-auto max-w-[1160px] px-10 py-4 text-[12.5px]">
+        <div className="mx-auto max-w-[1160px] px-4 py-4 text-[12.5px] sm:px-10">
           © 2026 AgriContract. Giá hiển thị là giá tham khảo, không phải giá giao dịch trên nền
           tảng.
         </div>
       </div>
-    </div>
+    </footer>
   )
 }
 
