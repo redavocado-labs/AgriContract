@@ -1,6 +1,6 @@
 import { useState } from "react"
-import { useFreshLogin } from "@/features/auth/hooks/use-fresh-login"
-import type { Challenge } from "@/features/contracts/types/contract"
+import { useFreshLogin } from "@/features/auth"
+import type { Challenge } from "@/features/contracts"
 import { parseApiError } from "@/shared/api/errors"
 import {
   initiateDisputeExit,

@@ -1,5 +1,5 @@
 import { formatDecimalVnd } from "@/shared/lib/decimal-display"
-import type { ParticipantRole } from "@/features/contracts/types/contract"
+import type { ParticipantRole } from "@/features/contracts"
 
 export function settlementStatement(amount: string) {
   return `Tôi đồng ý bên bán nhận ${formatDecimalVnd(amount)} đồng cho đợt giao này, phần còn lại hoàn bên mua. Thoả thuận chỉ có hiệu lực khi bên kia xác nhận đúng con số này; khi đó tranh chấp kết thúc không bên nào có lỗi. Nếu không thoả thuận được, giám định tiếp tục.`

@@ -1,5 +1,8 @@
 import { useState } from "react"
-import type { ParticipantRole } from "@/features/contracts/types/contract"
+import {
+  contractError,
+  type ParticipantRole,
+} from "@/features/contracts"
 import { vietnamTime } from "@/shared/lib/vietnam-time"
 import { Banner } from "@/shared/ui/banner"
 import { Button } from "@/shared/ui/button"
@@ -24,7 +27,6 @@ import { displayKg } from "../lib/milestone-consent"
 import { breachStatusLabel } from "../lib/presentation"
 import { contestAction } from "../lib/contest"
 import { EvidenceGallery, Panel, ServerDeadline } from "./milestone-parts"
-import { contractError } from "@/features/contracts/types/presentation"
 
 const disposition = {
   CONFORMING: "Đạt chất lượng",
