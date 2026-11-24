@@ -5,6 +5,7 @@ import com.agricontract.escrow.domain.exception.InvalidDepositLegException;
 import com.agricontract.escrow.domain.model.Money;
 import com.agricontract.escrow.domain.model.RemedyLeg;
 import com.agricontract.escrow.domain.model.RetrySchedule;
+import com.agricontract.escrow.domain.repository.ContractClearanceRepository;
 import com.agricontract.escrow.domain.repository.RemedyLegRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +17,7 @@ import java.util.Optional;
 
 /**
  * A bank result (release, refund or seize) that names a remedyLegId (#249), under the leg's row lock:
- * completed → COMPLETED; refused → the same command is resent per the retry schedule (same eventId, D27), with no
+ * completed → COMPLETED, and the contract is queued for the clearance check (#609); refused → the same command is resent per the retry schedule (same eventId, D27), with no
  * resend left the leg stays FAILED and the error log alerts OPERATOR. A result for a leg escrow does not know is
  * logged and acked; one that does not match the command that leg sent is refused (DLQ).
  */
@@ -26,6 +27,7 @@ import java.util.Optional;
 public class RecordRemedyLegResultUseCase {
 
     private final RemedyLegRepository remedyLegs;
+    private final ContractClearanceRepository clearances;
     private final RetrySchedule retrySchedule;
     private final Clock clock;
 
@@ -53,6 +55,7 @@ public class RecordRemedyLegResultUseCase {
                 return;
             }
             remedyLegs.update(leg);
+            clearances.request(leg.getContractId(), now);
             log.info("event=remedy_leg_completed remedyDecisionId={} remedyLegId={} contractId={} entryType={}"
                             + " amount={} ledgerEntryId={}", leg.getRemedyDecisionId(), leg.getRemedyLegId(),
                     leg.getContractId(), leg.getEntryType(), leg.getAmount().amount().toPlainString(),
