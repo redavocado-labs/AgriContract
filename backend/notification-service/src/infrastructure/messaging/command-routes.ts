@@ -3,6 +3,7 @@ import {
   DocumentFileMismatchError,
   FileServiceRejectedError,
   OperatorEmailNotConfiguredError,
+  OtsProofInvalidError,
 } from '../../application/notification-errors';
 import {
   unsupportedTermination,
@@ -20,6 +21,7 @@ import {
   type NotifyMilestoneStatusUseCase,
   type NotifyBreachNoticeUseCase,
   type NotifyRemedyFinalizedUseCase,
+  type NotifyMilestoneAnchorUseCase,
   type NotifyUserKycResultUseCase,
   type NotifyUserLockChangedUseCase,
 } from '../../application/use-cases';
@@ -39,6 +41,7 @@ import {
   parseMilestoneStatusRequested,
   parseBreachNoticeRequested,
   parseRemedyFinalizedRequested,
+  parseMilestoneAnchorRequested,
   parseUserKycResultRequested,
   parseUserLockChangedRequested,
   unsupportedCommand,
@@ -70,6 +73,7 @@ export interface CommandUseCases {
   milestoneStatus: NotifyMilestoneStatusUseCase;
   breachNotice: NotifyBreachNoticeUseCase;
   remedyFinalized: NotifyRemedyFinalizedUseCase;
+  milestoneAnchor: NotifyMilestoneAnchorUseCase;
 }
 
 /**
@@ -110,6 +114,10 @@ export function commandRoutes(u: CommandUseCases): CommandRoutes {
       u.breachNotice.execute(parseBreachNoticeRequested(b)),
     'notification.remedy_finalized_requested': (b) =>
       u.remedyFinalized.execute(parseRemedyFinalizedRequested(b)),
+    'notification.milestone_anchor_requested': (b) =>
+      documentMail(() =>
+        u.milestoneAnchor.execute(parseMilestoneAnchorRequested(b)),
+      ),
     'notification.milestone_funding_status_requested': (b) =>
       u.milestoneFundingStatus.execute(parseMilestoneFundingStatusRequested(b)),
     'notification.user_kyc_result_requested': (b) =>
@@ -142,10 +150,12 @@ export function commandRoutes(u: CommandUseCases): CommandRoutes {
 }
 
 /**
- * Sends the final-document email. A PDF that does not hash to the command's
- * documentFileHash, or a read file-service refuses for good (401, size cap),
- * cannot get better on redelivery: straight to the DLQ, unsent. Not READY and
- * unavailable stay retryable.
+ * Sends an evidence email with an attachment: the final contract PDF, or a
+ * milestone's OpenTimestamps proof. A PDF that does not hash to the
+ * command's documentFileHash, a read file-service refuses for good (401,
+ * size cap), or an otsProof that is not a usable proof cannot get better on
+ * redelivery: straight to the DLQ, unsent. Not READY and unavailable stay
+ * retryable.
  */
 async function documentMail(send: () => Promise<void>): Promise<void> {
   try {
@@ -153,7 +163,8 @@ async function documentMail(send: () => Promise<void>): Promise<void> {
   } catch (err) {
     if (
       err instanceof DocumentFileMismatchError ||
-      err instanceof FileServiceRejectedError
+      err instanceof FileServiceRejectedError ||
+      err instanceof OtsProofInvalidError
     ) {
       throw new NonRetryableError(err.message);
     }

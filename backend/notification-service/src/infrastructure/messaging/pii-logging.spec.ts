@@ -26,6 +26,7 @@ import {
   NotifyMilestoneStatusUseCase,
   NotifyBreachNoticeUseCase,
   NotifyRemedyFinalizedUseCase,
+  NotifyMilestoneAnchorUseCase,
   NotifyContractAnchorUseCase,
   NotifyCategoryApprovedUseCase,
   NotifyCategoryRejectedUseCase,
@@ -144,6 +145,7 @@ async function harness(
     milestoneStatus: new NotifyMilestoneStatusUseCase(sender),
     breachNotice: new NotifyBreachNoticeUseCase(sender),
     remedyFinalized: new NotifyRemedyFinalizedUseCase(sender),
+    milestoneAnchor: new NotifyMilestoneAnchorUseCase(sender),
   });
   const consumer = new NotificationEventConsumer(amqp, routes, commands);
   await consumer.onModuleInit();

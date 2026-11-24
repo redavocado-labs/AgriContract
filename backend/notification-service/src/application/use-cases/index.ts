@@ -19,3 +19,4 @@ export { NotifyMilestoneFundingStatusUseCase } from './notify-milestone-funding-
 export { NotifyMilestoneStatusUseCase } from './notify-milestone-status.use-case';
 export { NotifyBreachNoticeUseCase } from './notify-breach-notice.use-case';
 export { NotifyRemedyFinalizedUseCase } from './notify-remedy-finalized.use-case';
+export { NotifyMilestoneAnchorUseCase } from './notify-milestone-anchor.use-case';

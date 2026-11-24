@@ -33,6 +33,7 @@ import {
   NotifyMilestoneStatusUseCase,
   NotifyBreachNoticeUseCase,
   NotifyRemedyFinalizedUseCase,
+  NotifyMilestoneAnchorUseCase,
   NotifyContractAnchorUseCase,
 } from '../../application/use-cases';
 import { validate } from '../../config/env.validation';
@@ -152,6 +153,7 @@ describe('shutdown park on real MySQL', () => {
       milestoneStatus: new NotifyMilestoneStatusUseCase(sender),
       breachNotice: new NotifyBreachNoticeUseCase(sender),
       remedyFinalized: new NotifyRemedyFinalizedUseCase(sender),
+      milestoneAnchor: new NotifyMilestoneAnchorUseCase(sender),
     });
     const consumer = new NotificationEventConsumer(amqp, routes, commands);
     await consumer.onModuleInit();

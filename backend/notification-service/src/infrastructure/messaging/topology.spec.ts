@@ -50,6 +50,7 @@ const EXPECTED_QUEUES = [
   'notification-svc.notification.user_lock_changed_requested',
   'notification-svc.notification.level1_5_assignment_waiting_requested',
   'notification-svc.notification.level1_5_inspector_assignment_requested',
+  'notification-svc.notification.milestone_anchor_requested',
   'notification-svc.notification.escrow_leg_alert_requested',
   'notification-svc.notification.escrow_remedy_leg_alert_requested',
   'notification-svc.notification.escrow_remedy_rejected_requested',
@@ -63,6 +64,9 @@ const dlxOf = (queue: string): string => {
   if (key.startsWith('notification.level1_5_')) {
     return 'notification-svc.inspection.dlx';
   }
+  if (key === 'notification.milestone_anchor_requested') {
+    return 'notification-svc.audit.dlx';
+  }
   if (key.startsWith('notification.escrow_')) {
     return 'notification-svc.escrow.dlx';
   }
@@ -70,12 +74,12 @@ const dlxOf = (queue: string): string => {
 };
 
 describe('topology (must match the Java RabbitMQConfig)', () => {
-  it('names the 18 queues and 18 DLQs', () => {
+  it('names the 19 queues and 19 DLQs', () => {
     expect(queueNames()).toEqual(EXPECTED_QUEUES);
     expect(dlqNames()).toEqual(EXPECTED_QUEUES.map((q) => `${q}.dlq`));
   });
 
-  it('declares exactly 10 durable, non auto-delete exchanges', async () => {
+  it('declares exactly 12 durable, non auto-delete exchanges', async () => {
     const { channel, exchanges } = recordingChannel();
     await declareTopology(channel);
 
@@ -92,6 +96,9 @@ describe('topology (must match the Java RabbitMQConfig)', () => {
       // inspection-service's outbox exchange (#439), same options.
       ['agricontract.inspection', 'topic', durable],
       ['notification-svc.inspection.dlx', 'direct', durable],
+      // audit-service's outbox exchange, by the same convention (no outbox yet).
+      ['agricontract.audit', 'topic', durable],
+      ['notification-svc.audit.dlx', 'direct', durable],
       // escrow-service declares agricontract.escrow with the same options
       // (RabbitMQConfig: TopicExchange("agricontract.escrow", true, false)).
       ['agricontract.escrow', 'topic', durable],
@@ -99,11 +106,11 @@ describe('topology (must match the Java RabbitMQConfig)', () => {
     ]);
   });
 
-  it('declares 36 queues: main queues with only x-dead-letter-exchange, DLQs without arguments', async () => {
+  it('declares 38 queues: main queues with only x-dead-letter-exchange, DLQs without arguments', async () => {
     const { channel, queues } = recordingChannel();
     await declareTopology(channel);
 
-    expect(queues).toHaveLength(36);
+    expect(queues).toHaveLength(38);
 
     for (const q of EXPECTED_QUEUES) {
       // toEqual on the whole options object also fails on any extra option
@@ -133,7 +140,18 @@ describe('topology (must match the Java RabbitMQConfig)', () => {
     const { channel, bindings } = recordingChannel();
     await declareTopology(channel);
 
-    expect(bindings).toHaveLength(36);
+    expect(bindings).toHaveLength(38);
+    // audit-service's settlement anchor (hash-chain §4.3), on its own exchange.
+    expect(bindings).toContainEqual([
+      'notification-svc.notification.milestone_anchor_requested',
+      'agricontract.audit',
+      'notification.milestone_anchor_requested',
+    ]);
+    expect(bindings).toContainEqual([
+      'notification-svc.notification.milestone_anchor_requested.dlq',
+      'notification-svc.audit.dlx',
+      'notification.milestone_anchor_requested',
+    ]);
     // D96: contract-service declares these three ahead with the same names.
     for (const key of [
       'notification.milestone_status_requested',
