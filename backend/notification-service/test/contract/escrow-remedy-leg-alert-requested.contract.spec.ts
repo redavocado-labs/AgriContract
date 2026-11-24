@@ -29,6 +29,7 @@ const CONTRACT = join(
 
 interface Schema {
   $defs: Record<string, Record<string, unknown>>;
+  oneOf: Array<{ $ref: string }>;
 }
 
 interface RemedyLegAlertProperties {
@@ -83,12 +84,10 @@ const sorted = (values: readonly string[]) => [...values].sort();
 describe('escrowRemedyLegAlertRequested contract (notification-commands.yaml)', () => {
   const schema = remedyLegAlertSchema();
 
-  /*
-   * Not asserted: membership of the document's top-level oneOf, which does
-   * not list this command yet (docs PR #608). The $defs entry is what the
-   * publisher and this test validate against.
-   */
-  it('is a command consumed by this service', () => {
+  it('is a command of the contract, consumed by this service', () => {
+    expect(contract.oneOf).toContainEqual({
+      $ref: '#/$defs/escrowRemedyLegAlertRequested',
+    });
     expect(contract.$defs.escrowRemedyLegAlertRequested['x-consumers']).toEqual(
       ['notification-service'],
     );
