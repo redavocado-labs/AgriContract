@@ -8,4 +8,5 @@ public interface AssignmentAlerts {
     void waitingChanged(WaitingAssignment waiting, Stage stage, String correlationId, String causationId);
     void assigned(TimedAssignment assignment, String email, String correlationId, String causationId);
     void cancelled(TimedAssignment assignment, String email, String correlationId, String causationId);
+    void cancellationNoop(String eventId, String contractId, String milestoneId);
 }

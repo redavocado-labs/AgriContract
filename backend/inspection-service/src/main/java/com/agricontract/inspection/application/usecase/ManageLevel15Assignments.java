@@ -31,6 +31,8 @@ public class ManageLevel15Assignments {
     private final Clock clock;
     private final TransactionRunner transactions;
     private final AssignmentWaitingRepository waiting;
+    @org.springframework.beans.factory.annotation.Value("${inspection.assignment.free-cancel-hours:4}")
+    private long freeCancelHours = 4;
 
     public void requested(Level15AssignmentRequestedCommand request) {
         transactions.inReadCommittedTransaction(() -> {
@@ -60,11 +62,16 @@ public class ManageLevel15Assignments {
                 if (cancelledAt.isBefore(assignment.assignedAt())) {
                     throw new IllegalStateException("Cancellation predates assignment; requires investigation");
                 }
+                if (assignment.freeCancelUntil() == null) {
+                    throw new IllegalStateException("Missing stored free cancellation deadline; requires investigation");
+                }
                 String email = inspectors.loadInspectorEmail(assignment.inspectorId());
                 if (!assignments.end(assignment.commissionId(), cancelledAt)) {
                     throw new IllegalStateException("Assignment already ended");
                 }
                 alerts.cancelled(assignment, email, correlationId, eventId);
+            } else {
+                alerts.cancellationNoop(eventId, contract, milestone);
             }
         });
     }
@@ -130,7 +137,8 @@ public class ManageLevel15Assignments {
         String email = inspectors.loadInspectorEmail(inspector);
         Instant assigned = now();
         var assignment = new TimedAssignment(UUID.randomUUID().toString(), contract, milestone,
-                inspector, assigned, null, days, calendar.deadline(assigned, days), actor, service);
+                inspector, assigned, null, days, calendar.deadline(assigned, days), actor, service,
+                assigned.plus(java.time.Duration.ofHours(freeCancelHours)));
         assignments.insert(assignment);
         alerts.assigned(assignment, email, correlationId, causationId);
     }
