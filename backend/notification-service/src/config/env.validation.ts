@@ -33,6 +33,13 @@ export interface AppConfig {
    * alert is dead-lettered with a message that names the variable.
    */
   operatorEmail: string | null;
+  /**
+   * Base URL of file-service (FILE_SERVICE_URL), whose
+   * GET /internal/v1/files/{fileId} gives the final contract PDF the
+   * document-ready email attaches (design §3.3). Same variable name and
+   * default port as inspection-service.
+   */
+  fileServiceUrl: string;
 }
 
 /** As loose as the address check of the command parsers: `format: email` decides the rest. */
@@ -110,6 +117,7 @@ export function validate(env: Record<string, unknown>): AppConfig {
     // without .env still authenticates; compose requires it in .env.
     serviceInternalSecret: text('SERVICE_INTERNAL_SECRET', 'changeme-internal'),
     operatorEmail: optionalEmail('OPERATOR_EMAIL'),
+    fileServiceUrl: text('FILE_SERVICE_URL', 'http://localhost:8089'),
   };
 
   if (errors.length > 0) {

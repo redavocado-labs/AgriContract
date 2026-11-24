@@ -13,6 +13,7 @@ import {
 } from './notification-errors';
 import {
   EmailDeliveryError,
+  type EmailAttachment,
   type EmailMessage,
   type EmailPort,
   type EmailReceipt,
@@ -120,6 +121,11 @@ export class NotificationSender {
      * payloads hold addresses only.
      */
     recipientUserId: string | null = null,
+    /**
+     * Files sent with the email. The log keeps the text only (design §3.3):
+     * whatever identifies an attachment belongs in the body.
+     */
+    attachments: EmailAttachment[] = [],
   ): Promise<void> {
     const log = NotificationLog.create(
       eventId,
@@ -139,6 +145,7 @@ export class NotificationSender {
         to: recipientEmail,
         subject,
         body,
+        ...(attachments.length > 0 ? { attachments } : {}),
       });
     } catch (err) {
       const code =

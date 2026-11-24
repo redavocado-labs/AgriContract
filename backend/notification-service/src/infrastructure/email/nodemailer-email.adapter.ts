@@ -76,13 +76,27 @@ export class NodemailerEmailAdapter implements EmailPort {
     });
   }
 
-  async send({ to, subject, body }: EmailMessage): Promise<EmailReceipt> {
+  async send({
+    to,
+    subject,
+    body,
+    attachments = [],
+  }: EmailMessage): Promise<EmailReceipt> {
     try {
       const info = await this.transport.sendMail({
         from: this.from,
         to,
         subject,
         text: body,
+        ...(attachments.length > 0
+          ? {
+              attachments: attachments.map((a) => ({
+                filename: a.filename,
+                contentType: a.contentType,
+                content: a.content,
+              })),
+            }
+          : {}),
       });
       return { providerMessageId: sentMessageId(info) };
     } catch (err) {

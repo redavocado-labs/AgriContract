@@ -80,6 +80,46 @@ describe('NodemailerEmailAdapter', () => {
     ).not.toHaveProperty('html');
   });
 
+  it('sends attachments after the text, as given', async () => {
+    const sendMail = jest.fn().mockResolvedValue({ messageId: 'm-2' });
+    const { adapter } = adapterWith(sendMail);
+    const content = Buffer.from('%PDF-1.7');
+
+    await adapter.send({
+      to: 'buyer@example.test',
+      subject: 's',
+      body: 'b',
+      attachments: [
+        { filename: 'contract.pdf', contentType: 'application/pdf', content },
+      ],
+    });
+
+    expect(
+      (sendMail.mock.calls[0] as [Record<string, unknown>])[0],
+    ).toMatchObject({
+      text: 'b',
+      attachments: [
+        { filename: 'contract.pdf', contentType: 'application/pdf', content },
+      ],
+    });
+  });
+
+  it('sends no attachments property for an empty list', async () => {
+    const sendMail = jest.fn().mockResolvedValue({});
+    const { adapter } = adapterWith(sendMail);
+
+    await adapter.send({
+      to: 'a@x.test',
+      subject: 's',
+      body: 'b',
+      attachments: [],
+    });
+
+    expect(
+      (sendMail.mock.calls[0] as [Record<string, unknown>])[0],
+    ).not.toHaveProperty('attachments');
+  });
+
   it('defaults from to noreply@agricontract.com', async () => {
     const sendMail = jest.fn().mockResolvedValue({});
     const { adapter } = adapterWith(sendMail);

@@ -20,7 +20,17 @@ describe('validate (env)', () => {
       serverPort: 8085,
       serviceInternalSecret: 'changeme-internal',
       operatorEmail: null,
+      fileServiceUrl: 'http://localhost:8089',
     });
+  });
+
+  it('reads FILE_SERVICE_URL and rejects an empty one', () => {
+    expect(
+      validate({ FILE_SERVICE_URL: 'http://file-service:8089' }).fileServiceUrl,
+    ).toBe('http://file-service:8089');
+    expect(() => validate({ FILE_SERVICE_URL: ' ' })).toThrow(
+      'FILE_SERVICE_URL must not be empty',
+    );
   });
 
   it('reads OPERATOR_EMAIL, trimmed, and leaves a blank one unset', () => {
