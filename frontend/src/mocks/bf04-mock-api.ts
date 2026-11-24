@@ -37,6 +37,7 @@ import {
   initialBreachCases,
   initialDetails,
 } from "./bf04-fixtures"
+import { handleAuditMock } from "./bf04-audit"
 
 const params = new URLSearchParams(window.location.search)
 for (const key of ["as", "mock"]) {
@@ -59,6 +60,7 @@ const orgs: Record<string, string> = {
   SELLER: "HTX Nông nghiệp Ea Kar",
   ARBITRATOR: "Trọng tài AgriContract",
   OPERATOR: "Vận hành AgriContract",
+  ADMIN: "Quản trị AgriContract",
 }
 
 const persisted = window.sessionStorage.getItem(`bf04.state.d99.${mode}`)
@@ -273,6 +275,16 @@ async function route(
     return fail(403, "FORBIDDEN", path)
   if (mode === "notfound" && method === "get" && path.includes("/milestones/"))
     return fail(404, "MILESTONE_NOT_FOUND", path)
+
+  const auditReply = handleAuditMock(
+    method,
+    path,
+    viewer,
+    ids[viewer]!,
+    mode,
+    config.params as Record<string, unknown> | undefined
+  )
+  if (auditReply) return new Reply(auditReply.status, auditReply.data)
 
   let m: RegExpMatchArray | null
   if (method === "get" && path === "/api/v1/contracts")
