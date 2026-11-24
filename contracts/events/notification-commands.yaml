@@ -548,6 +548,8 @@ $defs:
       lock states, returnRequestEventId for return states), so the operator can find the matching bank
       log line, including a bank_command_replay_mismatch. since is when the problem began: entry into
       the waiting state for STUCK and RESOLVED, the last failed return for RETURN_EXHAUSTED.
+      REMEDY_EXHAUSTED (D93) once when a remedy leg (legKind REMEDY) is refused with no resend left;
+      bankCommandEventId is its requestEventId, since its last refusal.
     allOf:
       - {$ref: "#/$defs/commandEnvelope"}
       - type: object
@@ -561,11 +563,40 @@ $defs:
             properties:
               contractId: {$ref: "#/$defs/uuid"}
               legId: {$ref: "#/$defs/uuid"}
-              legKind: {enum: [DEPOSIT]}
+              legKind:
+                description: "DEPOSIT = activation deposit leg (D68); REMEDY = remedy.finalized leg (D93, legId = remedyLegId, party = payee role)."
+                enum: [DEPOSIT, REMEDY]
               party: {enum: [BUYER, SELLER]}
               legStatus:
-                enum: [REQUESTED, LOCKED, FAILED, CANCEL_PENDING, CANCELLED, RETURN_REQUESTED, RETURN_FAILED, RETURNED]
+                enum: [REQUESTED, LOCKED, FAILED, CANCEL_PENDING, CANCELLED, RETURN_REQUESTED, RETURN_FAILED, RETURNED, SENT, COMPLETED]
               amount: {$ref: "#/$defs/money"}
               bankCommandEventId: {$ref: "#/$defs/uuid"}
               since: {type: string, format: date-time}
-              stage: {enum: [STUCK, RESOLVED, RETURN_EXHAUSTED]}
+              stage:
+                description: "REMEDY_EXHAUSTED (D93): a REMEDY leg is FAILED with no retry left; OPERATOR fixes the cause then calls RetryRemedyLegs."
+                enum: [STUCK, RESOLVED, RETURN_EXHAUSTED, REMEDY_EXHAUSTED]
+  escrowRemedyRejectedRequested:
+    x-publisher: escrow-service
+    x-consumers: [notification-service]
+    x-semantics: >-
+      Staff-only operational alert (milestone-escrow design §6.8, D93). Escrow refused a whole
+      remedy.finalized decision because its legs exceed the money still locked, so no bank command was
+      sent. Normal operation never reaches this (contract-service always subtracts every decided
+      forfeiture); it means a calculation or data error. The contract stays ACTIVE and there is no
+      platform action to fix it. No recipients in the command: notification-service sends to
+      notification.operatorEmail. Once per remedyDecisionId.
+    allOf:
+      - {$ref: "#/$defs/commandEnvelope"}
+      - type: object
+        properties:
+          eventType: {const: notification.escrow_remedy_rejected_requested}
+          producer: {const: escrow-service}
+          payload:
+            type: object
+            required: [contractId, remedyDecisionId, reason, rejectedAt]
+            additionalProperties: false
+            properties:
+              contractId: {$ref: "#/$defs/uuid"}
+              remedyDecisionId: {$ref: "#/$defs/uuid"}
+              reason: {type: string, minLength: 1, maxLength: 500}
+              rejectedAt: {type: string, format: date-time}

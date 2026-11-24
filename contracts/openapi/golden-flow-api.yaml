@@ -325,6 +325,26 @@ paths:
         '204': {description: Retry accepted; escrow retries only the missing leg.}
         '403': {$ref: '#/components/responses/Forbidden'}
         '409': {$ref: '#/components/responses/Conflict'}
+  /api/v1/contracts/{contractId}/remedy/retry-legs:
+    x-service-owner: contract-service
+    post:
+      operationId: retryRemedyLegs
+      x-roles: [OPERATOR]
+      description: >-
+        OPERATOR-only technical recovery (D93) after a remedy leg ran out of retries and the cause is fixed:
+        contract-service writes contract.remedy_retry_requested and escrow resends every FAILED remedy leg of
+        the contract with its original command id. COMPLETED legs are never resent. It cannot change amounts,
+        payees or the decision. Accepted (204) while the contract is ACTIVE even if no leg is FAILED (escrow
+        no-op).
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: contractId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {$ref: '#/components/parameters/IdempotencyKey'}
+      responses:
+        '204': {description: Retry accepted; escrow resends only FAILED remedy legs.}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: "The contract is not ACTIVE.", content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}}
   /api/v1/contracts/{contractId}/activation/cancel/initiate:
     x-service-owner: contract-service
     post:
