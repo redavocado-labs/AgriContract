@@ -3,6 +3,7 @@ package com.agricontract.contract.infrastructure.config;
 import com.agricontract.contract.application.exception.ActivationRefusedException;
 import com.agricontract.contract.application.exception.MilestoneFundingRefusedException;
 import com.agricontract.contract.application.exception.InvalidEventPayloadException;
+import com.agricontract.contract.application.exception.TerminalCommitRefusedException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.core.*;
@@ -29,6 +30,8 @@ public class RabbitMQConfig {
     public static final String DEPOSIT_LOCKED_QUEUE = "contract-svc.escrow.deposit_locked";
     public static final String DEPOSIT_LOCK_FAILED_QUEUE = "contract-svc.escrow.deposit_lock_failed";
     public static final String ACTIVATION_REFUND_COMPLETED_QUEUE = "contract-svc.escrow.activation_refund_completed";
+    /** D93, #139: escrow confirms every remedy leg completed and the contract lock is 0.00. */
+    public static final String CONTRACT_LOCK_CLEARED_QUEUE = "contract-svc.escrow.contract_lock_cleared";
     public static final String MILESTONE_FUNDED_QUEUE = "contract-svc.escrow.milestone_funded";
     public static final String MILESTONE_FUNDING_FAILED_QUEUE = "contract-svc.escrow.milestone_funding_failed";
     public static final String FILE_READY_QUEUE = "contract-svc.file.ready";
@@ -56,6 +59,9 @@ public class RabbitMQConfig {
         Queue refundCompleted = QueueBuilder.durable(ACTIVATION_REFUND_COMPLETED_QUEUE)
                 .deadLetterExchange(dlx.getName()).build();
         Queue refundCompletedDlq = QueueBuilder.durable(ACTIVATION_REFUND_COMPLETED_QUEUE + ".dlq").build();
+        // D93, #139: the terminal guard. Same exchange and DLX as activation_refund_completed.
+        Queue lockCleared = QueueBuilder.durable(CONTRACT_LOCK_CLEARED_QUEUE).deadLetterExchange(dlx.getName()).build();
+        Queue lockClearedDlq = QueueBuilder.durable(CONTRACT_LOCK_CLEARED_QUEUE + ".dlq").build();
         // D64, #119. escrow-service (#120) must declare the same queues ahead before it publishes these events.
         Queue funded = QueueBuilder.durable(MILESTONE_FUNDED_QUEUE).deadLetterExchange(dlx.getName()).build();
         Queue fundedDlq = QueueBuilder.durable(MILESTONE_FUNDED_QUEUE + ".dlq").build();
@@ -99,6 +105,9 @@ public class RabbitMQConfig {
                 refundCompleted, refundCompletedDlq,
                 BindingBuilder.bind(refundCompleted).to(escrow).with("escrow.activation_refund_completed"),
                 BindingBuilder.bind(refundCompletedDlq).to(dlx).with("escrow.activation_refund_completed"),
+                lockCleared, lockClearedDlq,
+                BindingBuilder.bind(lockCleared).to(escrow).with("escrow.contract_lock_cleared"),
+                BindingBuilder.bind(lockClearedDlq).to(dlx).with("escrow.contract_lock_cleared"),
                 funded, fundedDlq,
                 BindingBuilder.bind(funded).to(escrow).with("escrow.milestone_funded"),
                 BindingBuilder.bind(fundedDlq).to(dlx).with("escrow.milestone_funded"),
@@ -138,7 +147,9 @@ public class RabbitMQConfig {
                 // A contract that cannot be activated now will not be on a retry either (D40).
                 ActivationRefusedException.class, false,
                 // A funding result its milestone cannot take will not fit on a retry either.
-                MilestoneFundingRefusedException.class, false
+                MilestoneFundingRefusedException.class, false,
+                // A lock cleared for an unknown contract will not find it on a retry either (D93).
+                TerminalCommitRefusedException.class, false
         );
         SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy(3, retryableExceptions, true, true);
 

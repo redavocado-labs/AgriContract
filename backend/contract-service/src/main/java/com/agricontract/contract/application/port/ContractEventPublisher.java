@@ -47,6 +47,17 @@ public interface ContractEventPublisher {
     void depositLockRetryRequested(Contract contract, String operatorUserId, Instant requestedAt);
 
     /**
+     * contract.remedy_retry_requested (D93): OPERATOR asks escrow to resend every FAILED remedy leg of the contract.
+     */
+    void remedyRetryRequested(Contract contract, String operatorUserId, Instant requestedAt);
+
+    /**
+     * contract.settled (D93): the contract is SETTLED because escrow cleared its lock for the pending final decision.
+     * Lifecycle and reputation history only, never money. causationId is the escrow.contract_lock_cleared.
+     */
+    void contractSettled(Contract contract, Instant settledAt, String correlationId, String causationId);
+
+    /**
      * contract.activation_refund_requested (D42), with SIGNED → ACTIVATION_REFUND_PENDING: escrow returns the locked
      * deposits. trigger is BOTH_PARTIES or ONE_PARTY_AFTER_WINDOW.
      */
