@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
 /** The whole service on real MySQL (production migration and grants) and RabbitMQ. */
@@ -71,11 +72,117 @@ class ContractSignedFlowIntegrationTest {
         registry.add("spring.rabbitmq.username", RABBIT::getAdminUsername);
         registry.add("spring.rabbitmq.password", RABBIT::getAdminPassword);
         registry.add("audit.dlq-monitor.enabled", () -> "false");
+        registry.add("gateway.internal-secret", () -> "test-only-gateway-secret");
     }
 
     @Autowired RabbitTemplate rabbit;
     @Autowired AmqpAdmin admin;
     @Autowired JdbcTemplate jdbc;
+    @Autowired com.agricontract.audit.application.usecase.ReadAuditTrailUseCase trails;
+
+    static JdbcTemplate root() {
+        return new JdbcTemplate(new DriverManagerDataSource(MYSQL.getJdbcUrl(), "root", MYSQL.getPassword()));
+    }
+
+    // ---- D97: the evidence log ----
+
+    /** contract.signed then two milestone events of the same contract, all chained; returns the signed payload. */
+    private Map<String, Object> signedContractWithEvents() throws Exception {
+        Map<String, Object> signed = ContractSignedConsumerTest.validEvent();
+        Map<String, Object> signedPayload = ContractSignedConsumerTest.payload(signed);
+        String contractId = (String) signedPayload.get("contractId");
+        send(signed);
+        // Each queue has its own listener, so events of different types are chained in no guaranteed order.
+        awaitRows(contractId, 1);
+        Map<String, Map<String, Object>> samples = CatalogEventConsumerTest.samples();
+        for (String type : List.of("milestone.seller_weighed", "milestone.buyer_received")) {
+            Map<String, Object> payload = samples.get(type);
+            payload.put("contractId", contractId);
+            sendTo(CatalogEvent.CONTRACTS, CatalogEventConsumerTest.envelope(type, payload));
+        }
+        awaitRows(contractId, 3);
+        return signedPayload;
+    }
+
+    @Test
+    void aParty_readsItsContractsChain_strangersAndUnknownContractsGet404() throws Exception {
+        Map<String, Object> signed = signedContractWithEvents();
+        String contractId = (String) signed.get("contractId");
+
+        var view = trails.forParty(contractId, (String) signed.get("buyerId"));
+        assertThat(view.records()).hasSize(3);
+        assertThat(view.records().getFirst().record().sourceType()).isEqualTo("CONTRACT_SIGNED");
+        assertThat(view.currentRecordHash()).isEqualTo(view.records().getLast().recordHash());
+        assertThat(trails.forParty(contractId, (String) signed.get("sellerId")).records()).hasSize(3);
+        assertThat(trails.verifyForParty(contractId, (String) signed.get("sellerId")).valid()).isTrue();
+
+        assertThatThrownBy(() -> trails.forParty(contractId, java.util.UUID.randomUUID().toString()))
+                .isInstanceOf(com.agricontract.audit.application.exception.AuditTrailNotFoundException.class);
+        assertThatThrownBy(() -> trails.forParty(java.util.UUID.randomUUID().toString(),
+                (String) signed.get("buyerId")))
+                .isInstanceOf(com.agricontract.audit.application.exception.AuditTrailNotFoundException.class);
+        assertThat(count("source_type", "AUDIT_VIEWED")).as("a party's read is not chained").isZero();
+    }
+
+    @Test
+    void anAdminRead_isChainedAsSystem_andNeverJoinsTheContractsChain() throws Exception {
+        Map<String, Object> signed = signedContractWithEvents();
+        String contractId = (String) signed.get("contractId");
+        String admin = java.util.UUID.randomUUID().toString();
+        int before = count("source_type", "AUDIT_VIEWED");
+
+        var view = trails.forAdmin(contractId, admin);
+        var page = trails.globalForAdmin(null, 0, 5, admin);
+
+        assertThat(view.records()).hasSize(3);
+        assertThat(count("source_type", "AUDIT_VIEWED")).isEqualTo(before + 2);
+        Map<String, Object> viewed = jdbc.queryForMap("SELECT subject_type, subject_id, content FROM audit_record"
+                + " WHERE source_type = 'AUDIT_VIEWED' AND JSON_UNQUOTE(JSON_EXTRACT(content, '$.contractId')) = ?",
+                contractId);
+        assertThat(viewed).containsEntry("subject_type", "SYSTEM").containsEntry("subject_id", "SYSTEM");
+        assertThat((String) viewed.get("content")).contains(admin);
+        assertThat(trails.forParty(contractId, (String) signed.get("buyerId")).records()).hasSize(3);
+        assertThat(page.records().getFirst().record().sourceType()).as("newest first: this read itself")
+                .isEqualTo("AUDIT_VIEWED");
+        assertThat(trails.globalForAdmin(com.agricontract.audit.domain.model.SubjectType.CONTRACT, 0, 100, admin)
+                .records()).allMatch(r -> r.record().subjectType()
+                        == com.agricontract.audit.domain.model.SubjectType.CONTRACT);
+
+        int views = count("source_type", "AUDIT_VIEWED");
+        assertThatThrownBy(() -> trails.forAdmin(java.util.UUID.randomUUID().toString(), admin))
+                .isInstanceOf(com.agricontract.audit.application.exception.AuditTrailNotFoundException.class);
+        assertThat(count("source_type", "AUDIT_VIEWED")).as("a 404 read leaves no view").isEqualTo(views);
+        assertThat(trails.verifyGlobal().valid()).isTrue();
+    }
+
+    @Test
+    void rootEditingOrDeletingARow_isCaughtByTheChecks() throws Exception {
+        Map<String, Object> signed = signedContractWithEvents();
+        String contractId = (String) signed.get("contractId");
+        List<String> ids = jdbc.queryForList("SELECT record_id FROM audit_record WHERE subject_id = ? ORDER BY"
+                + " global_seq", String.class, contractId);
+        try {
+            root().update("UPDATE audit_record SET content = JSON_SET(content, '$.sellerDeclaredWeight', '1')"
+                    + " WHERE record_id = ?", ids.get(1));
+            var edited = trails.verifyForParty(contractId, (String) signed.get("buyerId"));
+            assertThat(edited.valid()).isFalse();
+            assertThat(edited.violations()).anyMatch(v -> v.recordId().equals(ids.get(1))
+                    && v.reason() == com.agricontract.audit.application.dto.ChainVerificationResult.Reason.HASH_MISMATCH);
+
+            root().update("DELETE FROM audit_record WHERE record_id = ?", ids.get(1));
+            var deleted = trails.verifyForAdmin(contractId);
+            assertThat(deleted.violations()).anyMatch(v -> v.recordId().equals(ids.get(2)) && v.reason()
+                    == com.agricontract.audit.application.dto.ChainVerificationResult.Reason.PREV_SUBJECT_MISMATCH);
+            assertThat(trails.verifyGlobal().valid()).isFalse();
+        } finally {
+            // Leave the shared table verifiable for the other tests: drop this contract's rows and everything after.
+            Long first = jdbc.queryForObject("SELECT MIN(global_seq) FROM audit_record WHERE subject_id = ?",
+                    Long.class, contractId);
+            if (first != null) {
+                root().update("DELETE FROM audit_record WHERE global_seq >= ?", first);
+            }
+        }
+    }
 
     @BeforeEach
     void purge() {
