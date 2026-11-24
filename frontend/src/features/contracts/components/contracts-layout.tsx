@@ -3,8 +3,7 @@ import { Link, useLocation } from "react-router-dom"
 import { AppSidebar, type SidebarItem } from "@/shared/ui/app-sidebar"
 import { TopBar } from "@/shared/ui/top-bar"
 import { useAuthStore } from "@/shared/auth/auth-store"
-import { AccountMenu } from "@/features/auth/components/account-menu"
-import { useOrganizationProfile } from "@/features/organization/hooks/use-organization-profile"
+import { AccountMenu, useOrganizationProfile } from "@/features/organization"
 
 export interface Crumb {
   label: string

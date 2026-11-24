@@ -2,12 +2,12 @@ import { useState } from "react"
 import { Link } from "react-router-dom"
 import { useAuthStore } from "@/shared/auth/auth-store"
 import { logout } from "@/shared/auth/keycloak"
-import { useMyProfile } from "../hooks/use-my-profile"
+import { useOrganizationProfile } from "../hooks/use-organization-profile"
 import { Button } from "@/shared/ui/button"
 
 export function AccountMenu() {
   const { authenticated, email } = useAuthStore()
-  const profile = useMyProfile()
+  const profile = useOrganizationProfile()
   const [error, setError] = useState(false)
   if (!authenticated)
     return (

@@ -6,7 +6,7 @@ import { DeadlinePill } from "@/shared/ui/deadline-pill"
 import { StatusBadge } from "@/shared/ui/status-badge"
 import { Countdown } from "@/shared/ui/countdown"
 import { vietnamTime } from "@/shared/lib/vietnam-time"
-import type { MilestoneStatus } from "@/features/contracts/types/contract"
+import type { MilestoneStatus } from "@/features/contracts"
 import { readEvidence, type MilestoneDetail } from "../api/milestones"
 import {
   daysLeft,

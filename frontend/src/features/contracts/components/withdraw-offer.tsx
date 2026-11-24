@@ -1,15 +1,14 @@
-import { useRef, useState } from "react"
+import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { newIdempotencyKey } from "@/shared/api/client"
-import { parseApiError } from "@/shared/api/errors"
+import { useRecoverableWrite } from "@/shared/api/operation-recovery"
 import { useAuthStore } from "@/shared/auth/auth-store"
 import { Banner } from "@/shared/ui/banner"
 import { Button } from "@/shared/ui/button"
 import { Modal } from "@/shared/ui/modal"
 import { useToast } from "@/shared/ui/toast"
-import { useOrganizationPermissions } from "@/features/organization/hooks/use-organization-permissions"
-import { withdrawOffer } from "../api/contracts"
-import { canWithdraw, contractError } from "../types/presentation"
+import { useOrganizationPermissions } from "@/features/organization"
+import { getContract, withdrawOffer } from "../api/contracts"
+import { canWithdraw, contractError, PRE_SIGNATURE } from "../types/presentation"
 import type { Contract } from "../types/contract"
 
 /** WITHDRAW_OFFER: either party, before the second signature; no penalty. */
@@ -19,30 +18,42 @@ export function WithdrawOffer({ contract }: { contract: Contract }) {
   const cache = useQueryClient()
   const toast = useToast()
   const [open, setOpen] = useState(false)
-  const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
-  const key = useRef<string | null>(null)
+  const operation = useRecoverableWrite(
+    "withdraw-offer",
+    contract.id,
+    !PRE_SIGNATURE.includes(contract.status)
+  )
+  const { busy } = operation
   if (!canWithdraw(contract, canCreateOrSign)) return null
   async function confirm() {
-    if (busy) return
-    key.current ??= newIdempotencyKey()
-    setBusy(true)
+    if (!userId) return
     setError("")
+    const queryKey = ["contract", userId, contract.id]
     try {
-      await withdrawOffer(contract.id, key.current)
-      key.current = null
+      await operation.run({
+        binding: null,
+        reconcile: async () => {
+          const current = await cache.fetchQuery({
+            queryKey,
+            queryFn: ({ signal }) => getContract(contract.id, userId, signal),
+            retry: false,
+            staleTime: 0,
+          })
+          return canWithdraw(current, canCreateOrSign) ? "replay" : "changed"
+        },
+        send: (key) => withdrawOffer(contract.id, key),
+      })
+      if (useAuthStore.getState().userId !== userId) return
       setOpen(false)
       toast.add({ title: "Đã rút đề nghị hợp đồng", type: "success" })
     } catch (failure) {
       setError(contractError(failure))
-      const { status } = parseApiError(failure)
-      if (status >= 400 && status < 500) key.current = null
     } finally {
-      setBusy(false)
-      await cache.invalidateQueries({
-        queryKey: ["contract", userId, contract.id],
-      })
-      await cache.invalidateQueries({ queryKey: ["contracts", userId] })
+      void Promise.allSettled([
+        cache.invalidateQueries({ queryKey }),
+        cache.invalidateQueries({ queryKey: ["contracts", userId] }),
+      ])
     }
   }
   return (
@@ -83,6 +94,12 @@ export function WithdrawOffer({ contract }: { contract: Contract }) {
             Chỉ rút được trước khi đủ hai chữ ký. Không bên nào bị phạt hay trừ
             uy tín.
           </p>
+          {operation.pending && !busy && (
+            <Banner variant="warning" role="status">
+              Kết quả lần rút trước chưa được xác nhận. Hệ thống sẽ tải lại trạng
+              thái hợp đồng trước khi gửi lại thao tác này.
+            </Banner>
+          )}
           {error && (
             <Banner role="alert" variant="danger">
               {error}

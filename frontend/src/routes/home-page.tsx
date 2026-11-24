@@ -4,26 +4,25 @@ import { cn } from "@/shared/lib/utils"
 import { buttonVariants } from "@/shared/ui/button"
 import { Footer } from "@/shared/ui/footer"
 import { MoneyDisplay } from "@/shared/ui/money-display"
-import { PublicNav } from "@/shared/ui/public-nav"
 import { StatusBadge } from "@/shared/ui/status-badge"
-
+import { PublicNav } from "./layouts/public-nav"
 
 function Hero() {
   return (
     <div className="bg-primary text-white">
-      <div className="mx-auto grid max-w-[1160px] grid-cols-[1.15fr_1fr] items-center gap-14 px-10 pt-[72px] pb-[76px]">
+      <div className="mx-auto grid max-w-[1160px] items-center gap-8 px-4 py-10 sm:px-10 lg:grid-cols-[1.15fr_1fr] lg:gap-14 lg:pt-[72px] lg:pb-[76px]">
         <div>
           <div className="mb-[22px] inline-flex items-center gap-2 rounded-full bg-white/[0.12] px-3 py-1.5 text-[12.5px] text-primary-tint">
-            <span className="ms text-base">verified_user</span> Nền tảng hợp đồng nông sản có ký quỹ
+            <span className="ms text-base" aria-hidden="true">verified_user</span> Nền tảng hợp đồng nông sản có ký quỹ
           </div>
-          <div className="mb-5 text-[42px] leading-[1.18] font-medium tracking-[-0.015em]">
+          <h1 className="mb-5 text-[32px] leading-[1.18] font-medium tracking-[-0.015em] sm:text-[42px]">
             Mua bán nông sản kỳ hạn, không lo bẻ kèo.
-          </div>
+          </h1>
           <div className="mb-8 max-w-[520px] text-base leading-[1.65] text-primary-tint">
-            Tiền được khoá trong ký quỹ và chỉ giải ngân theo từng cột mốc giao hàng khi cả hai bên
-            xác nhận. Tranh chấp có giám định độc lập, lịch sử uy tín công khai.
+            Tiền hàng được khoá trước mỗi đợt giao và giải ngân khi cột mốc đủ điều kiện tất toán.
+            Hệ thống hỗ trợ giám định độc lập khi có tranh chấp và cho phép xem uy tín đối tác sau khi đăng nhập.
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Link
               to="/register"
               className="rounded-[9px] bg-white px-6 py-[13px] text-[15px] font-medium text-primary"
@@ -34,44 +33,30 @@ function Hero() {
               to="/listing"
               className="inline-flex items-center gap-2 rounded-[9px] border border-white/35 px-6 py-[13px] text-[15px] font-medium text-white hover:bg-white/10"
             >
-              Xem sàn nguồn hàng <span className="ms text-lg">arrow_forward</span>
+              Xem sàn nguồn hàng <span className="ms text-lg" aria-hidden="true">arrow_forward</span>
             </Link>
-          </div>
-          <div className="mt-11 flex gap-10">
-            <div>
-              <div className="font-mono text-[26px] font-medium">2.400+</div>
-              <div className="text-[13px] text-[#BBF7D0]">hợp đồng đã tất toán</div>
-            </div>
-            <div>
-              <div className="font-mono text-[26px] font-medium">98,2%</div>
-              <div className="text-[13px] text-[#BBF7D0]">giao dịch không tranh chấp</div>
-            </div>
-            <div>
-              <div className="font-mono text-[26px] font-medium">4</div>
-              <div className="text-[13px] text-[#BBF7D0]">mặt hàng: cà phê, gạo, cao su, điều</div>
-            </div>
           </div>
         </div>
 
         <div className="rounded-2xl bg-surface px-6 py-[22px] text-text-primary shadow-[0_20px_50px_rgba(15,23,42,0.18)]">
-          <div className="mb-4 flex items-center justify-between">
-            <span className="font-mono text-[13px] text-text-secondary">HĐ-2026-0142</span>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <span className="text-[13px] font-medium text-text-secondary">Hợp đồng minh hoạ</span>
             <StatusBadge variant="info">Đang thực hiện</StatusBadge>
           </div>
-          <div className="mb-0.5 text-[13px] text-text-secondary">Đang khoá trong ký quỹ</div>
+          <div className="mb-0.5 text-[13px] text-text-secondary">Tiền hàng đang khoá</div>
           <div className="mb-4.5">
-            <MoneyDisplay amount={5_000_000_000} sign="neutral" emphasis="large" />
+            <MoneyDisplay amount={2_500_000_000} sign="neutral" emphasis="large" />
           </div>
           <div className="flex flex-col gap-3.5">
             <div className="flex items-start gap-3">
-              <span className="ms text-xl text-success">check_circle</span>
+              <span className="ms text-xl text-success" aria-hidden="true">check_circle</span>
               <div className="flex-1">
                 <div className="text-[13.5px]">Cột mốc 1 — 10 tấn</div>
                 <div className="text-xs text-text-muted">Đã tất toán · giải ngân 2.500.000.000 ₫</div>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <span className="ms text-xl text-warning">radio_button_checked</span>
+              <span className="ms text-xl text-warning" aria-hidden="true">radio_button_checked</span>
               <div className="flex-1">
                 <div className="text-[13.5px]">Cột mốc 2 — 10 tấn</div>
                 <div className="text-xs text-text-muted">Chờ xác nhận nhận hàng · 2.500.000.000 ₫</div>
@@ -79,7 +64,7 @@ function Hero() {
             </div>
           </div>
           <div className="mt-4.5 flex items-start gap-2 rounded-[9px] bg-surface-muted px-3.5 py-2.5">
-            <span className="ms mt-px text-base text-text-secondary">lock</span>
+            <span className="ms mt-px text-base text-text-secondary" aria-hidden="true">lock</span>
             <span className="text-xs leading-[1.5] text-text-secondary">
               Sổ cái chỉ ghi thêm — không thể sửa hoặc xoá bút toán.
             </span>
@@ -100,7 +85,7 @@ function Eyebrow({ children }: { children: string }) {
 
 function ProblemStatement() {
   return (
-    <div className="mx-auto max-w-[1160px] px-10 pt-16 pb-2">
+    <div className="mx-auto max-w-[1160px] px-4 pt-16 pb-2 sm:px-10">
       <Eyebrow>Vấn đề</Eyebrow>
       <div className="max-w-[820px] text-[26px] leading-[1.4] font-medium">
         Hợp đồng nông sản kỳ hạn ở Việt Nam thường bị bẻ kèo khi giá biến động — và bên yếu thế là
@@ -130,10 +115,10 @@ const pillars = [
 
 function PillarsSection() {
   return (
-    <div className="mx-auto grid max-w-[1160px] grid-cols-3 gap-5 px-10 pt-10 pb-6">
+    <div className="mx-auto grid max-w-[1160px] gap-5 px-4 pt-10 pb-6 sm:grid-cols-2 sm:px-10 lg:grid-cols-3">
       {pillars.map((pillar) => (
         <div key={pillar.title} className="rounded-xl border-[0.5px] border-border bg-surface p-6">
-          <span className="ms text-[26px] text-primary">{pillar.icon}</span>
+          <span className="ms text-[26px] text-primary" aria-hidden="true">{pillar.icon}</span>
           <div className="mt-3.5 mb-2 text-[17px] font-medium">{pillar.title}</div>
           <div className="text-sm leading-[1.6] text-text-secondary">{pillar.body}</div>
         </div>
@@ -149,7 +134,7 @@ const steps = [
   },
   {
     title: "Khoá ký quỹ",
-    body: "Tiền cọc và tiền cột mốc được khoá, ghi vào sổ cái chỉ-ghi-thêm.",
+    body: "Khoá cọc theo điều khoản để kích hoạt hợp đồng. Tiền hàng được khoá trước từng đợt giao.",
   },
   {
     title: "Giao & xác nhận",
@@ -163,12 +148,12 @@ const steps = [
 
 function HowItWorks() {
   return (
-    <div className="mx-auto max-w-[1160px] px-10 py-12">
+    <div className="mx-auto max-w-[1160px] px-4 py-12 sm:px-10">
       <Eyebrow>Cách hoạt động</Eyebrow>
       <div className="mb-8 text-2xl font-medium">
         Từ đề nghị đến tất toán, mọi bước đều kiểm chứng được
       </div>
-      <div className="grid grid-cols-4">
+      <div className="grid gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
         {steps.map((step, index) => {
           const stepNumber = index + 1
           const isLast = stepNumber === steps.length
@@ -196,47 +181,28 @@ function HowItWorks() {
   )
 }
 
-const commodities = [
-  { name: "Cà phê", note: "Thuộc EUDR — khai vùng trồng" },
-  { name: "Cao su", note: "Thuộc EUDR — khai vùng trồng" },
-  { name: "Gạo", note: "Không thuộc EUDR" },
-  { name: "Điều", note: "Không thuộc EUDR" },
-]
-
 function TraceabilitySection() {
   return (
     <div className="border-y-[0.5px] border-border bg-surface-muted">
-      <div className="mx-auto grid max-w-[1160px] grid-cols-2 items-center gap-12 px-10 py-12">
+      <div className="mx-auto grid max-w-[1160px] items-center gap-6 px-4 py-12 sm:px-10 lg:grid-cols-2 lg:gap-12">
         <div>
           <Eyebrow>Truy xuất nguồn gốc</Eyebrow>
           <div className="mb-3.5 text-2xl leading-[1.35] font-medium">
-            Cà phê và cao su khai vùng trồng, sẵn sàng cho EUDR
+            Truy xuất vùng trồng cà phê
           </div>
           <div className="mb-4.5 text-sm leading-[1.65] text-text-secondary">
-            Với cà phê và cao su, bên bán khai toạ độ vùng trồng và hệ thống đối chiếu vệ tinh.
-            EUDR áp cho doanh nghiệp lớn từ 30/12/2026 và doanh nghiệp nhỏ từ 30/6/2027.
+            Bên bán khai báo vùng trồng khi đăng nguồn hàng cà phê. Thông tin vùng trồng hỗ trợ đối chiếu nguồn gốc.
           </div>
           <div className="flex flex-col gap-2.5">
             <div className="flex items-center gap-2.5 text-[13.5px] text-text-secondary">
-              <span className="ms text-lg text-success">check_circle</span> Kết quả kiểm tra tách
-              bạch: tiến trình và mức rủi ro
-            </div>
-            <div className="flex items-center gap-2.5 text-[13.5px] text-text-secondary">
-              <span className="ms text-lg text-success">check_circle</span> Hồ sơ due diligence giữ
-              tối thiểu 5 năm
+              <span className="ms text-lg text-success" aria-hidden="true">check_circle</span>
+              Chi tiết nguồn hàng cho biết số vùng trồng đã khai báo.
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          {commodities.map((commodity) => (
-            <div
-              key={commodity.name}
-              className="rounded-xl border-[0.5px] border-border bg-surface px-4.5 py-4"
-            >
-              <div className="text-[15px] font-medium">{commodity.name}</div>
-              <div className="mt-1 text-[12.5px] text-text-secondary">{commodity.note}</div>
-            </div>
-          ))}
+        <div className="rounded-xl border-[0.5px] border-border bg-surface px-4.5 py-4">
+          <div className="text-[15px] font-medium">Cà phê</div>
+          <div className="mt-1 text-[12.5px] text-text-secondary">Mặt hàng đang được hỗ trợ</div>
         </div>
       </div>
     </div>
@@ -245,12 +211,12 @@ function TraceabilitySection() {
 
 function FinalCta() {
   return (
-    <div className="mx-auto max-w-[1160px] px-10 py-16 text-center">
+    <div className="mx-auto max-w-[1160px] px-4 py-16 text-center sm:px-10">
       <div className="mb-3 text-[28px] font-medium">Bắt đầu giao dịch có bảo chứng</div>
       <div className="mb-7 text-[15px] text-text-secondary">
-        Mở tài khoản miễn phí. Quản trị viên duyệt hồ sơ trước khi kích hoạt.
+        Mở tài khoản miễn phí. Điều phối viên xác minh hồ sơ doanh nghiệp.
       </div>
-      <div className="flex justify-center gap-3">
+      <div className="flex flex-wrap justify-center gap-3">
         <Link
           to="/login"
           className={cn(buttonVariants({ variant: "outline", size: "cta" }))}
@@ -269,12 +235,14 @@ function HomePage() {
   return (
     <div className="bg-page-bg text-text-primary">
       <PublicNav />
-      <Hero />
-      <ProblemStatement />
-      <PillarsSection />
-      <HowItWorks />
-      <TraceabilitySection />
-      <FinalCta />
+      <main>
+        <Hero />
+        <ProblemStatement />
+        <PillarsSection />
+        <HowItWorks />
+        <TraceabilitySection />
+        <FinalCta />
+      </main>
       <Footer />
     </div>
   )

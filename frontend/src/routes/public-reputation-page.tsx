@@ -1,181 +1,136 @@
-import { Link } from "react-router-dom"
+import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { Link, useParams } from "react-router-dom"
+import { z } from "zod"
 
+import { getPublicPartner, getPublicReputationSummary, type ReputationSummary } from "@/features/reputation/api/public-summary"
+import { parseApiError } from "@/shared/api/errors"
+import { ROLE_LABELS, useAuthStore } from "@/shared/auth/auth-store"
+import { login } from "@/shared/auth/keycloak"
+import { Banner } from "@/shared/ui/banner"
+import { Button } from "@/shared/ui/button"
+import { EmptyState } from "@/shared/ui/empty-state"
 import { Footer } from "@/shared/ui/footer"
-import { LineChartCard } from "@/shared/ui/line-chart-card"
-import { PublicNav } from "@/shared/ui/public-nav"
+import { StatusBadge } from "@/shared/ui/status-badge"
+import { PublicNav } from "./layouts/public-nav"
 
-// ─── Mock Data ───────────────────────────────────────────────────────────────
-
-const SELLER_DATA = {
-  id: "htx-ea-kar",
-  name: "HTX Nông nghiệp Ea Kar",
-  type: "Hợp tác xã",
-  province: "Đắk Lắk",
-  role: "Bên bán",
-  reputation: 88,
-  reputationLabel: "Uy tín tốt",
-  kycVerified: true,
-  metrics: {
-    completedContracts: 32,
-    onTimeRate: "94%",
-    violations: 0,
-    memberSince: 2023,
-  },
-  chart: {
-    current: 90,
-    average: 85.3,
-    trend: "+12",
-    data: [
-      { label: "T7/24", value: 78 },
-      { label: "T10/24", value: 80 },
-      { label: "T1/25", value: 82 },
-      { label: "T4/25", value: 83 },
-      { label: "T7/25", value: 85 },
-      { label: "T10/25", value: 86 },
-      { label: "T1/26", value: 87 },
-      { label: "T3/26", value: 88 },
-      { label: "T5/26", value: 89 },
-      { label: "T6/26", value: 90 },
-      { label: "T7/26", value: 90 },
-    ],
-  },
-  events: [
-    { title: "Tất toán hợp đồng cà phê", date: "28/05/2026", delta: "+2" },
-    { title: "Giao dịch đúng hạn 6 tháng", date: "01/04/2026", delta: "+3" },
-    { title: "Hoàn thành khai vùng trồng EUDR", date: "18/02/2026", delta: "+1" },
-    { title: "Tất toán hợp đồng cà phê", date: "03/11/2025", delta: "+2" },
-  ],
+const lockStatus = {
+  ACTIVE: "Đang khoá",
+  EXPIRED: "Đã hết hạn",
+  UNLOCKED_EARLY: "Đã mở khoá sớm",
 }
+const date = new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeZone: "Asia/Ho_Chi_Minh" })
 
-// ─── Component ───────────────────────────────────────────────────────────────
-
-function PublicReputationPage() {
-  // Trong thực tế sẽ fetch data theo userId từ useParams(), hiện tại dùng mock
-  const data = SELLER_DATA
-
+function ReputationDetails({ summary }: { summary: ReputationSummary }) {
   return (
-    <div className="min-h-screen bg-page-bg text-text-primary flex flex-col">
-      <title>Hồ sơ uy tín — AgriContract</title>
-      <PublicNav />
-
-      <div className="mx-auto w-full max-w-[1000px] px-10 pt-6 pb-20 flex-1">
-        {/* Breadcrumb */}
-        <div className="mb-[18px] text-[13px] text-text-secondary">
-          <Link to="/listing" className="hover:text-text-primary hover:underline">
-            Sàn nguồn hàng
-          </Link>{" "}
-          <span className="mx-1.5 text-border-strong">/</span> Hồ sơ uy tín công khai
-        </div>
-
-        {/* Public notice */}
-        <div className="mb-5 flex items-center gap-2.5 rounded-[10px] bg-surface-muted px-4 py-[11px]">
-          <span className="ms text-[18px] text-text-secondary">public</span>
-          <span className="text-[13px] text-text-secondary">
-            Bản tóm tắt công khai — mọi đối tác đều xem được trước khi ký. Số liệu chi tiết chỉ
-            hiển thị cho chủ hồ sơ.
-          </span>
-        </div>
-
-        {/* Header Card */}
-        <div className="mb-5 flex items-center gap-8 rounded-xl border-[0.5px] border-border bg-surface p-7">
-          {/* Custom large donut for 120px */}
-          <div className="relative shrink-0 w-[120px] h-[120px]">
-            <div
-              className="flex h-[120px] w-[120px] items-center justify-center rounded-full"
-              style={{
-                background: `conic-gradient(var(--color-primary) 0% ${data.reputation}%, var(--color-surface-muted) ${data.reputation}% 100%)`,
-              }}
-            >
-              <div className="flex h-[92px] w-[92px] flex-col items-center justify-center rounded-full bg-surface">
-                <div className="text-[32px] font-medium leading-none">{data.reputation}</div>
-                <div className="text-xs text-text-muted">/ 100</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1">
-            <div className="mb-1 text-[20px] font-medium">{data.name}</div>
-            <div className="mb-3 text-sm text-text-secondary">
-              {data.type} · {data.province} · {data.role}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex rounded-full bg-primary-tint px-3.5 py-1.5 text-sm font-medium text-primary">
-                {data.reputationLabel}
-              </span>
-              {data.kycVerified && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-muted px-3 py-1.5 text-[13px] text-text-secondary">
-                  <span className="ms text-[15px]">verified</span> Đã xác minh KYC
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Metrics Row */}
-        <div className="mb-5 grid grid-cols-4 gap-4">
-          <div className="rounded-xl bg-surface-muted px-5 py-4">
-            <div className="mb-2 text-[13px] text-text-secondary">Hợp đồng hoàn thành</div>
-            <div className="text-2xl font-medium">{data.metrics.completedContracts}</div>
-          </div>
-          <div className="rounded-xl bg-surface-muted px-5 py-4">
-            <div className="mb-2 text-[13px] text-text-secondary">Tỷ lệ đúng hạn</div>
-            <div className="text-2xl font-medium">{data.metrics.onTimeRate}</div>
-          </div>
-          <div className="rounded-xl bg-surface-muted px-5 py-4">
-            <div className="mb-2 text-[13px] text-text-secondary">Số lần vi phạm</div>
-            <div className="text-2xl font-medium">{data.metrics.violations}</div>
-          </div>
-          <div className="rounded-xl bg-surface-muted px-5 py-4">
-            <div className="mb-2 text-[13px] text-text-secondary">Thành viên từ</div>
-            <div className="text-2xl font-medium">{data.metrics.memberSince}</div>
-          </div>
-        </div>
-
-        {/* Two Cards Layout */}
-        <div className="mb-4 grid grid-cols-[1.3fr_1fr] items-start gap-5">
-          {/* Line Chart */}
-          <LineChartCard
-            title="Điểm uy tín — 24 tháng"
-            currentValue={data.chart.current}
-            averageValue={data.chart.average}
-            trendLabel={data.chart.trend}
-            data={data.chart.data}
-            className="rounded-xl p-6"
-            height={240}
-          />
-
-          {/* Event Timeline */}
-          <div className="rounded-xl border-[0.5px] border-border bg-surface p-6">
-            <div className="mb-4 text-base font-medium">Sự kiện uy tín gần đây</div>
-            <div className="flex flex-col">
-              {data.events.map((ev, i) => (
-                <div
-                  key={i}
-                  className={`flex items-start justify-between py-2.5 ${
-                    i !== data.events.length - 1 ? "border-b-[0.5px] border-border" : ""
-                  }`}
-                >
-                  <div>
-                    <div className="text-sm">{ev.title}</div>
-                    <div className="text-[13px] text-text-muted">{ev.date}</div>
+    <div className="space-y-5">
+      <section className="space-y-3 rounded-xl border border-border bg-surface p-5">
+        <h2 className="text-lg font-medium">Điểm uy tín</h2>
+        {summary.score === null ? (
+          <p className="text-sm text-text-secondary">Chưa có dữ liệu uy tín</p>
+        ) : (
+          <p className="font-mono text-2xl">{summary.score} / 100</p>
+        )}
+        {summary.locked && <StatusBadge variant="danger">Đang bị khoá giao dịch</StatusBadge>}
+      </section>
+      <section className="space-y-3 rounded-xl border border-border bg-surface p-5">
+        <h2 className="text-lg font-medium">Lịch sử khoá giao dịch</h2>
+        {summary.lockHistory.length === 0 ? (
+          <p className="text-sm text-text-secondary">Chưa ghi nhận lần khoá giao dịch nào.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {summary.lockHistory.map((lock, index) => (
+              <li key={`${lock.lockedAt}-${lock.penalizedRole}-${index}`} className="flex flex-wrap justify-between gap-2 py-3 text-sm">
+                <div>
+                  <div>{lock.penalizedRole === "BUYER" ? "Bên mua" : "Bên bán"} · {lock.lockDurationDays} ngày</div>
+                  <div className="text-text-secondary">
+                    <time dateTime={lock.lockedAt}>{date.format(new Date(lock.lockedAt))}</time>
+                    {" – "}
+                    <time dateTime={lock.lockedUntil}>{date.format(new Date(lock.lockedUntil))}</time>
                   </div>
-                  <span className="font-mono text-sm text-success">{ev.delta}</span>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Disclaimer */}
-        <div className="text-[13px] text-text-muted">
-          Vi phạm được tính trong cửa sổ 24 tháng. Uy tín hai chiều — bên bán cũng xem được uy tín
-          bên mua trước khi ký.
-        </div>
-      </div>
-
-      <Footer />
+                <StatusBadge variant={lock.status === "ACTIVE" ? "danger" : "neutral"}>{lockStatus[lock.status]}</StatusBadge>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   )
 }
 
-export { PublicReputationPage }
+function ReputationSignIn() {
+  const [error, setError] = useState(false)
+  return (
+    <div className="space-y-3">
+      <p>Đăng nhập để xem hồ sơ uy tín</p>
+      <Button onClick={() => {
+        setError(false)
+        void login().catch(() => setError(true))
+      }}>Đăng nhập</Button>
+      {error && <Banner role="alert" variant="danger">Không thể mở hệ thống đăng nhập. Vui lòng thử lại.</Banner>}
+    </div>
+  )
+}
+
+export function PublicReputationPage() {
+  const { userId = "" } = useParams()
+  const viewerId = useAuthStore((state) => state.authenticated ? state.userId : undefined)
+  const authStatus = useAuthStore((state) => state.status)
+  const validId = z.guid().safeParse(userId).success
+  const enabled = validId && authStatus === "ready" && Boolean(viewerId)
+  const query = useQuery({
+    queryKey: ["public-reputation", viewerId, userId],
+    queryFn: ({ signal }) => getPublicReputationSummary(userId, signal),
+    enabled,
+    retry: false,
+  })
+  const partner = useQuery({
+    queryKey: ["public-partner", viewerId, userId],
+    queryFn: ({ signal }) => getPublicPartner(userId, signal),
+    enabled,
+    retry: false,
+  })
+  const status = query.isError ? parseApiError(query.error).status : undefined
+  const unauthorized = status === 401 || status === 403
+
+  return (
+    <div className="flex min-h-screen flex-col bg-page-bg text-text-primary">
+      <title>Hồ sơ uy tín — AgriContract</title>
+      <PublicNav />
+      <main className="mx-auto w-full max-w-[900px] flex-1 space-y-5 px-4 py-8 sm:px-8">
+        <Link to="/listing" className="text-sm text-primary underline">Về sàn nguồn hàng</Link>
+        <h1 className="text-2xl font-medium">Hồ sơ uy tín</h1>
+        {!validId && <p role="status">Đường dẫn hồ sơ uy tín không hợp lệ.</p>}
+        {validId && authStatus === "error" && <p role="alert">Chưa kết nối được hệ thống đăng nhập.</p>}
+        {validId && authStatus === "initializing" && <p role="status">Đang kiểm tra phiên đăng nhập…</p>}
+        {validId && authStatus === "ready" && !viewerId && <ReputationSignIn />}
+        {enabled && query.isPending && <p role="status">Đang tải hồ sơ uy tín…</p>}
+        {enabled && query.isError && (
+          <EmptyState
+            role="alert"
+            variant="error"
+            title={unauthorized ? "Không có quyền xem hồ sơ uy tín" : "Chưa tải được hồ sơ uy tín"}
+            description={unauthorized ? "Vui lòng kiểm tra phiên đăng nhập." : "Vui lòng thử lại để tải hồ sơ."}
+            {...(!unauthorized ? { actionLabel: "Thử lại", onAction: () => void query.refetch() } : {})}
+          />
+        )}
+        {enabled && query.isSuccess && (
+          <>
+            {partner.isSuccess ? (
+              <div className="space-y-1">
+                <p className="break-words text-lg font-medium">{partner.data.organizationName}</p>
+                <p className="text-sm text-text-secondary">
+                  {ROLE_LABELS[partner.data.role]}
+                  {partner.data.verificationStatus === "VERIFIED" && " · Hồ sơ đã xác minh"}
+                </p>
+              </div>
+            ) : <p className="break-words text-sm text-text-secondary">Mã đối tác {userId}</p>}
+            <ReputationDetails summary={query.data} />
+          </>
+        )}
+      </main>
+      <Footer />
+    </div>
+  )
+}

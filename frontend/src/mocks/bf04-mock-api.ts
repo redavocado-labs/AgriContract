@@ -286,7 +286,7 @@ async function route(
     })
   if (method === "get" && (m = path.match(/^\/api\/v1\/contracts\/([^/]+)$/))) {
     if (!party) return fail(403, "FORBIDDEN", path)
-    const id = decodeURIComponent(m[1])
+    const id = decodeURIComponent(m[1]!)
     return contractIds.includes(id)
       ? new Reply(200, contractResponse(id))
       : fail(404, "CONTRACT_NOT_FOUND", path)
@@ -315,10 +315,12 @@ async function route(
       /^\/api\/v1\/contracts\/([^/]+)\/breach-cases\/([^/]+)(\/review|\/resolve|\/contest(?:\/evidence)?)?$/
     ))
   ) {
+    const [, , breachCaseId] = m
+    if (!breachCaseId) return fail(404, "BREACH_CASE_NOT_FOUND", path)
     const breach = breachCases.find(
       (b) =>
-        b.contractId === decodeURIComponent(m![1]) &&
-        b.breachCaseId === decodeURIComponent(m![2])
+        b.contractId === decodeURIComponent(m![1]!) &&
+        b.breachCaseId === decodeURIComponent(breachCaseId)
     )
     if (!breach) return fail(404, "BREACH_CASE_NOT_FOUND", path)
     if (method === "get")
@@ -409,7 +411,7 @@ async function route(
   )
   if (method === "post" && remedy) {
     if (viewer !== "OPERATOR") return fail(403, "FORBIDDEN", path)
-    if (!contractIds.includes(remedy[1]))
+    if (!contractIds.includes(remedy[1]!))
       return fail(404, "CONTRACT_NOT_FOUND", path)
     return remedy[1] === FINISHED_CONTRACT_ID
       ? fail(409, "REMEDY_RETRY_NOT_ALLOWED", path)
@@ -419,10 +421,13 @@ async function route(
   m = path.match(
     /^\/api\/v1\/contracts\/([^/]+)\/milestones\/([^/]+)(?:\/(.+))?$/
   )
-  if (!m) return fail(404, "NOT_FOUND", path)
-  const detail = findDetail(decodeURIComponent(m[1]), decodeURIComponent(m[2]))
+  const [, contractId, milestoneId, action] = m ?? []
+  if (!contractId || !milestoneId) return fail(404, "NOT_FOUND", path)
+  const detail = findDetail(
+    decodeURIComponent(contractId),
+    decodeURIComponent(milestoneId)
+  )
   if (!detail) return fail(404, "MILESTONE_NOT_FOUND", path)
-  const action = m[3]
   const ms = detail.milestone
   const nowIso = () => new Date().toISOString()
   if (!party && viewer !== "ARBITRATOR" && viewer !== "OPERATOR")

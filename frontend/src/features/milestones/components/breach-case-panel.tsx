@@ -199,7 +199,7 @@ function ContestForm({
   detail: MilestoneDetail
   role: ParticipantRole
 }) {
-  const command = useMilestoneCommand(detail)
+  const command = useMilestoneCommand(detail, "breach-contest")
   const slot = useEvidenceSlot(detail)
   const toast = useToast()
   const [reason, setReason] = useState("")

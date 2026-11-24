@@ -1,11 +1,13 @@
 import { useAuthStore } from "@/shared/auth/auth-store"
 import { Banner } from "@/shared/ui/banner"
+import { Button } from "@/shared/ui/button"
 import { KeyValueList } from "@/shared/ui/key-value-list"
 import { MoneyDisplay } from "@/shared/ui/money-display"
 import { Skeleton } from "@/shared/ui/skeleton"
+import { useToast } from "@/shared/ui/toast"
 import { VerticalStepper } from "@/shared/ui/vertical-stepper"
 import { vietnamTime } from "@/shared/lib/vietnam-time"
-import { type MilestoneDetail } from "../api/milestones"
+import { retryMilestoneFunding, type MilestoneDetail } from "../api/milestones"
 import { displayKg } from "../lib/milestone-consent"
 import {
   canReadMilestoneCase,
@@ -13,7 +15,7 @@ import {
   issueTypeLabel,
   settlementPathLabel,
 } from "../lib/presentation"
-import { useMilestoneBreachCase } from "../hooks/use-milestone"
+import { useMilestoneBreachCase, useMilestoneCommand } from "../hooks/use-milestone"
 import { MilestoneDeltas } from "./delta-rows"
 import { EvidenceGallery, Panel, ServerDeadline } from "./milestone-parts"
 
@@ -68,8 +70,16 @@ export function WaitingPanel({
   )
 }
 
-export function FundingPanel({ detail }: { detail: MilestoneDetail }) {
+export function FundingPanel({
+  detail,
+  operator,
+}: {
+  detail: MilestoneDetail
+  operator: boolean
+}) {
   const m = detail.milestone
+  const toast = useToast()
+  const command = useMilestoneCommand(detail, "funding")
   const failed = m.fundingStatus === "FUNDING_FAILED"
   return (
     <Panel
@@ -101,6 +111,35 @@ export function FundingPanel({ detail }: { detail: MilestoneDetail }) {
           Khoá tiền đợt chưa thành công sau các lần thử tự động. Hạn giao của
           bên bán tạm dừng cho tới khi khoá được.
         </Banner>
+      )}
+      {failed && operator && (
+        <div className="space-y-3">
+          {command.error && (
+            <Banner role="alert" variant="danger">
+              {command.error}
+            </Banner>
+          )}
+          <Button
+            className="w-full sm:w-auto"
+            disabled={command.busy}
+            onClick={() =>
+              void command
+                .run(null, (key) =>
+                  retryMilestoneFunding(detail.contractId, m.milestoneId, key)
+                )
+                .then(
+                  (ok) =>
+                    ok &&
+                    toast.add({
+                      title: "Đã gửi lệnh khoá lại tiền đợt",
+                      type: "success",
+                    })
+                )
+            }
+          >
+            {command.busy ? "Đang gửi…" : "Thử khoá lại tiền đợt"}
+          </Button>
+        </div>
       )}
     </Panel>
   )

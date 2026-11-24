@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 import { cn } from "@/shared/lib/utils"
 import { buttonVariants } from "@/shared/ui/button"
 import { Footer } from "@/shared/ui/footer"
-import { PublicNav } from "@/shared/ui/public-nav"
+import { PublicNav } from "./layouts/public-nav"
 
 function HowItWorksPage() {
   return (

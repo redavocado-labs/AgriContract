@@ -1,8 +1,8 @@
 import { useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useAuthStore } from "@/shared/auth/auth-store"
-import { useFreshLogin } from "@/features/auth/hooks/use-fresh-login"
-import { useOrganizationPermissions } from "@/features/organization/hooks/use-organization-permissions"
+import { useFreshLogin } from "@/features/auth"
+import { useOrganizationPermissions } from "@/features/organization"
 import { Banner } from "@/shared/ui/banner"
 import { Button } from "@/shared/ui/button"
 import { Checkbox } from "@/shared/ui/checkbox"
@@ -11,7 +11,9 @@ import { Countdown } from "@/shared/ui/countdown"
 import { Stepper } from "@/shared/ui/stepper"
 import { ContentHashDisplay } from "@/shared/ui/content-hash-display"
 import { parseApiError } from "@/shared/api/errors"
+import { useRecoverableWrite } from "@/shared/api/operation-recovery"
 import { getSigningConsent } from "../api/capabilities"
+import { getContract } from "../api/contracts"
 import { validConsent } from "../api/signing"
 import { SigningSession } from "../hooks/signing-session"
 import {
@@ -29,6 +31,7 @@ export function SigningPanel({ contract }: { contract: Contract }) {
   const emailVerified = profile.data?.emailVerified === true
   const fresh = useFreshLogin()
   const cache = useQueryClient()
+  const verification = useRecoverableWrite("verify-signature", contract.id)
   const [session] = useState(() =>
     role && contract.hash
       ? new SigningSession(contract.id, role, contract.hash)
@@ -64,15 +67,39 @@ export function SigningPanel({ contract }: { contract: Contract }) {
       fresh.consumeIntent("sign")
       if (!(await fresh.ensureFreshLogin(intent))) return
       if (kind === "verify") {
-        await session.verify(otp)
+        const challenge = session.challenge
+        if (!userId || !challenge || Date.parse(challenge.expiresAt) <= Date.now()) {
+          setExpired(true)
+          return
+        }
+        const queryKey = ["contract", userId, contract.id]
+        await verification.run({
+          binding: JSON.stringify([challenge.otpId, otp]),
+          reconcile: async () => {
+            const current = await cache.fetchQuery({
+              queryKey,
+              queryFn: ({ signal }) => getContract(contract.id, userId, signal),
+              retry: false,
+              staleTime: 0,
+            })
+            if (!["OFFERED", "NEGOTIATING"].includes(current.status)) return "changed"
+            return current.hash === contract.hash &&
+              session.challenge?.otpId === challenge.otpId &&
+              Date.parse(challenge.expiresAt) > Date.now()
+              ? "replay"
+              : "unresolved"
+          },
+          send: (key) => session.verify(otp, key),
+        })
         setOtp("")
-        await Promise.all([
+        void Promise.allSettled([
           cache.invalidateQueries({
             queryKey: ["contract", userId, contract.id],
           }),
           cache.invalidateQueries({ queryKey: ["contracts", userId] }),
         ])
       } else {
+        if (verification.pending) return
         setOtp("")
         setExpired(false)
         await session.initiate(consent, kind === "resend")
@@ -152,6 +179,20 @@ export function SigningPanel({ contract }: { contract: Contract }) {
           {error}
         </Banner>
       )}
+      {verification.pending && !busy && (
+        <Banner
+          variant="warning"
+          role="status"
+          actionLabel="Kiểm tra trạng thái hợp đồng"
+          onAction={() => void cache.invalidateQueries({
+            queryKey: ["contract", userId, contract.id],
+          }).catch(() => {})}
+        >
+          Chưa xác nhận được kết quả ký. Nếu mã hiện tại còn hạn, có thể kiểm tra
+          lại với cùng mã trong phiên này. Nếu đã rời phiên hoặc mã hết hạn,
+          hãy kiểm tra trạng thái hợp đồng và liên hệ bộ phận hỗ trợ.
+        </Banner>
+      )}
       {session?.complete ? (
         <Banner variant="success">
           Máy chủ đã xác nhận chữ ký của bạn. Trạng thái của bên còn lại và kích
@@ -189,7 +230,7 @@ export function SigningPanel({ contract }: { contract: Contract }) {
           </Button>
           <Button
             variant="outline"
-            disabled={busy || !allowed || Date.now() < session.resendAfter}
+            disabled={busy || verification.pending || !allowed || Date.now() < session.resendAfter}
             onClick={() => void act("resend")}
           >
             Gửi lại mã
@@ -207,6 +248,7 @@ export function SigningPanel({ contract }: { contract: Contract }) {
         <Button
           disabled={
             busy ||
+            verification.pending ||
             !allowed ||
             !accepted ||
             !session ||

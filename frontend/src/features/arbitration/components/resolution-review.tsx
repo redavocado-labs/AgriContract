@@ -12,20 +12,18 @@ import { MoneyDisplay } from "@/shared/ui/money-display"
 import { Skeleton } from "@/shared/ui/skeleton"
 import { StatusBadge } from "@/shared/ui/status-badge"
 import { useToast } from "@/shared/ui/toast"
-import { contractError } from "@/features/contracts/types/presentation"
+import { contractError } from "@/features/contracts"
 import {
   approveComputedResolution,
+  breachStatusLabel,
+  displayKg,
+  EvidenceGallery,
   getMilestoneDetail,
+  issueTypeLabel,
+  MilestoneDeltas,
   reviewBreachCase,
   type BreachCase,
-} from "@/features/milestones/api/milestones"
-import { MilestoneDeltas } from "@/features/milestones/components/delta-rows"
-import { EvidenceGallery } from "@/features/milestones/components/milestone-parts"
-import { displayKg } from "@/features/milestones/lib/milestone-consent"
-import {
-  breachStatusLabel,
-  issueTypeLabel,
-} from "@/features/milestones/lib/presentation"
+} from "@/features/milestones"
 
 const dispositionLabel = {
   CONFORMING: "Đạt chất lượng",

@@ -37,7 +37,7 @@ export function DisputeExitPanel({
   const exit = detail.disputeExit
   const [choice, setChoice] = useState<DisputeExitIntent["kind"]>()
   const [amount, setAmount] = useState("")
-  const request = useMilestoneCommand(detail)
+  const request = useMilestoneCommand(detail, "dispute-exit")
   const toast = useToast()
   if (!exit?.concedeAllowed && !exit?.settlementAllowed) return null
 

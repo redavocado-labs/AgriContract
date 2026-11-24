@@ -1,10 +1,10 @@
 import type { ReactNode } from "react"
 import { useLocation } from "react-router-dom"
 import { useAuthStore } from "@/shared/auth/auth-store"
-import { AccountMenu } from "@/features/auth/components/account-menu"
 import { AppSidebar, type SidebarItem } from "@/shared/ui/app-sidebar"
 import { TopBar } from "@/shared/ui/top-bar"
 import { useOrganizationProfile } from "../hooks/use-organization-profile"
+import { AccountMenu } from "./account-menu"
 
 export function OrganizationLayout({
   title,

@@ -61,7 +61,7 @@ function WeighForm({
   initial?: { weight: number; evidence: string; certificate: string | null }
 }) {
   const toast = useToast()
-  const command = useMilestoneCommand(detail)
+  const command = useMilestoneCommand(detail, side === "SELLER" ? "seller-weigh" : "buyer-receipt")
   const photo = useEvidenceSlot(detail, initial?.evidence)
   const certificate = useEvidenceSlot(detail, initial?.certificate)
   const [weight, setWeight] = useState(initial ? String(initial.weight) : "")
@@ -73,8 +73,9 @@ function WeighForm({
   const sameFile = !!photo.fileId && photo.fileId === certificate.fileId
   const action =
     side === "SELLER" ? "DECLARE_SELLER_WEIGHT" : "RECORD_BUYER_RECEIPT"
+  const certificateUnready = !!certificate.item && !certificate.fileId
   const parts =
-    review && !error && photo.fileId
+    review && !error && photo.fileId && !certificateUnready
       ? side === "SELLER"
         ? {
             action: "DECLARE_SELLER_WEIGHT" as const,
@@ -93,7 +94,7 @@ function WeighForm({
       : null
   const hash = useConsentHash(parts)
   const waiting = photo.pending || certificate.pending
-  const canReview = !error && !!photo.fileId && !waiting && !sameFile
+  const canReview = !error && !!photo.fileId && !waiting && !sameFile && !certificateUnready
   async function submit() {
     if (!parts || !accepted) return
     const consent = await milestoneConsent(parts)
@@ -112,7 +113,7 @@ function WeighForm({
         : {}),
       consent,
     }
-    const ok = await command.run(consent.presentedContentHash, (key) =>
+    const ok = await command.run(JSON.stringify(body), (key) =>
       side === "SELLER"
         ? recordSellerWeighed(
             detail.contractId,
@@ -182,27 +183,36 @@ function WeighForm({
               id={`${side}-photo`}
               label="Ảnh cân hàng"
               required
+              disabled={photo.uploading}
               value={photo.item}
               onSelect={photo.select}
               hint="Chụp rõ màn hình cân và lô hàng. Ảnh được kiểm tra an toàn trước khi dùng làm bằng chứng."
             />
-            <EvidenceUploader
-              id={`${side}-certificate`}
-              label="Phiếu giao hàng (không bắt buộc)"
-              value={certificate.item}
-              onSelect={certificate.select}
-              error={
-                sameFile
-                  ? "Phiếu giao hàng phải là tệp khác ảnh cân."
-                  : undefined
-              }
-              hint="Phiếu xuất kho hoặc biên bản giao nhận, chỉ dùng làm bằng chứng."
-            />
+            <div className="space-y-2">
+              <EvidenceUploader
+                id={`${side}-certificate`}
+                label="Phiếu giao hàng (không bắt buộc)"
+                disabled={certificate.uploading}
+                value={certificate.item}
+                onSelect={certificate.select}
+                error={
+                  sameFile
+                    ? "Phiếu giao hàng phải là tệp khác ảnh cân."
+                    : undefined
+                }
+                hint="Phiếu xuất kho hoặc biên bản giao nhận, chỉ dùng làm bằng chứng."
+              />
+              {certificate.item && !certificate.uploading && (
+                <Button type="button" size="sm" variant="ghost" onClick={certificate.clear}>
+                  Bỏ phiếu giao hàng
+                </Button>
+              )}
+            </div>
           </div>
           {waiting && (
             <Banner variant="info">
-              Ảnh đang được kiểm tra an toàn, thường mất vài giây. Bạn có thể
-              tiếp tục khi ảnh hiện “Sẵn sàng”.
+              Có tệp đang được tải lên hoặc kiểm tra an toàn. Bạn có thể tiếp
+              tục khi tệp hiện “Sẵn sàng”.
             </Banner>
           )}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -218,7 +228,9 @@ function WeighForm({
             </Button>
             {!canReview && !waiting && (
               <span className="text-xs text-text-secondary">
-                Cần nhập số kg và có ảnh cân đã sẵn sàng.
+                {certificateUnready
+                  ? "Chờ phiếu giao hàng sẵn sàng, chọn tệp khác hoặc bỏ phiếu."
+                  : "Cần nhập số kg và có ảnh cân đã sẵn sàng."}
               </span>
             )}
           </div>
@@ -427,7 +439,7 @@ export function BuyerDecisionPanel({
   inspectionPending: boolean
 }) {
   const toast = useToast()
-  const command = useMilestoneCommand(detail)
+  const command = useMilestoneCommand(detail, "buyer-decision")
   const declaration = detail.sellerDeclaration!
   const receipt = detail.buyerReceipt!
   const m = detail.milestone
@@ -459,7 +471,7 @@ export function BuyerDecisionPanel({
     )
       return
     const consent = await milestoneConsent(parts)
-    const ok = await command.run(consent.presentedContentHash, (key) =>
+    const ok = await command.run(JSON.stringify([parts, consent]), (key) =>
       parts.action === "CONFIRM_CLEAN_RECEIPT"
         ? confirmMilestoneClean(detail.contractId, m.milestoneId, consent, key)
         : flagMilestoneIssue(
@@ -649,7 +661,7 @@ function ChoiceCard({
 
 export function SellerRespondPanel({ detail }: { detail: MilestoneDetail }) {
   const toast = useToast()
-  const command = useMilestoneCommand(detail)
+  const command = useMilestoneCommand(detail, "seller-response")
   const flag = detail.flag!
   const declaration = detail.sellerDeclaration!
   const receipt = detail.buyerReceipt!
@@ -667,7 +679,7 @@ export function SellerRespondPanel({ detail }: { detail: MilestoneDetail }) {
   const hash = useConsentHash(parts)
   async function submit() {
     const consent = await milestoneConsent(parts)
-    const ok = await command.run(consent.presentedContentHash, (key) =>
+    const ok = await command.run(JSON.stringify(consent), (key) =>
       respondToMilestoneFlag(
         detail.contractId,
         detail.milestone.milestoneId,

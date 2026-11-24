@@ -81,10 +81,11 @@ export function registrationRoleProblem(
   selected?: string
 ) {
   // Backend picks the first recognized role; multiple roles are ambiguous.
-  if (roles.length !== 1 || !["BUYER", "SELLER"].includes(roles[0])) {
+  const [role] = roles
+  if (roles.length !== 1 || (role !== "BUYER" && role !== "SELLER")) {
     return "Tài khoản cần được quản trị viên cấp đúng một vai trò Bên mua hoặc Bên bán trước khi tạo hồ sơ. Lựa chọn trên form không tự cấp quyền."
   }
-  if (selected && selected !== roles[0])
+  if (selected && selected !== role)
     return "Loại tài khoản đã chọn không khớp vai trò đăng nhập. Vui lòng chọn đúng vai trò hoặc liên hệ quản trị viên."
   return null
 }
@@ -173,7 +174,8 @@ export function organizationErrorMessage(error: unknown) {
   )
     return error.message
   const parsed = parseApiError(error)
-  if (userErrorMessages[parsed.code]) return userErrorMessages[parsed.code]
+  const knownMessage = userErrorMessages[parsed.code]
+  if (knownMessage) return knownMessage
   if (parsed.status === 401)
     return "Phiên đăng nhập cần được xác thực lại. Đang chuyển đến hệ thống đăng nhập."
   if (parsed.status === 403)

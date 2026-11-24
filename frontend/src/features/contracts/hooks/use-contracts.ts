@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useAuthStore } from "@/shared/auth/auth-store"
 import { getContract, listContracts } from "../api/contracts"
@@ -24,20 +24,57 @@ export function useContracts(
 }
 export function useContract(id: string) {
   const { authenticated, status, userId } = useAuthStore()
-  const [startedAt] = useState(Date.now)
-  return useQuery({
+  const scope = authenticated && status === "ready" && userId && id
+    ? JSON.stringify([userId, id])
+    : null
+  const [activation, setActivation] = useState<{
+    scope: string
+    startedAt: number
+    expired: boolean
+  } | null>(null)
+  const budget = scope && activation?.scope === scope ? activation : null
+  const query = useQuery({
     queryKey: ["contract", userId, id],
     queryFn: ({ signal }) => getContract(id, userId!, signal),
-    enabled: authenticated && status === "ready" && !!userId && !!id,
+    enabled: !!scope,
     retry: false,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: (query) => query.state.data?.status !== "SIGNED",
     refetchIntervalInBackground: false,
-    refetchInterval: (query) =>
-      pollInterval(
+    refetchInterval: (query) => {
+      if (!budget || budget.expired) return false
+      const now = Date.now()
+      const interval = pollInterval(
         query.state.data?.status,
-        startedAt,
-        Date.now(),
+        budget.startedAt,
+        now,
         !!query.state.error
-      ),
+      )
+      return interval && now + interval < budget.startedAt + 120_000
+        ? interval
+        : false
+    },
   })
+  const awaitingActivation = !!scope && query.data?.status === "SIGNED"
+  useEffect(() => {
+    if (!scope || !awaitingActivation) {
+      setActivation(null)
+      return
+    }
+    const startedAt = Date.now()
+    setActivation({ scope, startedAt, expired: false })
+    const timeout = setTimeout(() => {
+      setActivation({ scope, startedAt, expired: true })
+    }, 120_000)
+    return () => clearTimeout(timeout)
+  }, [scope, awaitingActivation])
+
+  const activationCheck = !awaitingActivation
+    ? null
+    : budget?.expired
+      ? "timed-out"
+      : query.isError
+        ? "interrupted"
+        : "pending"
+  return { ...query, activationCheck }
 }
