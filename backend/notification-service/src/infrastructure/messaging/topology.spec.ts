@@ -51,6 +51,11 @@ const EXPECTED_QUEUES = [
   'notification-svc.notification.level1_5_assignment_waiting_requested',
   'notification-svc.notification.level1_5_inspector_assignment_requested',
   'notification-svc.notification.milestone_anchor_requested',
+  'notification-svc.notification.audit_digest_requested',
+  'notification-svc.notification.audit_failure_requested',
+  'notification-svc.notification.security_lock_changed_requested',
+  'notification-svc.notification.reconciliation_mismatch_requested',
+  'notification-svc.notification.verifier_key_anchor_requested',
   'notification-svc.notification.escrow_leg_alert_requested',
   'notification-svc.notification.escrow_remedy_leg_alert_requested',
   'notification-svc.notification.escrow_remedy_rejected_requested',
@@ -64,8 +69,18 @@ const dlxOf = (queue: string): string => {
   if (key.startsWith('notification.level1_5_')) {
     return 'notification-svc.inspection.dlx';
   }
-  if (key === 'notification.milestone_anchor_requested') {
+  if (
+    key === 'notification.milestone_anchor_requested' ||
+    key.startsWith('notification.audit_')
+  ) {
     return 'notification-svc.audit.dlx';
+  }
+  if (
+    key === 'notification.security_lock_changed_requested' ||
+    key === 'notification.reconciliation_mismatch_requested' ||
+    key === 'notification.verifier_key_anchor_requested'
+  ) {
+    return 'notification-svc.bank.dlx';
   }
   if (key.startsWith('notification.escrow_')) {
     return 'notification-svc.escrow.dlx';
@@ -74,12 +89,12 @@ const dlxOf = (queue: string): string => {
 };
 
 describe('topology (must match the Java RabbitMQConfig)', () => {
-  it('names the 19 queues and 19 DLQs', () => {
+  it('names the 24 queues and 24 DLQs', () => {
     expect(queueNames()).toEqual(EXPECTED_QUEUES);
     expect(dlqNames()).toEqual(EXPECTED_QUEUES.map((q) => `${q}.dlq`));
   });
 
-  it('declares exactly 12 durable, non auto-delete exchanges', async () => {
+  it('declares exactly 14 durable, non auto-delete exchanges', async () => {
     const { channel, exchanges } = recordingChannel();
     await declareTopology(channel);
 
@@ -99,6 +114,9 @@ describe('topology (must match the Java RabbitMQConfig)', () => {
       // audit-service's outbox exchange, by the same convention (no outbox yet).
       ['agricontract.audit', 'topic', durable],
       ['notification-svc.audit.dlx', 'direct', durable],
+      // bank-service's outbox exchange (agricontract.eventing.outbox.exchange).
+      ['agricontract.bank', 'topic', durable],
+      ['notification-svc.bank.dlx', 'direct', durable],
       // escrow-service declares agricontract.escrow with the same options
       // (RabbitMQConfig: TopicExchange("agricontract.escrow", true, false)).
       ['agricontract.escrow', 'topic', durable],
@@ -106,11 +124,11 @@ describe('topology (must match the Java RabbitMQConfig)', () => {
     ]);
   });
 
-  it('declares 38 queues: main queues with only x-dead-letter-exchange, DLQs without arguments', async () => {
+  it('declares 48 queues: main queues with only x-dead-letter-exchange, DLQs without arguments', async () => {
     const { channel, queues } = recordingChannel();
     await declareTopology(channel);
 
-    expect(queues).toHaveLength(38);
+    expect(queues).toHaveLength(48);
 
     for (const q of EXPECTED_QUEUES) {
       // toEqual on the whole options object also fails on any extra option
@@ -140,7 +158,7 @@ describe('topology (must match the Java RabbitMQConfig)', () => {
     const { channel, bindings } = recordingChannel();
     await declareTopology(channel);
 
-    expect(bindings).toHaveLength(38);
+    expect(bindings).toHaveLength(48);
     // audit-service's settlement anchor (hash-chain §4.3), on its own exchange.
     expect(bindings).toContainEqual([
       'notification-svc.notification.milestone_anchor_requested',
@@ -152,6 +170,46 @@ describe('topology (must match the Java RabbitMQConfig)', () => {
       'notification-svc.audit.dlx',
       'notification.milestone_anchor_requested',
     ]);
+    // #278: audit-service's digest and failure alert share the anchor's row,
+    // bank-service's three commands have a row of their own.
+    for (const [key, exchange, dlx] of [
+      [
+        'notification.audit_digest_requested',
+        'agricontract.audit',
+        'notification-svc.audit.dlx',
+      ],
+      [
+        'notification.audit_failure_requested',
+        'agricontract.audit',
+        'notification-svc.audit.dlx',
+      ],
+      [
+        'notification.security_lock_changed_requested',
+        'agricontract.bank',
+        'notification-svc.bank.dlx',
+      ],
+      [
+        'notification.reconciliation_mismatch_requested',
+        'agricontract.bank',
+        'notification-svc.bank.dlx',
+      ],
+      [
+        'notification.verifier_key_anchor_requested',
+        'agricontract.bank',
+        'notification-svc.bank.dlx',
+      ],
+    ]) {
+      expect(bindings).toContainEqual([
+        `notification-svc.${key}`,
+        exchange,
+        key,
+      ]);
+      expect(bindings).toContainEqual([
+        `notification-svc.${key}.dlq`,
+        dlx,
+        key,
+      ]);
+    }
     // D96: contract-service declares these three ahead with the same names.
     for (const key of [
       'notification.milestone_status_requested',

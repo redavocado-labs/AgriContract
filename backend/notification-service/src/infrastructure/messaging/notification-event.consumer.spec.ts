@@ -12,6 +12,7 @@ import {
   FileNotReadyError,
   FileServiceRejectedError,
   OtsProofInvalidError,
+  RecipientRoleRefusedError,
 } from '../../application/notification-errors';
 import {
   anchorCommand,
@@ -39,6 +40,16 @@ import {
   documentReadyEnvelope,
   milestoneAnchorCommand,
   milestoneAnchorEnvelope,
+  auditDigestCommand,
+  auditDigestEnvelope,
+  auditFailureCommand,
+  auditFailureEnvelope,
+  securityLockCommand,
+  securityLockEnvelope,
+  reconciliationCommand,
+  reconciliationEnvelope,
+  verifierKeyCommand,
+  verifierKeyEnvelope,
   milestoneStatusCommand,
   milestoneStatusEnvelope,
   remedyFinalizedCommand,
@@ -110,6 +121,11 @@ const HANDLERS = [
   'breachNotice',
   'remedyFinalized',
   'milestoneAnchor',
+  'auditDigest',
+  'auditFailure',
+  'securityLockChanged',
+  'reconciliationMismatch',
+  'verifierKeyAnchor',
   'categoryApproved',
   'categoryRejected',
 ] as const;
@@ -535,6 +551,36 @@ describe('NotificationEventConsumer', () => {
       milestoneAnchorCommand,
     ],
     [
+      'auditDigest',
+      'notification-svc.notification.audit_digest_requested',
+      auditDigestEnvelope,
+      auditDigestCommand,
+    ],
+    [
+      'auditFailure',
+      'notification-svc.notification.audit_failure_requested',
+      auditFailureEnvelope,
+      auditFailureCommand,
+    ],
+    [
+      'securityLockChanged',
+      'notification-svc.notification.security_lock_changed_requested',
+      securityLockEnvelope,
+      securityLockCommand,
+    ],
+    [
+      'reconciliationMismatch',
+      'notification-svc.notification.reconciliation_mismatch_requested',
+      reconciliationEnvelope,
+      reconciliationCommand,
+    ],
+    [
+      'verifierKeyAnchor',
+      'notification-svc.notification.verifier_key_anchor_requested',
+      verifierKeyEnvelope,
+      verifierKeyCommand,
+    ],
+    [
       'milestoneStatus',
       'notification-svc.notification.milestone_status_requested',
       milestoneStatusEnvelope,
@@ -656,6 +702,81 @@ describe('NotificationEventConsumer', () => {
 
       expect(channel.nacked).toEqual(nacks.map((n) => ({ msg, ...n })));
       expect(channel.acked).toEqual([]);
+    },
+  );
+
+  it.each([
+    [
+      'auditDigest',
+      'notification-svc.notification.audit_digest_requested',
+      auditDigestEnvelope,
+    ],
+    [
+      'auditFailure',
+      'notification-svc.notification.audit_failure_requested',
+      auditFailureEnvelope,
+    ],
+    [
+      'securityLockChanged',
+      'notification-svc.notification.security_lock_changed_requested',
+      securityLockEnvelope,
+    ],
+    [
+      'reconciliationMismatch',
+      'notification-svc.notification.reconciliation_mismatch_requested',
+      reconciliationEnvelope,
+    ],
+  ] as const)(
+    'dead-letters a %s command naming a role it may not reach at once',
+    async (handler, queue, envelope) => {
+      const { consumer, service, open } = setup();
+      service[handler].mockRejectedValue(
+        new RecipientRoleRefusedError('e1', 'x', 0, 'BUYER', ['ADMIN']),
+      );
+      await consumer.onModuleInit();
+      const channel = new FakeChannel();
+      await open(channel);
+
+      const msg = channel.deliver(queue, envelope());
+      await flush();
+
+      expect(service[handler]).toHaveBeenCalledTimes(1);
+      expect(channel.nacked).toEqual([{ msg, requeue: false }]);
+      expect(channel.acked).toEqual([]);
+    },
+  );
+
+  it.each([
+    [
+      'a security lock email on the reconciliation queue',
+      'notification-svc.notification.reconciliation_mismatch_requested',
+      securityLockEnvelope,
+    ],
+    [
+      'an audit failure alert on the digest queue',
+      'notification-svc.notification.audit_digest_requested',
+      auditFailureEnvelope,
+    ],
+    [
+      'a key fingerprint email on the security lock queue',
+      'notification-svc.notification.security_lock_changed_requested',
+      verifierKeyEnvelope,
+    ],
+  ] as const)(
+    'dead-letters %s, calling no use case',
+    async (_case, queue, envelope) => {
+      const { consumer, service, open } = setup();
+      await consumer.onModuleInit();
+      const channel = new FakeChannel();
+      await open(channel);
+
+      const msg = channel.deliver(queue, envelope());
+      await flush();
+
+      for (const handler of HANDLERS) {
+        expect(service[handler]).not.toHaveBeenCalled();
+      }
+      expect(channel.nacked).toEqual([{ msg, requeue: false }]);
     },
   );
 

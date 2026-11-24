@@ -4,6 +4,7 @@ import {
   FileServiceRejectedError,
   OperatorEmailNotConfiguredError,
   OtsProofInvalidError,
+  RecipientRoleRefusedError,
 } from '../../application/notification-errors';
 import {
   unsupportedTermination,
@@ -22,6 +23,11 @@ import {
   type NotifyBreachNoticeUseCase,
   type NotifyRemedyFinalizedUseCase,
   type NotifyMilestoneAnchorUseCase,
+  type NotifyAuditDigestUseCase,
+  type NotifyAuditFailureUseCase,
+  type NotifySecurityLockChangedUseCase,
+  type NotifyReconciliationMismatchUseCase,
+  type NotifyVerifierKeyAnchorUseCase,
   type NotifyUserKycResultUseCase,
   type NotifyUserLockChangedUseCase,
 } from '../../application/use-cases';
@@ -42,6 +48,11 @@ import {
   parseBreachNoticeRequested,
   parseRemedyFinalizedRequested,
   parseMilestoneAnchorRequested,
+  parseAuditDigestRequested,
+  parseAuditFailureRequested,
+  parseSecurityLockChangedRequested,
+  parseReconciliationMismatchRequested,
+  parseVerifierKeyAnchorRequested,
   parseUserKycResultRequested,
   parseUserLockChangedRequested,
   unsupportedCommand,
@@ -74,6 +85,11 @@ export interface CommandUseCases {
   breachNotice: NotifyBreachNoticeUseCase;
   remedyFinalized: NotifyRemedyFinalizedUseCase;
   milestoneAnchor: NotifyMilestoneAnchorUseCase;
+  auditDigest: NotifyAuditDigestUseCase;
+  auditFailure: NotifyAuditFailureUseCase;
+  securityLockChanged: NotifySecurityLockChangedUseCase;
+  reconciliationMismatch: NotifyReconciliationMismatchUseCase;
+  verifierKeyAnchor: NotifyVerifierKeyAnchorUseCase;
 }
 
 /**
@@ -146,7 +162,40 @@ export function commandRoutes(u: CommandUseCases): CommandRoutes {
       operatorAlert(() =>
         u.escrowRemedyRejected.execute(parseEscrowRemedyRejectedRequested(b)),
       ),
+    'notification.audit_digest_requested': (b) =>
+      staffMail(() => u.auditDigest.execute(parseAuditDigestRequested(b))),
+    'notification.audit_failure_requested': (b) =>
+      staffMail(() => u.auditFailure.execute(parseAuditFailureRequested(b))),
+    'notification.security_lock_changed_requested': (b) =>
+      staffMail(() =>
+        u.securityLockChanged.execute(parseSecurityLockChangedRequested(b)),
+      ),
+    'notification.reconciliation_mismatch_requested': (b) =>
+      staffMail(() =>
+        u.reconciliationMismatch.execute(
+          parseReconciliationMismatchRequested(b),
+        ),
+      ),
+    'notification.verifier_key_anchor_requested': (b) =>
+      u.verifierKeyAnchor.execute(parseVerifierKeyAnchorRequested(b)),
   };
+}
+
+/**
+ * Sends an integrity or security email to staff contacts (#278). A command
+ * naming a recipient whose role it may not reach (a buyer on the
+ * reconciliation alert, say) is refused before anyone is mailed, and no
+ * redelivery of the same bytes can change that: straight to the DLQ.
+ */
+async function staffMail(send: () => Promise<void>): Promise<void> {
+  try {
+    await send();
+  } catch (err) {
+    if (err instanceof RecipientRoleRefusedError) {
+      throw new NonRetryableError(err.message);
+    }
+    throw err;
+  }
 }
 
 /**
