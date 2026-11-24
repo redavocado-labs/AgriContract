@@ -32,8 +32,14 @@ import {
   inspectorEnvelope,
   legAlertCommand,
   legAlertEnvelope,
+  breachNoticeCommand,
+  breachNoticeEnvelope,
   documentReadyCommand,
   documentReadyEnvelope,
+  milestoneStatusCommand,
+  milestoneStatusEnvelope,
+  remedyFinalizedCommand,
+  remedyFinalizedEnvelope,
   fundingCommand,
   fundingEnvelope,
   remedyLegAlertCommand,
@@ -97,6 +103,9 @@ const HANDLERS = [
   'escrowRemedyRejected',
   'milestoneFundingStatus',
   'contractDocumentReady',
+  'milestoneStatus',
+  'breachNotice',
+  'remedyFinalized',
   'categoryApproved',
   'categoryRejected',
 ] as const;
@@ -515,6 +524,24 @@ describe('NotificationEventConsumer', () => {
   });
 
   it.each([
+    [
+      'milestoneStatus',
+      'notification-svc.notification.milestone_status_requested',
+      milestoneStatusEnvelope,
+      milestoneStatusCommand,
+    ],
+    [
+      'breachNotice',
+      'notification-svc.notification.breach_notice_requested',
+      breachNoticeEnvelope,
+      breachNoticeCommand,
+    ],
+    [
+      'remedyFinalized',
+      'notification-svc.notification.remedy_finalized_requested',
+      remedyFinalizedEnvelope,
+      remedyFinalizedCommand,
+    ],
     [
       'contractDocumentReady',
       'notification-svc.notification.contract_document_ready_requested',

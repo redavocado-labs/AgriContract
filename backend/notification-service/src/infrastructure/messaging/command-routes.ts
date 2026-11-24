@@ -17,6 +17,9 @@ import {
   type NotifyLevel15AssignmentWaitingUseCase,
   type NotifyLevel15InspectorAssignmentUseCase,
   type NotifyMilestoneFundingStatusUseCase,
+  type NotifyMilestoneStatusUseCase,
+  type NotifyBreachNoticeUseCase,
+  type NotifyRemedyFinalizedUseCase,
   type NotifyUserKycResultUseCase,
   type NotifyUserLockChangedUseCase,
 } from '../../application/use-cases';
@@ -33,6 +36,9 @@ import {
   parseLevel15AssignmentWaitingRequested,
   parseLevel15InspectorAssignmentRequested,
   parseMilestoneFundingStatusRequested,
+  parseMilestoneStatusRequested,
+  parseBreachNoticeRequested,
+  parseRemedyFinalizedRequested,
   parseUserKycResultRequested,
   parseUserLockChangedRequested,
   unsupportedCommand,
@@ -61,6 +67,9 @@ export interface CommandUseCases {
   escrowRemedyRejected: NotifyEscrowRemedyRejectedUseCase;
   milestoneFundingStatus: NotifyMilestoneFundingStatusUseCase;
   contractDocumentReady: NotifyContractDocumentReadyUseCase;
+  milestoneStatus: NotifyMilestoneStatusUseCase;
+  breachNotice: NotifyBreachNoticeUseCase;
+  remedyFinalized: NotifyRemedyFinalizedUseCase;
 }
 
 /**
@@ -95,6 +104,12 @@ export function commandRoutes(u: CommandUseCases): CommandRoutes {
       documentMail(() =>
         u.contractDocumentReady.execute(parseContractDocumentReadyRequested(b)),
       ),
+    'notification.milestone_status_requested': (b) =>
+      u.milestoneStatus.execute(parseMilestoneStatusRequested(b)),
+    'notification.breach_notice_requested': (b) =>
+      u.breachNotice.execute(parseBreachNoticeRequested(b)),
+    'notification.remedy_finalized_requested': (b) =>
+      u.remedyFinalized.execute(parseRemedyFinalizedRequested(b)),
     'notification.milestone_funding_status_requested': (b) =>
       u.milestoneFundingStatus.execute(parseMilestoneFundingStatusRequested(b)),
     'notification.user_kyc_result_requested': (b) =>

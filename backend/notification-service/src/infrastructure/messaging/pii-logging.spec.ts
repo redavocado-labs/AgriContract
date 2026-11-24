@@ -23,6 +23,9 @@ import {
   NotifyEscrowRemedyRejectedUseCase,
   NotifyMilestoneFundingStatusUseCase,
   NotifyContractDocumentReadyUseCase,
+  NotifyMilestoneStatusUseCase,
+  NotifyBreachNoticeUseCase,
+  NotifyRemedyFinalizedUseCase,
   NotifyContractAnchorUseCase,
   NotifyCategoryApprovedUseCase,
   NotifyCategoryRejectedUseCase,
@@ -138,6 +141,9 @@ async function harness(
     contractDocumentReady: new NotifyContractDocumentReadyUseCase(sender, {
       readReady: () => Promise.reject(new Error('no file-service here')),
     }),
+    milestoneStatus: new NotifyMilestoneStatusUseCase(sender),
+    breachNotice: new NotifyBreachNoticeUseCase(sender),
+    remedyFinalized: new NotifyRemedyFinalizedUseCase(sender),
   });
   const consumer = new NotificationEventConsumer(amqp, routes, commands);
   await consumer.onModuleInit();
