@@ -10,6 +10,7 @@ import type {
   EscrowRemedyRejectedRequestedCommand,
   Level15AssignmentWaitingRequestedCommand,
   Level15InspectorAssignmentRequestedCommand,
+  MilestoneAnchorRequestedCommand,
   MilestoneFundingStatusRequestedCommand,
   MilestoneStatusRequestedCommand,
   RemedyFinalizedRequestedCommand,
@@ -1148,5 +1149,74 @@ export function remedyFinalizedCommand(): RemedyFinalizedRequestedCommand {
     penaltyEligible: true,
     reputationEligible: true,
     remedyLegs: p.remedyLegs as RemedyFinalizedRequestedCommand['remedyLegs'],
+  };
+}
+
+/*
+ * `notification.milestone_anchor_requested`, as audit-service is to write it
+ * (hash-chain design §4.3): the dispute fixture's milestone settled, its
+ * audit record hash, and an OpenTimestamps proof in base64. OTS_PROOF_BASE64
+ * is the 65 bytes of an .ots header (magic, version 1, sha256 op) followed by
+ * the record hash; its base64 and SHA-256 come from base64 and sha256sum,
+ * not from the code under test.
+ */
+export const ANCHOR_RECORD_HASH =
+  '5d2c8e4f1a7b3c9d0e6f2a1b4c8d7e3f9a0b5c6d1e2f3a4b7c8d9e0f1a2b3c4d';
+export const OTS_PROOF_BASE64 =
+  'AE9wZW5UaW1lc3RhbXBzAABQcm9vZgC/ieLohOiSlAEIXSyOTxp7PJ0ObyobTI1+P5oLXG0eLzpLfI2eDxorPE0=';
+export const OTS_PROOF_BYTES = 65;
+export const OTS_PROOF_SHA256 =
+  'cc957f0039b17968c994f2ec23378164de5188ad3b85194434efddb1fc692f98';
+const MILESTONE_ANCHOR_EVENT_ID = '267b6c5d-4e3f-4a2b-9c0d-9e8f7a6b5c4d';
+
+export function milestoneAnchorPayload(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    contractId: DISPUTE_CONTRACT_ID,
+    milestoneId: DISPUTE_MILESTONE_ID,
+    recipients: ANCHOR_RECIPIENTS.map((r) => ({ ...r })),
+    recordHash: ANCHOR_RECORD_HASH,
+    otsProof: OTS_PROOF_BASE64,
+    settlementSummary: {
+      lockedAmount: '110400000.00',
+      actualAmount: '105800000.00',
+    },
+    ...overrides,
+  };
+}
+
+export const milestoneAnchorEnvelope = (
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> => ({
+  eventId: MILESTONE_ANCHOR_EVENT_ID,
+  eventType: 'notification.milestone_anchor_requested',
+  eventVersion: 1,
+  occurredAt: '2026-12-03T05:00:00.500Z',
+  producer: 'audit-service',
+  aggregateId: DISPUTE_MILESTONE_ID,
+  correlationId: '378c7d6e-5f4a-4b3c-8d1e-0f9a8b7c6d5e',
+  causationId: '489d8e7f-6a5b-4c4d-9e2f-1a0b9c8d7e6f',
+  payload: milestoneAnchorPayload(),
+  ...overrides,
+});
+
+export const milestoneAnchorBody = (
+  overrides: Record<string, unknown> = {},
+): Buffer => Buffer.from(JSON.stringify(milestoneAnchorEnvelope(overrides)));
+
+/** The command the parser is expected to produce from `milestoneAnchorEnvelope()`. */
+export function milestoneAnchorCommand(): MilestoneAnchorRequestedCommand {
+  return {
+    eventId: MILESTONE_ANCHOR_EVENT_ID,
+    contractId: DISPUTE_CONTRACT_ID,
+    milestoneId: DISPUTE_MILESTONE_ID,
+    recipients: ANCHOR_RECIPIENTS.map((r) => ({ ...r })),
+    recordHash: ANCHOR_RECORD_HASH,
+    otsProof: OTS_PROOF_BASE64,
+    settlementSummary: {
+      lockedAmount: '110400000.00',
+      actualAmount: '105800000.00',
+    },
   };
 }
