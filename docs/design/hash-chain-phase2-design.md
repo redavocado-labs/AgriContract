@@ -26,7 +26,8 @@ metadata:
 | Event                                          | Vào chain? | Lý do                                                                                                             |
 | ---------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------- |
 | `milestone.seller_weighed`                     | ✅         | Mang `sellerDeclaredWeight` — input gốc để tính Delta 1/Delta 2, cần chứng minh không bị sửa sau khi cân          |
-| `milestone.buyer_confirmed`                    | ✅         | Mang `buyerReceivedWeight` — input gốc tính Delta 2, cùng lý do trên                                              |
+| `milestone.buyer_received` (**24/11/2026, D98**) | ✅ | Mang `buyerReceivedWeight` — input gốc tính Delta 2 (D76: buyer nhận 2 bước, số cân nằm ở bước nhận, không ở bước xác nhận) |
+| `milestone.buyer_confirmed` | ✅ | **Sửa 24/11/2026 (D98):** không mang số cân (chỉ `confirmedBy` BUYER/SYSTEM_TIMEOUT) — vào chain vì là mốc buyer chấp nhận lô hàng không lỗi, căn cứ tất toán sạch |
 | `milestone.flagged`                            | ❌         | Chỉ là tín hiệu "buyer bấm nút", không mang số liệu riêng — số liệu thật đã nằm ở `buyer_confirmed`               |
 | `milestone.force_majeure_claimed`              | ✅         | Bằng chứng bất khả kháng seller nộp — cơ sở miễn/không miễn penalty, giá trị pháp lý cao (Điều 156/351 BLDS 2015) |
 | `milestone.force_majeure_resolved`             | ✅         | Quyết định APPROVE/REJECT của Admin/Level 1.5 — kết quả tranh chấp, bắt buộc immutable                            |
@@ -74,6 +75,7 @@ Cả 3 dùng chung schema `AuditRecord` §3 — `content` mang payload đã ký 
 | `BREACH_REPORTED` (**mới 19/07/2026**) | `breach.reported` | contract-service (milestone-escrow §6.4 — thời điểm mở cáo buộc + notice là bằng chứng then chốt khi tranh cãi wrongful termination / cure deadline; trước đây `milestone.flagged` bị coi "không đáng vào chain" — với attribution model, mốc cáo buộc thành evidence bắt buộc) |
 | `REMEDY_FINALIZED` (**mới 19/07/2026**) | `remedy.finalized` | contract-service (kết luận attribution + remedyLegs — chính là RemedyDecision mà escrow/reputation thực thi theo; phải bất biến + timestamp độc lập để defensible trước VIAC/toà) |
 | `CONTRACT_TERMINATED` (**mới 19/07/2026**) | `contract.terminated` | contract-service (terminationType + finalBreachingRole — gồm cả `MUTUAL_REPLACEMENT` với cặp con trỏ supersede: chain chứng minh được hợp đồng cũ đóng sạch và hợp đồng mới nối đúng) |
+| `CONTRACT_SETTLED` (**mới 24/11/2026, D98**) | `contract.settled` | contract-service (hợp đồng hoàn tất sau khi tiền về hết — §6.8 milestone-escrow; đối xứng `CONTRACT_TERMINATED`, dòng cuối của chuỗi hợp đồng) |
 | `AUDIT_VIEWED` (**mới 24/11/2026, D97**) | không có event — audit-service tự ghi khi ADMIN lấy bản ghi qua `/api/v1/admin/audit/**` (§4.6); `subject_type = SYSTEM`, không OTS-anchor riêng | audit-service |
 
 `STRUCTURING_REPORT` và `AML_RISK_CLEARED` là 2 giá trị trước đây chỉ được nhắc ở bank/reputation mà chưa vào catalog này — đã gom về. `CONTRACT_DOCUMENT_GENERATED` commit tách biệt hash nội dung pháp lý (`sourceContentHash`) và hash bytes PDF (`documentFileHash`); audit-service không coi hai hash là cùng một giá trị. Record cấp hệ thống/cấp cặp (key registration, security lock, AML) dùng `subject_type = SYSTEM | USER_PAIR` (**sửa 18/07/2026** — bỏ hẳn contractId sentinel; sentinel làm per-contract chain lẫn semantic, giờ mỗi subject có chain riêng sạch sẽ qua `prev_hash_subject`). OTS policy: 2 nhóm security (`EXTERNAL_VERIFIER_*`, `SECURITY_*`) anchor như event ✅ (§2.3); `STRUCTURING_REPORT`/`AML_RISK_CLEARED` cũng anchor — cùng tiêu chí "quyết định có thể bị tranh chấp". **3 source_type attribution (19/07/2026)** — `BREACH_REPORTED`/`REMEDY_FINALIZED`/`CONTRACT_TERMINATED` — anchor như event ✅ theo đúng tiêu chí đó: đây là các mốc sẽ bị tranh chấp trực diện nhất (ai cáo buộc lúc nào, kết luận ra sao, hợp đồng chấm dứt kiểu gì); `subject_type = CONTRACT`.
@@ -337,7 +339,7 @@ Toàn bộ thiết kế 3 lớp (hash chain + multi-location + email anchor) đ�
 
 Hash Chain — **ĐÓNG SESSION HOÀN TOÀN**: 3 lớp gốc + lớp External Verifier (§2.3/§4.4) đều đã đóng, sẵn sàng đưa vào Architecture/SDS/TechnicalSpec chính thức.
 
-**Bổ sung 24/11/2026 (D97):** §4.6 — buyer/seller xem và kiểm chuỗi của hợp đồng mình, ADMIN xem và kiểm toàn bộ trên FE; lượt xem của ADMIN ghi vào chain (`AUDIT_VIEWED`, §2.4).
+**Bổ sung 24/11/2026 (D97, D98):** catalog thêm `milestone.buyer_received` và `CONTRACT_SETTLED`, sửa lý do `milestone.buyer_confirmed`; §4.6 — buyer/seller xem và kiểm chuỗi của hợp đồng mình, ADMIN xem và kiểm toàn bộ trên FE; lượt xem của ADMIN ghi vào chain (`AUDIT_VIEWED`, §2.4).
 
 ---
 
