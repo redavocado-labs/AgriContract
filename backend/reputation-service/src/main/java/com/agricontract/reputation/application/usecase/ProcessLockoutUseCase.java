@@ -1,9 +1,10 @@
 package com.agricontract.reputation.application.usecase;
 
 import com.agricontract.reputation.application.dto.ProcessLockoutCommand;
-import com.agricontract.reputation.application.exception.ImmutableFactConflictException;
 import com.agricontract.reputation.application.port.LockEntryWriter;
 import com.agricontract.reputation.application.port.LockHistoryReader;
+import com.agricontract.reputation.application.port.RemedyDecisionLedger;
+import com.agricontract.reputation.application.port.TransactionRunner;
 import com.agricontract.reputation.domain.LockDurationPolicy;
 import com.agricontract.reputation.domain.LockHistoryPolicy;
 import com.agricontract.reputation.domain.RemedyAttribution;
@@ -21,22 +22,33 @@ public class ProcessLockoutUseCase {
     private final LockEventLifecycle lifecycle;
     private final LockHistoryReader history;
     private final LockEntryWriter entries;
+    private final RemedyDecisionLedger decisions;
+    private final TransactionRunner transactions;
 
-    public ProcessLockoutUseCase(LockEventLifecycle lifecycle, LockHistoryReader history, LockEntryWriter entries) {
+    public ProcessLockoutUseCase(LockEventLifecycle lifecycle, LockHistoryReader history, LockEntryWriter entries,
+                                 RemedyDecisionLedger decisions, TransactionRunner transactions) {
         this.lifecycle = lifecycle;
         this.history = history;
         this.entries = entries;
+        this.decisions = decisions;
+        this.transactions = transactions;
     }
 
-    public boolean execute(ProcessLockoutCommand command) {
+    public boolean execute(ProcessLockoutCommand command, String fingerprint) {
         Objects.requireNonNull(command);
         Objects.requireNonNull(command.sourceEventId());
         Objects.requireNonNull(command.remedyDecisionId());
         Objects.requireNonNull(command.contractId());
         Objects.requireNonNull(command.decidedAt());
-        if (Objects.requireNonNull(command.settledMilestoneCount()).signum() < 0) {
+        Objects.requireNonNull(fingerprint);
+        if (command.settledMilestoneCount() < 0) {
             throw new IllegalArgumentException("Invalid settled milestone count");
         }
+        return transactions.inTransaction(() -> process(command, fingerprint));
+    }
+
+    private boolean process(ProcessLockoutCommand command, String fingerprint) {
+        if (!decisions.claim(command, fingerprint)) return false;
         var party = RemedyAttribution.select(command.reputationEligible(), command.finalBreachingRole(),
                 command.buyerId(), command.sellerId(), command.breachReasonCode());
         if (party.isEmpty()) {
@@ -46,44 +58,20 @@ public class ProcessLockoutUseCase {
         Instant decided = command.decidedAt().truncatedTo(ChronoUnit.MICROS);
         return lifecycle.recordRemedy(penalized.userId(), command.remedyDecisionId(), penalized.reason(),
                 command.correlationId(), () -> {
-                    var existingDecision = entries.decisionForEvent(command.sourceEventId());
-                    if (existingDecision.isPresent() && !existingDecision.orElseThrow().equals(command.remedyDecisionId())) {
-                        throw new ImmutableFactConflictException();
-                    }
-                    var prior = entries.findBySourceOrDecision(command.sourceEventId(), command.remedyDecisionId());
-                    if (!prior.isEmpty()) {
-                        if (prior.size() != 1 || !prior.getFirst().remedyDecisionId().equals(command.remedyDecisionId())
-                                || !prior.getFirst().contractId().equals(command.contractId())
-                                || !prior.getFirst().userId().equals(penalized.userId())
-                                || !prior.getFirst().penalizedRole().equals(penalized.role().name())
-                                || !prior.getFirst().decidedAt().equals(decided)
-                                || !command.buyerId().equals(prior.getFirst().buyerId())
-                                || !command.sellerId().equals(prior.getFirst().sellerId())
-                                || !penalized.reason().equals(prior.getFirst().reason())
-                                || !command.settledMilestoneCount().equals(prior.getFirst().settledMilestones())) {
-                            throw new ImmutableFactConflictException();
-                        }
-                        if (existingDecision.isEmpty()) {
-                            entries.recordEvent(command.sourceEventId(), command.remedyDecisionId());
-                        }
-                        return null;
-                    }
                     var counts = history.counts(penalized.userId(), decided);
                     var snapshot = LockDurationPolicy.calculate(penalized.reason(),
                             LockHistoryPolicy.repeatMultiplier(counts.recentLocks()),
                             LockHistoryPolicy.trackRecordMultiplier(counts.completed(), counts.priorLocks()),
-                            command.settledMilestoneCount().signum());
+                            command.settledMilestoneCount() == 0);
                     if (snapshot.unknownReason()) {
-                        LOG.warn("event=reputation_unknown_eligible_breach_reason");
+                        LOG.warn("event=reputation_unknown_eligible_breach_reason remedyDecisionId={} breachReasonCode={}",
+                                command.remedyDecisionId(), command.breachReasonCode());
                     }
                     Instant expiry = decided.plus(snapshot.lockDurationDays(), ChronoUnit.DAYS);
                     entries.insert(new LockEntryWriter.Entry(UUID.randomUUID(), command.sourceEventId(),
                             command.remedyDecisionId(), command.contractId(), penalized.userId(), penalized.role().name(),
                             snapshot.baseDays(), snapshot.repeatOffenseMultiplier(), snapshot.trackRecordMultiplier(),
                             snapshot.zeroProgressMultiplier(), snapshot.lockDurationDays(), decided, expiry));
-                    entries.recordEvidence(command.remedyDecisionId(), command.buyerId(), command.sellerId(),
-                            penalized.reason(), command.settledMilestoneCount());
-                    entries.recordEvent(command.sourceEventId(), command.remedyDecisionId());
                     return expiry;
                 });
     }

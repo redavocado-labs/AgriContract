@@ -49,7 +49,6 @@ Optional settings: `REPUTATION_DLQ_MONITOR_ENABLED` (default true), `REPUTATION_
 
 D52 uses a 3-day base for quality/shortfall and 30 days for strategic or fallback reasons; zero progress adds 1.5x only for the latter. D55 counts earlier locks within 24 calendar months for repeat offense and all earlier completions/locks for track record, anchored to `occurredAt`; the final duration is rounded up. D66 records an already expired decision in the ledger without changing lock state or emitting an event. Historical inputs are the facts available when processing occurs; late facts do not recompute immutable snapshots.
 
-V8 refuses to migrate if V6/V7 decision evidence already exists: those rows lack the full original payload needed to reconstruct a truthful fingerprint. Stop and resolve such data with the database owner; do not fabricate a backfill or delete evidence.
 
 ## Public summary and security
 

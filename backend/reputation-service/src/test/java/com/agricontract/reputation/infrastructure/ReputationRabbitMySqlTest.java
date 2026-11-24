@@ -6,7 +6,8 @@ import com.agricontract.reputation.infrastructure.contract.FrozenSchemas;
 import com.agricontract.reputation.infrastructure.messaging.ReputationFactConsumerTest;
 import com.agricontract.reputation.infrastructure.persistence.JdbcFactRepository;
 import com.agricontract.reputation.infrastructure.messaging.DlqMonitor;
-import com.agricontract.reputation.infrastructure.messaging.RemedyDeliveryReceipt;
+import com.agricontract.reputation.infrastructure.persistence.RemedyDeliveryReceipt;
+import com.agricontract.reputation.infrastructure.persistence.JdbcRemedyDecisionLedger;
 import com.agricontract.reputation.infrastructure.messaging.OutboxLockEventPublisher;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -75,6 +76,7 @@ class ReputationRabbitMySqlTest {
     @Autowired DlqMonitor monitor;
     @SpyBean(proxyTargetAware = true) JdbcFactRepository facts;
     @SpyBean(proxyTargetAware = true) RemedyDeliveryReceipt remedyReceipts;
+    @SpyBean(proxyTargetAware = true) JdbcRemedyDecisionLedger decisionLedger;
     @SpyBean(proxyTargetAware = true) OutboxLockEventPublisher lockPublisher;
     final HttpClient management = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
 
@@ -177,29 +179,27 @@ class ReputationRabbitMySqlTest {
         assertThat(count("event_outbox")).isEqualTo(1);
     }
 
-    @Test void largeSchemaValidMilestoneCountIsPreservedAndComparedOnReplay() throws Exception {
+    @Test void oversizedMilestoneCountIsRejectedWithoutTruncation() throws Exception {
         var event = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
-        ((ObjectNode) event.get("payload")).put("settledMilestoneCount", new java.math.BigInteger("18446744073709551616"));
+        ((ObjectNode) event.get("payload")).put("settledMilestoneCount", 2147483648L);
         FrozenSchemas.assertEvent("remedyFinalized", event);
+        publish(event);
+        assertDeadLetter(REMEDY, event);
+        assertThat(count("processed_event")).isZero();
+        assertThat(count("remedy_lock_evidence")).isZero();
+        assertThat(count("lock_entry")).isZero();
+    }
+
+    @Test void maximumMilestoneCountIsAccepted() throws Exception {
+        var event = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
+        ((ObjectNode) event.get("payload")).put("settledMilestoneCount", Integer.MAX_VALUE);
         long before = acknowledgments(REMEDY);
         publish(event);
         awaitAcknowledgments(REMEDY, before + 1);
-        assertThat(runtime.queryForObject("SELECT settled_milestone_count FROM remedy_lock_evidence", String.class))
-                .isEqualTo("18446744073709551616");
-        var replay = event.deepCopy();
-        replay.put("eventId", java.util.UUID.randomUUID().toString());
-        publish(replay);
-        awaitAcknowledgments(REMEDY, before + 2);
+        assertThat(runtime.queryForObject("SELECT settled_milestone_count FROM remedy_lock_evidence", Integer.class))
+                .isEqualTo(Integer.MAX_VALUE);
         assertThat(count("lock_entry")).isEqualTo(1);
-        assertThat(count("processed_event")).isEqualTo(2);
-        var conflict = replay.deepCopy();
-        conflict.put("eventId", java.util.UUID.randomUUID().toString());
-        ((ObjectNode) conflict.get("payload")).put("settledMilestoneCount", new java.math.BigInteger("18446744073709551617"));
-        publish(conflict);
-        assertDeadLetter(REMEDY, conflict);
-        assertThat(count("processed_event")).isEqualTo(2);
     }
-
     @Test void remedyDeliveryIsUnacknowledgedUntilTransactionCommits() throws Exception {
         var entered = new CountDownLatch(1);
         var release = new CountDownLatch(1);
@@ -348,7 +348,7 @@ class ReputationRabbitMySqlTest {
             entered.countDown();
             requireSignal(release);
             return call.callRealMethod();
-        }).when(AopTestUtils.<RemedyDeliveryReceipt>getUltimateTargetObject(remedyReceipts)).claimDecision(any(), any());
+        }).when(AopTestUtils.<JdbcRemedyDecisionLedger>getUltimateTargetObject(decisionLedger)).claim(any(), any());
         var first = remedy("SELLER", false, "SHORTFALL", java.time.Instant.now());
         var second = first.deepCopy();
         second.put("eventId", java.util.UUID.randomUUID().toString());
@@ -386,7 +386,7 @@ class ReputationRabbitMySqlTest {
             Object result = call.callRealMethod();
             if (calls.incrementAndGet() == 1) throw new DataAccessResourceFailureException("injected after decision evidence");
             return result;
-        }).when(AopTestUtils.<RemedyDeliveryReceipt>getUltimateTargetObject(remedyReceipts)).claimDecision(any(), any());
+        }).when(AopTestUtils.<JdbcRemedyDecisionLedger>getUltimateTargetObject(decisionLedger)).claim(any(), any());
         var event = remedy(null, false, null, java.time.Instant.now());
         long before = acknowledgments(REMEDY);
         publish(event);
@@ -432,11 +432,15 @@ class ReputationRabbitMySqlTest {
         ((ObjectNode) negative.get("payload")).put("settledMilestoneCount", -1);
         var fractional = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
         ((ObjectNode) fractional.get("payload")).put("settledMilestoneCount", new java.math.BigDecimal("1.00000000000000000001"));
+        var nullCount = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
+        ((ObjectNode) nullCount.get("payload")).putNull("settledMilestoneCount");
+        var textCount = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
+        ((ObjectNode) textCount.get("payload")).put("settledMilestoneCount", "1");
         var invalidQuality = remedy("BUYER", true, "FUNDING_FAILURE", java.time.Instant.now());
         ((ObjectNode) invalidQuality.get("payload")).put("qualityDisposition", "NON_CONFORMING");
         var wrongProducer = remedy("SELLER", true, "SHORTFALL", java.time.Instant.now());
         wrongProducer.put("producer", "user-service");
-        for (var event : List.of(badId, negative, fractional, invalidQuality, wrongProducer)) {
+        for (var event : List.of(badId, negative, fractional, nullCount, textCount, invalidQuality, wrongProducer)) {
             publish(event);
             assertDeadLetter(REMEDY, event);
         }

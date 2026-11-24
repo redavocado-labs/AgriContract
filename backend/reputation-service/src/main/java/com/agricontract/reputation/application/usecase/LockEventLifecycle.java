@@ -13,7 +13,8 @@ import org.springframework.stereotype.Service;
 /**
  * D53 integration boundary. The caller owns eligibility/approval and the insert-only ledger write.
  * Its callback MUST write through the same datasource, only inside this boundary, after the user mutex
- * is acquired. It must not publish or perform external effects. No production caller exists until #144/#269.
+ * is acquired. This boundary updates the lock projection and publishes lifecycle events transactionally;
+ * the callback must not publish or perform external effects.
  */
 @Service
 public class LockEventLifecycle {
