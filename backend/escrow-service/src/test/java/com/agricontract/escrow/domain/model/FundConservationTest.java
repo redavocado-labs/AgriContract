@@ -100,6 +100,6 @@ class FundConservationTest {
     private static PlannedRemedyLeg planned(String remedyType, String entryType, String fund, String milestone,
                                             String user, String amount) {
         return new PlannedRemedyLeg(UUID.randomUUID().toString(), RemedyType.valueOf(remedyType),
-                RemedyEntryType.valueOf(entryType), fund, user, milestone, new BigDecimal(amount));
+                RemedyEntryType.valueOf(entryType), fund, user, "BUYER", milestone, new BigDecimal(amount));
     }
 }

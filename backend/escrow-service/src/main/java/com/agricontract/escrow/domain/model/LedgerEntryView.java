@@ -9,6 +9,11 @@ public record LedgerEntryView(String entryType, String fundType, String mileston
         return entryType.startsWith("LOCK_");
     }
 
+    /** What the entry does to its pool's remaining lock: a LOCK_* adds, every other entry type moves money out. */
+    public BigDecimal signedAmount() {
+        return isLock() ? amount : amount.negate();
+    }
+
     public FundPool pool() {
         return FundPool.of(fundType, milestoneId);
     }
