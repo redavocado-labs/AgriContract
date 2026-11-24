@@ -1,5 +1,7 @@
 import axios from "axios"
 import { keycloak, login, refreshAccessToken } from "../auth/keycloak"
+import { parseApiError } from "./errors"
+import { reportClientFailure } from "./telemetry"
 
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -35,6 +37,16 @@ apiClient.interceptors.request.use(async (config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
+    if (axios.isAxiosError(error) && !axios.isCancel(error)) {
+      const { status, traceId } = parseApiError(error)
+      const method = error.config?.method?.toLowerCase() ?? "get"
+      reportClientFailure({
+        category: status === 0 ? "network" : "http",
+        operation: ["get", "head", "options"].includes(method) ? "read" : "write",
+        status,
+        traceId,
+      })
+    }
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       try {
         await login()

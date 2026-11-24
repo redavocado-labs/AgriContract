@@ -29,26 +29,30 @@ function readThreeDigits(group: number, isMostSignificantGroup: boolean): string
   const hundred = Math.floor(group / 100)
   const ten = Math.floor((group % 100) / 10)
   const unit = group % 10
+  const hundredWord = DIGIT_WORDS[hundred]
+  const tenWord = DIGIT_WORDS[ten]
+  const unitWord = DIGIT_WORDS[unit]
+  if (!hundredWord || !tenWord || !unitWord) return ""
   const parts: string[] = []
 
   if (hundred > 0) {
-    parts.push(DIGIT_WORDS[hundred], "trăm")
+    parts.push(hundredWord, "trăm")
   } else if (!isMostSignificantGroup && (ten > 0 || unit > 0)) {
     parts.push("không trăm")
   }
 
   if (ten > 1) {
-    parts.push(DIGIT_WORDS[ten], "mươi")
+    parts.push(tenWord, "mươi")
     if (unit === 1) parts.push("mốt")
     else if (unit === 5) parts.push("lăm")
-    else if (unit > 0) parts.push(DIGIT_WORDS[unit])
+    else if (unit > 0) parts.push(unitWord)
   } else if (ten === 1) {
     parts.push("mười")
     if (unit === 5) parts.push("lăm")
-    else if (unit > 0) parts.push(DIGIT_WORDS[unit])
+    else if (unit > 0) parts.push(unitWord)
   } else if (unit > 0) {
     if (hundred > 0 || !isMostSignificantGroup) parts.push("linh")
-    parts.push(DIGIT_WORDS[unit])
+    parts.push(unitWord)
   }
 
   return parts.join(" ")
