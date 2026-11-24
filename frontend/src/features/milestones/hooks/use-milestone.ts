@@ -6,6 +6,7 @@ import { useAuthStore } from "@/shared/auth/auth-store"
 import type { FileUploadItem } from "@/shared/ui/file-upload"
 import { contractError } from "@/features/contracts/types/presentation"
 import {
+  getBreachCase,
   getMilestoneDetail,
   uploadEvidence,
   type MilestoneDetail,
@@ -18,9 +19,13 @@ export const milestoneKey = (
   milestoneId: string
 ) => ["milestone", userId, contractId, milestoneId] as const
 
-/** Detail read model; re-fetched every 2 s while a file is still being scanned. */
+const SCAN_POLL_MILLISECONDS = 2_000
+const SCAN_BUDGET_MILLISECONDS = 60_000
+
+/** Poll at most one minute per batch of processing files. */
 export function useMilestoneDetail(contractId: string, milestoneId: string) {
   const { authenticated, status, userId } = useAuthStore()
+  const firstSeen = useRef(new Map<string, number>())
   return useQuery({
     queryKey: milestoneKey(userId, contractId, milestoneId),
     queryFn: ({ signal }) =>
@@ -29,10 +34,26 @@ export function useMilestoneDetail(contractId: string, milestoneId: string) {
       authenticated && status === "ready" && !!contractId && !!milestoneId,
     retry: false,
     refetchOnWindowFocus: true,
-    refetchInterval: (query) =>
-      query.state.data?.evidence.some((file) => file.status === "PROCESSING")
-        ? 2_000
-        : false,
+    refetchInterval: (query) => {
+      if (query.state.error) return false
+      const now = Date.now()
+      const files = query.state.data?.evidence.filter((file) => file.status === "PROCESSING") ?? []
+      for (const file of files)
+        if (!firstSeen.current.has(file.fileId)) firstSeen.current.set(file.fileId, now)
+      return files.some((file) => now - firstSeen.current.get(file.fileId)! < SCAN_BUDGET_MILLISECONDS)
+        ? SCAN_POLL_MILLISECONDS
+        : false
+    },
+  })
+}
+
+export function useMilestoneBreachCase(detail: MilestoneDetail) {
+  const userId = useAuthStore((state) => state.userId)
+  return useQuery({
+    queryKey: ["breach-case", detail.contractId, detail.breachCaseId, userId],
+    queryFn: ({ signal }) => getBreachCase(detail.contractId, detail.breachCaseId!, signal),
+    enabled: !!userId && !!detail.breachCaseId,
+    retry: false,
   })
 }
 
@@ -43,14 +64,17 @@ export function useMilestoneDetail(contractId: string, milestoneId: string) {
 export function useMilestoneCommand(detail: MilestoneDetail) {
   const userId = useAuthStore((state) => state.userId)
   const cache = useQueryClient()
+  const lock = useRef(false)
   const key = useRef<{ fingerprint: string; key: string } | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   async function run(
     fingerprint: string,
-    action: (key: string) => Promise<void>
+    action: (key: string) => Promise<void>,
+    refresh = true
   ) {
-    if (busy) return false
+    if (lock.current) return false
+    lock.current = true
     if (key.current?.fingerprint !== fingerprint)
       key.current = { fingerprint, key: newIdempotencyKey() }
     setBusy(true)
@@ -65,17 +89,17 @@ export function useMilestoneCommand(detail: MilestoneDetail) {
       if (status >= 400 && status < 500) key.current = null
       return false
     } finally {
+      if (refresh)
+        await Promise.all([
+          cache.invalidateQueries({
+            queryKey: milestoneKey(userId, detail.contractId, detail.milestone.milestoneId),
+          }),
+          cache.invalidateQueries({ queryKey: ["contract", userId, detail.contractId] }),
+          cache.invalidateQueries({ queryKey: ["breach-case", detail.contractId] }),
+          cache.invalidateQueries({ queryKey: ["contracts", userId] }),
+        ])
+      lock.current = false
       setBusy(false)
-      await cache.invalidateQueries({
-        queryKey: milestoneKey(
-          userId,
-          detail.contractId,
-          detail.milestone.milestoneId
-        ),
-      })
-      await cache.invalidateQueries({
-        queryKey: ["contract", userId, detail.contractId],
-      })
     }
   }
   return { run, busy, error, setError }
