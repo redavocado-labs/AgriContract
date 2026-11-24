@@ -44,6 +44,9 @@ import {
   fundingBody,
   fundingCommand,
   fundingPayload,
+  documentReadyBody,
+  documentReadyCommand,
+  documentReadyPayload,
 } from '../../../test/support/commands';
 import {
   parseActivationCancelRequested,
@@ -67,6 +70,8 @@ import {
   ESCROW_REMEDY_REJECTED_FIELDS,
   parseEscrowRemedyRejectedRequested,
   MILESTONE_FUNDING_STATUS_REQUIRED,
+  CONTRACT_DOCUMENT_READY_FIELDS,
+  parseContractDocumentReadyRequested,
   parseMilestoneFundingStatusRequested,
 } from './notification-command.parsers';
 
@@ -1220,6 +1225,90 @@ describe('parseMilestoneFundingStatusRequested', () => {
       message(() =>
         parseMilestoneFundingStatusRequested(activationFailedBody()),
       ),
+    ).toContain("is not this queue's command");
+  });
+});
+
+describe('parseContractDocumentReadyRequested', () => {
+  const parseDocument = (
+    payload: Record<string, unknown> = documentReadyPayload(),
+  ) => parseContractDocumentReadyRequested(documentReadyBody({ payload }));
+
+  it('reads the envelope eventId and every payload field', () => {
+    expect(parseDocument()).toEqual(documentReadyCommand());
+  });
+
+  it.each([
+    ['another VN_COFFEE_ template', { templateCode: 'VN_COFFEE_B2B_V2' }],
+    ['a one-character version', { templateVersion: 'x' }],
+    [
+      'a generatedAt with an offset',
+      { generatedAt: '2026-11-25T11:00:00+07:00' },
+    ],
+  ])('accepts %s, as the contract does', (_case, patch) => {
+    expect(parseDocument(documentReadyPayload(patch))).toMatchObject(patch);
+  });
+
+  it.each([
+    ['templateCode', 'VN_RICE_B2B', 'field "templateCode" must match'],
+    ['templateCode', 'vn_coffee_b2b', 'field "templateCode" must match'],
+    ['templateCode', 'VN_COFFEE_', 'field "templateCode" must match'],
+    ['templateCode', 42, 'field "templateCode" must be a string'],
+    ['templateVersion', '', 'field "templateVersion" must not be empty'],
+    ['templateVersion', 1, 'field "templateVersion" must be a string'],
+    [
+      'documentFileHash',
+      'B0C1599C63930FDB7A8EF24E770ABEDF61595981CE0FDEA9277605CF6064D137',
+      'field "documentFileHash" must be 64 lowercase hex characters',
+    ],
+    [
+      'sourceContentHash',
+      'abc',
+      'field "sourceContentHash" must be 64 lowercase hex characters',
+    ],
+    ['fileId', 'file-1', 'field "fileId" must be a UUID'],
+    ['documentId', 'doc-1', 'field "documentId" must be a UUID'],
+    ['generatedAt', '2026-11-25', 'RFC 3339'],
+    ['recipients', [], 'field "recipients"'],
+    [
+      'documentType',
+      'FINAL_SIGNED_CONTRACT',
+      'unknown payload property "documentType"',
+    ],
+  ])(
+    'rejects %s = %p as an invalid payload, without retrying',
+    (field, value, reason) => {
+      const text = message(() =>
+        parseDocument(documentReadyPayload({ [field]: value })),
+      );
+
+      expect(text).toContain(
+        'Malformed notification.contract_document_ready_requested',
+      );
+      expect(text).toContain(reason);
+    },
+  );
+
+  it.each(CONTRACT_DOCUMENT_READY_FIELDS)('rejects a missing %s', (field) => {
+    const payload = documentReadyPayload();
+    delete payload[field];
+
+    expect(message(() => parseDocument(payload))).toContain(`"${field}"`);
+  });
+
+  it('rejects a command from another producer', () => {
+    expect(
+      message(() =>
+        parseContractDocumentReadyRequested(
+          documentReadyBody({ producer: 'file-service' }),
+        ),
+      ),
+    ).toContain('producer must be "contract-service"');
+  });
+
+  it('rejects the signed-contract anchor command, whose eventType is not this queue’s', () => {
+    expect(
+      message(() => parseContractDocumentReadyRequested(anchorBody())),
     ).toContain("is not this queue's command");
   });
 });

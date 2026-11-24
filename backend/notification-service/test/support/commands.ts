@@ -2,6 +2,7 @@ import type {
   ActivationCancelRequestedCommand,
   ContractActivationFailedRequestedCommand,
   ContractAnchorRequestedCommand,
+  ContractDocumentReadyRequestedCommand,
   ContractTerminatedRequestedCommand,
   EscrowLegAlertRequestedCommand,
   EscrowRemedyLegAlertRequestedCommand,
@@ -821,5 +822,77 @@ export function fundingCommand(): MilestoneFundingStatusRequestedCommand {
     statusType: 'FUNDING_FAILED',
     deadline: '2026-12-04T16:59:59.999Z',
     reason: FUNDING_REASON,
+  };
+}
+
+/*
+ * `notification.contract_document_ready_requested`, as contract-service is to
+ * write it after `contract.document_generated` (design §3.3): the final
+ * signed contract PDF of the anchor fixture's contract, to its buyer and
+ * seller. DOCUMENT_PDF stands for the stored bytes; DOCUMENT_PDF_SHA256 is
+ * their SHA-256, from sha256sum rather than from the code under test.
+ */
+export const DOCUMENT_ID = 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e';
+export const DOCUMENT_FILE_ID = 'c3d4e5f6-a7b8-4c9d-8e0f-2a3b4c5d6e7f';
+const DOCUMENT_EVENT_ID = 'd4e5f6a7-b8c9-4d0e-9f1a-3b4c5d6e7f8a';
+
+export const DOCUMENT_PDF = Buffer.from(
+  '%PDF-1.7\n% AgriContract final signed contract (test bytes)\n%%EOF\n',
+  'latin1',
+);
+export const DOCUMENT_PDF_SHA256 =
+  'b0c1599c63930fdb7a8ef24e770abedf61595981ce0fdea9277605cf6064d137';
+
+export function documentReadyEnvelope(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    eventId: DOCUMENT_EVENT_ID,
+    eventType: 'notification.contract_document_ready_requested',
+    eventVersion: 1,
+    occurredAt: '2026-11-25T04:00:01.500Z',
+    producer: 'contract-service',
+    aggregateId: CONTRACT_ID,
+    correlationId: 'e5f6a7b8-c9d0-4e1f-8a2b-4c5d6e7f8a9b',
+    causationId: 'f6a7b8c9-d0e1-4f2a-9b3c-5d6e7f8a9b0c',
+    payload: documentReadyPayload(),
+    ...overrides,
+  };
+}
+
+export function documentReadyPayload(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    documentId: DOCUMENT_ID,
+    contractId: CONTRACT_ID,
+    recipients: ANCHOR_RECIPIENTS.map((r) => ({ ...r })),
+    fileId: DOCUMENT_FILE_ID,
+    sourceContentHash: TERMS_SNAPSHOT_HASH,
+    documentFileHash: DOCUMENT_PDF_SHA256,
+    templateCode: 'VN_COFFEE_B2B',
+    templateVersion: '1.0.0',
+    generatedAt: '2026-11-25T04:00:00Z',
+    ...overrides,
+  };
+}
+
+export const documentReadyBody = (
+  overrides: Record<string, unknown> = {},
+): Buffer => Buffer.from(JSON.stringify(documentReadyEnvelope(overrides)));
+
+/** The command the parser is expected to produce from `documentReadyEnvelope()`. */
+export function documentReadyCommand(): ContractDocumentReadyRequestedCommand {
+  return {
+    eventId: DOCUMENT_EVENT_ID,
+    documentId: DOCUMENT_ID,
+    contractId: CONTRACT_ID,
+    recipients: ANCHOR_RECIPIENTS.map((r) => ({ ...r })),
+    fileId: DOCUMENT_FILE_ID,
+    sourceContentHash: TERMS_SNAPSHOT_HASH,
+    documentFileHash: DOCUMENT_PDF_SHA256,
+    templateCode: 'VN_COFFEE_B2B',
+    templateVersion: '1.0.0',
+    generatedAt: '2026-11-25T04:00:00Z',
   };
 }

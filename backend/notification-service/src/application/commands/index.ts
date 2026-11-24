@@ -61,6 +61,7 @@ export {
   type EscrowLegStatus,
 } from './escrow-leg-alert-requested.command';
 export type { EscrowRemedyLegAlertRequestedCommand } from './escrow-remedy-leg-alert-requested.command';
+export type { ContractDocumentReadyRequestedCommand } from './contract-document-ready-requested.command';
 export {
   MILESTONE_FUNDING_STATUS_TYPES,
   type MilestoneFundingStatusRequestedCommand,
