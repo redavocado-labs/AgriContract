@@ -24,7 +24,7 @@ public class JdbcAssignmentLifecycleRepository implements AssignmentLifecycleRep
             rs.getString("inspector_id"), rs.getTimestamp("assigned_at").toInstant(),
             instant(rs.getTimestamp("ended_at")), rs.getInt("report_due_business_days"),
             rs.getTimestamp("report_due_at").toInstant(), rs.getString("initiated_by_actor_id"),
-            rs.getString("assigned_by_service"));
+            rs.getString("assigned_by_service"), instant(rs.getTimestamp("free_cancel_until")));
     private static Instant instant(Timestamp value) { return value == null ? null : value.toInstant(); }
 
     @Override
@@ -69,10 +69,11 @@ public class JdbcAssignmentLifecycleRepository implements AssignmentLifecycleRep
         jdbc.update("""
                 INSERT INTO level1_5_inspection_assignment
                 (commission_id,contract_id,milestone_id,inspector_id,assigned_at,assigned_by_service,
-                 initiated_by_actor_id,report_due_business_days,report_due_at)
-                VALUES (?,?,?,?,?,?,?,?,?)
+                 initiated_by_actor_id,report_due_business_days,report_due_at,free_cancel_until)
+                VALUES (?,?,?,?,?,?,?,?,?,?)
                 """, a.commissionId(), a.contractId(), a.milestoneId(), a.inspectorId(), Timestamp.from(a.assignedAt()),
-                a.assignedByService(), a.initiatedByActorId(), a.reportDueBusinessDays(), Timestamp.from(a.reportDueAt()));
+                a.assignedByService(), a.initiatedByActorId(), a.reportDueBusinessDays(), Timestamp.from(a.reportDueAt()),
+                Timestamp.from(java.util.Objects.requireNonNull(a.freeCancelUntil(), "freeCancelUntil")));
     }
 
     @Override

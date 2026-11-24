@@ -21,10 +21,9 @@ The internal user-service profile is checked for INSPECTOR role, verified KYC,
 and a valid or explicitly unlimited authorization expiry. The client fails
 closed on dependency errors. It uses `X-Internal-Secret`, matching the frozen
 `serviceAuth` header.
-User-service requests have a total response deadline covering connection,
-headers and body. Profile responses are limited to 64 KiB and eligible pools to
-1 MiB; timeout and oversized or invalid responses fail closed. The HTTP executor
-has a bounded task queue.
+User-service calls use RestClient with Jetty's total request/response timeout,
+including streaming the body, a separate connection timeout, and bounded response
+sizes. The client stops its transport on shutdown.
 
 The assignment and report tables belong to inspection-service. Report binding
 uses a same-database foreign key to the assignment; cross-service identifiers
@@ -81,16 +80,16 @@ ends an active assignment at `cancelledAt` and queues an inspector CANCELLED com
 using the current verified User Service email. Nothing open is a no-op. Invalid
 messages are rejected to the DLQ; dependency failures follow the retry policy.
 An event predating the active assignment fails for investigation without changing history.
-No new migration is required for cancellation. A delayed retry of a previously failed
-request can still create a stale assignment after cancellation (D57); there is no tombstone.
+The review requires persisting `freeCancelUntil`, a change from the current D57 design.
+Migration V9 adds the stored deadline without changing existing assignment history.
+Historical rows have no authoritative deadline: a NULL deadline fails cancellation
+closed for investigation instead of fabricating a value. A delayed retry of a previously
+failed request can still create a stale assignment after cancellation (D57); there is no tombstone.
 
 The contract-facing `inspection.level1_5_assigned` event uses exchange
-`agricontract.inspection` and that event type as routing key. Current main does
-not declare a durable contract-service queue bound to this key. Contract-service
-owns its consumer, queue and binding and needs separate implementation; until a
-matching production binding exists, mandatory outbox publication is returned as
-unroutable, the row remains pending, and later outbox rows are held back. A test
-queue does not establish production delivery.
+`agricontract.inspection` and that event type as routing key. Contract-service #494
+declares a durable consumer queue and binding. If the binding is absent at runtime,
+mandatory publication is returned as unroutable and later outbox rows are held back.
 
 Consume `inspection.level1_5_requested` with shared `EventEnvelopeCodec` and
 `ProcessedEventStore`. The processed-event claim and assignment changes share a

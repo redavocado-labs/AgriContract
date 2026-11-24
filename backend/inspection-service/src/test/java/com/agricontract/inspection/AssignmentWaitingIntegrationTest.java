@@ -182,6 +182,43 @@ class AssignmentWaitingIntegrationTest {
         var payload = codec.parse(json.getBytes(StandardCharsets.UTF_8)).payload();
         assertThat(payload.get("recipients")).isEqualTo(List.of(Map.of("userId", a, "email", "inspector@example.com", "role", "INSPECTOR")));
     }
+    @Test void cancellationUsesPersistedDeadlineAfterConfigurationChange() {
+        var target = org.springframework.test.util.AopTestUtils.<ManageLevel15Assignments>getUltimateTargetObject(lifecycle);
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "freeCancelHours", 4L);
+        try {
+            when(clock.instant()).thenReturn(NOW.plusNanos(123456000));
+            when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+            deliver(event());
+            var before = assignments.active(contract, milestone).orElseThrow();
+            var stored = assignments.find(before.commissionId()).orElseThrow();
+            assertThat(stored.freeCancelUntil()).isEqualTo(before.assignedAt().plus(Duration.ofHours(4)));
+            var assigned = codec.parse(jdbc.queryForObject("SELECT envelope FROM event_outbox WHERE event_type='inspection.level1_5_assigned'", String.class).getBytes(StandardCharsets.UTF_8));
+            var mail = codec.parse(jdbc.queryForObject("SELECT envelope FROM event_outbox WHERE event_type='notification.level1_5_inspector_assignment_requested'", String.class).getBytes(StandardCharsets.UTF_8));
+            assertThat(assigned.payload().get("freeCancelUntil")).isEqualTo(stored.freeCancelUntil().toString());
+            assertThat(mail.payload().get("freeCancelUntil")).isEqualTo(stored.freeCancelUntil().toString());
+            org.springframework.test.util.ReflectionTestUtils.setField(target, "freeCancelHours", 1L);
+            deliver(cancellation(NOW.plusSeconds(1)));
+            var cancelled = codec.parse(jdbc.queryForObject("SELECT envelope FROM event_outbox WHERE event_type='notification.level1_5_inspector_assignment_requested' AND JSON_UNQUOTE(JSON_EXTRACT(envelope,'$.payload.stage'))='CANCELLED'", String.class).getBytes(StandardCharsets.UTF_8));
+            var reloaded = assignments.find(before.commissionId()).orElseThrow();
+            assertThat(cancelled.payload().get("freeCancelUntil")).isEqualTo(stored.freeCancelUntil().toString());
+            assertThat(reloaded.freeCancelUntil()).isEqualTo(stored.freeCancelUntil());
+            assertThat(reloaded.reportDueAt()).isEqualTo(before.reportDueAt());
+        } finally {
+            org.springframework.test.util.ReflectionTestUtils.setField(target, "freeCancelHours", 4L);
+        }
+    }
+    @Test void historicalAssignmentWithoutDeadlineFailsClosed() {
+        when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+        deliver(event());
+        var assignment = assignments.active(contract, milestone).orElseThrow();
+        jdbc.update("UPDATE level1_5_inspection_assignment SET free_cancel_until=NULL WHERE commission_id=?", assignment.commissionId());
+        var cancel = cancellation(NOW.plusSeconds(1));
+        assertThatThrownBy(() -> deliver(cancel)).isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Missing stored free cancellation deadline");
+        assertThat(assignments.active(contract, milestone)).isPresent();
+        assertThat(count("processed_event")).isEqualTo(1);
+        assertThat(events("notification.level1_5_inspector_assignment_requested")).isEqualTo(1);
+    }
     @Test void failedCancellationRollsBackReceiptAndCanRetry() {
         when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
         deliver(event());
@@ -307,11 +344,41 @@ class AssignmentWaitingIntegrationTest {
         assertThat(events("notification.level1_5_inspector_assignment_requested")).isEqualTo(1);
     }
     @Test void cancellationWithNothingOpenIsNoOp() {
-        deliver(cancellation(NOW));
+        var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(OutboxAssignmentAlerts.class);
+        var captured = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        captured.start(); logger.addAppender(captured);
+        var cancel = cancellation(NOW);
+        try {
+            deliver(cancel); deliver(cancel);
+        } finally {
+            logger.detachAppender(captured); captured.stop();
+        }
+        assertThat(captured.list).hasSize(1);
+        assertThat(captured.list.getFirst().getLevel()).isEqualTo(ch.qos.logback.classic.Level.INFO);
+        assertThat(captured.list.getFirst().getFormattedMessage()).contains("inspection_level15_cancel_noop",
+                cancel.eventId().toString(), contract, milestone);
         assertThat(count("processed_event")).isEqualTo(1);
         assertThat(count("level1_5_inspection_assignment")).isZero();
         assertThat(count("level1_5_assignment_waiting")).isZero();
         assertThat(count("event_outbox")).isZero();
+    }
+    @Test void rolledBackNoopDoesNotLogOrClaimReceipt() {
+        var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(OutboxAssignmentAlerts.class);
+        var captured = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        captured.start(); logger.addAppender(captured);
+        try {
+            var cancel = cancellation(NOW);
+            assertThatThrownBy(() -> transactions.inReadCommittedTransaction(() -> {
+                deliver(cancel);
+                throw new IllegalStateException("rollback");
+            })).isInstanceOf(IllegalStateException.class).hasMessage("rollback");
+            assertThat(captured.list).isEmpty();
+            assertThat(count("processed_event")).isZero();
+            deliver(cancel);
+            assertThat(captured.list).hasSize(1);
+        } finally {
+            logger.detachAppender(captured); captured.stop();
+        }
     }
     @Test void cancellationRejectsAuthorizationAndPreservesEndedHistory() {
         when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
@@ -426,7 +493,11 @@ class AssignmentWaitingIntegrationTest {
         when(clock.instant()).thenReturn(first.reportDueAt());
         lifecycle.timeout(first.commissionId());
         assertAssignmentPair(2);
-        assertThat(assignments.active(contract, milestone).orElseThrow().inspectorId()).isEqualTo(b);
+        var second = assignments.active(contract, milestone).orElseThrow();
+        assertThat(second.inspectorId()).isEqualTo(b);
+        assertThat(second.freeCancelUntil()).isEqualTo(second.assignedAt().plus(Duration.ofHours(4)));
+        assertThat(assignments.find(first.commissionId()).orElseThrow().freeCancelUntil()).isEqualTo(first.freeCancelUntil());
+        assertThat(second.freeCancelUntil()).isNotEqualTo(first.freeCancelUntil());
     }
 
     @Test void waitingRetryPublishesPairAlongsideOperatorCommand() {
@@ -434,6 +505,9 @@ class AssignmentWaitingIntegrationTest {
         when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
         job().scan();
         assertAssignmentPair(1);
+        var assigned = assignments.active(contract, milestone).orElseThrow();
+        assertThat(assignments.find(assigned.commissionId()).orElseThrow().freeCancelUntil())
+                .isEqualTo(assigned.assignedAt().plus(Duration.ofHours(4)));
         assertThat(commands(Stage.ASSIGNED)).isEqualTo(1);
         assertThat(count("level1_5_assignment_waiting")).isZero();
     }

@@ -414,9 +414,9 @@ class Level15ReportPersistenceTest {
                 s -> reports.insert(second,evidence(),NOW)), 1062, "uk_report_l15_commission");
     }
 
-    @Test void freshDatabaseHasAllEightMigrationsAndCompleteReportSchema() {
+    @Test void freshDatabaseHasAllNineMigrationsAndCompleteReportSchema() {
         assertThat(jdbc.queryForList("SELECT version FROM flyway_schema_history WHERE success=1 ORDER BY installed_rank",
-                String.class)).containsExactly("1", "2", "3", "4", "5", "6", "7", "8");
+                String.class)).containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9");
         var expected = """
                 report_id|char(36)|NO
                 l15_commission_id|char(36)|YES
