@@ -53,6 +53,9 @@ public class ContractConflictException extends RuntimeException {
      */
     public static final String SETTLEMENT_PROPOSAL_CONFLICT = "SETTLEMENT_PROPOSAL_CONFLICT";
 
+    /** D93: OPERATOR RetryRemedyLegs on a contract that is not ACTIVE. */
+    public static final String REMEDY_RETRY_NOT_ALLOWED = "REMEDY_RETRY_NOT_ALLOWED";
+
     private final String code;
 
     public ContractConflictException(String code, String message) {
