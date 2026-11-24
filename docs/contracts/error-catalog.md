@@ -67,6 +67,7 @@ Current explicit `409` codes occupy these slots:
 | `INSPECTION_REPORT_PENDING` | `*_STATE_CONFLICT` (mandatory or contested inspection has no confirmed report yet) |
 | `RESOLUTION_MISMATCH` | `*_STATE_CONFLICT` (Arbitrator decision differs from the result computed from the report, D81) |
 | `DISPUTE_EXIT_NOT_ALLOWED` | `*_STATE_CONFLICT` (concede or settlement outside the moments of milestone-escrow §3.4 D92: no open flag/dispute, a COMPLETE report already decides it, or the case came from mandatory inspection) |
+| `REMEDY_RETRY_NOT_ALLOWED` | `*_STATE_CONFLICT` (OPERATOR retryRemedyLegs on a contract that is not ACTIVE, milestone-escrow §6.8 D93) |
 | `SETTLEMENT_PROPOSAL_CONFLICT` | `*_STATE_CONFLICT` (a proposal is already open, the acceptance amount differs from it, the proposer accepts its own proposal, or there is no open proposal to withdraw, D57) |
 | `CONSENT_CONTENT_MISMATCH` | `*_VERSION_MISMATCH` |
 
