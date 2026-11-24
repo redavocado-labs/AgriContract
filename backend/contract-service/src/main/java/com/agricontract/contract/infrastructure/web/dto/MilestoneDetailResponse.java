@@ -1,6 +1,7 @@
 package com.agricontract.contract.infrastructure.web.dto;
 
 import com.agricontract.contract.application.dto.MilestoneDetailView;
+import com.agricontract.contract.application.dto.MilestoneSummary;
 import com.agricontract.contract.domain.model.milestone.Milestone;
 import com.agricontract.contract.domain.model.milestone.MilestoneEvidenceFile;
 import com.agricontract.contract.domain.model.milestone.SellerWeighDeclaration;
@@ -18,15 +19,22 @@ import java.util.List;
 public record MilestoneDetailResponse(String contractId, MilestoneResponse milestone,
                                       SellerDeclarationView sellerDeclaration, BuyerReceiptView buyerReceipt, FlagView flag,
                                       List<EvidenceView> evidence, SettlementView settlement, String breachCaseId,
-                                      DisputeExitView disputeExit) {
+                                      DisputeExitView disputeExit, RemedyDecisionResponse remedyDecision) {
+
+    /** MilestoneResponse, shared with the contract detail (D99). */
+    public static MilestoneResponse summary(MilestoneSummary s) {
+        Milestone m = s.milestone();
+        return new MilestoneResponse(m.milestoneId(), m.milestoneIndex(), m.status().name(),
+                m.fundingStatus().name(), m.fundingScheduledDate().toString(), kg(m.committedQuantity()),
+                m.batchAmount() == null ? null : m.batchAmount().wire(), s.effectiveUnitPrice().wire(), null,
+                m.expectedDeliveryDate().toString(), m.graceDays(), m.fundingDelayBusinessDays(),
+                s.effectiveDeliveryDeadline().toString());
+    }
 
     public static MilestoneDetailResponse from(MilestoneDetailView view) {
         Milestone m = view.milestone();
-        MilestoneResponse summary = new MilestoneResponse(m.milestoneId(), m.milestoneIndex(), m.status().name(),
-                m.fundingStatus().name(), m.fundingScheduledDate().toString(), kg(m.committedQuantity()),
-                m.batchAmount() == null ? null : m.batchAmount().wire(), view.effectiveUnitPrice().wire(), null,
-                m.expectedDeliveryDate().toString(), m.graceDays(), m.fundingDelayBusinessDays(),
-                view.effectiveDeliveryDeadline().toString());
+        MilestoneResponse summary = summary(new MilestoneSummary(m, view.effectiveUnitPrice(),
+                view.effectiveDeliveryDeadline()));
         SellerDeclarationView declaration = null;
         if (view.sellerDeclaration() != null) {
             SellerWeighDeclaration d = view.sellerDeclaration().declaration();
@@ -59,13 +67,15 @@ public record MilestoneDetailResponse(String contractId, MilestoneResponse miles
         if (view.disputeExit() != null) {
             var x = view.disputeExit();
             var p = x.openProposal();
-            exit = new DisputeExitView(x.buyerPosition().wire(), x.sellerPosition().wire(), x.concedeAllowed(),
+            exit = new DisputeExitView(x.buyerPosition().wire(), x.buyerPositionRefund().wire(),
+                    x.sellerPosition().wire(), x.sellerPositionRefund().wire(), x.concedeAllowed(),
                     x.settlementAllowed(), p == null ? null : new SettlementProposalView(
-                            p.agreedSellerEntitlementAmount().wire(), p.proposedByRole().name(),
-                            p.proposedAt().toString()));
+                            p.agreedSellerEntitlementAmount().wire(), x.openProposalRefund().wire(),
+                            p.proposedByRole().name(), p.proposedAt().toString()));
         }
         return new MilestoneDetailResponse(view.contractId(), summary, declaration, receipt, flag, evidence,
-                settlement, m.flag() == null ? null : m.flag().breachCaseId(), exit);
+                settlement, m.flag() == null ? null : m.flag().breachCaseId(), exit,
+                view.remedyDecision() == null ? null : RemedyDecisionResponse.from(view.remedyDecision()));
     }
 
     private static EvidenceView evidence(MilestoneEvidenceFile f) {
@@ -115,13 +125,15 @@ public record MilestoneDetailResponse(String contractId, MilestoneResponse miles
 
     /** MilestoneDisputeExitView (D92). */
     @JsonInclude(JsonInclude.Include.ALWAYS)
-    public record DisputeExitView(String buyerPositionAmount, String sellerPositionAmount, boolean concedeAllowed,
-                                  boolean settlementAllowed, SettlementProposalView openProposal) {
+    public record DisputeExitView(String buyerPositionAmount, String buyerPositionRefundAmount,
+                                  String sellerPositionAmount, String sellerPositionRefundAmount,
+                                  boolean concedeAllowed, boolean settlementAllowed,
+                                  SettlementProposalView openProposal) {
     }
 
     /** MilestoneSettlementProposalView (D92). */
-    public record SettlementProposalView(String agreedSellerEntitlementAmount, String proposedByRole,
-                                         String proposedAt) {
+    public record SettlementProposalView(String agreedSellerEntitlementAmount, String agreedBuyerRefundAmount,
+                                         String proposedByRole, String proposedAt) {
     }
 
     public record EvidenceView(String fileId, String uploadedByRole, String status, String uploadedAt) {
