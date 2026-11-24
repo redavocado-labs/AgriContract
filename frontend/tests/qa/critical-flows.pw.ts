@@ -309,7 +309,7 @@ test("FE-003 an uncertain withdrawal survives reload and reuses its key after th
   assert.equal(keys.length, 1)
   events.length = 0
   await confirm.click()
-  await waitForText(page, "Đã rút đề nghị")
+  await page.getByText("Đã rút đề nghị hợp đồng", { exact: true }).waitFor()
   assert.deepEqual(events.slice(0, 2), ["read", "write"])
   assert.equal(keys.length, 2)
   assert.match(keys[0] ?? "", /^[0-9a-f-]{36}$/)
