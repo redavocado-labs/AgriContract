@@ -548,8 +548,6 @@ $defs:
       lock states, returnRequestEventId for return states), so the operator can find the matching bank
       log line, including a bank_command_replay_mismatch. since is when the problem began: entry into
       the waiting state for STUCK and RESOLVED, the last failed return for RETURN_EXHAUSTED.
-      REMEDY_EXHAUSTED (D93) once when a remedy leg (legKind REMEDY) is refused with no resend left;
-      bankCommandEventId is its requestEventId, since its last refusal.
     allOf:
       - {$ref: "#/$defs/commandEnvelope"}
       - type: object
@@ -563,18 +561,40 @@ $defs:
             properties:
               contractId: {$ref: "#/$defs/uuid"}
               legId: {$ref: "#/$defs/uuid"}
-              legKind:
-                description: "DEPOSIT = activation deposit leg (D68); REMEDY = remedy.finalized leg (D93, legId = remedyLegId, party = payee role)."
-                enum: [DEPOSIT, REMEDY]
+              legKind: {enum: [DEPOSIT]}
               party: {enum: [BUYER, SELLER]}
               legStatus:
-                enum: [REQUESTED, LOCKED, FAILED, CANCEL_PENDING, CANCELLED, RETURN_REQUESTED, RETURN_FAILED, RETURNED, SENT, COMPLETED]
+                enum: [REQUESTED, LOCKED, FAILED, CANCEL_PENDING, CANCELLED, RETURN_REQUESTED, RETURN_FAILED, RETURNED]
               amount: {$ref: "#/$defs/money"}
               bankCommandEventId: {$ref: "#/$defs/uuid"}
               since: {type: string, format: date-time}
-              stage:
-                description: "REMEDY_EXHAUSTED (D93): a REMEDY leg is FAILED with no retry left; OPERATOR fixes the cause then calls RetryRemedyLegs."
-                enum: [STUCK, RESOLVED, RETURN_EXHAUSTED, REMEDY_EXHAUSTED]
+              stage: {enum: [STUCK, RESOLVED, RETURN_EXHAUSTED]}
+  escrowRemedyLegAlertRequested:
+    x-publisher: escrow-service
+    x-consumers: [notification-service]
+    x-semantics: >-
+      Staff-only operational alert (milestone-escrow design §6.8, D93). Once when a remedy.finalized leg is
+      refused by the bank with no resend left (status FAILED). OPERATOR fixes the cause (kill switch, bank
+      error) then calls RetryRemedyLegs; escrow resends with the same bankCommandEventId. No recipients in
+      the command: notification-service sends to notification.operatorEmail. party is the payee role.
+    allOf:
+      - {$ref: "#/$defs/commandEnvelope"}
+      - type: object
+        properties:
+          eventType: {const: notification.escrow_remedy_leg_alert_requested}
+          producer: {const: escrow-service}
+          payload:
+            type: object
+            required: [contractId, remedyDecisionId, remedyLegId, party, amount, bankCommandEventId, since]
+            additionalProperties: false
+            properties:
+              contractId: {$ref: "#/$defs/uuid"}
+              remedyDecisionId: {$ref: "#/$defs/uuid"}
+              remedyLegId: {$ref: "#/$defs/uuid"}
+              party: {enum: [BUYER, SELLER]}
+              amount: {$ref: "#/$defs/money"}
+              bankCommandEventId: {$ref: "#/$defs/uuid"}
+              since: {type: string, format: date-time}
   escrowRemedyRejectedRequested:
     x-publisher: escrow-service
     x-consumers: [notification-service]
