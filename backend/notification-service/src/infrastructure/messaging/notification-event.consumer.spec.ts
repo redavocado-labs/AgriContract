@@ -27,6 +27,10 @@ import {
   inspectorEnvelope,
   legAlertCommand,
   legAlertEnvelope,
+  remedyLegAlertCommand,
+  remedyLegAlertEnvelope,
+  remedyRejectedCommand,
+  remedyRejectedEnvelope,
 } from '../../../test/support/commands';
 import { commandRoutes, type CommandUseCases } from './command-routes';
 import { legacyRoutes, type NotificationUseCases } from './legacy-routes';
@@ -80,6 +84,8 @@ const HANDLERS = [
   'level15AssignmentWaiting',
   'level15InspectorAssignment',
   'escrowLegAlert',
+  'escrowRemedyLegAlert',
+  'escrowRemedyRejected',
   'categoryApproved',
   'categoryRejected',
 ] as const;
@@ -495,6 +501,71 @@ describe('NotificationEventConsumer', () => {
     }
     expect(channel.acked).toEqual([msg]);
     expect(channel.nacked).toEqual([]);
+  });
+
+  it.each([
+    [
+      'escrowRemedyLegAlert',
+      'notification-svc.notification.escrow_remedy_leg_alert_requested',
+      remedyLegAlertEnvelope,
+      remedyLegAlertCommand,
+    ],
+    [
+      'escrowRemedyRejected',
+      'notification-svc.notification.escrow_remedy_rejected_requested',
+      remedyRejectedEnvelope,
+      remedyRejectedCommand,
+    ],
+  ] as const)(
+    'runs the %s use case on its own queue, and acks',
+    async (handler, queue, envelope, command) => {
+      const { consumer, service, open } = setup();
+      await consumer.onModuleInit();
+      const channel = new FakeChannel();
+      await open(channel);
+
+      const msg = channel.deliver(queue, envelope());
+      await flush();
+
+      expect(service[handler]).toHaveBeenCalledTimes(1);
+      expect(service[handler].mock.calls[0][0]).toEqual(command());
+      for (const other of HANDLERS.filter((h) => h !== handler)) {
+        expect(service[other]).not.toHaveBeenCalled();
+      }
+      expect(channel.acked).toEqual([msg]);
+      expect(channel.nacked).toEqual([]);
+    },
+  );
+
+  it.each([
+    [
+      'a deposit leg alert on the remedy leg alert queue',
+      'notification-svc.notification.escrow_remedy_leg_alert_requested',
+      legAlertEnvelope,
+    ],
+    [
+      'a remedy leg alert on the remedy rejected queue',
+      'notification-svc.notification.escrow_remedy_rejected_requested',
+      remedyLegAlertEnvelope,
+    ],
+    [
+      'a remedy rejected alert on the deposit leg alert queue',
+      'notification-svc.notification.escrow_leg_alert_requested',
+      remedyRejectedEnvelope,
+    ],
+  ] as const)('dead-letters %s', async (_case, queue, envelope) => {
+    const { consumer, service, open } = setup();
+    await consumer.onModuleInit();
+    const channel = new FakeChannel();
+    await open(channel);
+
+    const msg = channel.deliver(queue, envelope());
+    await flush();
+
+    for (const handler of HANDLERS) {
+      expect(service[handler]).not.toHaveBeenCalled();
+    }
+    expect(channel.nacked).toEqual([{ msg, requeue: false }]);
   });
 
   it('dead-letters a Level 1.5 waiting alert delivered to the escrow leg alert queue', async () => {

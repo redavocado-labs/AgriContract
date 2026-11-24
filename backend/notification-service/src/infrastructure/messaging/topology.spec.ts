@@ -46,6 +46,8 @@ const EXPECTED_QUEUES = [
   'notification-svc.notification.level1_5_assignment_waiting_requested',
   'notification-svc.notification.level1_5_inspector_assignment_requested',
   'notification-svc.notification.escrow_leg_alert_requested',
+  'notification-svc.notification.escrow_remedy_leg_alert_requested',
+  'notification-svc.notification.escrow_remedy_rejected_requested',
 ];
 
 /** The exchange row a queue belongs to, from the routing key in its name. */
@@ -63,7 +65,7 @@ const dlxOf = (queue: string): string => {
 };
 
 describe('topology (must match the Java RabbitMQConfig)', () => {
-  it('names the 11 queues and 11 DLQs', () => {
+  it('names the 13 queues and 13 DLQs', () => {
     expect(queueNames()).toEqual(EXPECTED_QUEUES);
     expect(dlqNames()).toEqual(EXPECTED_QUEUES.map((q) => `${q}.dlq`));
   });
@@ -92,11 +94,11 @@ describe('topology (must match the Java RabbitMQConfig)', () => {
     ]);
   });
 
-  it('declares 22 queues: main queues with only x-dead-letter-exchange, DLQs without arguments', async () => {
+  it('declares 26 queues: main queues with only x-dead-letter-exchange, DLQs without arguments', async () => {
     const { channel, queues } = recordingChannel();
     await declareTopology(channel);
 
-    expect(queues).toHaveLength(22);
+    expect(queues).toHaveLength(26);
 
     for (const q of EXPECTED_QUEUES) {
       // toEqual on the whole options object also fails on any extra option
@@ -126,7 +128,23 @@ describe('topology (must match the Java RabbitMQConfig)', () => {
     const { channel, bindings } = recordingChannel();
     await declareTopology(channel);
 
-    expect(bindings).toHaveLength(22);
+    expect(bindings).toHaveLength(26);
+    // escrow-service's remedy alerts (D93): same exchange, same DLX.
+    for (const key of [
+      'notification.escrow_remedy_leg_alert_requested',
+      'notification.escrow_remedy_rejected_requested',
+    ]) {
+      expect(bindings).toContainEqual([
+        `notification-svc.${key}`,
+        'agricontract.escrow',
+        key,
+      ]);
+      expect(bindings).toContainEqual([
+        `notification-svc.${key}.dlq`,
+        'notification-svc.escrow.dlx',
+        key,
+      ]);
+    }
     // escrow-service's leg monitor (D68) publishes to its own exchange.
     expect(bindings).toContainEqual([
       'notification-svc.notification.escrow_leg_alert_requested',

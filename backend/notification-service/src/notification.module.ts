@@ -15,6 +15,8 @@ import {
   NotifyContractAnchorUseCase,
   NotifyContractTerminatedUseCase,
   NotifyEscrowLegAlertUseCase,
+  NotifyEscrowRemedyLegAlertUseCase,
+  NotifyEscrowRemedyRejectedUseCase,
   NotifyLevel15AssignmentWaitingUseCase,
   NotifyLevel15InspectorAssignmentUseCase,
   NotifyUserKycResultUseCase,
@@ -129,6 +131,38 @@ const USE_CASES = {
       },
     },
     {
+      provide: NotifyEscrowRemedyLegAlertUseCase,
+      inject: [NotificationSender, ConfigService],
+      useFactory: (
+        sender: NotificationSender,
+        config: ConfigService<AppConfig, true>,
+      ) => {
+        const operatorEmail = config.get('operatorEmail', { infer: true });
+        if (operatorEmail === null) {
+          new Logger(NotifyEscrowRemedyLegAlertUseCase.name).warn(
+            'OPERATOR_EMAIL is not set: operator alerts (remedy payment refused by the bank, no retry left) will be dead-lettered',
+          );
+        }
+        return new NotifyEscrowRemedyLegAlertUseCase(sender, operatorEmail);
+      },
+    },
+    {
+      provide: NotifyEscrowRemedyRejectedUseCase,
+      inject: [NotificationSender, ConfigService],
+      useFactory: (
+        sender: NotificationSender,
+        config: ConfigService<AppConfig, true>,
+      ) => {
+        const operatorEmail = config.get('operatorEmail', { infer: true });
+        if (operatorEmail === null) {
+          new Logger(NotifyEscrowRemedyRejectedUseCase.name).warn(
+            'OPERATOR_EMAIL is not set: operator alerts (remedy decision rejected by escrow) will be dead-lettered',
+          );
+        }
+        return new NotifyEscrowRemedyRejectedUseCase(sender, operatorEmail);
+      },
+    },
+    {
       provide: COMMAND_ROUTES,
       inject: [
         NotifyContractAnchorUseCase,
@@ -140,6 +174,8 @@ const USE_CASES = {
         NotifyLevel15AssignmentWaitingUseCase,
         NotifyLevel15InspectorAssignmentUseCase,
         NotifyEscrowLegAlertUseCase,
+        NotifyEscrowRemedyLegAlertUseCase,
+        NotifyEscrowRemedyRejectedUseCase,
       ],
       useFactory: (
         contractAnchor: NotifyContractAnchorUseCase,
@@ -151,6 +187,8 @@ const USE_CASES = {
         level15AssignmentWaiting: NotifyLevel15AssignmentWaitingUseCase,
         level15InspectorAssignment: NotifyLevel15InspectorAssignmentUseCase,
         escrowLegAlert: NotifyEscrowLegAlertUseCase,
+        escrowRemedyLegAlert: NotifyEscrowRemedyLegAlertUseCase,
+        escrowRemedyRejected: NotifyEscrowRemedyRejectedUseCase,
       ) =>
         commandRoutes({
           contractAnchor,
@@ -162,6 +200,8 @@ const USE_CASES = {
           level15AssignmentWaiting,
           level15InspectorAssignment,
           escrowLegAlert,
+          escrowRemedyLegAlert,
+          escrowRemedyRejected,
         }),
     },
     {
