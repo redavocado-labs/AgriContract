@@ -24,11 +24,16 @@ import java.util.List;
 public record MilestoneDetailView(String contractId, Milestone milestone, VndAmount effectiveUnitPrice,
                                   LocalDate effectiveDeliveryDeadline, SellerDeclaration sellerDeclaration,
                                   BuyerReceiptBlock buyerReceipt, FlagBlock flag,
-                                  List<MilestoneEvidenceFile> evidence, DisputeExitBlock disputeExit) {
+                                  List<MilestoneEvidenceFile> evidence, DisputeExitBlock disputeExit,
+                                  com.agricontract.contract.domain.model.remedy.RemedyDecision remedyDecision) {
 
-    /** D92 (MilestoneDisputeExitView): openProposal is null when no settlement proposal is open. */
-    public record DisputeExitBlock(VndAmount buyerPosition, VndAmount sellerPosition, boolean concedeAllowed,
-                                   boolean settlementAllowed, SettlementProposal openProposal) {
+    /**
+     * D92 (MilestoneDisputeExitView): openProposal is null when no settlement proposal is open. D99: each refund is the
+     * locked batch minus the seller amount next to it, computed here so the FE never does money arithmetic.
+     */
+    public record DisputeExitBlock(VndAmount buyerPosition, VndAmount buyerPositionRefund, VndAmount sellerPosition,
+                                   VndAmount sellerPositionRefund, boolean concedeAllowed, boolean settlementAllowed,
+                                   SettlementProposal openProposal, VndAmount openProposalRefund) {
     }
 
     /** confirmWindowClosesAt = receivedAt + buyerConfirmWindowDays business days (D76). */

@@ -70,6 +70,12 @@ public class JdbcRemedyDecisionRepository implements RemedyDecisionRepository {
     }
 
     @Override
+    public Optional<RemedyDecision> findCurrentByMilestoneId(String milestoneId) {
+        return find("SELECT * FROM remedy_decision WHERE milestone_id = ? AND status <> 'SUPERSEDED'"
+                + " ORDER BY created_at DESC, `round` DESC LIMIT 1", milestoneId);
+    }
+
+    @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public void markFinalized(RemedyDecision d) {
         if (d.status() != RemedyStatus.FINALIZED) {

@@ -21,6 +21,12 @@ public interface RemedyDecisionRepository {
     /** The latest decision of the case (round 2 once a contest superseded round 1). */
     Optional<RemedyDecision> findByBreachCaseId(String breachCaseId);
 
+    /**
+     * D99: the milestone's current decision, the newest that is not SUPERSEDED (PENDING_CONTEST or FINALIZED); empty
+     * when the milestone has none.
+     */
+    Optional<RemedyDecision> findCurrentByMilestoneId(String milestoneId);
+
     /** PENDING_CONTEST becomes FINALIZED with finalizedAt; nothing else of the decision is written. */
     void markFinalized(RemedyDecision finalized);
 
