@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useLocation } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 import { useAuthStore } from "@/shared/auth/auth-store"
 import { useFreshLogin } from "@/features/auth/hooks/use-fresh-login"
 import { useOrganizationProfile } from "@/features/organization/hooks/use-organization-profile"
@@ -15,7 +15,7 @@ import { Banner } from "@/shared/ui/banner"
 import { Button } from "@/shared/ui/button"
 
 export function AccountPage() {
-  const { authTime } = useAuthStore()
+  const { authTime, roles } = useAuthStore()
   const profile = useOrganizationProfile()
   const { pathname } = useLocation()
   const { ensureFreshLogin, pendingIntent, consumeIntent } = useFreshLogin()
@@ -37,9 +37,13 @@ export function AccountPage() {
       {profile.data && <OrganizationProfile profile={profile.data} />}
       {profile.data && <EmailVerification profile={profile.data} />}
       {pathname === "/workspace" && (
-        <p className="text-sm text-text-secondary">
-          Các chức năng nghiệp vụ sẽ được bổ sung ở giai đoạn tiếp theo.
-        </p>
+        roles.includes("OPERATOR") ? (
+          <Link className="text-sm text-primary underline" to="/operations/remedy">Gửi lại lệnh tiền lỗi</Link>
+        ) : (
+          <p className="text-sm text-text-secondary">
+            Các chức năng nghiệp vụ sẽ được bổ sung ở giai đoạn tiếp theo.
+          </p>
+        )
       )}
       <OrganizationDocuments />
       <section

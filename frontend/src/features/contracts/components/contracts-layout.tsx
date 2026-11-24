@@ -51,6 +51,14 @@ export function ContractsLayout({
           },
         ]
       : []),
+    ...(roles.includes("OPERATOR")
+      ? [{
+          label: "Gửi lại lệnh tiền",
+          icon: "restart_alt",
+          href: "/operations/remedy",
+          active: pathname.startsWith("/operations/remedy"),
+        }]
+      : []),
     { label: "Hồ sơ doanh nghiệp", icon: "domain", href: "/account" },
   ]
   return (

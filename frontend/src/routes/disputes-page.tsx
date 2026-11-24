@@ -13,6 +13,7 @@ import {
   breachStatusLabel,
   issueTypeLabel,
 } from "@/features/milestones/lib/presentation"
+import { useAuthStore } from "@/shared/auth/auth-store"
 import { parseApiError } from "@/shared/api/errors"
 import { vietnamTime } from "@/shared/lib/vietnam-time"
 import { EmptyState } from "@/shared/ui/empty-state"
@@ -56,9 +57,12 @@ export function DisputesPage() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
+  const { userId, roles } = useAuthStore()
+  const canReview = roles.includes("ARBITRATOR")
   const queue = useQuery({
-    queryKey: ["arbitration", "queue", page],
+    queryKey: ["arbitration", "queue", userId, page],
     queryFn: ({ signal }) => listArbitrationQueue(page, signal),
+    enabled: canReview && !!userId,
     retry: false,
   })
   const fromQueue = queue.data?.content.find(
@@ -67,9 +71,9 @@ export function DisputesPage() {
   const contractId = params.get("contractId") ?? fromQueue?.contractId
   // A deep link (from a milestone page) or an already-approved case is read on its own.
   const single = useQuery({
-    queryKey: ["breach-case", contractId, breachCaseId],
+    queryKey: ["breach-case", contractId, breachCaseId, userId],
     queryFn: ({ signal }) => getBreachCase(contractId!, breachCaseId!, signal),
-    enabled: !!breachCaseId && !!contractId && !fromQueue,
+    enabled: canReview && !!userId && !!breachCaseId && !!contractId && !fromQueue,
     retry: false,
   })
   const selected = fromQueue ?? single.data

@@ -23,6 +23,7 @@ import { ContractsPage } from "@/routes/contracts-page"
 import { ContractDetailPage } from "@/routes/contract-detail-page"
 import { CreateContractPage } from "@/routes/create-contract-page"
 import { MilestonePage } from "@/routes/milestone-page"
+import { RemedyRetryPage } from "@/routes/remedy-retry-page"
 import { DisputesPage } from "@/routes/disputes-page"
 
 function App() {
@@ -46,6 +47,9 @@ function App() {
                 path="/contracts/:id/milestones/:milestoneId"
                 element={<MilestonePage />}
               />
+            </Route>
+            <Route element={<RequireRole roles={["OPERATOR"]} />}>
+              <Route path="/operations/remedy" element={<RemedyRetryPage />} />
             </Route>
             <Route element={<RequireRole roles={["ARBITRATOR"]} />}>
               <Route path="/disputes" element={<DisputesPage />} />
