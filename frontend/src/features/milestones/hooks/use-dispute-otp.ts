@@ -13,6 +13,7 @@ import { useMilestoneCommand } from "./use-milestone"
 const resendDelay = 60_000
 const invalidChallenge = new Set([
   "OTP_EXPIRED",
+  "OTP_ALREADY_USED",
   "OTP_LOCKED",
   "OTP_CHALLENGE_NOT_FOUND",
   "OTP_CONTRACT_MISMATCH",

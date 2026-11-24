@@ -234,7 +234,9 @@ function ContestForm({
           onChange={(event) => setReason(event.target.value)}
         />
       )}
-      <EvidenceGallery detail={detail} role={role} fileIds={files} />
+      {files.length > 0 && (
+        <EvidenceGallery detail={detail} role={role} fileIds={files} />
+      )}
       {files.length > 0 && (
         <Button
           type="button"
@@ -272,7 +274,11 @@ function ContestForm({
         </Banner>
       )}
       <div>
-        <Button className="w-full sm:w-auto" disabled={!ready || command.busy}>
+        <Button
+          type="submit"
+          className="w-full sm:w-auto"
+          disabled={!ready || command.busy}
+        >
           {contest ? "Gửi phản đối" : "Bổ sung bằng chứng"}
         </Button>
       </div>

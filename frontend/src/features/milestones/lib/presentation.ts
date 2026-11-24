@@ -43,6 +43,8 @@ export const settlementPathLabel: Record<SettlementPath, string> = {
   CLEAN_CONFIRMED: "Bên mua xác nhận đúng",
   CLEAN_AUTO_CONFIRMED: "Tự xác nhận khi hết hạn",
   SELLER_SILENT_QUANTITY: "Bên bán không phản hồi báo thiếu cân",
+  INSPECTED_CONFORMING: "Giám định bắt buộc xác nhận hàng đạt",
+  DISPUTE_RESOLVED: "Theo quyết định giải quyết tranh chấp",
   INSPECTION_RESOLVED: "Theo kết quả giám định",
   CONCEDED: "Bên bán chấp nhận số bên mua",
   MUTUAL_SETTLEMENT: "Hai bên thoả thuận",

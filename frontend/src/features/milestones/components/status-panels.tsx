@@ -209,7 +209,7 @@ export function SettlementResult({ detail }: { detail: MilestoneDetail }) {
             value:
               s.billableQuantityKg == null
                 ? "Tính theo số tiền"
-                : `${displayKg(s.billableQuantityKg)} kg`,
+                : `${displayKg(s.billableQuantityKg, 4)} kg`,
           },
           {
             label: "Đơn giá",

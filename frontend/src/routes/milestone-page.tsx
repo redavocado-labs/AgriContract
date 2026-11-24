@@ -5,7 +5,6 @@ import {
   contractError,
   participantRole,
 } from "@/features/contracts/types/presentation"
-import { useOrganizationPermissions } from "@/features/organization/hooks/use-organization-permissions"
 import { RemedyDecisionDetails } from "@/features/contracts/components/remedy-decision"
 import { BreachCasePanel } from "@/features/milestones/components/breach-case-panel"
 import { DisputeExitPanel } from "@/features/milestones/components/dispute-exit-panel"
@@ -36,7 +35,6 @@ import {
 import { parseApiError } from "@/shared/api/errors"
 import { useAuthStore } from "@/shared/auth/auth-store"
 import { vietnamTime } from "@/shared/lib/vietnam-time"
-import { Banner } from "@/shared/ui/banner"
 import { Button } from "@/shared/ui/button"
 import { EmptyState } from "@/shared/ui/empty-state"
 import { KeyValueList } from "@/shared/ui/key-value-list"
@@ -139,6 +137,7 @@ function Milestone({
               <Action
                 detail={detail.data}
                 viewer={viewer}
+                active={contract.data?.status === "ACTIVE"}
                 hash={contract.data?.hash ?? null}
                 inspectionPending={
                   contract.data?.terms.inspectionTerms != null &&
@@ -248,26 +247,20 @@ function Summary({ detail }: { detail: MilestoneDetail }) {
 function Action({
   detail,
   viewer,
+  active,
   hash,
   inspectionPending,
 }: {
   detail: MilestoneDetail
   viewer: Viewer
+  active: boolean
   hash: string | null
   inspectionPending: boolean
 }) {
-  const { canCreateOrSign } = useOrganizationPermissions()
   const navigate = useNavigate()
   const party = viewer === "BUYER" || viewer === "SELLER"
-  const acting = party && canCreateOrSign
+  const acting = party && active
   const m = detail.milestone
-  const notice =
-    party && !canCreateOrSign ? (
-      <Banner variant="warning">
-        Hồ sơ doanh nghiệp chưa được xác minh nên bạn chỉ xem được đợt giao,
-        chưa thao tác được.
-      </Banner>
-    ) : null
   const body = (() => {
     switch (m.status) {
       case "CREATED":
@@ -370,7 +363,6 @@ function Action({
   })()
   return (
     <>
-      {notice}
       {body}
       {detail.remedyDecision && (
         <RemedyDecisionDetails decision={detail.remedyDecision} />
