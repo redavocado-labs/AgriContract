@@ -65,7 +65,7 @@ jobs:
               # Read by test/contract/file-events.contract.spec.ts
               - 'contracts/events/golden-flow-events.yaml'
               - 'contracts/events/event-envelope.yaml'
-            frontend: 'frontend/**'
+            frontend: ['frontend/**', 'contracts/**']
             contracts:
               - 'contracts/**'
               - 'scripts/validate-contracts.py'
@@ -507,6 +507,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
 
     steps:
       - uses: actions/checkout@v4
@@ -518,13 +521,37 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      # build = tsc -b (typecheck) + vite build. No test runner in the app yet.
-      - name: Lint and build
-        working-directory: frontend
-        run: |
-          npm ci
-          npm run lint
-          npm run build
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Check module boundaries
+        run: npm run check:architecture
+
+      - name: Check frozen contract compatibility
+        run: npm run check:contracts
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        env:
+          VITE_APP_VERSION: ${{ github.sha }}
+        run: npm run build
+
+      - name: Check production bundle budget
+        run: npm run check:bundle
+
+      - name: Install Chromium for browser tests
+        run: npx playwright install --with-deps chromium --only-shell
+
+      - name: Test browser flows
+        run: npm run test:e2e
 
   # The only required check on main. Jobs skipped by the path filter count as passed;
   # a failed or cancelled job fails the gate.
