@@ -646,6 +646,7 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-guest}
       RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-guest}
+      GATEWAY_INTERNAL_SECRET: ${GATEWAY_INTERNAL_SECRET:?GATEWAY_INTERNAL_SECRET must be set in .env}
     depends_on:
       audit-db:
         condition: service_healthy
