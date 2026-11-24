@@ -16,6 +16,7 @@ import com.agricontract.contract.domain.model.vo.ContractId;
 import com.agricontract.contract.domain.model.vo.ContractStatus;
 import com.agricontract.contract.domain.repository.ContractRepository;
 import com.agricontract.contract.domain.repository.MilestoneRepository;
+import com.agricontract.contract.application.port.MilestoneStatusMail;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -90,6 +91,7 @@ public class SellerSilenceMilestonesUseCase {
         milestones.update(milestone);
         events.milestoneSettled(contract, milestone);
         events.milestoneDisputeResolvedForBuyer(contract, milestone);
+        events.milestoneStatusRequested(contract, milestone, MilestoneStatusMail.CONFIRMED, null, now);
         log.info("event=milestone_settled contractId={} milestoneId={} path={} sellerAmount={} buyerRefundAmount={}",
                 contractId, milestoneId, settlement.path(), settlement.sellerAmount().wire(),
                 settlement.buyerRefundAmount().wire());

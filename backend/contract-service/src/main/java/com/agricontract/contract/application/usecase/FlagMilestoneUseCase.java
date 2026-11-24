@@ -23,6 +23,8 @@ import com.agricontract.contract.domain.model.vo.ContractStatus;
 import com.agricontract.contract.domain.repository.ConsentEvidenceRepository;
 import com.agricontract.contract.domain.repository.ContractRepository;
 import com.agricontract.contract.domain.repository.MilestoneRepository;
+import com.agricontract.contract.application.port.MilestoneStatusMail;
+import com.agricontract.contract.application.port.MilestoneFlagSettings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -51,6 +53,7 @@ public class FlagMilestoneUseCase {
     private final IdempotencyStore idempotencyStore;
     private final ContractEventPublisher events;
     private final VietnamBusinessDays calendar;
+    private final MilestoneFlagSettings flagSettings;
     private final TransactionRunner transactions;
     private final Clock clock;
 
@@ -101,6 +104,8 @@ public class FlagMilestoneUseCase {
         milestone.flagIssue(command.issueType(), now);
         milestones.update(milestone);
         events.milestoneFlagged(contract, milestone);
+        events.milestoneStatusRequested(contract, milestone, MilestoneStatusMail.FLAGGED,
+                calendar.deadline(now, flagSettings.sellerResponseWindowDays()), now);
         idempotencyStore.recordResult(command.actorId(), OPERATION, command.idempotencyKey(),
                 consent.consentId().toString());
         log.info("event=milestone_flagged contractId={} milestoneId={} issueType={}", command.contractId(),

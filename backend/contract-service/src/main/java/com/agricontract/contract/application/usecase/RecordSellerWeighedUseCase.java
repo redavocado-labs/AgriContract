@@ -28,6 +28,7 @@ import com.agricontract.contract.domain.repository.ContractRepository;
 import com.agricontract.contract.domain.repository.MilestoneEvidenceRepository;
 import com.agricontract.contract.domain.repository.MilestoneRepository;
 import com.agricontract.contract.domain.repository.SellerWeighDeclarationRepository;
+import com.agricontract.contract.application.port.MilestoneStatusMail;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -125,6 +126,7 @@ public class RecordSellerWeighedUseCase {
         milestones.update(milestone);
         evidence.markNamed(fileIds, now);
         events.milestoneSellerWeighed(contract, milestone, declaration);
+        events.milestoneStatusRequested(contract, milestone, MilestoneStatusMail.WEIGHED, null, declaration.declaredAt());
         idempotencyStore.recordResult(command.actorId(), OPERATION, command.idempotencyKey(),
                 declaration.declarationId().toString());
         log.info("event=milestone_seller_weighed contractId={} milestoneId={} declarationNumber={} weightKg={}",

@@ -35,6 +35,7 @@ import com.agricontract.contract.domain.repository.MilestoneRepository;
 import com.agricontract.contract.domain.repository.RemedyDecisionRepository;
 import com.agricontract.contract.domain.repository.SettlementProposalRepository;
 import com.agricontract.contract.application.service.Level15Inspections;
+import com.agricontract.contract.application.port.MilestoneStatusMail;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -236,6 +237,7 @@ public class ApplyInspectionReportUseCase {
                 assessment.finalSellerEntitlement(), assessment.buyerRefundAmount(), now);
         milestones.update(milestone);
         events.milestoneSettled(contract, milestone);
+        events.milestoneStatusRequested(contract, milestone, MilestoneStatusMail.CONFIRMED, null, now);
         log.info("event=milestone_settled contractId={} milestoneId={} path={} sellerAmount={} buyerRefundAmount={}",
                 contract.getContractId().value(), milestone.milestoneId(), settlement.path(),
                 settlement.sellerAmount().wire(), settlement.buyerRefundAmount().wire());

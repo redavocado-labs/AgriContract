@@ -43,6 +43,7 @@ public class RemedySettlement {
         milestone.settleDisputeResolved(billableKg, finalized.sellerPayment(), finalized.buyerRefund(), now);
         milestones.update(milestone);
         events.remedyFinalized(contract, finalized, now);
+        events.remedyFinalizedRequested(contract, finalized, now);
         events.milestoneDisputeResolved(contract, milestone, computed.prevailingRole());
         log.info("event=remedy_finalized contractId={} remedyDecisionId={} milestoneId={} finalBreachingRole={}"
                         + " legs={}", contract.getContractId().value(), finalized.remedyDecisionId(),
