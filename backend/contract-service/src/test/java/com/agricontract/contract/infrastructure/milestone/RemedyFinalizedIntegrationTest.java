@@ -118,11 +118,14 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 /**
  * #246 on MySQL (D77, D81, D83, D85, D89, D90): inspection.report_confirmed through the real repositories, outbox, V22 and the consumer. The seller weighs and the buyer receives first. file-service is a fake.
  */
-@DataJpaTest(properties = "agricontract.eventing.outbox.enabled=false")
+@DataJpaTest(properties = {"agricontract.eventing.outbox.enabled=false",
+        "contract.notification.operator-email=operator@example.com"})
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ImportAutoConfiguration({JacksonAutoConfiguration.class, EventingAutoConfiguration.class})
 @Import({com.agricontract.contract.application.service.ContractCompletion.class,
+        com.agricontract.contract.application.usecase.SendMilestoneRemindersUseCase.class,
+        com.agricontract.contract.application.usecase.RecordMilestoneFundingResultUseCase.class,
         com.agricontract.contract.application.usecase.CommitTerminalAfterLockClearedUseCase.class, com.agricontract.contract.application.service.Level15Inspections.class, com.agricontract.contract.application.service.DisputeExitStep.class, com.agricontract.contract.application.service.MilestoneContestStep.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcLevel15RequestRepository.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcLevel15AssignmentRepository.class, com.agricontract.contract.infrastructure.persistence.dispute.JdbcSettlementProposalRepository.class, com.agricontract.contract.infrastructure.persistence.breach.JdbcBreachCaseRepository.class, com.agricontract.contract.infrastructure.persistence.remedy.JdbcRemedyDecisionRepository.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcInspectionReportRepository.class,
         BusinessCalendarConfiguration.class, SpringTransactionRunner.class, MilestoneFunding.class,
         JdbcMilestoneRepository.class, JdbcInspectionReportRepository.class, JdbcBreachCaseRepository.class, ReviewBreachCaseUseCase.class, ResolveBreachCaseUseCase.class, com.agricontract.contract.infrastructure.persistence.remedy.JdbcRemedyDecisionRepository.class, com.agricontract.contract.application.service.RemedySettlement.class,
@@ -205,6 +208,8 @@ class RemedyFinalizedIntegrationTest {
     @Autowired ReviewBreachCaseUseCase reviewCase;
     @Autowired ResolveBreachCaseUseCase resolveCase;
     @Autowired FinalizeRemedyDecisionUseCase finalizeRemedy;
+    @Autowired com.agricontract.contract.application.usecase.SendMilestoneRemindersUseCase reminders;
+    @Autowired com.agricontract.contract.application.usecase.RecordMilestoneFundingResultUseCase fundingResults;
     @Autowired com.agricontract.contract.application.usecase.CommitTerminalAfterLockClearedUseCase commitTerminal;
     @Autowired ContestBreachDecisionUseCase contestUc;
     @Autowired ExpireContestWindowsUseCase expireWindows;
@@ -717,6 +722,154 @@ class RemedyFinalizedIntegrationTest {
         assertThat(remedyEventOrder()).containsExactly("remedy.finalized", "milestone.dispute_resolved",
                 "remedy.finalized", "milestone.dispute_resolved", "remedy.finalized");
         assertThat(pendingDecisionOfTheContract()).isEqualTo(completionId);
+    }
+
+    // ---- D96: the BF-04 notification commands ----
+
+    @Test
+    void theDisputePath_writesEveryMailCommand_toTheRightParty_insideTheFrozenSchema() throws Exception {
+        activate(false);
+        delivered(first, "10000", "9800");
+        JsonNode weighed = status("WEIGHED").get(0);
+        assertThat(recipients(weighed)).containsExactly("BUYER");
+        assertThat(weighed.at("/payload/statusData/declarationNumber").asInt()).isEqualTo(1);
+        assertThat(weighed.at("/payload/statusData/sellerDeclaredWeightKg").asText()).isEqualTo("10000");
+        assertThat(weighed.at("/payload/recipients/0/email").asText()).isEqualTo("buyer@example.com");
+
+        flag.execute(flagCommand(first, BUYER, UUID.randomUUID(), FlagIssueType.QUALITY));
+        JsonNode flagged = status("FLAGGED").get(0);
+        assertThat(recipients(flagged)).containsExactly("SELLER");
+        assertThat(flagged.at("/payload/statusData/issueType").asText()).isEqualTo("QUALITY");
+        assertThat(java.time.Instant.parse(flagged.at("/payload/deadline").asText()))
+                .isAfter(java.time.Instant.parse(flagged.get("occurredAt").asText()));
+
+        respond.execute(respondCommand(first, SELLER, UUID.randomUUID()));
+        String caseId = reload(first).flag().breachCaseId();
+        List<JsonNode> notices = events("notification.breach_notice_requested");
+        assertThat(notices).hasSize(1);
+        FrozenSchemas.assertCommand("breachNoticeRequested", notices.get(0));
+        assertThat(notices.get(0).at("/payload/breachCaseId").asText()).isEqualTo(caseId);
+        assertThat(recipients(notices.get(0))).containsExactly("BUYER", "SELLER");
+
+        deliver(reportPayload(first.milestoneId(), "COMPLETE", "9800.000", "9800.000", PARTIALLY));
+        reviewCase.execute(review(caseId, UUID.randomUUID()));
+        resolveCase.execute(resolve(caseId, null, DecisionSource.INSPECTOR_L1_5));
+        List<JsonNode> remedies = events("notification.remedy_finalized_requested");
+        assertThat(remedies).hasSize(1);
+        FrozenSchemas.assertCommand("remedyFinalizedRequested", remedies.get(0));
+        assertThat(remedies.get(0).at("/payload/remedyDecisionId").asText())
+                .isEqualTo(decisionOf(caseId).get("remedy_decision_id"));
+        assertThat(remedies.get(0).at("/payload/qualityDisposition").asText()).isEqualTo("PARTIALLY_CONFORMING");
+        assertThat(recipients(remedies.get(0))).containsExactly("BUYER", "SELLER");
+
+        // The last milestone settles clean: CONFIRMED to both, and the completion decision mail.
+        delivered(second, "10000", "10000");
+        confirm.execute(confirmClean(second, UUID.randomUUID()));
+        JsonNode confirmed = status("CONFIRMED").get(0);
+        assertThat(recipients(confirmed)).containsExactly("BUYER", "SELLER");
+        assertThat(confirmed.at("/payload/statusData/settlementPath").asText()).isEqualTo("CLEAN_CONFIRMED");
+        assertThat(confirmed.at("/payload/statusData/sellerAmount").asText()).isEqualTo("150000000.00");
+        remedies = events("notification.remedy_finalized_requested");
+        assertThat(remedies).hasSize(2);
+        FrozenSchemas.assertCommand("remedyFinalizedRequested", remedies.get(1));
+        assertThat(remedies.get(1).at("/payload/decisionSource").asText()).isEqualTo("SYSTEM");
+        assertThat(remedies.get(1).at("/payload/affectedMilestoneIds")).isEmpty();
+        assertThat(remedies.get(1).at("/payload/attributionDecisionId").asText())
+                .isEqualTo(remedies.get(1).at("/payload/remedyDecisionId").asText());
+        assertThat(status("WEIGHED")).hasSize(2);
+        assertThat(status("FLAGGED")).hasSize(1);
+        assertThat(status("CONFIRMED")).hasSize(1);
+    }
+
+    @Test
+    void theReceiveReminder_isWrittenOnceTheWindowPassed_andOnlyOnce() throws Exception {
+        activate(false);
+        String photo = uploadReady(SELLER, first);
+        weigh.execute(weighCommand(first, "10000", photo, null, UUID.randomUUID()));
+
+        assertThat(reminders.remindBuyersToReceive()).as("inside the window").isZero();
+        jdbc.update("UPDATE milestone SET seller_first_declared_at = ? WHERE milestone_id = ?",
+                Timestamp.from(Instant.now().minus(30, ChronoUnit.DAYS)), first.milestoneId());
+
+        assertThat(reminders.remindBuyersToReceive()).isEqualTo(1);
+        assertThat(reminders.remindBuyersToReceive()).isZero();
+
+        List<JsonNode> reminded = status("BUYER_RECEIVE_REMINDER");
+        assertThat(reminded).hasSize(1);
+        assertThat(recipients(reminded.get(0))).containsExactly("BUYER");
+        assertThat(reload(first).status()).as("no state change").isEqualTo(MilestoneStatus.SELLER_WEIGHED);
+    }
+
+    @Test
+    void theFundingReminder_comesBeforeTheFundingDate_once_andFundingFailedAlsoTellsTheOperator() throws Exception {
+        contract = offered(terms(false));
+        jdbc.update("UPDATE contracts SET status = 'SETTLED' WHERE status = 'ACTIVE'");
+        jdbc.update("UPDATE contracts SET status = 'ACTIVE' WHERE contract_id = ?", id());
+        Contract active = contracts.findById(contract.getContractId()).orElseThrow();
+        List<Milestone> planned = transactions.inTransaction(
+                () -> funding.planOnActivation(active, Instant.now(), id(), null));
+        Milestone m = planned.get(0);
+        java.time.LocalDate today = java.time.LocalDate.now(com.agricontract.calendar.VietnamBusinessDays.ICT);
+        java.time.LocalDate fundingDate = today.plusDays(1);
+        while (!calendar.isBusinessDay(fundingDate)) {
+            fundingDate = fundingDate.plusDays(1);
+        }
+        jdbc.update("UPDATE milestone SET funding_scheduled_date = ? WHERE milestone_id = ?", fundingDate,
+                m.milestoneId());
+        jdbc.update("UPDATE milestone SET funding_scheduled_date = ? WHERE milestone_id = ?", today.plusYears(1),
+                planned.get(1).milestoneId());
+
+        assertThat(reminders.remindBuyersToFund()).isEqualTo(1);
+        assertThat(reminders.remindBuyersToFund()).isZero();
+        List<JsonNode> mails = events("notification.milestone_funding_status_requested");
+        assertThat(mails).hasSize(1);
+        FrozenSchemas.assertCommand("milestoneFundingStatusRequested", mails.get(0));
+        assertThat(mails.get(0).at("/payload/statusType").asText()).isEqualTo("FUNDING_REMINDER");
+        assertThat(mails.get(0).at("/payload/milestoneId").asText()).isEqualTo(m.milestoneId());
+        assertThat(recipients(mails.get(0))).containsExactly("BUYER");
+        assertThat(java.time.Instant.parse(mails.get(0).at("/payload/deadline").asText()))
+                .isEqualTo(fundingDate.atStartOfDay(com.agricontract.calendar.VietnamBusinessDays.ICT).toInstant());
+
+        transactions.inTransaction(() -> {
+            Contract locked = contracts.findByIdForUpdate(contract.getContractId()).orElseThrow();
+            funding.request(locked, milestones.findByIdForUpdate(m.milestoneId()).orElseThrow(), Instant.now(),
+                    id(), null);
+            return null;
+        });
+        var failed = new com.agricontract.contract.application.dto.MilestoneFundingResultCommand(
+                UUID.randomUUID().toString(), id(), m.milestoneId(), null, "INSUFFICIENT_FUNDS");
+        transactions.inTransaction(() -> {
+            fundingResults.failed(failed);
+            return null;
+        });
+        transactions.inTransaction(() -> {
+            fundingResults.failed(failed);
+            return null;
+        });
+
+        mails = events("notification.milestone_funding_status_requested");
+        assertThat(mails).as("a duplicate failure writes no second mail").hasSize(2);
+        FrozenSchemas.assertCommand("milestoneFundingStatusRequested", mails.get(1));
+        assertThat(mails.get(1).at("/payload/statusType").asText()).isEqualTo("FUNDING_FAILED");
+        assertThat(mails.get(1).at("/payload/reason").asText()).isEqualTo("INSUFFICIENT_FUNDS");
+        assertThat(recipients(mails.get(1))).containsExactly("BUYER", "SELLER", "OPERATOR");
+        assertThat(mails.get(1).at("/payload/recipients/2/email").asText()).isEqualTo("operator@example.com");
+        assertThat(mails.get(1).at("/payload/recipients/2/userId").isNull()).isTrue();
+    }
+
+    private List<JsonNode> status(String statusType) throws Exception {
+        List<JsonNode> all = events("notification.milestone_status_requested").stream()
+                .filter(e -> statusType.equals(e.at("/payload/statusType").asText())).toList();
+        for (JsonNode command : all) {
+            FrozenSchemas.assertCommand("milestoneStatusRequested", command);
+        }
+        return all;
+    }
+
+    private static List<String> recipients(JsonNode command) {
+        List<String> roles = new ArrayList<>();
+        command.at("/payload/recipients").forEach(r -> roles.add(r.get("role").asText()));
+        return roles;
     }
 
     private List<Map<String, Object>> completionDecisions() {
