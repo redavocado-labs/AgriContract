@@ -344,7 +344,7 @@ paths:
         '204': {description: Retry accepted; escrow resends only FAILED remedy legs.}
         '403': {$ref: '#/components/responses/Forbidden'}
         '404': {$ref: '#/components/responses/NotFound'}
-        '409': {description: "The contract is not ACTIVE.", content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}}
+        '409': {description: "REMEDY_RETRY_NOT_ALLOWED: the contract is not ACTIVE.", content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}}
   /api/v1/contracts/{contractId}/activation/cancel/initiate:
     x-service-owner: contract-service
     post:
