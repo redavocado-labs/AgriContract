@@ -2,6 +2,7 @@ package com.agricontract.escrow.application.usecase;
 
 import com.agricontract.escrow.application.dto.RemedyFinalizedCommand;
 import com.agricontract.escrow.application.port.BankLedgerReader;
+import com.agricontract.escrow.application.port.OperatorAlertPublisher;
 import com.agricontract.escrow.application.port.RemedyCommandPublisher;
 import com.agricontract.escrow.domain.exception.InvalidRemedyDecisionException;
 import com.agricontract.escrow.domain.model.FundConservation;
@@ -30,7 +31,8 @@ import java.util.Optional;
  * remedy.finalized (#249): maps every leg to its bank command (RemedyLegPlanner), checks the leg set against the bank
  * ledger minus what escrow already has in flight (FundConservation), and only then writes the legs and their commands,
  * all in the caller's transaction. A decision that fails either step writes no leg and no command: it is stored
- * REJECTED (so a replay is ignored), logged at ERROR (the operator alert) and acked. A bank that cannot answer the
+ * REJECTED (so a replay is ignored), logged at ERROR, notification.escrow_remedy_rejected_requested written once
+ * (#609, the operator alert) and acked. A bank that cannot answer the
  * ledger read throws BankLedgerUnavailableException: retried, never dispatched without the check.
  * <p>
  * remedyDecisionId is the idempotency key: a second event for a decision escrow already holds sends nothing (INFO when
@@ -48,6 +50,7 @@ public class DispatchRemedyLegsUseCase {
     private final OutstandingCommandRepository outstanding;
     private final BankLedgerReader ledger;
     private final RemedyCommandPublisher bankCommands;
+    private final OperatorAlertPublisher operatorAlerts;
     private final Clock clock;
 
     public void execute(RemedyFinalizedCommand command) {
@@ -87,8 +90,11 @@ public class DispatchRemedyLegsUseCase {
 
         Instant now = clock.instant();
         if (rejectReason != null) {
-            remedyLegs.insertDecision(RemedyDecision.rejected(command.remedyDecisionId(), command.contractId(),
-                    command.eventId(), rejectReason, now));
+            RemedyDecision rejected = RemedyDecision.rejected(command.remedyDecisionId(), command.contractId(),
+                    command.eventId(), rejectReason, now);
+            remedyLegs.insertDecision(rejected);
+            operatorAlerts.remedyRejected(command.contractId(), command.remedyDecisionId(), rejected.rejectReason(),
+                    now, command.correlationId(), command.eventId());
             log.error("event=remedy_legs_rejected remedyDecisionId={} contractId={} reason={}: no command sent,"
                             + " OPERATOR must look at the decision", command.remedyDecisionId(), command.contractId(),
                     rejectReason);
