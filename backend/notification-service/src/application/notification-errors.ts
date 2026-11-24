@@ -131,6 +131,27 @@ export class OtsProofInvalidError extends NotificationError {
   }
 }
 
+/**
+ * Not retryable: a staff-only command names a recipient whose role that
+ * command may not reach (design §4: the integrity and security emails go to
+ * the Admin and the Software Buyer contacts, never to a contract's parties).
+ * Raised before any email of the command is sent; the route dead-letters it
+ * at once. Names the recipient's index and role, never the address.
+ */
+export class RecipientRoleRefusedError extends NotificationError {
+  constructor(
+    readonly eventId: string,
+    readonly eventType: string,
+    readonly index: number,
+    readonly role: string,
+    readonly allowed: readonly string[],
+  ) {
+    super(
+      `Event ${eventId}: recipients[${index}] has role ${role}, which ${eventType} may not reach (only ${allowed.join(', ')})`,
+    );
+  }
+}
+
 const SAFE_CODE = /^[A-Za-z][A-Za-z0-9_/.-]{0,63}$/;
 
 /**

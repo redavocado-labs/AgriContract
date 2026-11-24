@@ -55,7 +55,21 @@ export const TOPOLOGY = [
     // (outbox disabled), so it must publish here for this binding to route.
     exchange: 'agricontract.audit',
     dlx: 'notification-svc.audit.dlx',
-    routingKeys: ['notification.milestone_anchor_requested'],
+    routingKeys: [
+      'notification.milestone_anchor_requested',
+      'notification.audit_digest_requested',
+      'notification.audit_failure_requested',
+    ],
+  },
+  {
+    // bank-service's outbox exchange (agricontract.eventing.outbox.exchange).
+    exchange: 'agricontract.bank',
+    dlx: 'notification-svc.bank.dlx',
+    routingKeys: [
+      'notification.security_lock_changed_requested',
+      'notification.reconciliation_mismatch_requested',
+      'notification.verifier_key_anchor_requested',
+    ],
   },
   {
     // escrow-service's outbox exchange (agricontract.eventing.outbox.exchange).
@@ -117,6 +131,22 @@ export type RoutingKey = (typeof TOPOLOGY)[number]['routingKeys'][number];
  * publish on this exchange, and if it declares the queue ahead, copy these
  * names and options byte for byte.
  *
+ * `notification.audit_digest_requested` and
+ * `notification.audit_failure_requested` (hash-chain design §5.1, §5.2) are
+ * the weekly digest to the Software Buyer contacts and the integrity alert to
+ * the Admin and those contacts at once. Same exchange, same row, same DLX as
+ * the settlement anchor, and the same rule if audit-service declares them.
+ *
+ * `notification.security_lock_changed_requested`,
+ * `notification.reconciliation_mismatch_requested` and
+ * `notification.verifier_key_anchor_requested` (bank design §3.5.4, §5b.1,
+ * §3.5.6) are the kill-switch email, the ledger/audit mismatch alert and the
+ * External Verifier's key fingerprint. They ride bank-service's outbox
+ * exchange, agricontract.bank, in a row of their own with the DLX
+ * notification-svc.bank.dlx. bank-service publishes none of them yet and
+ * declares no queue ahead; should it, it must copy these names and options
+ * byte for byte.
+ *
  * `notification.user_kyc_result_requested` tells a user the KYC decision on
  * their organisation; its one address is `payload.recipientEmail`. It rides
  * user-service's exchange, agricontract.user, in a row of its own. Unlike
@@ -166,6 +196,11 @@ export const COMMAND_ROUTING_KEYS = [
   'notification.breach_notice_requested',
   'notification.remedy_finalized_requested',
   'notification.milestone_anchor_requested',
+  'notification.audit_digest_requested',
+  'notification.audit_failure_requested',
+  'notification.security_lock_changed_requested',
+  'notification.reconciliation_mismatch_requested',
+  'notification.verifier_key_anchor_requested',
   'notification.user_kyc_result_requested',
   'notification.user_lock_changed_requested',
   'notification.level1_5_assignment_waiting_requested',

@@ -20,3 +20,8 @@ export { NotifyMilestoneStatusUseCase } from './notify-milestone-status.use-case
 export { NotifyBreachNoticeUseCase } from './notify-breach-notice.use-case';
 export { NotifyRemedyFinalizedUseCase } from './notify-remedy-finalized.use-case';
 export { NotifyMilestoneAnchorUseCase } from './notify-milestone-anchor.use-case';
+export { NotifyAuditDigestUseCase } from './notify-audit-digest.use-case';
+export { NotifyAuditFailureUseCase } from './notify-audit-failure.use-case';
+export { NotifySecurityLockChangedUseCase } from './notify-security-lock-changed.use-case';
+export { NotifyReconciliationMismatchUseCase } from './notify-reconciliation-mismatch.use-case';
+export { NotifyVerifierKeyAnchorUseCase } from './notify-verifier-key-anchor.use-case';

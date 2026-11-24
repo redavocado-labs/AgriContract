@@ -215,4 +215,39 @@ export const COMMAND_KINDS = {
     notificationType: 'ESCROW_REMEDY_REJECTED',
     templateVersion: 'escrow-remedy-rejected/v1',
   },
+  // notification.audit_digest_requested (hash-chain §5.1): the weekly digest
+  // to the Software Buyer contacts, only after WEEKLY_VERIFY_OK.
+  auditDigest: {
+    eventType: 'notification.audit_digest_requested',
+    notificationType: 'AUDIT_DIGEST',
+    templateVersion: 'audit-digest/v1',
+  },
+  // notification.audit_failure_requested (hash-chain §5.2): the integrity
+  // alert to the Admin and the Software Buyer contacts at once.
+  auditFailure: {
+    eventType: 'notification.audit_failure_requested',
+    notificationType: 'AUDIT_FAILURE',
+    templateVersion: 'audit-failure/v1',
+  },
+  // notification.security_lock_changed_requested (bank §3.5.4): one email per
+  // lock or unlock, to the Admin and the External Verifier. The template
+  // tells LOCKED and UNLOCKED apart, as user-lock-changed does.
+  securityLockChanged: {
+    eventType: 'notification.security_lock_changed_requested',
+    notificationType: 'SECURITY_LOCK_CHANGED',
+    templateVersion: 'security-lock-changed/v1',
+  },
+  // notification.reconciliation_mismatch_requested (bank §5b.1): Admin only.
+  reconciliationMismatch: {
+    eventType: 'notification.reconciliation_mismatch_requested',
+    notificationType: 'RECONCILIATION_MISMATCH',
+    templateVersion: 'reconciliation-mismatch/v1',
+  },
+  // notification.verifier_key_anchor_requested (bank §3.5.6): the key
+  // fingerprint to the External Verifier's own mailbox.
+  verifierKeyAnchor: {
+    eventType: 'notification.verifier_key_anchor_requested',
+    notificationType: 'VERIFIER_KEY_ANCHOR',
+    templateVersion: 'verifier-key-anchor/v1',
+  },
 } as const satisfies Record<string, NotificationKind>;
