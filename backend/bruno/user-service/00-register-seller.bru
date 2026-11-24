@@ -1,5 +1,5 @@
 meta {
-  name: POST /api/v1/users/register (first time → 201)
+  name: POST /api/v1/users/register (201 first time, 200 when the seed already has the profile)
   type: http
   seq: 1
 }
@@ -31,23 +31,27 @@ script:post-response {
 }
 
 tests {
-  test("should return 201 on first registration", function() {
-    expect(res.getStatus()).to.equal(201);
+  // backend/scripts/seed/02-user-db.sql seeds seller1's profile (VERIFIED), so after run-e2e.sh this call
+  // finds it and returns 200; 201 with a PENDING profile only when the seeded row was removed first.
+  test("should return 201 on first registration or 200 when the profile exists", function() {
+    expect([200, 201]).to.include(res.getStatus());
   });
 
   test("body is not wrapped in ApiResponse", function() {
     expect(res.getBody().data).to.equal(undefined);
   });
 
-  test("should return userId", function() {
-    expect(res.getBody().userId).to.be.a("string");
+  test("userId is seller1's Keycloak sub", function() {
+    expect(res.getBody().userId).to.equal(bru.getEnvVar("seller1_sub"));
   });
 
   test("role should be SELLER", function() {
     expect(res.getBody().role).to.equal("SELLER");
   });
 
-  test("verificationStatus should be PENDING", function() {
-    expect(res.getBody().verificationStatus).to.equal("PENDING");
+  test("a new profile starts PENDING", function() {
+    if (res.getStatus() === 201) {
+      expect(res.getBody().verificationStatus).to.equal("PENDING");
+    }
   });
 }
