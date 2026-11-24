@@ -18,9 +18,9 @@ export function milestoneStatementVersion(action: MilestoneConsentAction) {
 }
 
 /** Placeholder rendering for the statement: Vietnamese grouping, up to 3 decimals. */
-export function displayKg(value: number | string) {
+export function displayKg(value: number | string, maximumFractionDigits = 3) {
   const number = typeof value === "string" ? Number(value) : value
-  return new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 3 }).format(
+  return new Intl.NumberFormat("vi-VN", { maximumFractionDigits }).format(
     number
   )
 }

@@ -157,6 +157,7 @@ const errorMessages: Record<string, string> = {
   SIGNER_LOCKED: "Tài khoản ký đang bị khóa.",
   SIGNER_EMAIL_MISSING: "Tài khoản chưa có email nhận OTP.",
   SIGNER_PROFILE_NOT_FOUND: "Chưa tìm thấy hồ sơ người ký.",
+  OTP_ALREADY_USED: "Mã OTP đã được sử dụng. Tải lại trạng thái trước khi tiếp tục.",
   OTP_INVALID: "Mã OTP không đúng. Vui lòng kiểm tra lại email.",
   OTP_EXPIRED: "Mã OTP đã hết hạn. Vui lòng gửi mã mới.",
   OTP_ATTEMPTS_EXHAUSTED: "Đã hết số lần thử. Vui lòng gửi mã mới.",
