@@ -1100,6 +1100,106 @@ paths:
           description: Current per-contract audit chain hash for External Verifier reconciliation.
           content: {application/json: {schema: {$ref: '#/components/schemas/AuditHashResponse'}}}
         '401': {$ref: '#/components/responses/Unauthorized'}
+  /api/v1/audit/contracts/{contractId}/records:
+    x-service-owner: audit-service
+    get:
+      operationId: getContractAuditTrail
+      x-roles: [BUYER, SELLER]
+      description: >-
+        D97 (24/11/2026). The evidence log of one contract for a party of it: every audit record whose subject is the
+        contract, oldest first, with its recordHash. No link hashes and no record of another subject. The caller must be
+        the buyer or seller named on the contract's CONTRACT_SIGNED record; otherwise, and when the contract has no
+        audit record, 404 AUDIT_TRAIL_NOT_FOUND (the existence of another party's contract is not revealed). Reads are
+        logged by the service, not written to the chain. The gateway routes /api/v1/audit/** to audit-service.
+      parameters:
+        - {name: contractId, in: path, required: true, schema: {type: string, format: uuid}}
+      x-error-codes: [AUDIT_TRAIL_NOT_FOUND]
+      responses:
+        '200': {description: The contract's evidence log., content: {application/json: {schema: {$ref: '#/components/schemas/ContractAuditTrail'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/audit/contracts/{contractId}/verification:
+    x-service-owner: audit-service
+    get:
+      operationId: verifyContractAuditTrail
+      x-roles: [BUYER, SELLER]
+      description: >-
+        D97. Recomputes every record hash of the contract's chain from its stored fields (hash-chain §3 formula) and
+        checks each prevHashSubject against the record before it. Read-only; same party rule and 404 as the records.
+      parameters:
+        - {name: contractId, in: path, required: true, schema: {type: string, format: uuid}}
+      x-error-codes: [AUDIT_TRAIL_NOT_FOUND]
+      responses:
+        '200': {description: The verification result., content: {application/json: {schema: {$ref: '#/components/schemas/AuditChainVerification'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/admin/audit/contracts/{contractId}/records:
+    x-service-owner: audit-service
+    get:
+      operationId: getContractAuditTrailForAdmin
+      x-roles: [ADMIN]
+      description: >-
+        D97. The contract's evidence log for ADMIN, oldest first, with both link hashes and the global sequence. Every
+        successful call appends one AUDIT_VIEWED record (subject SYSTEM) before the response, in the same transaction:
+        ADMIN cannot read a contract's evidence without leaving a tamper-evident trace (hash-chain §4.6).
+      parameters:
+        - {name: contractId, in: path, required: true, schema: {type: string, format: uuid}}
+      x-error-codes: [AUDIT_TRAIL_NOT_FOUND]
+      responses:
+        '200': {description: The contract's evidence log with link hashes., content: {application/json: {schema: {$ref: '#/components/schemas/AdminContractAuditTrail'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/admin/audit/contracts/{contractId}/verification:
+    x-service-owner: audit-service
+    get:
+      operationId: verifyContractAuditTrailForAdmin
+      x-roles: [ADMIN]
+      description: D97. Same check as the party verification; no AUDIT_VIEWED record (it reveals no content).
+      parameters:
+        - {name: contractId, in: path, required: true, schema: {type: string, format: uuid}}
+      x-error-codes: [AUDIT_TRAIL_NOT_FOUND]
+      responses:
+        '200': {description: The verification result., content: {application/json: {schema: {$ref: '#/components/schemas/AuditChainVerification'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/admin/audit/records:
+    x-service-owner: audit-service
+    get:
+      operationId: listAuditRecordsForAdmin
+      x-roles: [ADMIN]
+      description: >-
+        D97. The global chain for ADMIN, newest first (globalSeq descending), every subject (CONTRACT, USER_PAIR, SYSTEM),
+        optionally one subject type. Every successful call appends one AUDIT_VIEWED record (subject SYSTEM, scope
+        GLOBAL, the filter and page) in the same transaction.
+      parameters:
+        - {name: subjectType, in: query, required: false, schema: {enum: [CONTRACT, USER_PAIR, SYSTEM]}}
+        - {name: page, in: query, required: false, schema: {type: integer, minimum: 0, default: 0}}
+        - {name: size, in: query, required: false, schema: {type: integer, minimum: 1, maximum: 100, default: 20}}
+      responses:
+        '200': {description: One page of the global chain., content: {application/json: {schema: {$ref: '#/components/schemas/AdminAuditRecordPage'}}}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /api/v1/admin/audit/verification:
+    x-service-owner: audit-service
+    get:
+      operationId: verifyGlobalAuditChain
+      x-roles: [ADMIN]
+      description: >-
+        D97. Walks the whole table in globalSeq order: recomputes every record hash and checks every prevHashGlobal
+        against the record before it. The same check VerifyChainJob (#257) runs weekly. Read-only.
+      responses:
+        '200': {description: The verification result., content: {application/json: {schema: {$ref: '#/components/schemas/AuditChainVerification'}}}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
   /api/v1/security/emergency-lock:
     x-service-owner: bank-service
     post:
@@ -2090,6 +2190,78 @@ components:
         sourceEventId: {type: [string, 'null'], format: uuid}
         releaseLegs: {type: array, items: {$ref: '#/components/schemas/MoneyLeg'}}
         refundLegs: {type: array, items: {$ref: '#/components/schemas/MoneyLeg'}}
+    ContractAuditTrail:
+      type: object
+      required: [contractId, currentRecordHash, anchorStatus, records]
+      additionalProperties: false
+      properties:
+        contractId: {type: string, format: uuid}
+        currentRecordHash: {type: string, pattern: '^[a-f0-9]{64}$', description: "recordHash of the newest record of the contract."}
+        anchorStatus: {enum: [NOT_ANCHORED, ANCHORED], description: "ANCHORED when an audit_anchor covers the newest record (OpenTimestamps, #256)."}
+        records: {type: array, items: {$ref: '#/components/schemas/PartyAuditRecord'}}
+    PartyAuditRecord:
+      type: object
+      required: [recordId, sourceType, sourceEventType, content, recordHash, createdAt]
+      additionalProperties: false
+      properties:
+        recordId: {type: string, format: uuid}
+        sourceType: {type: string}
+        sourceEventType: {type: string}
+        content: {type: object, description: "The minimised stored content (IDs, quantities, amounts, hashes; no contact data)."}
+        recordHash: {type: string, pattern: '^[a-f0-9]{64}$'}
+        createdAt: {type: string, format: date-time}
+    AdminContractAuditTrail:
+      type: object
+      required: [contractId, currentRecordHash, anchorStatus, records]
+      additionalProperties: false
+      properties:
+        contractId: {type: string, format: uuid}
+        currentRecordHash: {type: string, pattern: '^[a-f0-9]{64}$'}
+        anchorStatus: {enum: [NOT_ANCHORED, ANCHORED]}
+        records: {type: array, items: {$ref: '#/components/schemas/AdminAuditRecord'}}
+    AdminAuditRecord:
+      type: object
+      required: [recordId, globalSeq, subjectType, subjectId, sourceType, sourceEventType, sourceEventId, content, recordHash, prevHashSubject, prevHashGlobal, createdAt]
+      additionalProperties: false
+      properties:
+        recordId: {type: string, format: uuid}
+        globalSeq: {type: integer, minimum: 1}
+        subjectType: {enum: [CONTRACT, USER_PAIR, SYSTEM]}
+        subjectId: {type: string}
+        sourceType: {type: string}
+        sourceEventType: {type: string}
+        sourceEventId: {type: string, format: uuid}
+        content: {type: object}
+        recordHash: {type: string, pattern: '^[a-f0-9]{64}$'}
+        prevHashSubject: {type: [string, 'null'], pattern: '^[a-f0-9]{64}$'}
+        prevHashGlobal: {type: [string, 'null'], pattern: '^[a-f0-9]{64}$'}
+        createdAt: {type: string, format: date-time}
+    AdminAuditRecordPage:
+      type: object
+      required: [content, page, size, totalElements, totalPages]
+      additionalProperties: false
+      properties:
+        content: {type: array, items: {$ref: '#/components/schemas/AdminAuditRecord'}}
+        page: {type: integer, minimum: 0}
+        size: {type: integer, minimum: 1}
+        totalElements: {type: integer, minimum: 0}
+        totalPages: {type: integer, minimum: 0}
+    AuditChainVerification:
+      type: object
+      required: [scope, contractId, status, checkedRecords, brokenRecordId, brokenReason, checkedAt, anchorStatus]
+      additionalProperties: false
+      properties:
+        scope: {enum: [CONTRACT, GLOBAL]}
+        contractId: {type: [string, 'null'], format: uuid, description: "null for GLOBAL."}
+        status: {enum: [INTACT, BROKEN]}
+        checkedRecords: {type: integer, minimum: 0}
+        brokenRecordId: {type: [string, 'null'], format: uuid, description: "The first record that fails, in chain order; null when INTACT."}
+        brokenReason:
+          oneOf: [{enum: [RECORD_HASH_MISMATCH, SUBJECT_LINK_BROKEN, GLOBAL_LINK_BROKEN]}, {type: 'null'}]
+          description: >-
+            RECORD_HASH_MISMATCH = a stored field no longer gives the stored recordHash (content changed); SUBJECT_LINK_BROKEN / GLOBAL_LINK_BROKEN = the link hash does not equal the recordHash of the record before it (a record removed or inserted). null when INTACT.
+        checkedAt: {type: string, format: date-time}
+        anchorStatus: {enum: [NOT_ANCHORED, ANCHORED], description: "Removing the newest records is only caught against an anchor (hash-chain §4.3); NOT_ANCHORED says that limit applies."}
     AuditHashResponse:
       type: object
       required: [contractId, recordHash]
