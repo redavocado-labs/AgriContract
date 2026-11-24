@@ -111,6 +111,37 @@ and its addresses sit in `payload.recipients`, so the publisher — contract-ser
   characters, so the mail goes out as 7bit. `test/contract/contract-activation-failed-requested.contract.spec.ts`
   checks the parser against the contract in both directions.
 
+### Final signed contract PDF (Phase 2, `notification.contract_document_ready_requested`)
+
+| | |
+| --- | --- |
+| Queue | `notification-svc.notification.contract_document_ready_requested` (DLX `notification-svc.contracts.dlx`) |
+| Exchange, routing key | `agricontract.contracts`, `notification.contract_document_ready_requested` |
+| Recipients | every entry of `payload.recipients` (buyer and seller), `recipient_user_id` = its `userId` |
+| Row per email | `notification_type = CONTRACT_FINAL_PDF`, `template_version = contract-final-pdf/v1`, **`event_id` = `documentId`** |
+
+- The canonical Phase 2 final-contract email (design §3.3). The PDF is not in the command: it is read from
+  file-service by the trusted `fileId` (`GET /internal/v1/files/{fileId}` on `FILE_SERVICE_URL`, default
+  `http://localhost:8089`, compose `http://file-service:8089`, with `SERVICE_INTERNAL_SECRET`), once per delivery
+  and before anyone is mailed, and attached as `contract-<contractId>.pdf` with the content type file-service
+  recorded.
+- **The bytes must hash to `documentFileHash`** or nobody is mailed: a different SHA-256 is dead-lettered at once
+  (`DocumentFileMismatchError`). file-service already cuts a response short when the stored bytes differ from its
+  record; a body shorter than its Content-Length is treated as unavailable and retried, never attached.
+- file-service answers 404 for unknown, not READY, FAILED and deleted alike: retried (3 attempts), then the DLQ.
+  503, 5xx, a timeout (30 s) or a refused connection: retried. 401 (secret differs), another 4xx or a file over
+  10 MiB: dead-lettered at once (`FileServiceRejectedError`). No log line quotes a response or the secret.
+- **Dedup by `documentId`** (design §5, the contract's `x-deduplication-key`
+  `documentId + recipient.email + CONTRACT_FINAL_PDF`): the row's event key is the document, so a second command
+  for the same document never sends the PDF twice to the same address.
+- The body gives contract, document, template code and version, `generatedAt` in Vietnam time and UTC, the file
+  id, name, size and `documentFileHash` of the attachment, and `sourceContentHash`. The row keeps the text, not the
+  PDF, so the text is what identifies the attachment (design §3.3: size + SHA-256; no migration needed).
+- contract-service does not publish it yet; this service declares the queue, its DLQ and the DLX.
+  `test/contract/contract-document-ready-requested.contract.spec.ts` checks the parser against the contract in
+  both directions; `notify-contract-document-ready.int-spec.ts` sends it through MySQL, MailHog and a stand-in
+  file-service over HTTP and checks the SHA-256 of the attachment that arrived.
+
 ### Milestone funding (Phase 2, `notification.milestone_funding_status_requested`)
 
 | | |
