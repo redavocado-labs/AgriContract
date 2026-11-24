@@ -1,4 +1,4 @@
-"""Report 5.2 (IT/ST test cases): builds Report-5.2_Test_Report.xlsx from the Bruno collection in backend/bruno.
+"""Report 5.2 (IT/ST test cases of api-gateway, user-service, product-service): builds Report-5.2_Test_Report.xlsx from the Bruno collection in backend/bruno.
 
 Report 5.0 section II.2 puts the unit test cases in Report-5.1 and the other levels (IT, ST, AT) in a separate test
 report workbook; this script writes that workbook. Styles come from Report-5.1 (its Cover, Test Cases, Test Statistics
@@ -29,16 +29,16 @@ ISSUE_DATE = "24/11/2026"
 NO_BRUNO = "Chưa có request Bruno"
 
 ENV = (
-    "1. Toàn bộ stack: docker compose up trong backend/ (api-gateway 8080, user 8081, product 8082, contract 8083, "
-    "notification 8085, Keycloak 8180 realm agricontract, RabbitMQ 5672/15672, MailHog 8025, MySQL 8.0 mỗi service)\n"
+    "1. Toàn bộ stack: docker compose up trong backend/ (api-gateway 8080, user 8081, product 8082, contract 8083 "
+    "cho route protected, Keycloak 8180 realm agricontract, RabbitMQ 5672/15672, MySQL 8.0 mỗi service)\n"
     "2. Bruno CLI: cd backend/bruno && bru run <thư mục> --env local (biến trong environments/local.bru)\n"
     "3. Tài khoản Keycloak (agricontract-realm.json): buyer1, seller1, seller2 (người lạ), admin1, inspector1, "
     "operator1, arbitrator1; mật khẩu pass123\n"
     "4. Seed: backend/scripts/seed/01-product-db.sql, 02-user-db.sql (run-e2e.sh nạp lại trước mỗi lượt)\n"
     "5. product-service chạy với PLOT_GEO_VERIFICATION_TIMEOUT_HOURS=0, PLOT_GEO_VERIFICATION_TIMEOUT_CHECK_MS=1000 "
     "để plot vừa ghim được duyệt trước khi tạo listing\n"
-    "6. notification-service: chạy backend/bruno/notification-service/reset.sh trước lượt chạy\n"
-    "7. ITC = Integration test (gọi thẳng 1 service / broker); STC = System test (qua api-gateway với JWT)"
+    "6. ITC = Integration test (gọi thẳng 1 service); STC = System test (qua api-gateway với JWT)\n"
+    "7. Phạm vi: api-gateway, user-service, product-service (Nguyen Hai Long phụ trách)"
 )
 
 # (module, sheet, description, pre-condition, [(group, [(id, description, procedure, expected, pre, note)])])
@@ -246,138 +246,6 @@ SHEETS = [
              "ITC012 đã chạy", "Kỹ thuật: Error guessing (retry)\nBruno: product-service/11b-update-listing-replay.bru"),
         ]),
     ]),
-    ("contract-service", "ContractOffer", "Tạo offer hợp đồng, xem, liệt kê, chặn gọi vòng gateway, ký cần đăng nhập mới",
-     "Token buyer1, seller1, seller2 (người lạ) lấy bằng password grant (contract/01-03); listing {listing_id} là "
-     "listing COFFEE, AVAILABLE, quantityAvailable >= 2500.5 kg; biến listing_version_token = listingVersionToken "
-     "của GET /api/v1/listings/{listing_id} (local.bru chưa khai báo biến này và listing seed 51ef… là gạo 500 kg "
-     "nên phải tạo listing trước)", [
-        ("Chặn gọi vòng gateway", [
-            ("ITC001", "Gọi thẳng contract-service không có X-Gateway-Secret",
-             "1. POST {contract_service_url}/api/v1/contracts, không header\n2. Body {\"listingId\": "
-             "\"any-listing\", \"terms\": {}}",
-             "401 hoặc 403; không tạo hợp đồng", "contract-service :8083 mở cổng ra host",
-             "Kỹ thuật: Security\nBruno: contract/04-bypass-gateway-direct-call.bru"),
-            ("ITC002", "Gọi thẳng với X-User-Id/X-User-Role giả, không secret",
-             "1. Như ITC001, thêm X-User-Id = sub buyer1, X-User-Role BUYER",
-             "401 hoặc 403; không tạo hợp đồng", "Như ITC001",
-             "Kỹ thuật: Security (giả mạo header)\nBruno: contract/05-bypass-gateway-fake-header.bru"),
-        ]),
-        ("POST /api/v1/contracts", [
-            ("STC001", "Buyer tạo offer cà phê 2 đợt giao",
-             "1. POST {base_url}/api/v1/contracts, Bearer buyer1, Idempotency-Key 3c0f2b8e-…7a90\n2. Body: "
-             "listingId, listingVersionToken, terms cà phê (agreedPrice \"95000.00\", 2 milestone 1000 và 1500.5 kg, "
-             "priceBand 90000–100000, LegalProfile COFFEE_SALE)",
-             "201; status OFFERED; reservedQuantity 2500.5; buyerId = sub buyer1; listing giảm quantityAvailable "
-             "2500.5", "Listing COFFEE đủ 2500.5 kg; token phiên bản đúng",
-             "Kỹ thuật: EP, State transition (→ OFFERED)\nBruno: contract/06-create-contract.bru"),
-            ("STC002", "Gửi lại cùng Idempotency-Key và body",
-             "1. Gửi lại đúng request STC001",
-             "201; contractId = STC001; quantityAvailable của listing không giảm lần 2", "STC001 đã chạy",
-             "Kỹ thuật: Error guessing (retry)\nBruno: contract/07-create-contract-idempotent.bru (chưa kiểm "
-             "quantityAvailable)"),
-            ("STC003", "Cùng Idempotency-Key nhưng body khác",
-             "1. Như STC001 với agreedPrice \"96000.00\", giữ Idempotency-Key cũ",
-             "409; code IDEMPOTENCY_KEY_REUSED; không tạo hợp đồng mới", "STC001 đã chạy",
-             "Kỹ thuật: Error guessing\n" + NO_BRUNO),
-            ("STC004", "listingVersionToken cũ",
-             "1. Seller sửa listing (token đổi)\n2. Buyer tạo offer với token cũ, Idempotency-Key mới",
-             "409; code LISTING_VERSION_MISMATCH; không giữ hàng", "Listing AVAILABLE",
-             "Kỹ thuật: State transition, error guessing (docs của 06-create-contract.bru)\n" + NO_BRUNO),
-            ("STC005", "Tổng khối lượng milestone vượt khối lượng còn lại",
-             "1. Tạo offer có tổng committedQuantity = quantityAvailable + 0.001",
-             "409; code INSUFFICIENT_LISTING_QUANTITY; quantityAvailable không đổi",
-             "Listing AVAILABLE, biết quantityAvailable",
-             "Kỹ thuật: BVA (= còn lại → 201; còn lại + 0.001 → 409)\n" + NO_BRUNO),
-        ]),
-        ("GET /api/v1/contracts", [
-            ("STC006", "Người không phải bên hợp đồng xem chi tiết",
-             "1. GET {base_url}/api/v1/contracts/{contract_id}, Bearer seller2", "403", "STC001 đã chạy",
-             "Kỹ thuật: Security (IDOR)\nBruno: contract/08-get-contract-as-stranger.bru"),
-            ("STC007", "Xem hợp đồng không tồn tại",
-             "1. GET {base_url}/api/v1/contracts/non-existent-contract-id-12345, Bearer buyer1",
-             "404; code CONTRACT_NOT_FOUND", "N/A",
-             "Kỹ thuật: EP (id không tồn tại)\nBruno: contract/30-get-nonexistent-contract.bru"),
-            ("STC008", "Buyer liệt kê hợp đồng",
-             "1. GET {base_url}/api/v1/contracts?page=0&size=20, Bearer buyer1",
-             "200; có content (mảng) và totalElements; chứa {contract_id}", "STC001 đã chạy",
-             "Kỹ thuật: EP\nBruno: contract/28-list-contracts-as-buyer.bru"),
-            ("STC009", "Seller liệt kê hợp đồng (role=SELLER)",
-             "1. GET {base_url}/api/v1/contracts?role=SELLER&page=0&size=20, Bearer seller1",
-             "200; phân trang; chứa {contract_id}", "STC001 đã chạy",
-             "Kỹ thuật: EP\nBruno: contract/29-list-contracts-as-seller.bru"),
-            ("STC010", "Lọc theo status OFFERED (buyer và seller)",
-             "1. GET ...?status=OFFERED&page=0&size=10, Bearer buyer1\n"
-             "2. GET ...?role=SELLER&status=OFFERED&page=0&size=10, Bearer seller1",
-             "Cả 2: 200; mọi phần tử có status OFFERED; bước 2 totalElements > 0", "STC001 đã chạy",
-             "Kỹ thuật: EP (theo trạng thái)\n"
-             "Bruno: contract/31-list-contracts-filter-by-status.bru, 32-list-contracts-seller-filter-by-status.bru"),
-            ("STC011", "Tham số phân trang và status ngoài miền",
-             "1. ...?size=100\n2. ...?size=101\n3. ...?size=0\n4. ...?page=-1\n5. ...?status=FOO",
-             "Bước 1: 200\nBước 2–5: 400; code VALIDATION_FAILED", "Token buyer1",
-             "Kỹ thuật: BVA (size 1..100, page >= 0), EP (status không thuộc enum)\n" + NO_BRUNO),
-        ]),
-        ("POST /api/v1/contracts/{id}/sign/verify", [
-            ("STC012", "Ký với token không có auth_time (không đăng nhập lại)",
-             "1. POST {base_url}/api/v1/contracts/{bất kỳ}/sign/verify, Bearer buyer1 (password grant), "
-             "Idempotency-Key mới\n2. Body {\"otpId\": \"…\", \"otpCode\": \"123456\"}",
-             "403; code STEP_UP_REQUIRED (kiểm tra trước khi tìm hợp đồng)", "Token password grant (không có auth_time)",
-             "Kỹ thuật: Security (re-login trong 300 s)\nBruno: contract/11-sign-verify-without-fresh-login.bru"),
-        ]),
-    ]),
-    ("notification-service", "NotificationEmail", "Email theo event category.* và email OTP ký hợp đồng",
-     "Đã chạy backend/bruno/notification-service/reset.sh (xoá notification_logs, purge queue, xoá MailHog); "
-     "notification-service đang consume; X-Internal-Secret = service_internal_secret", [
-        ("Event category.*", [
-            ("ITC001", "category.approved gửi email cho người đề xuất",
-             "1. Publish lên exchange agricontract.events, routing key category.approved, payload eventId, "
-             "categoryId, name, proposedByEmail = seller1@test.com\n2. Tìm trong MailHog theo categoryId",
-             "Bước 1: routed = true\nBước 2: đúng 1 email tới seller1@test.com; subject "
-             "\"[AgriContract] Category proposal approved\"", "reset.sh đã chạy",
-             "Kỹ thuật: Event contract (consumer)\nBruno: notification-service/16-publish-category-approved.bru, "
-             "17-verify-category-approved-email.bru"),
-            ("ITC002", "category.rejected gửi email kèm lý do",
-             "1. Publish category.rejected, proposedByEmail = buyer1@test.com, rejectionReason "
-             "\"Trung ten voi danh muc da co\"\n2. Tìm trong MailHog theo categoryId",
-             "Bước 1: routed = true\nBước 2: đúng 1 email tới buyer1@test.com; subject "
-             "\"[AgriContract] Category proposal rejected\"; body chứa lý do", "reset.sh đã chạy",
-             "Kỹ thuật: Event contract (consumer)\nBruno: notification-service/18-publish-category-rejected.bru, "
-             "19-verify-category-rejected-email.bru"),
-            ("ITC003", "Cùng eventId được giao lại không gửi email lần 2",
-             "1. Publish lại đúng payload của ITC001 (cùng eventId)\n2. Tìm trong MailHog theo categoryId",
-             "Vẫn đúng 1 email", "ITC001 đã chạy",
-             "Kỹ thuật: Error guessing (at-least-once, dedup eventId)\n" + NO_BRUNO),
-        ]),
-        ("POST /internal/v1/notifications/otp-email", [
-            ("ITC004", "Gửi email OTP ký hợp đồng",
-             "1. POST {notification_service_url}/internal/v1/notifications/otp-email, X-Internal-Secret\n"
-             "2. Body: requestId, recipientUserId, recipientEmail buyer1@test.com, contractId, otpCode 6 số, "
-             "signedContentHash, expiresAt = now + 300 s\n3. Tìm trong MailHog theo contractId",
-             "Bước 1: 200\nBước 3: đúng 1 email tới buyer1; subject \"[AgriContract] Your contract signing code\" "
-             "không chứa mã; body có mã trên 1 dòng riêng và content hash", "reset.sh đã chạy",
-             "Kỹ thuật: EP (hợp lệ)\nBruno: notification-service/20-send-otp-email.bru, 21-verify-otp-email.bru"),
-            ("ITC005", "Gửi lại cùng requestId (contract-service retry)",
-             "1. Gửi lại đúng request ITC004\n2. Tìm trong MailHog theo contractId",
-             "Bước 1: 200\nBước 2: vẫn đúng 1 email", "ITC004 đã chạy",
-             "Kỹ thuật: Error guessing (retry sau timeout)\n"
-             "Bruno: notification-service/22-send-otp-email-repeat.bru, 23-verify-otp-email-not-duplicated.bru"),
-            ("ITC006", "Thiếu X-Internal-Secret", "1. Như ITC004 nhưng bỏ X-Internal-Secret",
-             "401; code UNAUTHORIZED; body đúng 7 khoá timestamp, status, error, code, message, path, traceId",
-             "N/A", "Kỹ thuật: Security\nBruno: notification-service/24-otp-email-without-secret.bru"),
-            ("ITC007", "otpCode sai định dạng không bị trả lại trong response",
-             "1. Như ITC004 với otpCode \"12x4\"",
-             "400; code VALIDATION_ERROR; message \"otpCode is invalid\"; response không chứa \"12x4\" và email",
-             "N/A", "Kỹ thuật: EP (ký tự không phải số), Security (không lộ dữ liệu)\n"
-             "Bruno: notification-service/25-otp-email-invalid-payload.bru"),
-            ("ITC008", "Độ dài otpCode tại biên",
-             "1. otpCode \"12345\" (5 số)\n2. otpCode \"1234567\" (7 số)\n3. otpCode \"000000\" (6 số, requestId mới)",
-             "Bước 1, 2: 400; message \"otpCode is invalid\"\nBước 3: 200", "N/A",
-             "Kỹ thuật: BVA (đúng 6 chữ số)\n" + NO_BRUNO),
-            ("ITC009", "Độ dài requestId tại biên",
-             "1. requestId 36 ký tự [A-Za-z0-9._:-]\n2. requestId 37 ký tự",
-             "Bước 1: 200\nBước 2: 400; message \"requestId is invalid\"", "N/A",
-             "Kỹ thuật: BVA (1..36 ký tự)\n" + NO_BRUNO),
-        ]),
-    ]),
 ]
 
 
@@ -481,7 +349,7 @@ def main():
     row_tpl = [copy.copy(cv.cell(11, c)) for c in range(1, 7)]
     clear_from(cv, 11)
     rec = [ISSUE_DATE, "v1.0", "Toàn bộ tài liệu", "A",
-           "Bản đầu: test case IT/ST từ Bruno collection (backend/bruno) và case bổ sung theo BVA/EP/error "
+           "Bản đầu: test case IT/ST của api-gateway, user-service, product-service từ Bruno collection (backend/bruno) và case bổ sung theo BVA/EP/error "
            "guessing chưa có request; Round 1 chưa chạy (Pending)", "SRS v1.7, Report 5.0"]
     for c, v in enumerate(rec, start=1):
         copy_style(row_tpl[c - 1], cv.cell(11, c, v))
@@ -506,8 +374,8 @@ def main():
     st["A2"] = "TEST REPORT STATISTICS"
     st["F4"] = CREATOR
     st["F6"] = ISSUE_DATE
-    st["B7"] = ("Test case integration (ITC) và system (STC) của api-gateway, user-service, product-service, "
-                "contract-service, notification-service, lấy từ Bruno collection backend/bruno; cột "
+    st["B7"] = ("Test case integration (ITC) và system (STC) của api-gateway, user-service, product-service "
+                "(phần Nguyen Hai Long phụ trách), lấy từ Bruno collection backend/bruno; cột "
                 f"\"{NO_BRUNO}\" đếm case thiết kế theo BVA/EP/error guessing chưa có request")
     st["F11"], st["G11"], st["H11"] = "IT", "ST", NO_BRUNO
     row_tpl = [copy.copy(st.cell(12, c)) for c in range(1, 10)]
