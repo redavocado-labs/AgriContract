@@ -1,5 +1,6 @@
 import type {
   ActivationCancelRequestedCommand,
+  BreachNoticeRequestedCommand,
   ContractActivationFailedRequestedCommand,
   ContractAnchorRequestedCommand,
   ContractDocumentReadyRequestedCommand,
@@ -10,6 +11,8 @@ import type {
   Level15AssignmentWaitingRequestedCommand,
   Level15InspectorAssignmentRequestedCommand,
   MilestoneFundingStatusRequestedCommand,
+  MilestoneStatusRequestedCommand,
+  RemedyFinalizedRequestedCommand,
   NotificationRecipient,
   UserKycResultRequestedCommand,
   UserLockChangedRequestedCommand,
@@ -894,5 +897,256 @@ export function documentReadyCommand(): ContractDocumentReadyRequestedCommand {
     templateCode: 'VN_COFFEE_B2B',
     templateVersion: '1.0.0',
     generatedAt: '2026-11-25T04:00:00Z',
+  };
+}
+
+/*
+ * The three D96 commands of #147, as contract-service's
+ * OutboxContractEventPublisher writes them: weights as plain decimals
+ * (stripTrailingZeros), money as the contract's two-decimal string, the
+ * anchor fixture's buyer and seller as recipients.
+ */
+export const DISPUTE_CONTRACT_ID = '6a5b4c3d-2e1f-4a0b-9c8d-7e6f5a4b3c2d';
+export const DISPUTE_MILESTONE_ID = '7b6c5d4e-3f2a-4b1c-8d9e-8f7a6b5c4d3e';
+export const BREACH_CASE_ID = '8c7d6e5f-4a3b-4c2d-9e0f-9a8b7c6d5e4f';
+export const EVIDENCE_FILE_IDS = [
+  '9d8e7f6a-5b4c-4d3e-8f1a-0b9c8d7e6f5a',
+  'ae9f8a7b-6c5d-4e4f-9a2b-1c0d9e8f7a6b',
+];
+export const DECISION_ID = 'bf0a9b8c-7d6e-4f5a-8b3c-2d1e0f9a8b7c';
+const ATTRIBUTION_ID = 'c01b0c9d-8e7f-4a6b-9c4d-3e2f1a0b9c8d';
+const BUYER_ID = ANCHOR_RECIPIENTS[0].userId as string;
+const SELLER_ID = ANCHOR_RECIPIENTS[1].userId as string;
+export const DISPUTE_LEG_IDS = [
+  'd12c1d0e-9f8a-4b7c-8d5e-4f3a2b1c0d9e',
+  'e23d2e1f-0a9b-4c8d-9e6f-5a4b3c2d1e0f',
+];
+
+const envelopeOf = (
+  eventId: string,
+  eventType: string,
+  aggregateId: string,
+  payload: Record<string, unknown>,
+  overrides: Record<string, unknown>,
+): Record<string, unknown> => ({
+  eventId,
+  eventType,
+  eventVersion: 1,
+  occurredAt: '2026-12-02T03:30:00.250Z',
+  producer: 'contract-service',
+  aggregateId,
+  correlationId: DISPUTE_CONTRACT_ID,
+  payload,
+  ...overrides,
+});
+
+const MILESTONE_STATUS_EVENT_ID = 'f34e3f2a-1b0c-4d9e-8f7a-6b5c4d3e2f1a';
+
+export function milestoneStatusPayload(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    contractId: DISPUTE_CONTRACT_ID,
+    milestoneId: DISPUTE_MILESTONE_ID,
+    recipients: [{ ...ANCHOR_RECIPIENTS[0] }],
+    statusType: 'WEIGHED',
+    deadline: null,
+    statusData: {
+      milestoneIndex: 2,
+      committedQuantityKg: '1200',
+      declarationNumber: 1,
+      sellerDeclaredWeightKg: '1195.5',
+    },
+    ...overrides,
+  };
+}
+
+export const milestoneStatusEnvelope = (
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> =>
+  envelopeOf(
+    MILESTONE_STATUS_EVENT_ID,
+    'notification.milestone_status_requested',
+    DISPUTE_MILESTONE_ID,
+    milestoneStatusPayload(),
+    overrides,
+  );
+
+export const milestoneStatusBody = (
+  overrides: Record<string, unknown> = {},
+): Buffer => Buffer.from(JSON.stringify(milestoneStatusEnvelope(overrides)));
+
+/** The command the parser is expected to produce from `milestoneStatusEnvelope()`. */
+export function milestoneStatusCommand(): MilestoneStatusRequestedCommand {
+  return {
+    eventId: MILESTONE_STATUS_EVENT_ID,
+    contractId: DISPUTE_CONTRACT_ID,
+    milestoneId: DISPUTE_MILESTONE_ID,
+    recipients: [{ ...ANCHOR_RECIPIENTS[0] }],
+    statusType: 'WEIGHED',
+    deadline: null,
+    statusData: {
+      milestoneIndex: 2,
+      committedQuantityKg: '1200',
+      declarationNumber: 1,
+      sellerDeclaredWeightKg: '1195.5',
+    },
+  };
+}
+
+const BREACH_NOTICE_EVENT_ID = '045f4a3b-2c1d-4e0f-9a8b-7c6d5e4f3a2b';
+
+export function breachNoticePayload(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    breachCaseId: BREACH_CASE_ID,
+    contractId: DISPUTE_CONTRACT_ID,
+    recipients: ANCHOR_RECIPIENTS.map((r) => ({ ...r })),
+    breachReasonCode: 'SHORTFALL',
+    severity: 'MATERIAL',
+    evidenceRefs: [...EVIDENCE_FILE_IDS],
+    ...overrides,
+  };
+}
+
+export const breachNoticeEnvelope = (
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> =>
+  envelopeOf(
+    BREACH_NOTICE_EVENT_ID,
+    'notification.breach_notice_requested',
+    BREACH_CASE_ID,
+    breachNoticePayload(),
+    overrides,
+  );
+
+export const breachNoticeBody = (
+  overrides: Record<string, unknown> = {},
+): Buffer => Buffer.from(JSON.stringify(breachNoticeEnvelope(overrides)));
+
+/** The command the parser is expected to produce from `breachNoticeEnvelope()`. */
+export function breachNoticeCommand(): BreachNoticeRequestedCommand {
+  return {
+    eventId: BREACH_NOTICE_EVENT_ID,
+    reportedAt: '2026-12-02T03:30:00.250Z',
+    breachCaseId: BREACH_CASE_ID,
+    contractId: DISPUTE_CONTRACT_ID,
+    recipients: ANCHOR_RECIPIENTS.map((r) => ({ ...r })),
+    breachReasonCode: 'SHORTFALL',
+    severity: 'MATERIAL',
+    evidenceRefs: [...EVIDENCE_FILE_IDS],
+  };
+}
+
+const REMEDY_FINALIZED_EVENT_ID = '156a5b4c-3d2e-4f1a-8b9c-8d7e6f5a4b3c';
+
+/** A seller shortfall decided by an arbitrator on one milestone: payment, refund, forfeited deposit. */
+export function remedyFinalizedPayload(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    remedyDecisionId: DECISION_ID,
+    attributionDecisionId: ATTRIBUTION_ID,
+    breachCaseId: BREACH_CASE_ID,
+    contractId: DISPUTE_CONTRACT_ID,
+    buyerId: BUYER_ID,
+    sellerId: SELLER_ID,
+    affectedMilestoneIds: [DISPUTE_MILESTONE_ID],
+    recipients: ANCHOR_RECIPIENTS.map((r) => ({ ...r })),
+    finalBreachingRole: 'SELLER',
+    breachReasonCode: 'SHORTFALL',
+    qualityDisposition: null,
+    decisionSource: 'ARBITRATOR',
+    penaltyEligible: true,
+    reputationEligible: true,
+    remedyLegs: [
+      {
+        remedyLegId: DISPUTE_LEG_IDS[0],
+        remedyType: 'PAYMENT_SETTLEMENT',
+        fundType: 'MILESTONE_PAYMENT',
+        role: 'SELLER',
+        amount: '90000000.00',
+      },
+      {
+        remedyLegId: DISPUTE_LEG_IDS[1],
+        remedyType: 'DEPOSIT_FORFEITURE',
+        fundType: 'SELLER_DEPOSIT',
+        role: 'BUYER',
+        amount: '5520000.00',
+      },
+    ],
+    ...overrides,
+  };
+}
+
+/** The D94 normal completion: SYSTEM, no case, no fault, both deposits back. */
+export function contractCompletedPayload(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return remedyFinalizedPayload({
+    breachCaseId: null,
+    affectedMilestoneIds: [],
+    finalBreachingRole: null,
+    breachReasonCode: null,
+    qualityDisposition: null,
+    decisionSource: 'SYSTEM',
+    penaltyEligible: false,
+    reputationEligible: false,
+    remedyLegs: [
+      {
+        remedyLegId: DISPUTE_LEG_IDS[0],
+        remedyType: 'PAYMENT_REFUND',
+        fundType: 'BUYER_DEPOSIT',
+        role: 'BUYER',
+        amount: '11040000.00',
+      },
+      {
+        remedyLegId: DISPUTE_LEG_IDS[1],
+        remedyType: 'PAYMENT_SETTLEMENT',
+        fundType: 'SELLER_DEPOSIT',
+        role: 'SELLER',
+        amount: '5520000.00',
+      },
+    ],
+    ...overrides,
+  });
+}
+
+export const remedyFinalizedEnvelope = (
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> =>
+  envelopeOf(
+    REMEDY_FINALIZED_EVENT_ID,
+    'notification.remedy_finalized_requested',
+    DECISION_ID,
+    remedyFinalizedPayload(),
+    overrides,
+  );
+
+export const remedyFinalizedBody = (
+  overrides: Record<string, unknown> = {},
+): Buffer => Buffer.from(JSON.stringify(remedyFinalizedEnvelope(overrides)));
+
+/** The command the parser is expected to produce from `remedyFinalizedEnvelope()`. */
+export function remedyFinalizedCommand(): RemedyFinalizedRequestedCommand {
+  const p = remedyFinalizedPayload();
+  return {
+    eventId: REMEDY_FINALIZED_EVENT_ID,
+    remedyDecisionId: DECISION_ID,
+    attributionDecisionId: ATTRIBUTION_ID,
+    breachCaseId: BREACH_CASE_ID,
+    contractId: DISPUTE_CONTRACT_ID,
+    buyerId: BUYER_ID,
+    sellerId: SELLER_ID,
+    affectedMilestoneIds: [DISPUTE_MILESTONE_ID],
+    recipients: ANCHOR_RECIPIENTS.map((r) => ({ ...r })),
+    finalBreachingRole: 'SELLER',
+    breachReasonCode: 'SHORTFALL',
+    qualityDisposition: null,
+    decisionSource: 'ARBITRATOR',
+    penaltyEligible: true,
+    reputationEligible: true,
+    remedyLegs: p.remedyLegs as RemedyFinalizedRequestedCommand['remedyLegs'],
   };
 }

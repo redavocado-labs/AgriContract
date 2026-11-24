@@ -7,6 +7,8 @@ import {
 import {
   ACTIVATION_NEXT_ACTIONS,
   BREACH_REASON_CODES,
+  BREACH_SEVERITIES,
+  DECISION_SOURCES,
   CANCEL_REQUESTER_ROLES,
   ESCROW_LEG_ALERT_STAGES,
   ESCROW_LEG_KINDS,
@@ -20,6 +22,8 @@ import {
   LEVEL15_WAITING_STAGES,
   LOCK_ACTIONS,
   MILESTONE_FUNDING_STATUS_TYPES,
+  MILESTONE_STATUS_TYPES,
+  QUALITY_DISPOSITIONS,
   PARTY_ROLES,
   RECIPIENT_ROLES,
   REMEDY_TYPES,
@@ -37,6 +41,9 @@ import {
   type Level15AssignmentWaitingRequestedCommand,
   type Level15InspectorAssignmentRequestedCommand,
   type MilestoneFundingStatusRequestedCommand,
+  type MilestoneStatusRequestedCommand,
+  type BreachNoticeRequestedCommand,
+  type RemedyFinalizedRequestedCommand,
   type NotificationRecipient,
   type RecipientRole,
   type UserKycResultRequestedCommand,
@@ -343,6 +350,40 @@ class CommandReader {
       throw this.error(`field "${field}" is missing`);
   }
 
+  /** A JSON boolean; the bad value is not quoted. */
+  boolean(field: string): boolean {
+    const value = this.payload[field];
+    if (typeof value !== 'boolean') {
+      throw this.error(
+        `field "${field}" must be a boolean, got ${describe(value)}`,
+      );
+    }
+    return value;
+  }
+
+  /** An array of strings, possibly empty; items are not quoted, only their index. */
+  stringArray(field: string): string[] {
+    const value = this.payload[field];
+    if (!Array.isArray(value)) {
+      throw this.error(
+        `field "${field}" must be an array, got ${describe(value)}`,
+      );
+    }
+    value.forEach((item, i) => {
+      if (typeof item !== 'string') {
+        throw this.error(
+          `${field}[${i}] must be a string, got ${describe(item)}`,
+        );
+      }
+    });
+    return (value as string[]).slice();
+  }
+
+  /** An optional `{type: object}` outside `required`: absent is null, null is not allowed. */
+  optionalObject(field: string): Record<string, unknown> | null {
+    return field in this.payload ? this.object(field) : null;
+  }
+
   /** A JSON object of any shape, as `contractTermsSnapshot` is declared. */
   object(field: string): Record<string, unknown> {
     const value = this.payload[field];
@@ -561,6 +602,211 @@ export function parseActivationCancelRequested(
     ),
     oneSidedCancelAllowedFrom: payload.dateTime('oneSidedCancelAllowedFrom'),
   };
+}
+
+export const MILESTONE_STATUS_REQUESTED =
+  'notification.milestone_status_requested';
+
+/** Payload properties of `milestoneStatusRequested`; `deadline` and `statusData` are optional. */
+export const MILESTONE_STATUS_FIELDS = [
+  'contractId',
+  'milestoneId',
+  'recipients',
+  'statusType',
+  'deadline',
+  'statusData',
+] as const;
+
+/** The required ones among MILESTONE_STATUS_FIELDS. */
+export const MILESTONE_STATUS_REQUIRED = [
+  'contractId',
+  'milestoneId',
+  'recipients',
+  'statusType',
+] as const;
+
+/**
+ * contract-service's milestone status (D96). `statusData` is any JSON object
+ * when present (the contract types it `object` and nothing more): its values
+ * are checked when the email reads them, not here, so a publisher adding a
+ * field never dead-letters the command.
+ */
+export function parseMilestoneStatusRequested(
+  body: Buffer,
+): MilestoneStatusRequestedCommand {
+  const { envelope, payload } = readCommand(
+    body,
+    MILESTONE_STATUS_REQUESTED,
+    'contract-service',
+  );
+  payload.only(MILESTONE_STATUS_FIELDS);
+
+  return {
+    eventId: envelope.eventId,
+    contractId: payload.uuid('contractId'),
+    milestoneId: payload.uuid('milestoneId'),
+    recipients: payload.recipients(),
+    statusType: payload.enumValue('statusType', MILESTONE_STATUS_TYPES),
+    deadline: payload.optionalNullableDateTime('deadline'),
+    statusData: payload.optionalObject('statusData'),
+  };
+}
+
+export const BREACH_NOTICE_REQUESTED = 'notification.breach_notice_requested';
+
+/** Payload properties of `breachNoticeRequested`, all required. */
+export const BREACH_NOTICE_FIELDS = [
+  'breachCaseId',
+  'contractId',
+  'recipients',
+  'breachReasonCode',
+  'severity',
+  'evidenceRefs',
+] as const;
+
+/**
+ * contract-service's BreachCase notice (D96). `evidenceRefs` are any strings
+ * by contract; the email shows only those that look like a file reference.
+ */
+export function parseBreachNoticeRequested(
+  body: Buffer,
+): BreachNoticeRequestedCommand {
+  const { envelope, payload } = readCommand(
+    body,
+    BREACH_NOTICE_REQUESTED,
+    'contract-service',
+  );
+  payload.only(BREACH_NOTICE_FIELDS);
+
+  return {
+    eventId: envelope.eventId,
+    reportedAt: envelope.occurredAt,
+    breachCaseId: payload.uuid('breachCaseId'),
+    contractId: payload.uuid('contractId'),
+    recipients: payload.recipients(),
+    breachReasonCode: payload.enumValue(
+      'breachReasonCode',
+      BREACH_REASON_CODES,
+    ),
+    severity: payload.enumValue('severity', BREACH_SEVERITIES),
+    evidenceRefs: payload.stringArray('evidenceRefs'),
+  };
+}
+
+export const REMEDY_FINALIZED_REQUESTED =
+  'notification.remedy_finalized_requested';
+
+/** Payload properties of `remedyFinalizedRequested`, all required. */
+export const REMEDY_FINALIZED_FIELDS = [
+  'remedyDecisionId',
+  'attributionDecisionId',
+  'breachCaseId',
+  'contractId',
+  'buyerId',
+  'sellerId',
+  'affectedMilestoneIds',
+  'recipients',
+  'finalBreachingRole',
+  'breachReasonCode',
+  'qualityDisposition',
+  'decisionSource',
+  'penaltyEligible',
+  'reputationEligible',
+  'remedyLegs',
+] as const;
+
+/**
+ * contract-service's finalized remedy decision (D96), with the contract's
+ * four consistency rules (its `allOf` of if/then):
+ * - no breaching role: no penalty, no reputation, legs only NONE,
+ *   PAYMENT_SETTLEMENT or PAYMENT_REFUND;
+ * - penaltyEligible false: no CONTRACTUAL_PENALTY leg;
+ * - CONFORMING or PARTIALLY_CONFORMING: no role, no reason, no penalty, no
+ *   reputation;
+ * - NON_CONFORMING: SELLER, QUALITY_BELOW_COMMITTED, penalty and reputation.
+ * A command breaking one would make the email contradict the decision.
+ */
+export function parseRemedyFinalizedRequested(
+  body: Buffer,
+): RemedyFinalizedRequestedCommand {
+  const { envelope, payload } = readCommand(
+    body,
+    REMEDY_FINALIZED_REQUESTED,
+    'contract-service',
+  );
+  payload.only(REMEDY_FINALIZED_FIELDS);
+
+  const command: RemedyFinalizedRequestedCommand = {
+    eventId: envelope.eventId,
+    remedyDecisionId: payload.uuid('remedyDecisionId'),
+    attributionDecisionId: payload.uuid('attributionDecisionId'),
+    breachCaseId: payload.nullableUuid('breachCaseId'),
+    contractId: payload.uuid('contractId'),
+    buyerId: payload.uuid('buyerId'),
+    sellerId: payload.uuid('sellerId'),
+    affectedMilestoneIds: payload.uuidSet('affectedMilestoneIds'),
+    recipients: payload.recipients(),
+    finalBreachingRole: payload.nullableEnum('finalBreachingRole', PARTY_ROLES),
+    breachReasonCode: payload.nullableEnum(
+      'breachReasonCode',
+      BREACH_REASON_CODES,
+    ),
+    qualityDisposition: payload.nullableEnum(
+      'qualityDisposition',
+      QUALITY_DISPOSITIONS,
+    ),
+    decisionSource: payload.enumValue('decisionSource', DECISION_SOURCES),
+    penaltyEligible: payload.boolean('penaltyEligible'),
+    reputationEligible: payload.boolean('reputationEligible'),
+    remedyLegs: payload.remedyLegs(),
+  };
+
+  const legTypes = command.remedyLegs.map((leg) => leg.remedyType);
+  if (command.finalBreachingRole === null) {
+    if (command.penaltyEligible || command.reputationEligible) {
+      throw payload.error(
+        'a decision with no finalBreachingRole cannot be penaltyEligible or reputationEligible',
+      );
+    }
+    if (
+      legTypes.some(
+        (t) => !['NONE', 'PAYMENT_SETTLEMENT', 'PAYMENT_REFUND'].includes(t),
+      )
+    ) {
+      throw payload.error(
+        'a decision with no finalBreachingRole can only have NONE, PAYMENT_SETTLEMENT or PAYMENT_REFUND legs',
+      );
+    }
+  }
+  if (!command.penaltyEligible && legTypes.includes('CONTRACTUAL_PENALTY')) {
+    throw payload.error(
+      'a CONTRACTUAL_PENALTY leg needs penaltyEligible = true',
+    );
+  }
+  const quality = command.qualityDisposition;
+  if (
+    (quality === 'CONFORMING' || quality === 'PARTIALLY_CONFORMING') &&
+    (command.finalBreachingRole !== null ||
+      command.breachReasonCode !== null ||
+      command.penaltyEligible ||
+      command.reputationEligible)
+  ) {
+    throw payload.error(
+      `qualityDisposition ${quality} needs no finalBreachingRole, no breachReasonCode, no penalty and no reputation`,
+    );
+  }
+  if (
+    quality === 'NON_CONFORMING' &&
+    (command.finalBreachingRole !== 'SELLER' ||
+      command.breachReasonCode !== 'QUALITY_BELOW_COMMITTED' ||
+      !command.penaltyEligible ||
+      !command.reputationEligible)
+  ) {
+    throw payload.error(
+      'qualityDisposition NON_CONFORMING needs SELLER, QUALITY_BELOW_COMMITTED, penalty and reputation',
+    );
+  }
+  return command;
 }
 
 export const CONTRACT_DOCUMENT_READY_REQUESTED =

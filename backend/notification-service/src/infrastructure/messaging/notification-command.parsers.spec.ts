@@ -47,6 +47,17 @@ import {
   documentReadyBody,
   documentReadyCommand,
   documentReadyPayload,
+  milestoneStatusBody,
+  milestoneStatusCommand,
+  milestoneStatusPayload,
+  breachNoticeBody,
+  breachNoticeCommand,
+  breachNoticePayload,
+  remedyFinalizedBody,
+  remedyFinalizedCommand,
+  remedyFinalizedPayload,
+  contractCompletedPayload,
+  DISPUTE_MILESTONE_ID,
 } from '../../../test/support/commands';
 import {
   parseActivationCancelRequested,
@@ -72,6 +83,12 @@ import {
   MILESTONE_FUNDING_STATUS_REQUIRED,
   CONTRACT_DOCUMENT_READY_FIELDS,
   parseContractDocumentReadyRequested,
+  MILESTONE_STATUS_REQUIRED,
+  parseMilestoneStatusRequested,
+  BREACH_NOTICE_FIELDS,
+  parseBreachNoticeRequested,
+  REMEDY_FINALIZED_FIELDS,
+  parseRemedyFinalizedRequested,
   parseMilestoneFundingStatusRequested,
 } from './notification-command.parsers';
 
@@ -1310,5 +1327,277 @@ describe('parseContractDocumentReadyRequested', () => {
     expect(
       message(() => parseContractDocumentReadyRequested(anchorBody())),
     ).toContain("is not this queue's command");
+  });
+});
+
+describe('parseMilestoneStatusRequested', () => {
+  const parseStatus = (
+    payload: Record<string, unknown> = milestoneStatusPayload(),
+  ) => parseMilestoneStatusRequested(milestoneStatusBody({ payload }));
+
+  it('reads the envelope eventId and every payload field', () => {
+    expect(parseStatus()).toEqual(milestoneStatusCommand());
+  });
+
+  it.each([
+    'WEIGHED',
+    'CONFIRMED',
+    'FLAGGED',
+    'FORCE_MAJEURE',
+    'LEVEL2_OPTOUT_REQUESTED',
+    'BUYER_RECEIVE_REMINDER',
+    'PENALTY',
+    'PROVISIONAL_LEVEL2',
+  ])('accepts statusType %s', (statusType) => {
+    expect(parseStatus(milestoneStatusPayload({ statusType })).statusType).toBe(
+      statusType,
+    );
+  });
+
+  it('reads absent deadline and statusData as null', () => {
+    const payload = milestoneStatusPayload();
+    delete payload.deadline;
+    delete payload.statusData;
+
+    expect(parseStatus(payload)).toMatchObject({
+      deadline: null,
+      statusData: null,
+    });
+  });
+
+  it('keeps statusData of any shape, values unchecked: the email checks what it reads', () => {
+    const statusData = { milestoneIndex: 'two', extra: [1, 2], nested: {} };
+
+    expect(
+      parseStatus(milestoneStatusPayload({ statusData })).statusData,
+    ).toEqual(statusData);
+  });
+
+  it.each([
+    ['statusType', 'SETTLED', 'field "statusType" must be one of WEIGHED,'],
+    ['deadline', '2026-12-04', 'field "deadline" must be an RFC 3339'],
+    ['statusData', null, 'field "statusData" must be a JSON object, got null'],
+    [
+      'statusData',
+      [],
+      'field "statusData" must be a JSON object, got an array',
+    ],
+    ['milestoneId', 'm-1', 'field "milestoneId" must be a UUID'],
+    ['recipients', [], 'field "recipients"'],
+    ['reason', 'x', 'unknown payload property "reason"'],
+  ])(
+    'rejects %s = %p as an invalid payload, without retrying',
+    (field, value, reason) => {
+      const text = message(() =>
+        parseStatus(milestoneStatusPayload({ [field]: value })),
+      );
+
+      expect(text).toContain(
+        'Malformed notification.milestone_status_requested',
+      );
+      expect(text).toContain(reason);
+    },
+  );
+
+  it.each(MILESTONE_STATUS_REQUIRED)('rejects a missing %s', (field) => {
+    const payload = milestoneStatusPayload();
+    delete payload[field];
+
+    expect(message(() => parseStatus(payload))).toContain(`"${field}"`);
+  });
+
+  it('rejects a command from another producer', () => {
+    expect(
+      message(() =>
+        parseMilestoneStatusRequested(
+          milestoneStatusBody({ producer: 'escrow-service' }),
+        ),
+      ),
+    ).toContain('producer must be "contract-service"');
+  });
+});
+
+describe('parseBreachNoticeRequested', () => {
+  const parseNotice = (
+    payload: Record<string, unknown> = breachNoticePayload(),
+  ) => parseBreachNoticeRequested(breachNoticeBody({ payload }));
+
+  it('reads the envelope eventId, occurredAt as reportedAt, and every payload field', () => {
+    expect(parseNotice()).toEqual(breachNoticeCommand());
+  });
+
+  it.each([
+    ['no evidence yet', { evidenceRefs: [] }],
+    ['MINOR severity', { severity: 'MINOR' }],
+    ['a reference that is not a file id', { evidenceRefs: ['photo 1.jpg'] }],
+    ['every breach reason code', { breachReasonCode: 'ACTIVATION_FAILURE' }],
+  ])('accepts %s, as the contract does', (_case, patch) => {
+    expect(parseNotice(breachNoticePayload(patch))).toMatchObject(patch);
+  });
+
+  it.each([
+    ['severity', 'SEVERE', 'field "severity" must be one of MINOR, MATERIAL'],
+    ['breachReasonCode', 'THEFT', 'field "breachReasonCode" must be one of'],
+    ['breachReasonCode', null, 'field "breachReasonCode" must be one of'],
+    ['evidenceRefs', 'f-1', 'field "evidenceRefs" must be an array'],
+    ['evidenceRefs', [1], 'evidenceRefs[0] must be a string, got a number'],
+    ['breachCaseId', 'case-1', 'field "breachCaseId" must be a UUID'],
+    [
+      'allegedBreachingRole',
+      'SELLER',
+      'unknown payload property "allegedBreachingRole"',
+    ],
+  ])(
+    'rejects %s = %p as an invalid payload, without retrying',
+    (field, value, reason) => {
+      const text = message(() =>
+        parseNotice(breachNoticePayload({ [field]: value })),
+      );
+
+      expect(text).toContain('Malformed notification.breach_notice_requested');
+      expect(text).toContain(reason);
+    },
+  );
+
+  it.each(BREACH_NOTICE_FIELDS)('rejects a missing %s', (field) => {
+    const payload = breachNoticePayload();
+    delete payload[field];
+
+    expect(message(() => parseNotice(payload))).toContain(`"${field}"`);
+  });
+});
+
+describe('parseRemedyFinalizedRequested', () => {
+  const parseRemedy = (
+    payload: Record<string, unknown> = remedyFinalizedPayload(),
+  ) => parseRemedyFinalizedRequested(remedyFinalizedBody({ payload }));
+
+  it('reads the envelope eventId and every payload field', () => {
+    expect(parseRemedy()).toEqual(remedyFinalizedCommand());
+  });
+
+  it.each([
+    ['the D94 normal completion', contractCompletedPayload()],
+    [
+      'a conforming quality resolution',
+      remedyFinalizedPayload({
+        finalBreachingRole: null,
+        breachReasonCode: null,
+        qualityDisposition: 'CONFORMING',
+        decisionSource: 'INSPECTOR_L1_5',
+        penaltyEligible: false,
+        reputationEligible: false,
+        remedyLegs: [],
+      }),
+    ],
+    [
+      'a non-conforming quality resolution',
+      remedyFinalizedPayload({
+        qualityDisposition: 'NON_CONFORMING',
+        breachReasonCode: 'QUALITY_BELOW_COMMITTED',
+        decisionSource: 'INSPECTOR_L1_5',
+      }),
+    ],
+    [
+      'a fault without penalty',
+      remedyFinalizedPayload({ penaltyEligible: false }),
+    ],
+    [
+      'a no-fault decision with a reason (mutual exit)',
+      remedyFinalizedPayload({
+        finalBreachingRole: null,
+        breachReasonCode: 'MUTUAL_EXIT',
+        decisionSource: 'MUTUAL',
+        penaltyEligible: false,
+        reputationEligible: false,
+        remedyLegs: [],
+      }),
+    ],
+  ])('accepts %s, as the contract does', (_case, payload) => {
+    expect(() => parseRemedy(payload)).not.toThrow();
+  });
+
+  it.each([
+    [
+      'no breaching role but penaltyEligible',
+      { finalBreachingRole: null, breachReasonCode: null },
+      'no finalBreachingRole cannot be penaltyEligible or reputationEligible',
+    ],
+    [
+      'no breaching role with a forfeiture leg',
+      {
+        finalBreachingRole: null,
+        penaltyEligible: false,
+        reputationEligible: false,
+      },
+      'can only have NONE, PAYMENT_SETTLEMENT or PAYMENT_REFUND legs',
+    ],
+    [
+      'a penalty leg without penaltyEligible',
+      {
+        penaltyEligible: false,
+        remedyLegs: [
+          {
+            remedyLegId: '0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d',
+            remedyType: 'CONTRACTUAL_PENALTY',
+            fundType: 'SELLER_DEPOSIT',
+            role: 'BUYER',
+            amount: '1.00',
+          },
+        ],
+      },
+      'a CONTRACTUAL_PENALTY leg needs penaltyEligible = true',
+    ],
+    [
+      'CONFORMING with a breaching role',
+      { qualityDisposition: 'CONFORMING' },
+      'qualityDisposition CONFORMING needs no finalBreachingRole',
+    ],
+    [
+      'NON_CONFORMING against the buyer',
+      {
+        qualityDisposition: 'NON_CONFORMING',
+        finalBreachingRole: 'BUYER',
+        breachReasonCode: 'QUALITY_BELOW_COMMITTED',
+      },
+      'qualityDisposition NON_CONFORMING needs SELLER',
+    ],
+    [
+      'decisionSource ADMIN',
+      { decisionSource: 'ADMIN' },
+      'field "decisionSource" must be one of',
+    ],
+    [
+      'penaltyEligible "yes"',
+      { penaltyEligible: 'yes' },
+      'field "penaltyEligible" must be a boolean',
+    ],
+    [
+      'a repeated milestone',
+      { affectedMilestoneIds: [DISPUTE_MILESTONE_ID, DISPUTE_MILESTONE_ID] },
+      'affectedMilestoneIds[1] repeats an earlier item',
+    ],
+    [
+      'settledMilestoneCount',
+      { settledMilestoneCount: 3 },
+      'unknown payload property "settledMilestoneCount"',
+    ],
+  ])(
+    'rejects %s as the contract does, without retrying',
+    (_case, patch, reason) => {
+      const text = message(() => parseRemedy(remedyFinalizedPayload(patch)));
+
+      expect(text).toContain(
+        'Malformed notification.remedy_finalized_requested',
+      );
+      expect(text).toContain(reason);
+    },
+  );
+
+  it.each(REMEDY_FINALIZED_FIELDS)('rejects a missing %s', (field) => {
+    const payload = remedyFinalizedPayload();
+    delete payload[field];
+
+    expect(message(() => parseRemedy(payload))).toContain(`"${field}"`);
   });
 });
