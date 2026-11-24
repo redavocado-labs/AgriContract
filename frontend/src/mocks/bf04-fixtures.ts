@@ -1,3 +1,9 @@
+import type { RemedyDecision } from "@/features/contracts/api/remedy"
+import type {
+  BreachCase,
+  MilestoneDetail,
+} from "@/features/milestones/api/milestones"
+
 /**
  * Dev-only BF-04 fixtures, shaped exactly like golden-flow-api.yaml + docs PR
  * #552 (D84): ContractResponse, MilestoneDetailResponse, BreachCase(Page).
@@ -16,6 +22,11 @@ export const SELLER_ID = "5e11e000-0000-4000-8000-00000000c001"
 export const ARBITRATOR_ID = "a7b17000-0000-4000-8000-00000000a001"
 export const OPERATOR_ID = "0be7a700-0000-4000-8000-00000000d001"
 export const CONTRACT_ID = "c0ffee00-2026-4142-8000-000000000142"
+export const PENDING_CONTRACT_ID = "c0ffee90-2026-4142-8000-000000000190"
+export const FINISHED_CONTRACT_ID = "c0ffee91-2026-4142-8000-000000000191"
+export const BREACH_OPEN = "bc000000-0000-4000-8000-000000000091"
+export const BREACH_WAITING = "bc000000-0000-4000-8000-000000000092"
+export const BREACH_PROPOSAL = "bc000000-0000-4000-8000-000000000093"
 export const CONTRACT_2_ID = "c0ffee38-2026-4138-8000-000000000138"
 
 const mid = (n: number) =>
@@ -118,11 +129,13 @@ export type Detail = {
     settledAt: string
   } | null
   breachCaseId: string | null
+  disputeExit: MilestoneDetail["disputeExit"]
+  remedyDecision: MilestoneDetail["remedyDecision"]
 }
 
 /** One contract, one milestone per BF-04 state. */
 export function initialDetails(): Detail[] {
-  return [
+  const base: Omit<Detail, "disputeExit" | "remedyDecision">[] = [
     {
       contractId: CONTRACT_ID,
       milestone: summary(1, "SETTLED"),
@@ -159,7 +172,7 @@ export function initialDetails(): Detail[] {
         evidence(4, "BUYER", -60 * 24 * 8),
       ],
       settlement: {
-        path: "INSPECTION_RESOLVED",
+        path: "DISPUTE_RESOLVED",
         billableQuantityKg: 9650,
         sellerAmount: "916750000.00",
         buyerRefundAmount: "33250000.00",
@@ -276,15 +289,59 @@ export function initialDetails(): Detail[] {
       breachCaseId: "bc000000-0000-4000-8000-000000000069",
     },
   ]
+  const rows: Detail[] = base.map((row) => ({
+    ...row,
+    disputeExit: null,
+    remedyDecision: null,
+  }))
+  const decided = rows[2]
+  const waiting = rows[3]
+  rows.push(
+    {
+      ...decided,
+      milestone: summary(9, "CONTESTED"),
+      breachCaseId: BREACH_OPEN,
+      remedyDecision: inspectionRemedy("PENDING_CONTEST"),
+    },
+    {
+      ...waiting,
+      milestone: summary(10, "CONTESTED"),
+      flag: { ...waiting.flag!, contestedAt: at(-20), contestedBy: "SELLER" },
+      breachCaseId: BREACH_WAITING,
+      disputeExit: disputePositions(true),
+    },
+    {
+      ...waiting,
+      milestone: summary(11, "CONTESTED"),
+      flag: { ...waiting.flag!, contestedAt: at(-20), contestedBy: "SELLER" },
+      breachCaseId: BREACH_PROPOSAL,
+      disputeExit: {
+        ...disputePositions(true),
+        openProposal: {
+          proposedByRole: "SELLER",
+          proposedAt: at(-10),
+          agreedSellerEntitlementAmount: "925000000.00",
+          agreedBuyerRefundAmount: "25000000.00",
+        },
+      },
+    },
+    ...[PENDING_CONTRACT_ID, FINISHED_CONTRACT_ID].map((contractId) => ({
+      ...rows[0],
+      contractId,
+    }))
+  )
+  waiting.disputeExit = disputePositions(false)
+  rows[1].remedyDecision = inspectionRemedy(
+    "FINALIZED",
+    "916750000.00",
+    "33250000.00",
+    false
+  )
+  return structuredClone(rows)
 }
 
-export function initialBreachCases() {
-  const base: Record<string, unknown> & {
-    resolvedAt: string | null
-    status: string
-    decisionSource: string | null
-    finalBreachingRole: string | null
-  } = {
+export function initialBreachCases(): BreachCase[] {
+  const base = {
     requestedBy: "BUYER",
     allegedBreachingRole: "SELLER",
     severity: "MINOR",
@@ -294,8 +351,8 @@ export function initialBreachCases() {
     resolvedAt: null,
     contestStatus: "NOT_APPLICABLE",
     contestDeadline: null,
-  }
-  return [
+  } as const
+  const cases: BreachCase[] = [
     {
       ...base,
       breachCaseId: BREACH_1,
@@ -361,6 +418,126 @@ export function initialBreachCases() {
       },
     },
   ]
+  cases.push(
+    {
+      ...cases[0],
+      breachCaseId: BREACH_OPEN,
+      milestoneId: mid(9),
+      status: "RESOLVED",
+      decisionSource: "INSPECTOR_L1_5",
+      resolvedAt: at(-60),
+      finalBreachingRole: "SELLER",
+      contestStatus: "OPEN",
+      contestDeadline: at(60 * 30),
+    },
+    ...[
+      [BREACH_WAITING, 10],
+      [BREACH_PROPOSAL, 11],
+    ].map(([id, index]): BreachCase => ({
+      ...base,
+      breachCaseId: String(id),
+      contractId: CONTRACT_ID,
+      milestoneId: mid(Number(index)),
+      breachReasonCode: "SHORTFALL",
+      evidenceFileIds: [file(8)],
+      reportedAt: at(-30),
+      computedResolution: null,
+    }))
+  )
+  return cases
+}
+
+export function disputePositions(settlementAllowed: boolean) {
+  return {
+    buyerPositionAmount: "912950000.00",
+    buyerPositionRefundAmount: "37050000.00",
+    sellerPositionAmount: "950000000.00",
+    sellerPositionRefundAmount: "0.00",
+    concedeAllowed: true,
+    settlementAllowed,
+    openProposal: null,
+  }
+}
+
+export function inspectionRemedy(
+  status: RemedyDecision["status"],
+  seller = "0.00",
+  buyer = "950000000.00",
+  penalty = true
+): RemedyDecision {
+  return {
+    remedyDecisionId: "87b8f263-c01b-480f-8df2-f04a829cea47",
+    status,
+    decisionSource: "INSPECTOR_L1_5",
+    finalBreachingRole: penalty ? "SELLER" : null,
+    breachReasonCode: penalty ? "QUALITY_BELOW_COMMITTED" : null,
+    qualityDisposition: penalty ? "NON_CONFORMING" : null,
+    penaltyAmount: penalty ? "57000000.00" : "0.00",
+    penaltyDebtAmount: penalty ? "20000000.00" : "0.00",
+    inspectionFeeParty: penalty ? "SELLER" : null,
+    settledMilestoneCount: 2,
+    createdAt: at(-60),
+    finalizedAt: status === "FINALIZED" ? at(-30) : null,
+    remedyLegs: [
+      {
+        remedyLegId: "a60de8b0-1d43-4533-8b42-e4c94ae780f6",
+        remedyType: "PAYMENT_REFUND",
+        fundType: "MILESTONE_PAYMENT",
+        role: "BUYER",
+        amount: buyer,
+      },
+      ...(seller !== "0.00"
+        ? [
+            {
+              remedyLegId: "b60de8b0-1d43-4533-8b42-e4c94ae780f6",
+              remedyType: "PAYMENT_SETTLEMENT",
+              fundType: "MILESTONE_PAYMENT",
+              role: "SELLER",
+              amount: seller,
+            } as const,
+          ]
+        : []),
+      ...(penalty
+        ? [
+            {
+              remedyLegId: "c60de8b0-1d43-4533-8b42-e4c94ae780f6",
+              remedyType: "CONTRACTUAL_PENALTY",
+              fundType: "SELLER_DEPOSIT",
+              role: "BUYER",
+              amount: "37000000.00",
+            } as const,
+          ]
+        : []),
+    ],
+  }
+}
+
+export function terminalDecision(moneyCleared: boolean) {
+  const decision: RemedyDecision = {
+    ...inspectionRemedy("FINALIZED", "0.00", "0.00", false),
+    decisionSource: "SYSTEM",
+    remedyLegs: [
+      {
+        remedyLegId: "a60de8b0-1d43-4533-8b42-e4c94ae780f6",
+        remedyType: "PAYMENT_REFUND",
+        fundType: "BUYER_DEPOSIT",
+        role: "BUYER",
+        amount: "47500000.00",
+      },
+      {
+        remedyLegId: "b60de8b0-1d43-4533-8b42-e4c94ae780f6",
+        remedyType: "PAYMENT_SETTLEMENT",
+        fundType: "SELLER_DEPOSIT",
+        role: "SELLER",
+        amount: "28500000.00",
+      },
+    ],
+  }
+  return {
+    targetStatus: "SETTLED" as const,
+    moneyCleared,
+    remedyDecision: decision,
+  }
 }
 
 export const milestoneIds = { mid, file }
