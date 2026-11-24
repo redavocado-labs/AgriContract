@@ -3,6 +3,7 @@ package com.agricontract.escrow.domain.model;
 import lombok.Getter;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -21,6 +22,7 @@ public final class RemedyLeg {
     private final RemedyEntryType entryType;
     private final String fundType;
     private final String userId;
+    private final String payeeRole;                 // BUYER or SELLER (D86); null on a row written before #609
     private final Money amount;
     private final String requestEventId;            // eventId = sourceEventId of the bank command (D27)
     private RemedyLegStatus status;
@@ -40,8 +42,8 @@ public final class RemedyLeg {
     }
 
     private RemedyLeg(String remedyLegId, String remedyDecisionId, String contractId, String milestoneId,
-                     RemedyType remedyType, RemedyEntryType entryType, String fundType, String userId, Money amount,
-                     String requestEventId, RemedyLegStatus status, int attempts, Instant nextAttemptAt,
+                     RemedyType remedyType, RemedyEntryType entryType, String fundType, String userId,
+                     String payeeRole, Money amount, String requestEventId, RemedyLegStatus status, int attempts, Instant nextAttemptAt,
                      String failureReason, String ledgerEntryId, Instant createdAt, Instant updatedAt) {
         this.remedyLegId = remedyLegId;
         this.remedyDecisionId = remedyDecisionId;
@@ -51,6 +53,7 @@ public final class RemedyLeg {
         this.entryType = entryType;
         this.fundType = fundType;
         this.userId = userId;
+        this.payeeRole = payeeRole;
         this.amount = amount;
         this.requestEventId = requestEventId;
         this.status = status;
@@ -65,7 +68,7 @@ public final class RemedyLeg {
     /** A new leg whose command is being sent, with a fresh command id. */
     public static RemedyLeg send(String remedyDecisionId, String contractId, PlannedRemedyLeg planned, Instant now) {
         return new RemedyLeg(planned.remedyLegId(), remedyDecisionId, contractId, planned.milestoneId(),
-                planned.remedyType(), planned.entryType(), planned.fundType(), planned.userId(),
+                planned.remedyType(), planned.entryType(), planned.fundType(), planned.userId(), planned.payeeRole(),
                 new Money(planned.amount()), UUID.randomUUID().toString(), RemedyLegStatus.SENT, 0, null, null, null,
                 now, now);
     }
@@ -73,12 +76,13 @@ public final class RemedyLeg {
     /** Rebuilds a stored row; no validation, the row was valid when written. */
     public static RemedyLeg reconstitute(String remedyLegId, String remedyDecisionId, String contractId,
                                          String milestoneId, RemedyType remedyType, RemedyEntryType entryType,
-                                         String fundType, String userId, Money amount, String requestEventId,
+                                         String fundType, String userId, String payeeRole, Money amount,
+                                         String requestEventId,
                                          RemedyLegStatus status, int attempts, Instant nextAttemptAt,
                                          String failureReason, String ledgerEntryId, Instant createdAt,
                                          Instant updatedAt) {
         return new RemedyLeg(remedyLegId, remedyDecisionId, contractId, milestoneId, remedyType, entryType, fundType,
-                userId, amount, requestEventId, status, attempts, nextAttemptAt, failureReason, ledgerEntryId,
+                userId, payeeRole, amount, requestEventId, status, attempts, nextAttemptAt, failureReason, ledgerEntryId,
                 createdAt, updatedAt);
     }
 
@@ -137,5 +141,43 @@ public final class RemedyLeg {
         this.status = RemedyLegStatus.SENT;
         this.nextAttemptAt = null;
         this.updatedAt = now;
+    }
+
+    /**
+     * OPERATOR RetryRemedyLegs (contract.remedy_retry_requested, D93): a FAILED leg, retry still scheduled or
+     * exhausted, starts a new retry cycle: in flight again, refusals counted from zero, its last failure reason kept
+     * until the bank answers. The caller resends the same command (same requestEventId, D27). False, and nothing
+     * changes, for a SENT leg (its result is still coming) or a COMPLETED one (never resent).
+     */
+    public boolean restartRetryCycle(Instant now) {
+        if (status != RemedyLegStatus.FAILED) {
+            return false;
+        }
+        this.status = RemedyLegStatus.SENT;
+        this.attempts = 0;
+        this.nextAttemptAt = null;
+        this.updatedAt = now;
+        return true;
+    }
+
+    /**
+     * The role receiving the leg's money: the stored payeeRole, or for a row written before it was stored, the one
+     * payee the entry type and fund allow (RELEASE_TO_SELLER: SELLER, REFUND_TO_BUYER: BUYER, DEPOSIT_FORFEITURE of
+     * SELLER_DEPOSIT: BUYER, of BUYER_DEPOSIT: SELLER). Empty when either party could receive it (penalty, damages).
+     */
+    public Optional<String> payeeParty() {
+        if (payeeRole != null) {
+            return Optional.of(payeeRole);
+        }
+        return switch (entryType) {
+            case RELEASE_TO_SELLER -> Optional.of("SELLER");
+            case REFUND_TO_BUYER -> Optional.of("BUYER");
+            case DEPOSIT_FORFEITURE -> switch (fundType) {
+                case "SELLER_DEPOSIT" -> Optional.of("BUYER");
+                case "BUYER_DEPOSIT" -> Optional.of("SELLER");
+                default -> Optional.empty();
+            };
+            default -> Optional.empty();
+        };
     }
 }

@@ -23,13 +23,9 @@ public final class FundConservation {
         for (PlannedRemedyLeg leg : legs) {
             requested.merge(leg.pool(), leg.amount(), BigDecimal::add);
         }
+        Map<FundPool, BigDecimal> remaining = remainingByPool(ledger);
         for (Map.Entry<FundPool, BigDecimal> pool : requested.entrySet()) {
-            BigDecimal available = BigDecimal.ZERO;
-            for (LedgerEntryView entry : ledger) {
-                if (entry.pool().equals(pool.getKey())) {
-                    available = entry.isLock() ? available.add(entry.amount()) : available.subtract(entry.amount());
-                }
-            }
+            BigDecimal available = remaining.getOrDefault(pool.getKey(), BigDecimal.ZERO);
             for (PoolAmount sent : inFlight) {
                 if (sent.pool().equals(pool.getKey())) {
                     available = available.subtract(sent.amount());
@@ -47,5 +43,17 @@ public final class FundConservation {
                         + " do not move the whole available " + available.toPlainString());
             }
         }
+    }
+
+    /**
+     * ledgerRemaining of every pool the ledger names: sum of LOCK_* entries minus every other entry. A pool whose
+     * money is all moved out is 0.00; a negative pool means the ledger moved more than it locked.
+     */
+    public static Map<FundPool, BigDecimal> remainingByPool(List<LedgerEntryView> ledger) {
+        Map<FundPool, BigDecimal> remaining = new LinkedHashMap<>();
+        for (LedgerEntryView entry : ledger) {
+            remaining.merge(entry.pool(), entry.signedAmount(), BigDecimal::add);
+        }
+        return remaining;
     }
 }

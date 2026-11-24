@@ -24,7 +24,7 @@ public class JdbcRemedyLegRepository implements RemedyLegRepository {
 
     private static final String LEG_COLUMNS = """
             remedy_leg_id, remedy_decision_id, contract_id, milestone_id, remedy_type, entry_type, fund_type, user_id,
-            amount, request_event_id, status, attempts, next_attempt_at, failure_reason, ledger_entry_id, created_at,
+            payee_role, amount, request_event_id, status, attempts, next_attempt_at, failure_reason, ledger_entry_id, created_at,
             updated_at
             """;
 
@@ -37,6 +37,7 @@ public class JdbcRemedyLegRepository implements RemedyLegRepository {
             RemedyEntryType.valueOf(rs.getString("entry_type")),
             rs.getString("fund_type"),
             rs.getString("user_id"),
+            rs.getString("payee_role"),
             new Money(rs.getBigDecimal("amount")),
             rs.getString("request_event_id"),
             RemedyLegStatus.valueOf(rs.getString("status")),
@@ -82,11 +83,11 @@ public class JdbcRemedyLegRepository implements RemedyLegRepository {
     @Transactional(propagation = Propagation.MANDATORY)
     public void insert(RemedyLeg leg) {
         jdbc.update("INSERT INTO remedy_leg (remedy_leg_id, remedy_decision_id, contract_id, milestone_id,"
-                        + " remedy_type, entry_type, fund_type, user_id, amount, request_event_id, status, attempts,"
-                        + " created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)",
+                        + " remedy_type, entry_type, fund_type, user_id, payee_role, amount, request_event_id, status,"
+                        + " attempts, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)",
                 leg.getRemedyLegId(), leg.getRemedyDecisionId(), leg.getContractId(), leg.getMilestoneId(),
                 leg.getRemedyType().name(), leg.getEntryType().name(), leg.getFundType(), leg.getUserId(),
-                leg.getAmount().amount(), leg.getRequestEventId(), leg.getStatus().name(),
+                leg.getPayeeRole(), leg.getAmount().amount(), leg.getRequestEventId(), leg.getStatus().name(),
                 Timestamp.from(leg.getCreatedAt()), Timestamp.from(leg.getUpdatedAt()));
     }
 
@@ -122,6 +123,25 @@ public class JdbcRemedyLegRepository implements RemedyLegRepository {
         return jdbc.queryForList("SELECT remedy_leg_id FROM remedy_leg WHERE status = 'FAILED'"
                 + " AND next_attempt_at <= ? ORDER BY next_attempt_at LIMIT ?", String.class, Timestamp.from(now),
                 limit);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public List<RemedyLeg> findByContractIdForUpdate(String contractId) {
+        return jdbc.query("SELECT " + LEG_COLUMNS + " FROM remedy_leg WHERE contract_id = ?"
+                + " ORDER BY remedy_leg_id FOR UPDATE", LEG, contractId);
+    }
+
+    @Override
+    public List<String> findAcceptedDecisionIds(String contractId) {
+        return jdbc.queryForList("SELECT remedy_decision_id FROM remedy_decision WHERE contract_id = ?"
+                + " AND status = 'ACCEPTED' ORDER BY remedy_decision_id", String.class, contractId);
+    }
+
+    @Override
+    public boolean hasLegInFlight(String contractId) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS (SELECT 1 FROM remedy_leg WHERE contract_id = ?"
+                + " AND status IN ('SENT', 'FAILED'))", Boolean.class, contractId));
     }
 
     private static Instant instant(Timestamp timestamp) {

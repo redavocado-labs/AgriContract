@@ -27,4 +27,13 @@ public interface RemedyLegRepository {
 
     /** Refused legs whose resend is due. */
     List<String> findWithRetryDue(Instant now, int limit);
+
+    /** Every leg of the contract, row-locked until the caller's transaction ends, in remedyLegId order. */
+    List<RemedyLeg> findByContractIdForUpdate(String contractId);
+
+    /** The ACCEPTED decisions of the contract, sorted; plain read. */
+    List<String> findAcceptedDecisionIds(String contractId);
+
+    /** True when a leg of the contract is SENT or FAILED (its money not moved yet); plain read. */
+    boolean hasLegInFlight(String contractId);
 }

@@ -56,7 +56,7 @@ public final class RemedyLegPlanner {
                 break; // reported below with the one message
             }
             planned.add(new PlannedRemedyLeg(leg.remedyLegId(), type, entry, leg.fundType(),
-                    BUYER.equals(leg.role()) ? buyerId : sellerId,
+                    BUYER.equals(leg.role()) ? buyerId : sellerId, leg.role(),
                     milestoneFund ? affectedMilestoneIds.get(0) : null, leg.amount()));
         }
         if (needsMilestone && affectedMilestoneIds.size() != 1) {
