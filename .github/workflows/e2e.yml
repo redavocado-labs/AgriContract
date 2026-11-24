@@ -1,0 +1,97 @@
+name: E2E
+
+# The golden flow (#149) on the whole compose stack, built from this commit. It builds every service image and runs
+# them together, so it is too slow for every pull request: it runs on main, on a schedule, and on demand (a PR can
+# be checked with "Run workflow" on its branch).
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'contracts/**'
+      - '.github/workflows/e2e.yml'
+  schedule:
+    # 01:00 UTC = 08:00 in Vietnam, Monday to Friday: a scenario that activates a contract needs a Vietnam
+    # business day (it skips itself on a weekend or holiday).
+    - cron: '0 1 * * 1-5'
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  golden-flow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Throwaway secrets for this run only; the database password matches the compose MySQL default.
+      - name: Write .env
+        run: |
+          secret() { openssl rand -hex 24; }
+          cat > .env <<EOF
+          DB_ROOT_PASSWORD=password
+          DB_USERNAME=root
+          DB_PASSWORD=password
+          KEYCLOAK_ADMIN=admin
+          KEYCLOAK_ADMIN_PASSWORD=$(secret)
+          KEYCLOAK_JWK_URI=http://keycloak:8080/realms/agricontract/protocol/openid-connect/certs
+          KEYCLOAK_ISSUER_URI=http://localhost:8180/realms/agricontract
+          KEYCLOAK_USER_SERVICE_SECRET=$(secret)
+          RABBITMQ_DEFAULT_USER=guest
+          RABBITMQ_DEFAULT_PASS=guest
+          GATEWAY_INTERNAL_SECRET=$(secret)
+          SERVICE_INTERNAL_SECRET=$(secret)
+          INTAKE_IMAP_USERNAME=intake
+          INTAKE_IMAP_PASSWORD=$(secret)
+          MAIL_HOST=mailhog
+          MAIL_PORT=1025
+          OPERATOR_EMAIL=operator@agricontract.test
+          INSPECTION_FILE_DOWNLOAD_ENABLED=true
+          EOF
+
+      # Only the services the golden flow calls and their dependencies: reputation, analytics and pricing are
+      # not on its path. e2e/compose.e2e.yml only shortens the plot geo-check timeout.
+      - name: Build and start the stack
+        run: >-
+          docker compose -f docker-compose.yml -f e2e/compose.e2e.yml up -d --build
+          api-gateway user-service product-service contract-service escrow-service bank-service
+          inspection-service audit-service notification-service file-service mailhog
+
+      # user_profiles exists once user-service has run its Flyway migrations, so wait for it to start.
+      - name: Seed users
+        run: |
+          for i in $(seq 1 90); do
+            docker logs user-service 2>&1 | grep -q 'Started UserServiceApplication' && break
+            sleep 5
+          done
+          docker exec -i user-db mysql --default-character-set=utf8mb4 -uroot -ppassword user_db \
+            < scripts/seed/02-user-db.sql
+
+      - name: Golden flow
+        working-directory: backend/e2e
+        run: npm test
+
+      - name: Collect service logs
+        if: failure()
+        run: |
+          mkdir -p e2e/out/logs
+          for c in $(docker compose ps -a --format '{{.Name}}'); do docker logs "$c" > "e2e/out/logs/$c.log" 2>&1 || true; done
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-evidence
+          path: backend/e2e/out/
+          if-no-files-found: ignore
