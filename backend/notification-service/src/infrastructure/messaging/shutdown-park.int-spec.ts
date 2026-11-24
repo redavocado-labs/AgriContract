@@ -26,6 +26,8 @@ import {
   NotifyLevel15AssignmentWaitingUseCase,
   NotifyLevel15InspectorAssignmentUseCase,
   NotifyEscrowLegAlertUseCase,
+  NotifyEscrowRemedyLegAlertUseCase,
+  NotifyEscrowRemedyRejectedUseCase,
   NotifyContractAnchorUseCase,
 } from '../../application/use-cases';
 import { validate } from '../../config/env.validation';
@@ -127,6 +129,14 @@ describe('shutdown park on real MySQL', () => {
         sender,
       ),
       escrowLegAlert: new NotifyEscrowLegAlertUseCase(
+        sender,
+        'ops@agricontract.test',
+      ),
+      escrowRemedyLegAlert: new NotifyEscrowRemedyLegAlertUseCase(
+        sender,
+        'ops@agricontract.test',
+      ),
+      escrowRemedyRejected: new NotifyEscrowRemedyRejectedUseCase(
         sender,
         'ops@agricontract.test',
       ),

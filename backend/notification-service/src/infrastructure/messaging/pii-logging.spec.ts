@@ -19,6 +19,8 @@ import {
   NotifyLevel15AssignmentWaitingUseCase,
   NotifyLevel15InspectorAssignmentUseCase,
   NotifyEscrowLegAlertUseCase,
+  NotifyEscrowRemedyLegAlertUseCase,
+  NotifyEscrowRemedyRejectedUseCase,
   NotifyContractAnchorUseCase,
   NotifyCategoryApprovedUseCase,
   NotifyCategoryRejectedUseCase,
@@ -41,6 +43,9 @@ import {
   lockPayload,
   waitingEnvelope,
   legAlertEnvelope,
+  remedyLegAlertEnvelope,
+  remedyRejectedEnvelope,
+  REMEDY_REJECTED_REASON,
   inspectorEnvelope,
   inspectorPayload,
 } from '../../../test/support/commands';
@@ -119,6 +124,14 @@ async function harness(
       sender,
     ),
     escrowLegAlert: new NotifyEscrowLegAlertUseCase(sender, operatorEmail),
+    escrowRemedyLegAlert: new NotifyEscrowRemedyLegAlertUseCase(
+      sender,
+      operatorEmail,
+    ),
+    escrowRemedyRejected: new NotifyEscrowRemedyRejectedUseCase(
+      sender,
+      operatorEmail,
+    ),
   });
   const consumer = new NotificationEventConsumer(amqp, routes, commands);
   await consumer.onModuleInit();
@@ -441,6 +454,58 @@ describe('no personal data in the logs', () => {
     expect(lines.join('\n')).toContain(
       'OPERATOR_EMAIL is not set, so this operator alert has no recipient',
     );
+  });
+
+  it.each([
+    [
+      'a remedy leg alert',
+      'notification-svc.notification.escrow_remedy_leg_alert_requested',
+      remedyLegAlertEnvelope,
+    ],
+    [
+      'a remedy rejected alert',
+      'notification-svc.notification.escrow_remedy_rejected_requested',
+      remedyRejectedEnvelope,
+    ],
+  ])(
+    '%s with OPERATOR_EMAIL unset: dead-lettered at once, the log names the variable',
+    async (_case, queue, envelope) => {
+      const lines = captureLogs();
+      const sendMail = jest.fn().mockResolvedValue({});
+      const { deliver, nacks } = await harness(sendMail, null);
+
+      deliver(queue, JSON.stringify(envelope()));
+      await jest.advanceTimersByTimeAsync(0);
+
+      expect(nacks).toEqual([false]); // no retry: none could find an address
+      expect(sendMail).not.toHaveBeenCalled();
+      expect(lines.join('\n')).toContain(
+        'OPERATOR_EMAIL is not set, so this operator alert has no recipient',
+      );
+    },
+  );
+
+  it('a malformed remedy rejected alert is dead-lettered without its reason in the log', async () => {
+    const lines = captureLogs();
+    const sendMail = jest.fn().mockResolvedValue({});
+    const { deliver, nacks } = await harness(sendMail);
+    const envelope = remedyRejectedEnvelope();
+    const payload = envelope.payload as Record<string, unknown>;
+
+    deliver(
+      'notification-svc.notification.escrow_remedy_rejected_requested',
+      JSON.stringify({
+        ...envelope,
+        payload: { ...payload, reason: REMEDY_REJECTED_REASON.repeat(7) },
+      }),
+    );
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(nacks).toEqual([false]);
+    expect(sendMail).not.toHaveBeenCalled();
+    const logged = lines.join('\n');
+    expect(logged).toContain('must be 1 to 500 characters, got 595');
+    expect(logged).not.toContain('Remedy legs total');
   });
 
   it('an unexpected error with personal data in its message is reduced to its code', async () => {

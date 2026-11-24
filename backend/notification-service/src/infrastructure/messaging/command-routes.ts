@@ -7,6 +7,8 @@ import {
   type NotifyContractAnchorUseCase,
   type NotifyContractTerminatedUseCase,
   type NotifyEscrowLegAlertUseCase,
+  type NotifyEscrowRemedyLegAlertUseCase,
+  type NotifyEscrowRemedyRejectedUseCase,
   type NotifyLevel15AssignmentWaitingUseCase,
   type NotifyLevel15InspectorAssignmentUseCase,
   type NotifyUserKycResultUseCase,
@@ -19,6 +21,8 @@ import {
   parseContractAnchorRequested,
   parseContractTerminatedRequested,
   parseEscrowLegAlertRequested,
+  parseEscrowRemedyLegAlertRequested,
+  parseEscrowRemedyRejectedRequested,
   parseLevel15AssignmentWaitingRequested,
   parseLevel15InspectorAssignmentRequested,
   parseUserKycResultRequested,
@@ -45,6 +49,8 @@ export interface CommandUseCases {
   level15AssignmentWaiting: NotifyLevel15AssignmentWaitingUseCase;
   level15InspectorAssignment: NotifyLevel15InspectorAssignmentUseCase;
   escrowLegAlert: NotifyEscrowLegAlertUseCase;
+  escrowRemedyLegAlert: NotifyEscrowRemedyLegAlertUseCase;
+  escrowRemedyRejected: NotifyEscrowRemedyRejectedUseCase;
 }
 
 /**
@@ -92,6 +98,14 @@ export function commandRoutes(u: CommandUseCases): CommandRoutes {
     'notification.escrow_leg_alert_requested': (b) =>
       operatorAlert(() =>
         u.escrowLegAlert.execute(parseEscrowLegAlertRequested(b)),
+      ),
+    'notification.escrow_remedy_leg_alert_requested': (b) =>
+      operatorAlert(() =>
+        u.escrowRemedyLegAlert.execute(parseEscrowRemedyLegAlertRequested(b)),
+      ),
+    'notification.escrow_remedy_rejected_requested': (b) =>
+      operatorAlert(() =>
+        u.escrowRemedyRejected.execute(parseEscrowRemedyRejectedRequested(b)),
       ),
   };
 }

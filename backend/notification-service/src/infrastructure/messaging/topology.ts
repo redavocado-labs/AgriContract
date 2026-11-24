@@ -48,7 +48,11 @@ export const TOPOLOGY = [
     // escrow-service's outbox exchange (agricontract.eventing.outbox.exchange).
     exchange: 'agricontract.escrow',
     dlx: 'notification-svc.escrow.dlx',
-    routingKeys: ['notification.escrow_leg_alert_requested'],
+    routingKeys: [
+      'notification.escrow_leg_alert_requested',
+      'notification.escrow_remedy_leg_alert_requested',
+      'notification.escrow_remedy_rejected_requested',
+    ],
   },
 ] as const;
 
@@ -108,6 +112,13 @@ export type RoutingKey = (typeof TOPOLOGY)[number]['routingKeys'][number];
  * escrow-service's exchange, agricontract.escrow, in a row of its own with
  * the DLX notification-svc.escrow.dlx. Should escrow-service declare this
  * queue ahead (#528), it must copy these names and options byte for byte.
+ *
+ * `notification.escrow_remedy_leg_alert_requested` (D93) tells the Operator a
+ * money leg of a finalized remedy decision was refused by the bank with no
+ * resend left, and `notification.escrow_remedy_rejected_requested` (D93) that
+ * escrow refused a whole remedy decision (milestone-escrow design §6.8). Same
+ * exchange, same row, same DLX as the leg alert; should escrow-service declare
+ * them ahead (#609), the same byte-for-byte rule holds.
  */
 export const COMMAND_ROUTING_KEYS = [
   'notification.contract_anchor_requested',
@@ -119,6 +130,8 @@ export const COMMAND_ROUTING_KEYS = [
   'notification.level1_5_assignment_waiting_requested',
   'notification.level1_5_inspector_assignment_requested',
   'notification.escrow_leg_alert_requested',
+  'notification.escrow_remedy_leg_alert_requested',
+  'notification.escrow_remedy_rejected_requested',
 ] as const;
 
 export type CommandRoutingKey = (typeof COMMAND_ROUTING_KEYS)[number];

@@ -12,3 +12,5 @@ export { NotifyUserLockChangedUseCase } from './notify-user-lock-changed.use-cas
 export { NotifyLevel15AssignmentWaitingUseCase } from './notify-level15-assignment-waiting.use-case';
 export { NotifyLevel15InspectorAssignmentUseCase } from './notify-level15-inspector-assignment.use-case';
 export { NotifyEscrowLegAlertUseCase } from './notify-escrow-leg-alert.use-case';
+export { NotifyEscrowRemedyLegAlertUseCase } from './notify-escrow-remedy-leg-alert.use-case';
+export { NotifyEscrowRemedyRejectedUseCase } from './notify-escrow-remedy-rejected.use-case';

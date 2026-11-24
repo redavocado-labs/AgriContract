@@ -108,4 +108,18 @@ export const COMMAND_KINDS = {
     notificationType: 'ESCROW_LEG_RETURN_EXHAUSTED',
     templateVersion: 'escrow-leg-return-exhausted/v1',
   },
+  // notification.escrow_remedy_leg_alert_requested (D93): a remedy leg the
+  // bank refused with no resend left, to the configured operator address.
+  escrowRemedyLegFailed: {
+    eventType: 'notification.escrow_remedy_leg_alert_requested',
+    notificationType: 'ESCROW_REMEDY_LEG_FAILED',
+    templateVersion: 'escrow-remedy-leg-failed/v1',
+  },
+  // notification.escrow_remedy_rejected_requested (D93): escrow refused a whole
+  // remedy decision, to the configured operator address.
+  escrowRemedyRejected: {
+    eventType: 'notification.escrow_remedy_rejected_requested',
+    notificationType: 'ESCROW_REMEDY_REJECTED',
+    templateVersion: 'escrow-remedy-rejected/v1',
+  },
 } as const satisfies Record<string, NotificationKind>;

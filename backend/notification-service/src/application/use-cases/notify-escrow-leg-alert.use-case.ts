@@ -7,6 +7,7 @@ import { COMMAND_KINDS } from '../notification-command-kinds';
 import { OperatorEmailNotConfiguredError } from '../notification-errors';
 import type { NotificationSender } from '../notification-sender';
 import { vietnamTime } from '../vietnam-time';
+import { vnd } from '../vnd';
 
 /*
  * `notification.escrow_leg_alert_requested` -> the Operator (design §4, D68;
@@ -149,12 +150,6 @@ export function escrowLegAlertBody(
 
   lines.push('');
   return lines.join('\n');
-}
-
-/** "150,000,000.00 VND": the contract's money, grouped as text, never as a float. */
-function vnd(amount: string): string {
-  const [whole, cents] = amount.split('.');
-  return `${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}.${cents} VND`;
 }
 
 function instant(value: string): string {
