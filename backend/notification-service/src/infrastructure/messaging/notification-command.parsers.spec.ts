@@ -58,6 +58,9 @@ import {
   remedyFinalizedPayload,
   contractCompletedPayload,
   DISPUTE_MILESTONE_ID,
+  milestoneAnchorBody,
+  milestoneAnchorCommand,
+  milestoneAnchorPayload,
 } from '../../../test/support/commands';
 import {
   parseActivationCancelRequested,
@@ -89,6 +92,8 @@ import {
   parseBreachNoticeRequested,
   REMEDY_FINALIZED_FIELDS,
   parseRemedyFinalizedRequested,
+  MILESTONE_ANCHOR_FIELDS,
+  parseMilestoneAnchorRequested,
   parseMilestoneFundingStatusRequested,
 } from './notification-command.parsers';
 
@@ -1599,5 +1604,83 @@ describe('parseRemedyFinalizedRequested', () => {
     delete payload[field];
 
     expect(message(() => parseRemedy(payload))).toContain(`"${field}"`);
+  });
+});
+
+describe('parseMilestoneAnchorRequested', () => {
+  const parseAnchor = (
+    payload: Record<string, unknown> = milestoneAnchorPayload(),
+  ) => parseMilestoneAnchorRequested(milestoneAnchorBody({ payload }));
+
+  it('reads the envelope eventId and every payload field', () => {
+    expect(parseAnchor()).toEqual(milestoneAnchorCommand());
+  });
+
+  it.each([
+    ['an empty settlementSummary', { settlementSummary: {} }],
+    ['a settlementSummary of any shape', { settlementSummary: { x: [1] } }],
+    // The contract types otsProof a plain string: the use case judges it.
+    ['an otsProof that is not base64', { otsProof: 'not base64!' }],
+    ['an empty otsProof', { otsProof: '' }],
+  ])('accepts %s, as the contract does', (_case, patch) => {
+    expect(parseAnchor(milestoneAnchorPayload(patch))).toMatchObject(patch);
+  });
+
+  it.each([
+    [
+      'recordHash',
+      'ABC',
+      'field "recordHash" must be 64 lowercase hex characters',
+    ],
+    ['otsProof', 42, 'field "otsProof" must be a string, got a number'],
+    ['otsProof', null, 'field "otsProof" must be a string, got null'],
+    [
+      'settlementSummary',
+      null,
+      'field "settlementSummary" must be a JSON object, got null',
+    ],
+    [
+      'settlementSummary',
+      [],
+      'field "settlementSummary" must be a JSON object, got an array',
+    ],
+    ['milestoneId', 'm-1', 'field "milestoneId" must be a UUID'],
+    ['recipients', [], 'field "recipients"'],
+    ['sourceEventId', '1', 'unknown payload property "sourceEventId"'],
+  ])(
+    'rejects %s = %p as an invalid payload, without retrying',
+    (field, value, reason) => {
+      const text = message(() =>
+        parseAnchor(milestoneAnchorPayload({ [field]: value })),
+      );
+
+      expect(text).toContain(
+        'Malformed notification.milestone_anchor_requested',
+      );
+      expect(text).toContain(reason);
+    },
+  );
+
+  it.each(MILESTONE_ANCHOR_FIELDS)('rejects a missing %s', (field) => {
+    const payload = milestoneAnchorPayload();
+    delete payload[field];
+
+    expect(message(() => parseAnchor(payload))).toContain(`"${field}"`);
+  });
+
+  it('rejects a command from another producer', () => {
+    expect(
+      message(() =>
+        parseMilestoneAnchorRequested(
+          milestoneAnchorBody({ producer: 'contract-service' }),
+        ),
+      ),
+    ).toContain('producer must be "audit-service"');
+  });
+
+  it('rejects the signed-contract anchor command, whose eventType is not this queue’s', () => {
+    expect(
+      message(() => parseMilestoneAnchorRequested(anchorBody())),
+    ).toContain("is not this queue's command");
   });
 });
