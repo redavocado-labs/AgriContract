@@ -29,6 +29,7 @@ import {
   NotifyMilestoneStatusUseCase,
   NotifyBreachNoticeUseCase,
   NotifyRemedyFinalizedUseCase,
+  NotifyMilestoneAnchorUseCase,
   NotifyUserKycResultUseCase,
   NotifyUserLockChangedUseCase,
 } from './application/use-cases';
@@ -109,6 +110,7 @@ const USE_CASES = {
     useCaseOf(NotifyMilestoneStatusUseCase),
     useCaseOf(NotifyBreachNoticeUseCase),
     useCaseOf(NotifyRemedyFinalizedUseCase),
+    useCaseOf(NotifyMilestoneAnchorUseCase),
     {
       provide: DOCUMENT_FILES,
       inject: [ConfigService],
@@ -210,6 +212,7 @@ const USE_CASES = {
         NotifyMilestoneStatusUseCase,
         NotifyBreachNoticeUseCase,
         NotifyRemedyFinalizedUseCase,
+        NotifyMilestoneAnchorUseCase,
       ],
       useFactory: (
         contractAnchor: NotifyContractAnchorUseCase,
@@ -228,6 +231,7 @@ const USE_CASES = {
         milestoneStatus: NotifyMilestoneStatusUseCase,
         breachNotice: NotifyBreachNoticeUseCase,
         remedyFinalized: NotifyRemedyFinalizedUseCase,
+        milestoneAnchor: NotifyMilestoneAnchorUseCase,
       ) =>
         commandRoutes({
           contractAnchor,
@@ -246,6 +250,7 @@ const USE_CASES = {
           milestoneStatus,
           breachNotice,
           remedyFinalized,
+          milestoneAnchor,
         }),
     },
     {

@@ -11,6 +11,7 @@ import {
   DocumentFileMismatchError,
   FileNotReadyError,
   FileServiceRejectedError,
+  OtsProofInvalidError,
 } from '../../application/notification-errors';
 import {
   anchorCommand,
@@ -36,6 +37,8 @@ import {
   breachNoticeEnvelope,
   documentReadyCommand,
   documentReadyEnvelope,
+  milestoneAnchorCommand,
+  milestoneAnchorEnvelope,
   milestoneStatusCommand,
   milestoneStatusEnvelope,
   remedyFinalizedCommand,
@@ -106,6 +109,7 @@ const HANDLERS = [
   'milestoneStatus',
   'breachNotice',
   'remedyFinalized',
+  'milestoneAnchor',
   'categoryApproved',
   'categoryRejected',
 ] as const;
@@ -525,6 +529,12 @@ describe('NotificationEventConsumer', () => {
 
   it.each([
     [
+      'milestoneAnchor',
+      'notification-svc.notification.milestone_anchor_requested',
+      milestoneAnchorEnvelope,
+      milestoneAnchorCommand,
+    ],
+    [
       'milestoneStatus',
       'notification-svc.notification.milestone_status_requested',
       milestoneStatusEnvelope,
@@ -648,6 +658,25 @@ describe('NotificationEventConsumer', () => {
       expect(channel.acked).toEqual([]);
     },
   );
+
+  it('dead-letters a milestone anchor whose proof is not usable at once', async () => {
+    const { consumer, service, open } = setup();
+    service.milestoneAnchor.mockRejectedValue(
+      new OtsProofInvalidError('e1', 'not strict base64'),
+    );
+    await consumer.onModuleInit();
+    const channel = new FakeChannel();
+    await open(channel);
+
+    const msg = channel.deliver(
+      'notification-svc.notification.milestone_anchor_requested',
+      milestoneAnchorEnvelope(),
+    );
+    await flush();
+
+    expect(channel.nacked).toEqual([{ msg, requeue: false }]);
+    expect(channel.acked).toEqual([]);
+  });
 
   it('keeps a not-READY document retryable: the route rethrows it unchanged, not as NonRetryableError', async () => {
     const execute = jest.fn().mockRejectedValue(new FileNotReadyError('f1'));

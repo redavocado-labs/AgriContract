@@ -50,6 +50,14 @@ export const TOPOLOGY = [
     ],
   },
   {
+    // audit-service's outbox exchange, by the agricontract.<service>
+    // convention of the other publishers: audit-service has no outbox yet
+    // (outbox disabled), so it must publish here for this binding to route.
+    exchange: 'agricontract.audit',
+    dlx: 'notification-svc.audit.dlx',
+    routingKeys: ['notification.milestone_anchor_requested'],
+  },
+  {
     // escrow-service's outbox exchange (agricontract.eventing.outbox.exchange).
     exchange: 'agricontract.escrow',
     dlx: 'notification-svc.escrow.dlx',
@@ -101,6 +109,14 @@ export type RoutingKey = (typeof TOPOLOGY)[number]['routingKeys'][number];
  * decision. Same exchange, same DLX; contract-service declares all three ahead
  * (ConsumerQueuesDeclaredAhead, D96) with these exact names and options.
  *
+ * `notification.milestone_anchor_requested` (hash-chain design §4.3) mails
+ * both parties the settlement of a milestone with the OpenTimestamps proof
+ * of its audit record attached (design §3.3). It rides audit-service's
+ * exchange, agricontract.audit, in a row of its own with the DLX
+ * notification-svc.audit.dlx. audit-service publishes nothing yet; it must
+ * publish on this exchange, and if it declares the queue ahead, copy these
+ * names and options byte for byte.
+ *
  * `notification.user_kyc_result_requested` tells a user the KYC decision on
  * their organisation; its one address is `payload.recipientEmail`. It rides
  * user-service's exchange, agricontract.user, in a row of its own. Unlike
@@ -149,6 +165,7 @@ export const COMMAND_ROUTING_KEYS = [
   'notification.milestone_status_requested',
   'notification.breach_notice_requested',
   'notification.remedy_finalized_requested',
+  'notification.milestone_anchor_requested',
   'notification.user_kyc_result_requested',
   'notification.user_lock_changed_requested',
   'notification.level1_5_assignment_waiting_requested',

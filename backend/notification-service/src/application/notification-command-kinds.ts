@@ -96,6 +96,13 @@ export const COMMAND_KINDS = {
     notificationType: 'MILESTONE_PROVISIONAL_LEVEL2',
     templateVersion: 'milestone-provisional-level2/v1',
   },
+  // notification.milestone_anchor_requested (hash-chain §4.3): the
+  // settlement email with the OpenTimestamps proof attached (design §3.3).
+  milestoneAnchor: {
+    eventType: 'notification.milestone_anchor_requested',
+    notificationType: 'MILESTONE_ANCHOR',
+    templateVersion: 'milestone-anchor/v1',
+  },
   // notification.breach_notice_requested (D96): the BreachCase notice.
   breachNotice: {
     eventType: 'notification.breach_notice_requested',
