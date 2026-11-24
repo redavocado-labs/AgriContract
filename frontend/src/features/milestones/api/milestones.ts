@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { apiClient } from "@/shared/api/client"
 import { milestoneSchema } from "@/features/contracts/api/contracts"
+import { remedyDecisionSchema } from "@/features/contracts/api/remedy"
 import type { Challenge } from "@/features/contracts/types/contract"
 import type { IssueType } from "../lib/milestone-consent"
 
@@ -52,30 +53,23 @@ const settlement = z.object({
   settledAt: instant,
 })
 const partyRole = z.enum(["BUYER", "SELLER"])
+const positionAmount = z.string().regex(/^\d+\.\d{2}$/)
 const disputeExit = z.object({
-  buyerPositionAmount: money,
-  sellerPositionAmount: money,
+  buyerPositionAmount: positionAmount,
+  sellerPositionAmount: positionAmount,
+  buyerPositionRefundAmount: positionAmount.optional(),
+  sellerPositionRefundAmount: positionAmount.optional(),
   concedeAllowed: z.boolean(),
   settlementAllowed: z.boolean(),
   openProposal: z.object({
-    agreedSellerEntitlementAmount: money,
+    agreedSellerEntitlementAmount: positionAmount,
+    agreedBuyerRefundAmount: positionAmount.optional(),
     proposedByRole: partyRole,
     proposedAt: instant,
   }).nullable(),
   freeCancelUntil: instant.nullish(),
   inspectionFeePartyLabel: z.string().nullish(),
 })
-const remedy = z.object({
-  legs: z.array(z.object({
-    remedyLegId: z.string(),
-    type: z.string(),
-    amount: money,
-    recipientRole: partyRole,
-  })),
-  penaltyClaimAmount: money.nullish(),
-})
-export type Remedy = z.infer<typeof remedy>
-
 export const milestoneDetailSchema = z.object({
   contractId: z.string().min(1),
   milestone: milestoneSchema,
@@ -86,7 +80,7 @@ export const milestoneDetailSchema = z.object({
   settlement: settlement.nullable(),
   breachCaseId: z.string().nullable(),
   disputeExit: disputeExit.nullish(),
-  remedy: remedy.nullish(),
+  remedyDecision: remedyDecisionSchema.nullish(),
 })
 export type MilestoneDetail = z.infer<typeof milestoneDetailSchema>
 export type EvidenceView = z.infer<typeof evidence>

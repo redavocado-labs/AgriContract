@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { apiClient } from "@/shared/api/client"
+import { terminalDecisionSchema } from "./remedy"
 import type {
   Contract,
   ContractPage,
@@ -68,7 +69,7 @@ const wire = z.object({
   reservedQuantity: z.union([z.number().finite(), z.string()]).nullish(),
   milestones: z.array(milestoneSchema).optional(),
   activationRecovery: activationRecovery.nullish(),
-  completion: z.object({ status: z.literal("PENDING_MONEY") }).nullish(),
+  terminalDecision: terminalDecisionSchema.nullish(),
 })
 
 export function mapContract(value: unknown, userId: string): Contract {
@@ -95,7 +96,7 @@ export function mapContract(value: unknown, userId: string): Contract {
       data.reservedQuantity == null ? undefined : String(data.reservedQuantity),
     milestones: (data.milestones ?? []) as Milestone[],
     activationRecovery: data.activationRecovery ?? undefined,
-    completion: data.completion ?? undefined,
+    terminalDecision: data.terminalDecision ?? undefined,
   }
 }
 export function mapContractPage(
