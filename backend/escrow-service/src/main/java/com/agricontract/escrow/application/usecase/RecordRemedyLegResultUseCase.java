@@ -1,6 +1,7 @@
 package com.agricontract.escrow.application.usecase;
 
 import com.agricontract.escrow.application.dto.ReturnResultCommand;
+import com.agricontract.escrow.application.port.OperatorAlertPublisher;
 import com.agricontract.escrow.domain.exception.InvalidDepositLegException;
 import com.agricontract.escrow.domain.model.Money;
 import com.agricontract.escrow.domain.model.RemedyLeg;
@@ -18,7 +19,8 @@ import java.util.Optional;
 /**
  * A bank result (release, refund or seize) that names a remedyLegId (#249), under the leg's row lock:
  * completed → COMPLETED, and the contract is queued for the clearance check (#609); refused → the same command is resent per the retry schedule (same eventId, D27), with no
- * resend left the leg stays FAILED and the error log alerts OPERATOR. A result for a leg escrow does not know is
+ * resend left the leg stays FAILED, the error log and notification.escrow_remedy_leg_alert_requested alert OPERATOR
+ * (#609), who may ask for a new cycle (RestartRemedyLegsUseCase). A result for a leg escrow does not know is
  * logged and acked; one that does not match the command that leg sent is refused (DLQ).
  */
 @Slf4j
@@ -28,6 +30,7 @@ public class RecordRemedyLegResultUseCase {
 
     private final RemedyLegRepository remedyLegs;
     private final ContractClearanceRepository clearances;
+    private final OperatorAlertPublisher operatorAlerts;
     private final RetrySchedule retrySchedule;
     private final Clock clock;
 
@@ -82,7 +85,19 @@ public class RecordRemedyLegResultUseCase {
                                 + " must act", leg.getRemedyDecisionId(), leg.getRemedyLegId(), leg.getContractId(),
                         leg.getEntryType(), leg.getAmount().amount().toPlainString(), leg.getRequestEventId(),
                         command.failureReason());
+                alertOperator(leg, command, now);
             }
         }
+    }
+
+    /** The payee of a row written before payee_role is derived; when either party could be paid, no command. */
+    private void alertOperator(RemedyLeg leg, ReturnResultCommand command, Instant now) {
+        Optional<String> party = leg.payeeParty();
+        if (party.isEmpty()) {
+            log.error("event=remedy_leg_alert_no_party remedyLegId={} entryType={} fundType={}: payee unknown, no"
+                    + " notification command written", leg.getRemedyLegId(), leg.getEntryType(), leg.getFundType());
+            return;
+        }
+        operatorAlerts.remedyLegFailed(leg, party.get(), now, command.correlationId(), command.eventId());
     }
 }

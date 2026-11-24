@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import com.agricontract.escrow.application.dto.RemedyFinalizedCommand;
 import com.agricontract.escrow.application.exception.BankLedgerUnavailableException;
 import com.agricontract.escrow.application.port.BankLedgerReader;
+import com.agricontract.escrow.application.port.OperatorAlertPublisher;
 import com.agricontract.escrow.application.port.RemedyCommandPublisher;
 import com.agricontract.escrow.domain.model.FundPool;
 import com.agricontract.escrow.domain.model.LedgerEntryView;
@@ -49,7 +50,8 @@ class DispatchRemedyLegsUseCaseTest {
     final OutstandingCommandRepository outstanding = mock(OutstandingCommandRepository.class);
     final BankLedgerReader ledger = mock(BankLedgerReader.class);
     final RemedyCommandPublisher commands = mock(RemedyCommandPublisher.class);
-    final DispatchRemedyLegsUseCase useCase = new DispatchRemedyLegsUseCase(repo, depositLegs, milestones, settlementLegs, outstanding, ledger, commands,
+    final OperatorAlertPublisher alerts = mock(OperatorAlertPublisher.class);
+    final DispatchRemedyLegsUseCase useCase = new DispatchRemedyLegsUseCase(repo, depositLegs, milestones, settlementLegs, outstanding, ledger, commands, alerts,
             Clock.fixed(Instant.parse("2026-11-20T00:00:00Z"), ZoneOffset.UTC));
 
     final String contractId = UUID.randomUUID().toString();
