@@ -261,6 +261,19 @@ describe("negotiation and capability boundaries", () => {
     expect(canWithdraw(offered, true)).toBe(true)
     expect(canWithdraw({ ...offered, status: "SIGNED" }, true)).toBe(false)
   })
+  it("keeps both actions available during negotiation for a verified party", () => {
+    const negotiating = mapContract({ ...coffee, status: "NEGOTIATING" }, "buyer-test")
+    expect(canNegotiate(negotiating, true)).toBe(true)
+    expect(canWithdraw(negotiating, true)).toBe(true)
+    expect(canWithdraw(negotiating, false)).toBe(false)
+  })
+  it("requires both matching participant identity and the assigned role", () => {
+    const contract = mapContract(coffee, "buyer-test")
+    expect(participantRole(contract, "buyer-test", ["BUYER"])).toBe("BUYER")
+    expect(participantRole(contract, "seller-test", ["SELLER"])).toBe("SELLER")
+    expect(participantRole(contract, "outsider", ["BUYER", "SELLER"])).toBeNull()
+    expect(participantRole(contract, "seller-test", ["BUYER"])).toBeNull()
+  })
   it("withdraws with an Idempotency-Key and accepts only 204", async () => {
     http.post.mockResolvedValueOnce({ status: 204 })
     await withdrawOffer(id, "key")

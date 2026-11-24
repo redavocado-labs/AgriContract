@@ -66,6 +66,19 @@ function show(node: React.ReactNode) {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  window.localStorage.clear()
+  if (!navigator.locks) {
+    Object.defineProperty(navigator, "locks", {
+      configurable: true,
+      value: {
+        request: async (
+          _name: string,
+          _opts: unknown,
+          cb: (lock: object) => unknown
+        ) => cb({}),
+      },
+    })
+  }
   stub.post.mockReset()
   stub.get.mockReset()
   stub.fresh.mockReset().mockResolvedValue(true)
