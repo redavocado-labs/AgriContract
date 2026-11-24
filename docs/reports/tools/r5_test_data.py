@@ -153,8 +153,10 @@ set_par_text(plain(tc_intro), "The test cases are kept in two workbooks that fol
 set_par_text(plain(find(d, "Unit Test Cases: Report5_Unit Test.xls")), "Unit Test Cases: Report-5.1_Unit_Test.xlsx")
 set_par_text(plain(find(d, "Other Test Cases (IT, ST, AT)")),
              "Other Test Cases (IT, ST): Report-5.2_Test_Report.xlsx, built from the Bruno collection backend/bruno "
-             "by tools/r5_2_test_report.py; ITC rows are integration tests, STC rows system tests, and rows without "
-             "a Bruno request yet are marked in Note. AT cases are added after the mentor demo.")
+             "by tools/r5_2_test_report.py, so far for api-gateway, user-service and product-service; ITC rows are "
+             "integration tests, STC rows system tests, and rows without "
+             "a Bruno request yet are marked in Note. The other services add their sheets, and AT cases are added "
+             "after the mentor demo.")
 
 # ---------------------------------------------------------------- Change log
 fill_change_log(next_table(find(d, "Change Log", tag="w:p")),
