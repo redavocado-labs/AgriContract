@@ -39,6 +39,8 @@ public class RabbitMQConfig {
     public static final String REMEDY_FINALIZED_QUEUE = "escrow-svc.contract.remedy_finalized";
     public static final String SEIZE_COMPLETED_QUEUE = "escrow-svc.bank.seize_completed";
     public static final String SEIZE_FAILED_QUEUE = "escrow-svc.bank.seize_failed";
+    // OPERATOR RetryRemedyLegs (#609, D93).
+    public static final String REMEDY_RETRY_QUEUE = "escrow-svc.contract.remedy_retry_requested";
 
     // One Declarables bean on purpose: DlqMonitor reads the .dlq queues from it.
     // The bank.lock_* queues are read by BankLockResultConsumer (#102). They must always exist: bank's outbox poller
@@ -71,6 +73,8 @@ public class RabbitMQConfig {
         bindWithDlq(declarables, REMEDY_FINALIZED_QUEUE, contracts, "remedy.finalized", dlx);
         bindWithDlq(declarables, SEIZE_COMPLETED_QUEUE, bank, "bank.seize_completed", dlx);
         bindWithDlq(declarables, SEIZE_FAILED_QUEUE, bank, "bank.seize_failed", dlx);
+        // OPERATOR RetryRemedyLegs (#609, D93), read by RemedyRetryRequestedConsumer.
+        bindWithDlq(declarables, REMEDY_RETRY_QUEUE, contracts, "contract.remedy_retry_requested", dlx);
         return new Declarables(declarables);
     }
 
