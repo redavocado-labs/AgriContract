@@ -26,6 +26,9 @@ backend/scripts/
 !backend/scripts/seed/
 !backend/scripts/seed/**
 
+# E2E evidence of a local run (#149); CI uploads it as an artifact
+backend/e2e/out/
+
 # Maven wrapper
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/

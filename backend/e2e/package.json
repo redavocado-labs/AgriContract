@@ -1,0 +1,12 @@
+{
+  "name": "agricontract-e2e",
+  "private": true,
+  "description": "Golden-flow end-to-end scenarios against the running compose stack (#149, #279).",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test --test-concurrency=1 --test-timeout=900000 \"scenarios/*.test.mjs\""
+  }
+}
