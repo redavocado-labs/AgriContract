@@ -1,6 +1,7 @@
 package com.agricontract.audit.infrastructure.config;
 
 import com.agricontract.audit.domain.exception.InvalidAuditRecordException;
+import com.agricontract.audit.infrastructure.messaging.CatalogEvent;
 import com.agricontract.audit.infrastructure.messaging.DlqMonitor;
 import com.agricontract.audit.infrastructure.messaging.InvalidEventPayloadException;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
@@ -24,8 +25,10 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Source events arrive on the producer's exchange. audit-service has its own DLX, as every new consumer must:
@@ -40,7 +43,14 @@ public class RabbitConfiguration {
     public static final String CONTRACT_SIGNED_KEY = "contract.signed";
     public static final String CONTRACT_SIGNED_QUEUE = "audit-svc." + CONTRACT_SIGNED_KEY;
     public static final String CONTRACT_SIGNED_DLQ = CONTRACT_SIGNED_QUEUE + ".dlq";
-    public static final List<String> DLQS = List.of(CONTRACT_SIGNED_DLQ);
+    /** contract.signed and every #255 catalog queue's DLQ, for the DlqMonitor. */
+    public static final List<String> DLQS = Stream.concat(Stream.of(CONTRACT_SIGNED_DLQ),
+            CatalogEvent.ALL.stream().map(e -> CatalogEvent.queue(e.eventType()) + ".dlq")).toList();
+
+    /** The #255 catalog queues CatalogEventConsumer listens on (audit-svc.<eventType>). */
+    public static String[] catalogQueues() {
+        return CatalogEvent.ALL.stream().map(e -> CatalogEvent.queue(e.eventType())).toArray(String[]::new);
+    }
 
     @Bean
     Declarables auditTopology() {
@@ -54,6 +64,25 @@ public class RabbitConfiguration {
         declarables.add(BindingBuilder.bind(queue).to(contracts).with(CONTRACT_SIGNED_KEY));
         // Dead-lettered messages keep their original routing key.
         declarables.add(BindingBuilder.bind(dlq).to(dlx).with(CONTRACT_SIGNED_KEY));
+        // #255: one queue per catalog event on its producer's topic exchange, the same names contract-service
+        // declared ahead (audit-svc.<eventType>, this DLX), so its declarations are no-ops.
+        Map<String, TopicExchange> exchanges = new LinkedHashMap<>();
+        exchanges.put(CONTRACTS_EXCHANGE, contracts);
+        for (CatalogEvent event : CatalogEvent.ALL) {
+            TopicExchange exchange = exchanges.computeIfAbsent(event.exchange(),
+                    name -> {
+                        TopicExchange created = new TopicExchange(name, true, false);
+                        declarables.add(created);
+                        return created;
+                    });
+            String name = CatalogEvent.queue(event.eventType());
+            Queue catalogQueue = QueueBuilder.durable(name).deadLetterExchange(DLX).build();
+            Queue catalogDlq = QueueBuilder.durable(name + ".dlq").build();
+            declarables.add(catalogQueue);
+            declarables.add(catalogDlq);
+            declarables.add(BindingBuilder.bind(catalogQueue).to(exchange).with(event.eventType()));
+            declarables.add(BindingBuilder.bind(catalogDlq).to(dlx).with(event.eventType()));
+        }
         return new Declarables(declarables);
     }
 
