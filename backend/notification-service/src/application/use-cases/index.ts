@@ -3,6 +3,7 @@ export { NotifyCategoryRejectedUseCase } from './notify-category-rejected.use-ca
 export { NotifyActivationCancelRequestedUseCase } from './notify-activation-cancel-requested.use-case';
 export { NotifyContractActivationFailedUseCase } from './notify-contract-activation-failed.use-case';
 export { NotifyContractAnchorUseCase } from './notify-contract-anchor.use-case';
+export { NotifyContractDocumentReadyUseCase } from './notify-contract-document-ready.use-case';
 export {
   NotifyContractTerminatedUseCase,
   unsupportedTermination,

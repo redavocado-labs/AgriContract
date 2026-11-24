@@ -40,6 +40,7 @@ const EXPECTED_QUEUES = [
   'notification-svc.notification.contract_activation_failed_requested',
   'notification-svc.notification.contract_terminated_requested',
   'notification-svc.notification.milestone_funding_status_requested',
+  'notification-svc.notification.contract_document_ready_requested',
   'notification-svc.category.approved',
   'notification-svc.category.rejected',
   'notification-svc.notification.user_kyc_result_requested',
@@ -66,7 +67,7 @@ const dlxOf = (queue: string): string => {
 };
 
 describe('topology (must match the Java RabbitMQConfig)', () => {
-  it('names the 14 queues and 14 DLQs', () => {
+  it('names the 15 queues and 15 DLQs', () => {
     expect(queueNames()).toEqual(EXPECTED_QUEUES);
     expect(dlqNames()).toEqual(EXPECTED_QUEUES.map((q) => `${q}.dlq`));
   });
@@ -95,11 +96,11 @@ describe('topology (must match the Java RabbitMQConfig)', () => {
     ]);
   });
 
-  it('declares 28 queues: main queues with only x-dead-letter-exchange, DLQs without arguments', async () => {
+  it('declares 30 queues: main queues with only x-dead-letter-exchange, DLQs without arguments', async () => {
     const { channel, queues } = recordingChannel();
     await declareTopology(channel);
 
-    expect(queues).toHaveLength(28);
+    expect(queues).toHaveLength(30);
 
     for (const q of EXPECTED_QUEUES) {
       // toEqual on the whole options object also fails on any extra option
@@ -129,7 +130,17 @@ describe('topology (must match the Java RabbitMQConfig)', () => {
     const { channel, bindings } = recordingChannel();
     await declareTopology(channel);
 
-    expect(bindings).toHaveLength(28);
+    expect(bindings).toHaveLength(30);
+    expect(bindings).toContainEqual([
+      'notification-svc.notification.contract_document_ready_requested',
+      'agricontract.contracts',
+      'notification.contract_document_ready_requested',
+    ]);
+    expect(bindings).toContainEqual([
+      'notification-svc.notification.contract_document_ready_requested.dlq',
+      'notification-svc.contracts.dlx',
+      'notification.contract_document_ready_requested',
+    ]);
     // contract-service's funding status (milestone-escrow §6b), on its exchange.
     expect(bindings).toContainEqual([
       'notification-svc.notification.milestone_funding_status_requested',
