@@ -22,6 +22,7 @@ import org.testcontainers.containers.RabbitMQContainer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -80,6 +81,64 @@ class ContractSignedFlowIntegrationTest {
     void purge() {
         admin.purgeQueue(RabbitConfiguration.CONTRACT_SIGNED_QUEUE, false);
         admin.purgeQueue(RabbitConfiguration.CONTRACT_SIGNED_DLQ, false);
+    }
+
+    // ---- #255: the catalog events ----
+
+    @Test
+    void catalogEvents_fromEveryProducerExchange_chainOnTheirSubject_onceEach() throws Exception {
+        Map<String, Map<String, Object>> samples = CatalogEventConsumerTest.samples();
+        String contractId = (String) samples.get("milestone.seller_weighed").get("contractId");
+        List<String> ids = new java.util.ArrayList<>();
+        for (CatalogEvent event : CatalogEvent.ALL) {
+            Map<String, Object> envelope = CatalogEventConsumerTest.envelope(event.eventType(),
+                    samples.get(event.eventType()));
+            ids.add((String) envelope.get("eventId"));
+            sendTo(event.exchange(), envelope);
+            if (event.eventType().equals("milestone.seller_weighed")) {
+                sendTo(event.exchange(), envelope);
+            }
+        }
+        await().atMost(Duration.ofSeconds(30)).until(() -> ids.stream().allMatch(id -> count("source_event_id", id) == 1));
+
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM audit_record WHERE source_event_id IN ("
+                + String.join(",", ids.stream().map(id -> "'" + id + "'").toList()) + ")", Integer.class))
+                .as("one row per event, the repeated delivery included").isEqualTo(CatalogEvent.ALL.size());
+        // The contract's records link to each other in global order: each prev_hash_subject is the record before.
+        List<Map<String, Object>> chain = jdbc.queryForList("SELECT record_hash, prev_hash_subject FROM audit_record"
+                + " WHERE subject_type = 'CONTRACT' AND subject_id = ? ORDER BY global_seq", contractId);
+        assertThat(chain).hasSizeGreaterThan(10);
+        for (int i = 1; i < chain.size(); i++) {
+            assertThat(chain.get(i).get("prev_hash_subject")).isEqualTo(chain.get(i - 1).get("record_hash"));
+        }
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM audit_record WHERE subject_type = 'SYSTEM'"
+                + " AND source_type IN ('SECURITY_LOCK_TRIGGERED', 'EXTERNAL_VERIFIER_KEY_REGISTERED')"
+                + " AND source_event_id IN (?, ?)", Integer.class, ids.get(ids.size() - 4), ids.get(ids.size() - 3)))
+                .isEqualTo(2);
+        assertThat(jdbc.queryForObject("SELECT content FROM audit_record WHERE source_type = 'MILESTONE_EVENT'"
+                + " AND source_event_type = 'milestone.settled' AND subject_id = ?", String.class, contractId))
+                .doesNotContain("recipients").doesNotContain("@");
+    }
+
+    @Test
+    void aBrokenCatalogEvent_goesToItsDlq_andWritesNothing() throws Exception {
+        Map<String, Object> payload = CatalogEventConsumerTest.samples().get("remedy.finalized");
+        payload.remove("remedyLegs");
+        Map<String, Object> envelope = CatalogEventConsumerTest.envelope("remedy.finalized", payload);
+        sendTo(CatalogEvent.CONTRACTS, envelope);
+
+        String dlq = CatalogEvent.queue("remedy.finalized") + ".dlq";
+        await().atMost(Duration.ofSeconds(20)).until(() -> {
+            Message dead = rabbit.receive(dlq, 500);
+            return dead != null && JSON.readTree(dead.getBody()).get("eventId").asText().equals(envelope.get("eventId"));
+        });
+        assertThat(count("source_event_id", (String) envelope.get("eventId"))).isZero();
+    }
+
+    private void sendTo(String exchange, Map<String, Object> event) throws Exception {
+        Message message = MessageBuilder.withBody(JSON.writeValueAsBytes(event))
+                .setContentType(MessageProperties.CONTENT_TYPE_JSON).build();
+        rabbit.send(exchange, (String) event.get("eventType"), message);
     }
 
     @Test
