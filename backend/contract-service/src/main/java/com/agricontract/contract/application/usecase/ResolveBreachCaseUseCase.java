@@ -23,6 +23,7 @@ import com.agricontract.contract.domain.repository.ContractRepository;
 import com.agricontract.contract.domain.repository.MilestoneRepository;
 import com.agricontract.contract.domain.repository.RemedyDecisionRepository;
 import com.agricontract.contract.domain.repository.SettlementProposalRepository;
+import com.agricontract.contract.domain.model.remedy.RemedyFundType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -109,7 +110,8 @@ public class ResolveBreachCaseUseCase {
         proposals.lapseOpen(milestone.milestoneId(), now);
         var terms = contract.getCoffeeTerms().snapshot();
         BigDecimal left = terms.sellerDepositAmount().value()
-                .subtract(remedyDecisions.sellerDepositForfeited(contract.getContractId().value()).value());
+                .subtract(remedyDecisions.depositForfeited(contract.getContractId().value(),
+                        RemedyFundType.SELLER_DEPOSIT).value());
         VndAmount remaining = new VndAmount(left.signum() < 0 ? BigDecimal.ZERO : left);
         int settled = (int) milestones.findByContractId(milestone.contractId()).stream()
                 .filter(m -> m.status() == MilestoneStatus.SETTLED).count();

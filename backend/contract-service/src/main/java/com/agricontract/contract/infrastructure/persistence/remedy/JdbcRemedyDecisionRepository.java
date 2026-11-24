@@ -95,10 +95,14 @@ public class JdbcRemedyDecisionRepository implements RemedyDecisionRepository {
     }
 
     @Override
-    public VndAmount sellerDepositForfeited(String contractId) {
+    public VndAmount depositForfeited(String contractId, RemedyFundType deposit) {
+        if (deposit == RemedyFundType.MILESTONE_PAYMENT) {
+            throw new IllegalArgumentException("MILESTONE_PAYMENT is not a deposit");
+        }
         BigDecimal sum = jdbc.queryForObject("SELECT COALESCE(SUM(l.amount), 0) FROM remedy_leg l JOIN remedy_decision d"
-                + " ON d.remedy_decision_id = l.remedy_decision_id WHERE d.contract_id = ? AND l.fund_type ="
-                + " 'SELLER_DEPOSIT' AND d.status <> 'SUPERSEDED'", BigDecimal.class, contractId);
+                + " ON d.remedy_decision_id = l.remedy_decision_id WHERE d.contract_id = ? AND l.fund_type = ?"
+                + " AND l.remedy_type = 'DEPOSIT_FORFEITURE' AND d.status <> 'SUPERSEDED'", BigDecimal.class,
+                contractId, deposit.name());
         return new VndAmount(sum == null ? BigDecimal.ZERO : sum);
     }
 

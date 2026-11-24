@@ -28,6 +28,7 @@ import com.agricontract.contract.domain.repository.Level15RequestRepository;
 import com.agricontract.contract.domain.repository.MilestoneRepository;
 import com.agricontract.contract.domain.repository.RemedyDecisionRepository;
 import com.agricontract.contract.domain.repository.SettlementProposalRepository;
+import com.agricontract.contract.domain.model.remedy.RemedyFundType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -56,6 +57,7 @@ public class DisputeExitStep {
     private final MilestoneRepository milestones;
     private final BreachCaseRepository breachCases;
     private final RemedyDecisionRepository remedyDecisions;
+    private final ContractCompletion completion;
     private final InspectionReportRepository reports;
     private final SettlementProposalRepository proposals;
     private final Level15RequestRepository requests;
@@ -143,7 +145,8 @@ public class DisputeExitStep {
 
         var terms = contract.getCoffeeTerms().snapshot();
         BigDecimal left = terms.sellerDepositAmount().value()
-                .subtract(remedyDecisions.sellerDepositForfeited(contract.getContractId().value()).value());
+                .subtract(remedyDecisions.depositForfeited(contract.getContractId().value(),
+                        RemedyFundType.SELLER_DEPOSIT).value());
         VndAmount remaining = new VndAmount(left.signum() < 0 ? BigDecimal.ZERO : left);
         int settled = (int) milestones.findByContractId(milestone.contractId()).stream()
                 .filter(m -> m.status() == MilestoneStatus.SETTLED).count();
@@ -163,6 +166,7 @@ public class DisputeExitStep {
         }
         boolean cancelled = level15.cancelOpen(contract, milestone,
                 type == DisputeExitType.CONCEDE ? CANCELLED_BY_CONCESSION : CANCELLED_BY_SETTLEMENT, now);
+        completion.afterSettled(contract, now);
         log.info("event=dispute_exit contractId={} milestoneId={} type={} stage={} conceder={} breachCaseId={}"
                         + " remedyDecisionId={} finalBreachingRole={} sellerAmount={} feeParty={} inspectionCancelled={}",
                 contract.getContractId().value(), milestone.milestoneId(), type, window.stage(), conceder,

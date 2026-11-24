@@ -2,6 +2,7 @@ package com.agricontract.contract.domain.repository;
 
 import com.agricontract.contract.domain.model.remedy.RemedyDecision;
 import com.agricontract.contract.domain.model.terms.VndAmount;
+import com.agricontract.contract.domain.model.remedy.RemedyFundType;
 
 import java.util.Optional;
 
@@ -27,8 +28,9 @@ public interface RemedyDecisionRepository {
     void markSuperseded(String remedyDecisionId, java.time.Instant at);
 
     /**
-     * The SELLER_DEPOSIT legs taken so far by the contract's remedy decisions, FINALIZED or PENDING_CONTEST, never SUPERSEDED: what the
-     * seller deposit has already lost (0.00 when none).
+     * The DEPOSIT_FORFEITURE legs taken so far from that deposit by the contract's remedy decisions, FINALIZED or
+     * PENDING_CONTEST, never SUPERSEDED: what the deposit has already lost (0.00 when none). A deposit return leg of
+     * the normal completion (#238) is not a forfeiture and never counts.
      */
-    VndAmount sellerDepositForfeited(String contractId);
+    VndAmount depositForfeited(String contractId, RemedyFundType deposit);
 }
