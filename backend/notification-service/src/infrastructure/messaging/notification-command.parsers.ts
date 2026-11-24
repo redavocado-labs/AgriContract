@@ -35,6 +35,7 @@ import {
   type RemedyLeg,
   type ContractAnchorRequestedCommand,
   type ContractDocumentReadyRequestedCommand,
+  type MilestoneAnchorRequestedCommand,
   type EscrowLegAlertRequestedCommand,
   type EscrowRemedyLegAlertRequestedCommand,
   type EscrowRemedyRejectedRequestedCommand,
@@ -807,6 +808,47 @@ export function parseRemedyFinalizedRequested(
     );
   }
   return command;
+}
+
+export const MILESTONE_ANCHOR_REQUESTED =
+  'notification.milestone_anchor_requested';
+
+/** Payload properties of `milestoneAnchorRequested`, all required. */
+export const MILESTONE_ANCHOR_FIELDS = [
+  'contractId',
+  'milestoneId',
+  'recipients',
+  'recordHash',
+  'otsProof',
+  'settlementSummary',
+] as const;
+
+/**
+ * audit-service's settlement email with the OpenTimestamps proof (hash-chain
+ * design §4.3). `otsProof` is any string here, as the contract declares it:
+ * whether it is a usable base64 proof is the use case's check, which
+ * dead-letters a bad one with its own message. `settlementSummary` is any
+ * JSON object.
+ */
+export function parseMilestoneAnchorRequested(
+  body: Buffer,
+): MilestoneAnchorRequestedCommand {
+  const { envelope, payload } = readCommand(
+    body,
+    MILESTONE_ANCHOR_REQUESTED,
+    'audit-service',
+  );
+  payload.only(MILESTONE_ANCHOR_FIELDS);
+
+  return {
+    eventId: envelope.eventId,
+    contractId: payload.uuid('contractId'),
+    milestoneId: payload.uuid('milestoneId'),
+    recipients: payload.recipients(),
+    recordHash: payload.hash('recordHash'),
+    otsProof: payload.text('otsProof'),
+    settlementSummary: payload.object('settlementSummary'),
+  };
 }
 
 export const CONTRACT_DOCUMENT_READY_REQUESTED =
