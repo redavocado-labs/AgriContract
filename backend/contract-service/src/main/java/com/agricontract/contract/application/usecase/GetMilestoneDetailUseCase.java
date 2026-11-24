@@ -2,6 +2,9 @@ package com.agricontract.contract.application.usecase;
 
 import com.agricontract.calendar.VietnamBusinessDays;
 import com.agricontract.contract.application.dto.MilestoneDetailView;
+import com.agricontract.contract.application.dto.MilestoneSummary;
+import com.agricontract.contract.application.service.MilestoneSummaries;
+import com.agricontract.contract.domain.repository.RemedyDecisionRepository;
 import com.agricontract.contract.application.port.MilestoneDeliverySettings;
 import com.agricontract.contract.application.port.MilestoneFlagSettings;
 import com.agricontract.contract.application.port.TransactionRunner;
@@ -40,26 +43,40 @@ public class GetMilestoneDetailUseCase {
     private final VietnamBusinessDays calendar;
     private final DisputeExitStep exits;
     private final SettlementProposalRepository proposals;
+    private final RemedyDecisionRepository remedyDecisions;
+    private final MilestoneSummaries summaries;
     private final TransactionRunner transactions;
 
     public MilestoneDetailView execute(String contractId, String milestoneId, String actorId, Set<String> roles) {
         return transactions.inTransaction(() -> {
             MilestoneReadAccess.Readable readable = access.require(contractId, milestoneId, actorId, roles, STAFF);
             Milestone milestone = readable.milestone();
-            VndAmount price = milestone.effectiveUnitPrice() != null ? milestone.effectiveUnitPrice()
-                    : readable.contract().getCoffeeTerms().snapshot().negotiated().agreedPrice();
-            return new MilestoneDetailView(contractId, milestone, price, effectiveDeliveryDeadline(milestone),
-                    sellerDeclaration(milestone), buyerReceipt(milestone, readable.contract()),
-                    flag(milestone),
-                    evidence.findByMilestoneId(milestoneId), disputeExit(readable.contract(), milestone));
+            MilestoneSummary summary = summaries.of(readable.contract(), milestone);
+            return new MilestoneDetailView(contractId, milestone, summary.effectiveUnitPrice(),
+                    summary.effectiveDeliveryDeadline(), sellerDeclaration(milestone),
+                    buyerReceipt(milestone, readable.contract()), flag(milestone),
+                    evidence.findByMilestoneId(milestoneId), disputeExit(readable.contract(), milestone),
+                    remedyDecisions.findCurrentByMilestoneId(milestoneId).orElse(null));
         });
     }
 
     /** D92: null outside the moments where a concession or a settlement can end the dispute. */
     private MilestoneDetailView.DisputeExitBlock disputeExit(Contract contract, Milestone milestone) {
-        return exits.peek(contract, milestone).map(w -> new MilestoneDetailView.DisputeExitBlock(w.buyerPosition(),
-                w.sellerPosition(), w.concedeAllowed(), w.settlementAllowed(),
-                proposals.findOpenByMilestoneId(milestone.milestoneId()).orElse(null))).orElse(null);
+        return exits.peek(contract, milestone).map(w -> {
+            var open = proposals.findOpenByMilestoneId(milestone.milestoneId()).orElse(null);
+            return new MilestoneDetailView.DisputeExitBlock(w.buyerPosition(), refund(milestone, w.buyerPosition()),
+                    w.sellerPosition(), refund(milestone, w.sellerPosition()), w.concedeAllowed(),
+                    w.settlementAllowed(), open,
+                    open == null ? null : refund(milestone, open.agreedSellerEntitlementAmount()));
+        }).orElse(null);
+    }
+
+    /** D99: what goes back to the buyer when the seller gets {@code sellerAmount} of the locked batch. */
+    private static VndAmount refund(Milestone milestone, VndAmount sellerAmount) {
+        if (milestone.batchAmount() == null) {
+            throw new IllegalStateException("Milestone " + milestone.milestoneId() + " in a dispute has no locked batch");
+        }
+        return new VndAmount(milestone.batchAmount().value().subtract(sellerAmount.value()));
     }
 
     private MilestoneDetailView.SellerDeclaration sellerDeclaration(Milestone milestone) {
@@ -88,21 +105,5 @@ public class GetMilestoneDetailUseCase {
         }
         int days = contract.getCoffeeTerms().snapshot().negotiated().buyerConfirmWindowDays();
         return new MilestoneDetailView.BuyerReceiptBlock(receipt, calendar.deadline(receipt.receivedAt(), days));
-    }
-
-    /**
-     * expectedDeliveryDate + fundingDelayBusinessDays + graceDays, counted in Vietnam business days (MilestoneResponse,
-     * design §6b).
-     */
-    LocalDate effectiveDeliveryDeadline(Milestone milestone) {
-        LocalDate date = milestone.expectedDeliveryDate();
-        int remaining = milestone.fundingDelayBusinessDays() + milestone.graceDays();
-        while (remaining > 0) {
-            date = date.plusDays(1);
-            if (calendar.isBusinessDay(date)) {
-                remaining--;
-            }
-        }
-        return date;
     }
 }
