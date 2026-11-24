@@ -92,6 +92,14 @@ export class MysqlNotificationLogRepository implements NotificationLogRepository
     return rows[0]?.status === 'SENT' ? 'ALREADY_SENT' : 'IN_PROGRESS';
   }
 
+  async isSent(key: NotificationKey): Promise<boolean> {
+    const [rows] = await this.pool.query<RowDataPacket[]>(
+      `SELECT 1 FROM notification_logs WHERE ${BY_KEY} AND status = 'SENT'`,
+      keyParams(key),
+    );
+    return rows.length > 0;
+  }
+
   async heartbeat(key: NotificationKey): Promise<void> {
     await this.pool.query(
       `UPDATE notification_logs

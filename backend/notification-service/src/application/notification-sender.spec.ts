@@ -104,6 +104,29 @@ describe('NotificationSender.send (plan §4.3)', () => {
     });
   });
 
+  it('alreadySent reads the row of the key: true once SENT, false before and when FAILED', async () => {
+    expect(await sender.alreadySent('evt-1', KIND, 'a@example.test')).toBe(
+      false,
+    );
+
+    email.failFor.add('a@example.test');
+    await expect(
+      sender.send('evt-1', KIND, 'a@example.test', 'S', 'B'),
+    ).rejects.toThrow();
+    expect(await sender.alreadySent('evt-1', KIND, 'a@example.test')).toBe(
+      false,
+    );
+
+    email.failFor.clear();
+    await sender.send('evt-1', KIND, 'a@example.test', 'S', 'B');
+    expect(await sender.alreadySent('evt-1', KIND, 'a@example.test')).toBe(
+      true,
+    );
+    expect(await sender.alreadySent('evt-2', KIND, 'a@example.test')).toBe(
+      false,
+    );
+  });
+
   it('skips a recipient already SENT for this event', async () => {
     await sender.send('evt-1', KIND, 'a@example.test', 'S', 'B');
     email.sent.length = 0;

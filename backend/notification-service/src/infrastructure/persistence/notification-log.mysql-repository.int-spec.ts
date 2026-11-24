@@ -193,6 +193,27 @@ describe('MysqlNotificationLogRepository on real MySQL', () => {
     );
   });
 
+  it('isSent is true for a SENT row only: not for none, PENDING or FAILED, nor another kind', async () => {
+    const none = newEvent();
+    const pending = newEvent();
+    await repo.claim(log(pending), LEASE_MS);
+    const failed = newEvent();
+    await repo.claim(log(failed), LEASE_MS);
+    await repo.markFailed(key(failed), 'ECONNREFUSED');
+    const sent = newEvent();
+    await repo.claim(log(sent), LEASE_MS);
+    await repo.markSent(key(sent), PROVIDER_ID);
+
+    expect(await repo.isSent(key(none))).toBe(false);
+    expect(await repo.isSent(key(pending))).toBe(false);
+    expect(await repo.isSent(key(failed))).toBe(false);
+    expect(await repo.isSent(key(sent))).toBe(true);
+    expect(await repo.isSent(key(sent, 'seller@it.test'))).toBe(false);
+    expect(
+      await repo.isSent({ ...key(sent), notificationType: 'ANOTHER_KIND' }),
+    ).toBe(false);
+  });
+
   it('a heartbeat touches only a PENDING row: SENT and FAILED rows keep their updated_at', async () => {
     const sentEvent = newEvent();
     await repo.claim(log(sentEvent), LEASE_MS);

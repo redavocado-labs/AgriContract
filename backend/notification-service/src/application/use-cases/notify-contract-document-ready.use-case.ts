@@ -34,7 +34,28 @@ export class NotifyContractDocumentReadyUseCase {
     private readonly files: DocumentFiles,
   ) {}
 
+  /**
+   * A redelivery after every recipient is SENT (the ack was lost) returns
+   * before reading the PDF: file-service being down or the file gone by then
+   * must not retry and dead-letter a command nobody is missing a mail of.
+   * Otherwise the PDF is read once and mailed to whoever is not SENT yet;
+   * send() claims each, so a concurrent delivery still sends nothing twice.
+   */
   async execute(command: ContractDocumentReadyRequestedCommand): Promise<void> {
+    const pending: typeof command.recipients = [];
+    for (const recipient of command.recipients) {
+      if (
+        !(await this.sender.alreadySent(
+          command.documentId,
+          KIND,
+          recipient.email,
+        ))
+      ) {
+        pending.push(recipient);
+      }
+    }
+    if (pending.length === 0) return;
+
     const file = await this.files.readReady(command.fileId);
     const sha256 = createHash('sha256').update(file.content).digest('hex');
     if (sha256 !== command.documentFileHash) {
@@ -49,7 +70,7 @@ export class NotifyContractDocumentReadyUseCase {
       content: file.content,
     };
 
-    for (const recipient of command.recipients) {
+    for (const recipient of pending) {
       await this.sender.send(
         command.documentId,
         KIND,

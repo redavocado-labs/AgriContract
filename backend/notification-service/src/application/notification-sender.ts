@@ -159,6 +159,26 @@ export class NotificationSender {
   }
 
   /**
+   * Whether the email of this event, kind and recipient is already SENT: a
+   * read only, for a caller that would otherwise do work it does not need
+   * (send() still claims before sending). A failed read is a retryable
+   * NotificationDeliveryError, as every log step.
+   */
+  async alreadySent(
+    eventId: string,
+    kind: NotificationKind,
+    recipientEmail: string,
+  ): Promise<boolean> {
+    return this.logStep(eventId, () =>
+      this.logs.isSent({
+        eventId,
+        recipientEmail,
+        notificationType: kind.notificationType,
+      }),
+    );
+  }
+
+  /**
    * Claims the send, polling while another delivery holds a live claim
    * (step 2 of send). Each look is a full claim attempt, so taking over a
    * FAILED or expired row stays atomic between concurrent waiters.
