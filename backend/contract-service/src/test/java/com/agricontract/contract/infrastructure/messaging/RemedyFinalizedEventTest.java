@@ -115,6 +115,38 @@ class RemedyFinalizedEventTest {
                 leg(RemedyType.PAYMENT_REFUND, RemedyFundType.MILESTONE_PAYMENT, SignerRole.BUYER, "150000000.00")));
     }
 
+    @Test
+    void normalCompletion_isValid_contractLevel_withTheDecisionAsAttribution() throws Exception {
+        String id = UUID.randomUUID().toString();
+        RemedyDecision d = new RemedyDecision(id, contract.getContractId().value(), null, null,
+                RemedyStatus.FINALIZED, null, null, null, DecisionSource.SYSTEM, VndAmount.parse("0.00"),
+                VndAmount.parse("0.00"), 2, List.of(
+                        leg(RemedyType.PAYMENT_REFUND, RemedyFundType.BUYER_DEPOSIT, SignerRole.BUYER, "15000000.00"),
+                        leg(RemedyType.PAYMENT_SETTLEMENT, RemedyFundType.SELLER_DEPOSIT, SignerRole.SELLER,
+                                "10500000.00")), AT, AT);
+
+        JsonNode event = publish(d);
+
+        assertThat(event.at("/payload/attributionDecisionId").asText()).isEqualTo(id);
+        assertThat(event.at("/payload/breachCaseId").isNull()).isTrue();
+        assertThat(event.at("/payload/affectedMilestoneIds")).isEmpty();
+        assertThat(event.at("/payload/decisionSource").asText()).isEqualTo("SYSTEM");
+        assertThat(event.at("/payload/settledMilestoneCount").asInt()).isEqualTo(2);
+        assertThat(event.at("/payload/penaltyEligible").asBoolean()).isFalse();
+        assertThat(event.at("/payload/reputationEligible").asBoolean()).isFalse();
+        assertThat(event.at("/payload/remedyLegs/0/fundType").asText()).isEqualTo("BUYER_DEPOSIT");
+        assertThat(event.at("/payload/remedyLegs/1/fundType").asText()).isEqualTo("SELLER_DEPOSIT");
+    }
+
+    @Test
+    void aMilestoneDecisionWithoutACase_isRefused() {
+        RemedyDecision d = new RemedyDecision(UUID.randomUUID().toString(), contract.getContractId().value(), null,
+                UUID.randomUUID().toString(), RemedyStatus.FINALIZED, null, null, null, DecisionSource.SYSTEM,
+                VndAmount.parse("0.00"), VndAmount.parse("0.00"), 0, List.of(), AT, AT);
+
+        assertThatThrownBy(() -> publisher.remedyFinalized(contract, d, AT)).isInstanceOf(IllegalStateException.class);
+    }
+
     // ---- the schema's if/then rules do reject what they should (the payload is built to be inside them) ----
 
     @Test

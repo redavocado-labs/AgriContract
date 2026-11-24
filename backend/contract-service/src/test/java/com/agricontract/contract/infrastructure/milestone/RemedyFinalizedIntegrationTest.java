@@ -87,6 +87,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
+import java.time.temporal.ChronoUnit;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -121,7 +122,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ImportAutoConfiguration({JacksonAutoConfiguration.class, EventingAutoConfiguration.class})
-@Import({com.agricontract.contract.application.service.Level15Inspections.class, com.agricontract.contract.application.service.DisputeExitStep.class, com.agricontract.contract.application.service.MilestoneContestStep.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcLevel15RequestRepository.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcLevel15AssignmentRepository.class, com.agricontract.contract.infrastructure.persistence.dispute.JdbcSettlementProposalRepository.class, com.agricontract.contract.infrastructure.persistence.breach.JdbcBreachCaseRepository.class, com.agricontract.contract.infrastructure.persistence.remedy.JdbcRemedyDecisionRepository.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcInspectionReportRepository.class,
+@Import({com.agricontract.contract.application.service.ContractCompletion.class,
+        com.agricontract.contract.application.usecase.CommitTerminalAfterLockClearedUseCase.class, com.agricontract.contract.application.service.Level15Inspections.class, com.agricontract.contract.application.service.DisputeExitStep.class, com.agricontract.contract.application.service.MilestoneContestStep.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcLevel15RequestRepository.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcLevel15AssignmentRepository.class, com.agricontract.contract.infrastructure.persistence.dispute.JdbcSettlementProposalRepository.class, com.agricontract.contract.infrastructure.persistence.breach.JdbcBreachCaseRepository.class, com.agricontract.contract.infrastructure.persistence.remedy.JdbcRemedyDecisionRepository.class, com.agricontract.contract.infrastructure.persistence.inspection.JdbcInspectionReportRepository.class,
         BusinessCalendarConfiguration.class, SpringTransactionRunner.class, MilestoneFunding.class,
         JdbcMilestoneRepository.class, JdbcInspectionReportRepository.class, JdbcBreachCaseRepository.class, ReviewBreachCaseUseCase.class, ResolveBreachCaseUseCase.class, com.agricontract.contract.infrastructure.persistence.remedy.JdbcRemedyDecisionRepository.class, com.agricontract.contract.application.service.RemedySettlement.class,
         GetBreachCaseUseCase.class, ListBreachCasesForArbitrationUseCase.class, FlagMilestoneUseCase.class,
@@ -203,6 +205,7 @@ class RemedyFinalizedIntegrationTest {
     @Autowired ReviewBreachCaseUseCase reviewCase;
     @Autowired ResolveBreachCaseUseCase resolveCase;
     @Autowired FinalizeRemedyDecisionUseCase finalizeRemedy;
+    @Autowired com.agricontract.contract.application.usecase.CommitTerminalAfterLockClearedUseCase commitTerminal;
     @Autowired ContestBreachDecisionUseCase contestUc;
     @Autowired ExpireContestWindowsUseCase expireWindows;
     @Autowired GetBreachCaseUseCase getCase;
@@ -588,6 +591,150 @@ class RemedyFinalizedIntegrationTest {
         } finally {
             sellerDepositRate = "0.075";
         }
+    }
+
+    // ---- #238, D94: normal completion ----
+
+    @Test
+    void theLastMilestoneSettled_returnsWhatIsLeftOfEachDeposit_once_thenTheClearedLockSettlesTheContract()
+            throws Exception {
+        activate(false);
+        String caseId = disputed(first, FlagIssueType.QUALITY, "10000", "9800", "9800.000", NON_CONFORMING);
+        resolveCase.execute(resolve(caseId, SignerRole.SELLER, DecisionSource.INSPECTOR_L1_5));
+        finalizeRemedy.execute((String) decisionOf(caseId).get("remedy_decision_id"));
+        assertThat(completionDecisions()).as("the second milestone is not settled yet").isEmpty();
+        assertThat(pendingDecisionOfTheContract()).isNull();
+
+        delivered(second, "10000", "10000");
+        UUID key = UUID.randomUUID();
+        confirm.execute(confirmClean(second, key));
+
+        List<Map<String, Object>> completions = completionDecisions();
+        assertThat(completions).hasSize(1);
+        Map<String, Object> decision = completions.get(0);
+        String decisionId = (String) decision.get("remedy_decision_id");
+        assertThat(decision).containsEntry("status", "FINALIZED").containsEntry("decision_source", "SYSTEM")
+                .containsEntry("breach_case_id", null).containsEntry("milestone_id", null)
+                .containsEntry("final_breaching_role", null).containsEntry("breach_reason_code", null)
+                .containsEntry("quality_disposition", null).containsEntry("settled_milestone_count", 2);
+        assertThat((BigDecimal) decision.get("penalty_amount")).isEqualByComparingTo("0");
+        String buyerDeposit = contract.getCoffeeTerms().snapshot().buyerDepositAmount().wire();
+        // The seller deposit 22,500,000 lost 12,000,000 to the first milestone's penalty.
+        assertThat(legsOf(decisionId)).extracting(l -> l.get("remedy_type"), l -> l.get("fund_type"),
+                l -> l.get("role"), l -> ((BigDecimal) l.get("amount")).toPlainString())
+                .containsExactly(
+                        org.assertj.core.groups.Tuple.tuple("PAYMENT_REFUND", "BUYER_DEPOSIT", "BUYER", buyerDeposit),
+                        org.assertj.core.groups.Tuple.tuple("PAYMENT_SETTLEMENT", "SELLER_DEPOSIT", "SELLER",
+                                "10500000.00"));
+
+        List<JsonNode> finalized = events("remedy.finalized");
+        assertThat(finalized).hasSize(2);
+        JsonNode event = finalized.get(1);
+        FrozenSchemas.assertEvent("remedyFinalized", event);
+        JsonNode payload = event.get("payload");
+        assertThat(payload.get("remedyDecisionId").asText()).isEqualTo(decisionId);
+        assertThat(payload.get("attributionDecisionId").asText()).as("D94").isEqualTo(decisionId);
+        assertThat(payload.get("breachCaseId").isNull()).isTrue();
+        assertThat(payload.get("affectedMilestoneIds")).isEmpty();
+        assertThat(payload.get("settledMilestoneCount").asInt()).isEqualTo(2);
+        assertThat(payload.get("decisionSource").asText()).isEqualTo("SYSTEM");
+        assertThat(payload.get("finalBreachingRole").isNull()).isTrue();
+        assertThat(payload.get("breachReasonCode").isNull()).isTrue();
+        assertThat(payload.get("qualityDisposition").isNull()).isTrue();
+        assertThat(payload.get("penaltyEligible").asBoolean()).isFalse();
+        assertThat(payload.get("reputationEligible").asBoolean()).isFalse();
+        assertThat(payload.at("/remedyLegs/1/remedyLegId").asText()).isEqualTo(legsOf(decisionId).get(1).get("remedy_leg_id"));
+        assertThat(payload.at("/remedyLegs/1/amount").asText()).isEqualTo("10500000.00");
+
+        Contract waiting = contracts.findById(contract.getContractId()).orElseThrow();
+        assertThat(waiting.getStatus().name()).as("money first (D93)").isEqualTo("ACTIVE");
+        assertThat(waiting.getPendingTerminalDecisionId()).isEqualTo(decisionId);
+        assertThat(waiting.getPendingTerminalStatus().name()).isEqualTo("SETTLED");
+        assertThat(events("contract.settled")).isEmpty();
+
+        // The same confirm again: no second decision, no second event.
+        confirm.execute(confirmClean(second, key));
+        assertThat(completionDecisions()).hasSize(1);
+        assertThat(events("remedy.finalized")).hasSize(2);
+
+        // escrow.contract_lock_cleared names both decisions: the contract is SETTLED, contract.settled once.
+        String penaltyId = (String) decisionOf(caseId).get("remedy_decision_id");
+        // The consumer runs the use case inside its transaction (with the eventId claim).
+        transactions.inTransaction(() -> {
+            commitTerminal.execute(new com.agricontract.contract.application.dto.ContractLockClearedCommand(id(),
+                    List.of(penaltyId, decisionId), UUID.randomUUID().toString(), UUID.randomUUID().toString()));
+            return null;
+        });
+        assertThat(contracts.findById(contract.getContractId()).orElseThrow().getStatus().name()).isEqualTo("SETTLED");
+        assertThat(events("contract.settled")).hasSize(1);
+        FrozenSchemas.assertEvent("contractSettled", events("contract.settled").get(0));
+    }
+
+    @Test
+    void withNoSellerDeposit_onlyTheBuyerDepositGoesBack_andTheTimeoutCanBeTheLastSettle() throws Exception {
+        sellerDepositRate = "0";
+        try {
+            activate(false);
+            delivered(first, "10000", "10000");
+            confirm.execute(confirmClean(first, UUID.randomUUID()));
+            assertThat(completionDecisions()).isEmpty();
+            delivered(second, "10000", "10000");
+            jdbc.update("UPDATE milestone SET buyer_received_at = ? WHERE milestone_id = ?",
+                    Timestamp.from(Instant.now().minus(30, ChronoUnit.DAYS)), second.milestoneId());
+
+            assertThat(autoConfirm.execute()).isEqualTo(1);
+
+            List<Map<String, Object>> completions = completionDecisions();
+            assertThat(completions).hasSize(1);
+            assertThat(legsOf((String) completions.get(0).get("remedy_decision_id")))
+                    .extracting(l -> l.get("remedy_type"), l -> l.get("fund_type"), l -> l.get("role"))
+                    .containsExactly(org.assertj.core.groups.Tuple.tuple("PAYMENT_REFUND", "BUYER_DEPOSIT", "BUYER"));
+            List<JsonNode> finalized = events("remedy.finalized");
+            assertThat(finalized).hasSize(1);
+            FrozenSchemas.assertEvent("remedyFinalized", finalized.get(0));
+            assertThat(finalized.get(0).at("/payload/remedyLegs")).hasSize(1);
+        } finally {
+            sellerDepositRate = "0.075";
+        }
+    }
+
+    @Test
+    void aSellerDepositFullyTakenByPenalties_hasNoSellerLeg_andTheDebtIsNotCollected() throws Exception {
+        activate(false);
+        String firstCase = disputed(first, FlagIssueType.QUALITY, "10000", "9800", "9800.000", NON_CONFORMING);
+        resolveCase.execute(resolve(firstCase, SignerRole.SELLER, DecisionSource.INSPECTOR_L1_5));
+        String secondCase = disputed(second, FlagIssueType.QUALITY, "10000", "9800", "9800.000", NON_CONFORMING);
+        resolveCase.execute(resolve(secondCase, SignerRole.SELLER, DecisionSource.INSPECTOR_L1_5));
+        finalizeRemedy.execute((String) decisionOf(firstCase).get("remedy_decision_id"));
+        assertThat(completionDecisions()).as("the second milestone waits for its contest window").isEmpty();
+
+        finalizeRemedy.execute((String) decisionOf(secondCase).get("remedy_decision_id"));
+
+        List<Map<String, Object>> completions = completionDecisions();
+        assertThat(completions).hasSize(1);
+        String completionId = (String) completions.get(0).get("remedy_decision_id");
+        assertThat(legsOf(completionId)).extracting(l -> l.get("fund_type")).containsExactly("BUYER_DEPOSIT");
+        assertThat(remedyEventOrder()).containsExactly("remedy.finalized", "milestone.dispute_resolved",
+                "remedy.finalized", "milestone.dispute_resolved", "remedy.finalized");
+        assertThat(pendingDecisionOfTheContract()).isEqualTo(completionId);
+    }
+
+    private List<Map<String, Object>> completionDecisions() {
+        return jdbc.queryForList("SELECT * FROM remedy_decision WHERE contract_id = ? AND milestone_id IS NULL",
+                id());
+    }
+
+    private String pendingDecisionOfTheContract() {
+        return jdbc.queryForObject("SELECT pending_terminal_decision_id FROM contracts WHERE contract_id = ?",
+                String.class, id());
+    }
+
+    private MilestoneEvidenceCommands.Confirm confirmClean(Milestone milestone, UUID key) {
+        Milestone current = reload(milestone);
+        return new MilestoneEvidenceCommands.Confirm(id(), milestone.milestoneId(), BUYER, key, "1.0",
+                com.agricontract.contract.domain.model.milestone.CleanReceiptConsent.contentHash(
+                        current.milestoneId(), current.sellerWeighing().declarationCount(),
+                        current.sellerWeighing().declaredWeight(), current.buyerReceipt().receivedWeight()));
     }
 
     @Test

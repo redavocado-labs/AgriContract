@@ -240,6 +240,67 @@ class RemedyCalculatorTest {
         assertThat(sum).isEqualByComparingTo("150000000");
     }
 
+    // ---- #238, D94: normal completion ----
+
+    @Test
+    void normalCompletion_returnsBothDepositsLessWhatWasForfeited_systemNoFault_finalizedAtOnce() {
+        ContractTermsSnapshot terms = terms("0.08", GoverningLaw.VN_COMMERCIAL_LAW);
+
+        RemedyDecision d = calculator.normalCompletion(CONTRACT, terms, deposit("0.00"), deposit("12000000.00"), 2,
+                NOW);
+
+        assertThat(d.status()).isEqualTo(RemedyStatus.FINALIZED);
+        assertThat(d.finalizedAt()).isEqualTo(NOW);
+        assertThat(d.decisionSource()).isEqualTo(DecisionSource.SYSTEM);
+        assertThat(d.breachCaseId()).isNull();
+        assertThat(d.milestoneId()).isNull();
+        assertThat(d.contractLevel()).isTrue();
+        assertThat(d.attributionDecisionId()).isEqualTo(d.remedyDecisionId());
+        assertThat(d.finalBreachingRole()).isNull();
+        assertThat(d.breachReasonCode()).isNull();
+        assertThat(d.qualityDisposition()).isNull();
+        assertThat(d.penaltyEligible()).isFalse();
+        assertThat(d.reputationEligible()).isFalse();
+        assertThat(d.penaltyAmount().wire()).isEqualTo("0.00");
+        assertThat(d.penaltyDebtAmount().wire()).isEqualTo("0.00");
+        assertThat(d.settledMilestoneCount()).isEqualTo(2);
+        assertThat(d.inspectionFeeParty()).isNull();
+        assertThat(d.legs()).extracting(RemedyLeg::remedyType, RemedyLeg::fundType, RemedyLeg::role,
+                l -> l.amount().wire()).containsExactly(
+                org.assertj.core.groups.Tuple.tuple(RemedyType.PAYMENT_REFUND, RemedyFundType.BUYER_DEPOSIT,
+                        SignerRole.BUYER, terms.buyerDepositAmount().wire()),
+                org.assertj.core.groups.Tuple.tuple(RemedyType.PAYMENT_SETTLEMENT, RemedyFundType.SELLER_DEPOSIT,
+                        SignerRole.SELLER, "10500000.00"));
+        assertThat(d.legs()).extracting(RemedyLeg::remedyLegId).doesNotHaveDuplicates();
+    }
+
+    @Test
+    void normalCompletion_aDepositWithNothingLeft_getsNoLeg() {
+        ContractTermsSnapshot terms = terms("0.08", GoverningLaw.VN_COMMERCIAL_LAW);
+
+        RemedyDecision d = calculator.normalCompletion(CONTRACT, terms, deposit("0.00"), terms.sellerDepositAmount(),
+                2, NOW);
+
+        assertThat(d.legs()).extracting(RemedyLeg::fundType).containsExactly(RemedyFundType.BUYER_DEPOSIT);
+    }
+
+    @Test
+    void normalCompletion_refusesADepositThatLostMoreThanItHeld_andAContractWithNoMilestone() {
+        ContractTermsSnapshot terms = terms("0.08", GoverningLaw.VN_COMMERCIAL_LAW);
+
+        assertThatThrownBy(() -> calculator.normalCompletion(CONTRACT, terms, deposit("0.00"),
+                deposit("22500000.01"), 2, NOW)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> calculator.normalCompletion(CONTRACT, terms, deposit("0.00"), deposit("0.00"), 0,
+                NOW)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void aDecisionOnABreachCase_mustNameItsMilestone() {
+        assertThatThrownBy(() -> new RemedyDecision(UUID.randomUUID().toString(), CONTRACT, CASE, null,
+                RemedyStatus.FINALIZED, null, null, null, DecisionSource.ARBITRATOR, deposit("0.00"), deposit("0.00"),
+                0, List.of(), NOW, NOW)).isInstanceOf(IllegalArgumentException.class);
+    }
+
     private static VndAmount deposit(String wire) {
         return VndAmount.parse(wire);
     }
