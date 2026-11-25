@@ -1,0 +1,36 @@
+meta {
+  name: BF05-010 Read the Arbitrator breach queue
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{base_url}}/api/v1/arbitration/breach-cases?size=10
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{arbitrator_token}}
+}
+
+script:pre-request {
+  const { token } = require('./e2e/helpers.js');
+  await token(bru, 'arbitrator');
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    const page = res.getBody();
+    expect(page.content).to.be.an('array');
+    expect(page.totalElements).to.be.a('number');
+    expect(page.size).to.equal(10);
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI listBreachCasesForArbitration; milestone escrow §6.4. BF-04 creates and resolves an actual quality breach case.
+}
