@@ -1,0 +1,13 @@
+# Compose override for the Report-5.2 Bruno run (run_bruno_report52.sh). Test machine only:
+# - product-service is published on 8082 so the direct integration tests reach it with X-Gateway-Secret
+#   (docker-compose.yml publishes only the gateway);
+# - a new plot passes the geo check at once, so 07-create-listing can use it.
+#   docker compose -f backend/docker-compose.yml -f scripts/unit-test-report/compose.report52.yml up -d \
+#       api-gateway user-service product-service contract-service
+services:
+  product-service:
+    ports:
+      - "8082:8082"
+    environment:
+      PLOT_GEO_VERIFICATION_TIMEOUT_HOURS: "0"
+      PLOT_GEO_VERIFICATION_TIMEOUT_CHECK_MS: "1000"
