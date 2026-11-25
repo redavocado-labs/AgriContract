@@ -1,0 +1,26 @@
+meta {
+  name: SEC-020 A protected profile requires an authenticated session
+  type: http
+  seq: 20
+}
+
+get {
+  url: {{base_url}}/api/v1/users/me
+  body: none
+  auth: none
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(401);
+    expect(res.getBody()).to.be.an('object');
+    expect(res.getBody().code).to.be.a('string');
+    expect(res.getBody()).not.to.have.property('userId');
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI getMyProfile 401; ErrorEnvelope. A normal unauthenticated request exercises the authentication rule.
+}

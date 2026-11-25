@@ -1,0 +1,33 @@
+meta {
+  name: SEC-010 A legitimate Buyer session gets its own profile
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{base_url}}/api/v1/users/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+script:pre-request {
+  const { token } = require('./e2e/helpers.js');
+  await token(bru, 'buyer');
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.include({ userId: bru.getEnvVar('buyer1_sub'), role: 'BUYER', emailVerified: true });
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI getMyProfile; data-governance design §5.4 (own profile).
+}

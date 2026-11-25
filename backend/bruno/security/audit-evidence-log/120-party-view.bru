@@ -1,0 +1,51 @@
+meta {
+  name: SEC-130 Party reads the minimized trail
+  type: http
+  seq: 120
+}
+
+get {
+  url: {{audit_service_url}}/api/v1/audit/contracts/{{contract_id}}/records
+  body: none
+  auth: none
+}
+
+headers {
+  X-Gateway-Secret: {{gateway_secret}}
+  X-User-Id: {{buyer1_sub}}
+  X-User-Role: BUYER
+}
+
+script:pre-request {
+  const { fixture, gateway, token } = require('./e2e/helpers.js');
+  await fixture(bru, 'e2e/bf04-milestone-delivery-settlement/completion', [['010-settled-contract', 200]]);
+  const { auditEvent } = require('./e2e/milestone.js');
+  await auditEvent(bru, 'contract.settled');
+  await token(bru, 'admin');
+  const verification = await gateway(bru, '/api/v1/admin/audit/verification', 'admin');
+  if (verification.status !== 200 || verification.data.status !== 'INTACT') {
+    throw new Error('Cannot establish the global audit baseline');
+  }
+  bru.setVar('audit_baseline', verification.data.checkedRecords);
+}
+
+script:post-response {
+  if (res.getStatus() === 200) bru.setVar('party_trail', res.getBody());
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().contractId).to.equal(bru.getVar('contract_id'));
+    expect(res.getBody().records).to.have.length.greaterThan(0);
+    for (const entry of res.getBody().records) {
+      expect(entry).not.to.have.any.keys('prevHashSubject', 'prevHashGlobal', 'globalSeq');
+    }
+  });
+}
+
+docs {
+  IT-DIRECT
+
+  OpenAPI getContractAuditTrail; hash-chain design §4.6.
+}
