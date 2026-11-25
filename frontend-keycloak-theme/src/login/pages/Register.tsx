@@ -14,9 +14,18 @@ export default function Register({
 }) {
   const { msgStr } = i18n;
   const { url, profile, passwordRequired } = kcContext;
+  // D47: the realm role is picked here; the choices come from the realm `accountType` options.
+  const accountType = profile.attributesByName.accountType;
+  const roleOptions = accountType?.validators.options?.options ?? [];
   const schema = z
     .object({
       email: z.email(msgStr("invalidEmail")),
+      accountType:
+        roleOptions.length > 0
+          ? z.string().refine((value) => roleOptions.includes(value), {
+              message: msgStr("accountTypeRequired"),
+            })
+          : z.string(),
       password: z
         .string()
         .min(passwordRequired ? 1 : 0, msgStr("requiredField")),
@@ -28,14 +37,18 @@ export default function Register({
     });
   const form = useKeycloakForm(schema, {
     email: profile.attributesByName.email?.value ?? "",
+    accountType: accountType?.value ?? "",
     password: "",
     "password-confirm": "",
   });
   // Do not hide mandatory server requirements or invent first/last names to bypass them.
   const unsupportedProfile = Object.values(profile.attributesByName).some(
     (attribute) =>
-      attribute.required && !["email", "username"].includes(attribute.name),
+      attribute.required &&
+      !["email", "username"].includes(attribute.name) &&
+      !(attribute.name === "accountType" && roleOptions.length > 0),
   );
+  const roleError = form.error("accountType", kcContext);
   const unavailable =
     !kcContext.realm.registrationEmailAsUsername ||
     unsupportedProfile ||
@@ -67,6 +80,43 @@ export default function Register({
             autoFocus
             required
           />
+          {roleOptions.length > 0 && (
+            <fieldset
+              className="flex flex-col"
+              aria-describedby={roleError ? "accountType-feedback" : undefined}
+            >
+              <legend className="mb-1.5 text-[13px] text-text-primary">
+                {msgStr("accountTypeLabel")}{" "}
+                <span className="text-danger">*</span>
+              </legend>
+              <div className="grid grid-cols-2 gap-3">
+                {roleOptions.map((option) => (
+                  <label key={option} className="auth-role-option">
+                    <input
+                      type="radio"
+                      value={option}
+                      required
+                      aria-invalid={!!roleError}
+                      {...form.register("accountType")}
+                    />
+                    <span>
+                      {accountType?.annotations.inputOptionLabels?.[option] ??
+                        option}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {roleError ? (
+                <div
+                  id="accountType-feedback"
+                  aria-live="polite"
+                  className="mt-1 text-[13px] text-danger"
+                >
+                  {roleError}
+                </div>
+              ) : null}
+            </fieldset>
+          )}
           {passwordRequired && (
             <>
               <TextInput
