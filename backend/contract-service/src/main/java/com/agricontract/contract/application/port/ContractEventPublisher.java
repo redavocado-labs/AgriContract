@@ -107,9 +107,6 @@ public interface ContractEventPublisher {
     /** milestone.buyer_confirmed (D78): confirmedBy is BUYER, or SYSTEM_TIMEOUT when the confirm window passed. */
     void milestoneBuyerConfirmed(Contract contract, Milestone milestone, String confirmedBy);
 
-    /** milestone.flagged (D80, D82): the buyer flagged the milestone; an allegation, no money or reputation effect. */
-    void milestoneFlagged(Contract contract, Milestone milestone);
-
     /** breach.reported (D80): the allegation opened by the contest step; audit only, never money or reputation. */
     void breachReported(BreachCase breachCase);
 

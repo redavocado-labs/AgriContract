@@ -70,7 +70,6 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
     static final String MILESTONE_BUYER_RECEIVED = "milestone.buyer_received";
     static final String MILESTONE_SETTLED = "milestone.settled";
     static final String MILESTONE_BUYER_CONFIRMED = "milestone.buyer_confirmed";
-    static final String MILESTONE_FLAGGED = "milestone.flagged";
     static final String BREACH_REPORTED = "breach.reported";
     static final String INSPECTION_LEVEL1_5_REQUESTED = "inspection.level1_5_requested";
     static final String INSPECTION_LEVEL1_5_CANCELLED = "inspection.level1_5_cancelled";
@@ -539,26 +538,6 @@ public class OutboxContractEventPublisher implements ContractEventPublisher {
         payload.put("confirmedBy", confirmedBy);
 
         outbox.append(new EventEnvelope(UUID.randomUUID(), MILESTONE_BUYER_CONFIRMED, 1, settlement.settledAt(),
-                PRODUCER, milestoneId, contractId, null, null, payload));
-    }
-
-    /** golden-flow-events.yaml milestoneFlagged, on agricontract.contracts; no mandatory consumer. */
-    @Override
-    @Transactional(propagation = Propagation.MANDATORY)
-    public void milestoneFlagged(Contract contract, Milestone milestone) {
-        if (milestone.flag() == null || !milestone.contractId().equals(contract.getContractId().value())) {
-            throw new IllegalStateException("milestone.flagged for milestone " + milestone.milestoneId()
-                    + " in status " + milestone.status());
-        }
-        String contractId = uuid(contract.getContractId().value(), "contractId");
-        String milestoneId = uuid(milestone.milestoneId(), "milestoneId");
-        Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("contractId", contractId);
-        payload.put("milestoneId", milestoneId);
-        payload.put("flaggedBy", "BUYER");
-        payload.put("issueType", milestone.flag().issueType().name());
-
-        outbox.append(new EventEnvelope(UUID.randomUUID(), MILESTONE_FLAGGED, 1, milestone.flag().flaggedAt(),
                 PRODUCER, milestoneId, contractId, null, null, payload));
     }
 
