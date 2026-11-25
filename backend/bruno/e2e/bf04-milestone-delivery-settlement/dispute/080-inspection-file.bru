@@ -1,0 +1,59 @@
+meta {
+  name: BF04-180 Assigned inspector uploads report evidence
+  type: http
+  seq: 80
+}
+
+post {
+  url: {{base_url}}/api/v1/inspections/{{contract_id}}/milestones/{{milestone_id}}/report-files
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{inspector_token}}
+}
+
+headers {
+  Idempotency-Key: {{action_key}}
+  Content-Type: image/png
+}
+
+script:pre-request {
+  const { browserLogin, gateway, poll, variable } = require('./e2e/helpers.js');
+  const { milestoneState, photo } = require('./e2e/milestone.js');
+  const detail = await milestoneState(bru, (data) => data.milestone?.status === 'CONTESTED' && data.breachCaseId,
+    'contested milestone and breach case');
+  bru.setVar('breach_case_id', detail.data.breachCaseId);
+  bru.setVar('inspector_token', await browserLogin(bru, {
+    username: variable(bru, 'inspector_username'), password: variable(bru, 'inspector_password'), credentialId: '',
+  }));
+  const upload = '/api/v1/inspections/' + bru.getVar('contract_id') + '/milestones/' + bru.getVar('milestone_id') + '/report-files';
+  const uploadKey = require('crypto').randomUUID();
+  const headers = { 'Idempotency-Key': uploadKey, 'Content-Type': 'image/png', 'Content-Length': String(photo.length) };
+  await poll(async () => {
+    const result = await gateway(bru, upload, 'inspector', { method: 'POST', data: photo, headers });
+    if (![202, 403].includes(result.status)) throw new Error('Inspection upload returned ' + result.status + ' ' + result.data?.code);
+    return result;
+  }, ({ status }) => status === 202, 'Level 1.5 assignment');
+  bru.setVar('action_key', uploadKey);
+  req.setBody(photo);
+  req.setHeader('Content-Length', String(photo.length));
+}
+
+script:post-response {
+  if (res.getStatus() === 202) bru.setVar('report_file_id', res.getBody().fileId);
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(202);
+    expect(res.getBody().fileId).to.be.a('string');
+  });
+}
+
+docs {
+  IT-GW
+
+  Inspection design §4 and ReportFileUploadController. Polls the assignment through the upload permission on the real service.
+}

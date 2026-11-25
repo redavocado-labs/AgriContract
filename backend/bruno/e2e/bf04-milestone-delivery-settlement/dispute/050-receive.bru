@@ -1,0 +1,52 @@
+meta {
+  name: BF04-150 Record buyer weight
+  type: http
+  seq: 50
+}
+
+post {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}/milestones/{{milestone_id}}/receive
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+headers {
+  Idempotency-Key: {{action_key}}
+}
+
+body:json {
+  {
+    "buyerReceivedWeight": 1000,
+    "buyerEvidenceFileId": "{{evidence_id}}",
+    "consent": {
+      "statementVersion": "1.0",
+      "presentedContentHash": "{{consent_hash}}"
+    }
+  }
+}
+
+script:pre-request {
+  const { consent, milestoneState } = require('./e2e/milestone.js');
+  const file = bru.getVar('evidence_id');
+  await milestoneState(bru, (data) => data.evidence?.some((item) => item.fileId === file && item.status === 'READY'),
+    'ready evidence ' + file);
+  bru.setVar('action_key', require('crypto').randomUUID());
+  bru.setVar('consent_hash', consent('RECORD_BUYER_RECEIPT', [bru.getVar('milestone_id'), '1000.000', file, '']).presentedContentHash);
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(204);
+    expect([null, undefined, '']).to.include(res.getBody());
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI milestone receive and D84 canonical consent.
+}

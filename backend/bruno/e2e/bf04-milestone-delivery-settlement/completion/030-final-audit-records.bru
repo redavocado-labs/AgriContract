@@ -1,0 +1,45 @@
+meta {
+  name: BF04-330 Verify completion events in the party audit trail
+  type: http
+  seq: 30
+}
+
+get {
+  url: {{audit_service_url}}/api/v1/audit/contracts/{{contract_id}}/records
+  body: none
+  auth: none
+}
+
+headers {
+  X-Gateway-Secret: {{gateway_secret}}
+  X-User-Id: {{buyer1_sub}}
+  X-User-Role: BUYER
+}
+
+script:pre-request {
+  const { auditEvent } = require('./e2e/milestone.js');
+  await auditEvent(bru, 'contract.settled');
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    const trail = res.getBody();
+    expect(trail.contractId).to.equal(bru.getVar('contract_id'));
+    for (const [sourceEventType, sourceType] of [
+      ['remedy.finalized', 'REMEDY_FINALIZED'],
+      ['contract.settled', 'CONTRACT_SETTLED'],
+    ]) {
+      const records = trail.records.filter((entry) => entry.sourceEventType === sourceEventType);
+      expect(records).to.have.length(1);
+      expect(records[0].sourceType).to.equal(sourceType);
+    }
+    expect(trail.currentRecordHash).to.equal(trail.records.at(-1).recordHash);
+  });
+}
+
+docs {
+  IT-DIRECT
+
+  Hash-chain design §2.4 and §4.6. Each event must appear exactly once for this one-milestone contract.
+}

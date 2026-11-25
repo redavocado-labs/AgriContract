@@ -1,0 +1,44 @@
+meta {
+  name: BF04-060 Buyer confirms clean receipt
+  type: http
+  seq: 60
+}
+
+post {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}/milestones/{{milestone_id}}/confirm
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+headers {
+  Idempotency-Key: {{action_key}}
+}
+
+body:json {
+  {{confirmation}}
+}
+
+script:pre-request {
+  const { consent, milestoneState, receiptFields } = require('./e2e/milestone.js');
+  const result = await milestoneState(bru, (data) => data.milestone?.status === 'BUYER_RECEIVED', 'buyer receipt');
+  bru.setVar('action_key', require('crypto').randomUUID());
+  bru.setVar('confirmation_key', bru.getVar('action_key'));
+  bru.setVar('confirmation', JSON.stringify(consent('CONFIRM_CLEAN_RECEIPT', receiptFields(bru, result.data))));
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(204);
+    expect([null, undefined, '']).to.include(res.getBody());
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI confirmMilestoneClean; D84 canonical consent.
+}

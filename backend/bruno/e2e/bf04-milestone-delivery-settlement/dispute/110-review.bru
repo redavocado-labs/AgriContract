@@ -1,0 +1,36 @@
+meta {
+  name: BF04-210 Arbitrator opens the breach review
+  type: http
+  seq: 110
+}
+
+post {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}/breach-cases/{{breach_case_id}}/review
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{arbitrator_token}}
+}
+
+headers {
+  Idempotency-Key: {{action_key}}
+}
+
+script:pre-request {
+  bru.setVar('action_key', require('crypto').randomUUID());
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(204);
+    expect([null, undefined, '']).to.include(res.getBody());
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI reviewBreachCase and data-governance §5.4.
+}

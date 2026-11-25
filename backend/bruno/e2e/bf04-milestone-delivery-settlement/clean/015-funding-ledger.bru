@@ -1,0 +1,31 @@
+meta {
+  name: BF04-015 Confirm the batch lock
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{bank_service_url}}/internal/v1/bank/ledger?contractId={{contract_id}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Internal-Secret: {{service_internal_secret}}
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    const locked = res.getBody().filter((row) =>
+      row.milestoneId === bru.getVar('milestone_id') && row.entryType === 'LOCK_MILESTONE');
+    expect(locked).to.have.length(1);
+    expect(locked[0]).to.include({ amount: bru.getVar('batch_amount'), userId: bru.getEnvVar('buyer1_sub') });
+  });
+}
+
+docs {
+  IT-DIRECT
+
+  OpenAPI getInternalLedgerEntries and milestone escrow D63.
+}

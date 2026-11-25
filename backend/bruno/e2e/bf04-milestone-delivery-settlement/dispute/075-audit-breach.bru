@@ -1,0 +1,39 @@
+meta {
+  name: BF04-175 Assert audit record breach.reported
+  type: http
+  seq: 75
+}
+
+get {
+  url: {{audit_service_url}}/api/v1/audit/contracts/{{contract_id}}/records
+  body: none
+  auth: none
+}
+
+headers {
+  X-Gateway-Secret: {{gateway_secret}}
+  X-User-Id: {{buyer1_sub}}
+  X-User-Role: BUYER
+}
+
+script:pre-request {
+  const { auditEvent } = require('./e2e/milestone.js');
+  await auditEvent(bru, 'breach.reported');
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    const trail = res.getBody();
+    const matching = trail.records.filter((record) => record.sourceEventType === 'breach.reported');
+    expect(matching).to.have.length(1);
+    expect(matching[0].sourceType).to.equal('BREACH_REPORTED');
+    expect(trail.currentRecordHash).to.equal(trail.records.at(-1).recordHash);
+  });
+}
+
+docs {
+  IT-DIRECT
+
+  Hash-chain design §2.4 and §4.6. Uses the party response from audit-service while #630 is pending.
+}

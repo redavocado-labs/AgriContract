@@ -1,0 +1,40 @@
+meta {
+  name: BF04-230 Confirm the disputed contract settled without a clean settlement event
+  type: http
+  seq: 130
+}
+
+get {
+  url: {{audit_service_url}}/api/v1/audit/contracts/{{contract_id}}/records
+  body: none
+  auth: none
+}
+
+headers {
+  X-Gateway-Secret: {{gateway_secret}}
+  X-User-Id: {{buyer1_sub}}
+  X-User-Role: BUYER
+}
+
+script:pre-request {
+  const { auditEvent } = require('./e2e/milestone.js');
+  await auditEvent(bru, 'contract.settled');
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    const trail = res.getBody();
+    expect(trail.records.some((record) => record.sourceEventType === 'milestone.settled')).to.equal(false);
+    const matching = trail.records.filter((record) => record.sourceEventType === 'contract.settled');
+    expect(matching).to.have.length(1);
+    expect(matching[0].sourceType).to.equal('CONTRACT_SETTLED');
+    expect(trail.currentRecordHash).to.equal(trail.records.at(-1).recordHash);
+  });
+}
+
+docs {
+  IT-DIRECT
+
+  Milestone escrow design §3.2.2 and §7. A quality remedy must not also publish the clean-only milestone.settled event.
+}

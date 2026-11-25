@@ -1,0 +1,47 @@
+meta {
+  name: BF04-160 Buyer flags a quality issue
+  type: http
+  seq: 60
+}
+
+post {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}/milestones/{{milestone_id}}/flag
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+headers {
+  Idempotency-Key: {{action_key}}
+}
+
+body:json {
+  {{flag_payload}}
+}
+
+script:pre-request {
+  const { consent, milestoneState, receiptFields } = require('./e2e/milestone.js');
+  const result = await milestoneState(bru, (data) => data.milestone?.status === 'BUYER_RECEIVED', 'buyer receipt');
+  bru.setVar('action_key', require('crypto').randomUUID());
+  const issueType = 'QUALITY';
+  bru.setVar('flag_payload', JSON.stringify({
+    issueType,
+    consent: consent('FLAG_MILESTONE_ISSUE', [...receiptFields(bru, result.data), issueType], '1.1'),
+  }));
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(204);
+    expect([null, undefined, '']).to.include(res.getBody());
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI flagMilestoneIssue and D84.
+}
