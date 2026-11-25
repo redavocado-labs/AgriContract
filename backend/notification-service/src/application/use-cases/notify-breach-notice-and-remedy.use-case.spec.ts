@@ -180,7 +180,7 @@ describe('NotifyRemedyFinalizedUseCase', () => {
     await new NotifyRemedyFinalizedUseCase(s).execute(command);
 
     expect(email.sent[0].subject).toBe(
-      `[AgriContract] Contract ${DISPUTE_CONTRACT_ID} is complete`,
+      `[AgriContract] Every milestone of contract ${DISPUTE_CONTRACT_ID} has settled`,
     );
     expect(
       logs.get({
@@ -244,15 +244,30 @@ describe('NotifyRemedyFinalizedUseCase', () => {
     );
   });
 
-  it('contract-completed/v1: complete, nobody breached, the deposits come back', () => {
-    expect(remedyFinalizedText(completion())).toBe(
+  const NO_NEW_BREACH = [
+    'This decision finds no new breach. It does not change any earlier',
+    'decision on this contract.',
+  ];
+  const CLOSES_ON_RECONCILIATION = [
+    'The contract is not closed yet. It closes once escrow-service confirms',
+    'that all money of the contract has cleared, including the final',
+    'milestone payment and any earlier transfer that is still pending.',
+  ];
+
+  it('contract-completed/v1: no new breach, deposits returned, closure awaits reconciliation', () => {
+    const body = remedyFinalizedText(completion());
+
+    expect(body).toBe(
       [
-        'Your AgriContract contract is complete: every milestone has settled.',
-        'Nobody breached it. The deposits still locked for it are returned.',
+        'Every milestone of your AgriContract contract has settled, and the',
+        'platform has made its completion decision.',
         '',
         `Contract: ${DISPUTE_CONTRACT_ID}`,
         `Decision: ${DECISION_ID}`,
         '',
+        ...NO_NEW_BREACH,
+        '',
+        'This decision returns the deposits still locked for the contract.',
         'Money, as decided (each line names who receives it):',
         '- 11,040,000.00 VND to the buyer:',
         "  refund, from the buyer's deposit",
@@ -261,27 +276,34 @@ describe('NotifyRemedyFinalizedUseCase', () => {
         '',
         'escrow-service carries out these transfers.',
         '',
-        'The contract is closed once every transfer above has completed.',
+        ...CLOSES_ON_RECONCILIATION,
         '',
       ].join('\n'),
     );
+    expect(body).not.toMatch(/contract is closed|is complete|Nobody breached/);
   });
 
-  it('contract-completed/v1 with no deposit left: closed, no transfer above', () => {
-    expect(remedyFinalizedText({ ...completion(), remedyLegs: [] })).toBe(
+  it('contract-completed/v1 with no deposit left: no transfer, still not closed', () => {
+    const body = remedyFinalizedText({ ...completion(), remedyLegs: [] });
+
+    expect(body).toBe(
       [
-        'Your AgriContract contract is complete: every milestone has settled.',
-        'Nobody breached it. No deposit is still locked for it.',
+        'Every milestone of your AgriContract contract has settled, and the',
+        'platform has made its completion decision.',
         '',
         `Contract: ${DISPUTE_CONTRACT_ID}`,
         `Decision: ${DECISION_ID}`,
         '',
-        'No money moves because of this decision.',
+        ...NO_NEW_BREACH,
         '',
-        'The contract is closed.',
+        'No deposit is still locked for the contract, so this decision',
+        'moves no money.',
+        '',
+        ...CLOSES_ON_RECONCILIATION,
         '',
       ].join('\n'),
     );
+    expect(body).not.toMatch(/contract is closed|is complete|Nobody breached/);
   });
 
   it('a quality resolution shows the disposition with the final attribution', () => {
