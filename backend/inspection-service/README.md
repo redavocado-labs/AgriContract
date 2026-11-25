@@ -79,9 +79,13 @@ Cancellation deletes a waiting row and queues an Operator CANCELLED command, or
 ends an active assignment at `cancelledAt` and queues an inspector CANCELLED command
 using the current verified User Service email. Nothing open is a no-op. Invalid
 messages are rejected to the DLQ; dependency failures follow the retry policy.
-An event predating the active assignment fails for investigation without changing history.
+If cancellation predates a retry-created assignment, the assignment ends at its
+start time to preserve the timeline constraint. The original event ID and business
+timestamp are recorded in an after-commit log; the event itself is not changed.
 The review requires persisting `freeCancelUntil`, a change from the current D57 design.
 Migration V9 adds the stored deadline without changing existing assignment history.
+`inspection.assignment.free-cancel-hours` defaults to 4 and must be between 1
+and 720 hours (30 calendar days); invalid configuration prevents startup.
 Historical rows have no authoritative deadline: a NULL deadline fails cancellation
 closed for investigation instead of fabricating a value. A delayed retry of a previously
 failed request can still create a stale assignment after cancellation (D57); there is no tombstone.

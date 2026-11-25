@@ -10,6 +10,25 @@ import java.time.Instant;
 import static org.assertj.core.api.Assertions.*;
 
 class AssignmentConfigurationTest {
+    @Test void freeCancellationWindowDefaultsToFourHours() {
+        new ApplicationContextRunner().withUserConfiguration(AssignmentConfiguration.class)
+                .withPropertyValues("VIETNAM_HOLIDAYS=2026-01-01")
+                .run(context -> assertThat(context.getBean(com.agricontract.inspection.application.port.FreeCancellationWindow.class).duration()).isEqualTo(java.time.Duration.ofHours(4)));
+    }
+
+    @Test void customFreeCancellationWindowIsBound() {
+        new ApplicationContextRunner().withUserConfiguration(AssignmentConfiguration.class)
+                .withPropertyValues("VIETNAM_HOLIDAYS=2026-01-01", "inspection.assignment.free-cancel-hours=12")
+                .run(context -> assertThat(context.getBean(com.agricontract.inspection.application.port.FreeCancellationWindow.class).duration()).isEqualTo(java.time.Duration.ofHours(12)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"0", "-1", "721", "invalid", "9223372036854775807", "9223372036854775808"})
+    void invalidFreeCancellationWindowFailsStartup(String value) {
+        new ApplicationContextRunner().withUserConfiguration(AssignmentConfiguration.class)
+                .withPropertyValues("VIETNAM_HOLIDAYS=2026-01-01", "inspection.assignment.free-cancel-hours=" + value)
+                .run(context -> assertThat(context).hasFailed());
+    }
     @ParameterizedTest
     @ValueSource(strings = {"", "   ", ",,,", " , , ", "not-a-date", "2026-02-30"})
     void invalidCalendarCannotSilentlyBecomeWeekendOnly(String value) {
