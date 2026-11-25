@@ -95,6 +95,27 @@ describe('NotifyMilestoneStatusUseCase', () => {
     ]);
   });
 
+  it('milestone-level2-optout-requested/v1 asks the buyer to choose the provisional release level', async () => {
+    const { email, useCase } = setup();
+
+    await useCase.execute(
+      command({ statusType: 'LEVEL2_OPTOUT_REQUESTED', statusData: null }),
+    );
+
+    expect(email.sent[0].subject).toBe(
+      `[AgriContract] A milestone of contract ${DISPUTE_CONTRACT_ID}: choose the provisional release`,
+    );
+    expect(email.sent[0].body).toContain(
+      [
+        'While its Level 2 inspection runs, part of its payment is released',
+        'to the seller provisionally. The buyer chooses how much: the higher',
+        'release level or the lower one. If the buyer does not choose before',
+        'the deadline, the lower level applies.',
+      ].join('\n'),
+    );
+    expect(email.sent[0].body).not.toContain('inspection was requested');
+  });
+
   it('a redelivery sends nothing twice; a failure is retried for whoever is missing', async () => {
     const { email, useCase } = setup();
     const both = command({ recipients: [BUYER, SELLER] });

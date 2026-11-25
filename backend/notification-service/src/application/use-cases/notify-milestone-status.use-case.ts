@@ -44,7 +44,7 @@ const SUBJECTS: Record<MilestoneStatusType, string> = {
   CONFIRMED: 'settled',
   FLAGGED: 'flagged by the buyer',
   FORCE_MAJEURE: 'force majeure claim',
-  LEVEL2_OPTOUT_REQUESTED: 'Level 2 inspection requested',
+  LEVEL2_OPTOUT_REQUESTED: 'choose the provisional release',
   BUYER_RECEIVE_REMINDER: 'waiting to be received',
   PENALTY: 'penalty',
   PROVISIONAL_LEVEL2: 'provisional release during Level 2',
@@ -275,7 +275,12 @@ function textOf(
     case 'FORCE_MAJEURE':
       return generic(['A force majeure claim concerns it.']);
     case 'LEVEL2_OPTOUT_REQUESTED':
-      return generic(['A Level 2 inspection was requested for it.']);
+      return generic([
+        'While its Level 2 inspection runs, part of its payment is released',
+        'to the seller provisionally. The buyer chooses how much: the higher',
+        'release level or the lower one. If the buyer does not choose before',
+        'the deadline, the lower level applies.',
+      ]);
     case 'PENALTY':
       return generic(['A penalty applies to it.']);
     case 'PROVISIONAL_LEVEL2':
