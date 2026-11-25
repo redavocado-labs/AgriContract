@@ -1,0 +1,57 @@
+meta {
+  name: POST /api/v1/listings (minOrderQuantity = offeredQuantity = 500 → 201)
+  type: http
+  seq: 21
+}
+
+post {
+  url: {{product_service_url}}/api/v1/listings
+  body: json
+  auth: none
+}
+
+headers {
+  X-Gateway-Secret: {{gateway_secret}}
+  X-User-Id: {{seller1_sub}}
+  X-User-Role: SELLER
+  Idempotency-Key: {{listing_key_07f}}
+}
+
+body:json {
+  {
+    "productId": "{{product_id}}",
+    "productName": "Ca phe Robusta Dak Lak",
+    "unitOfMeasure": "KG",
+    "offeredQuantity": 500,
+    "minOrderQuantity": 500,
+    "askingUnitPrice": "15000.00",
+    "registryEntryIds": [
+      "{{plot_id}}"
+    ],
+    "regionText": "Buon Ma Thuot, Dak Lak",
+    "declaredQualitySpec": {
+      "commodity": "COFFEE",
+      "type": "ROBUSTA",
+      "moisturePercent": 12.5,
+      "foreignMatterPercent": 0.5,
+      "blackBrokenBeansPercent": 5.0
+    },
+    "packagingDeclaration": "Bao day 60 kg"
+  }
+}
+
+script:pre-request {
+  bru.setVar("listing_key_07f", "listing-" + Date.now() + "-" + Math.random().toString(36).slice(2));
+}
+
+tests {
+  test("should return 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("minOrderQuantity equals offeredQuantity", function() {
+    expect(res.getBody().minOrderQuantity).to.equal(500);
+    expect(res.getBody().offeredQuantity).to.equal(500);
+    expect(res.getBody().status).to.equal("AVAILABLE");
+  });
+}

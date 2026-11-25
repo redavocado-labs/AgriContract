@@ -1,0 +1,31 @@
+meta {
+  name: GET /api/v1/listings (size 0, outside 1..100 → 400)
+  type: http
+  seq: 29
+}
+
+get {
+  url: {{product_service_url}}/api/v1/listings?page=0&size=0
+  body: none
+  auth: none
+}
+
+headers {
+  X-Gateway-Secret: {{gateway_secret}}
+}
+
+params:query {
+  page: 0
+  size: 0
+}
+
+tests {
+  test("should return 400", function() {
+    expect(res.getStatus()).to.equal(400);
+  });
+
+  test("error code is VALIDATION_FAILED", function() {
+    expect(res.getBody().code).to.equal("VALIDATION_FAILED");
+    expect(res.getBody().traceId).to.be.a("string");
+  });
+}

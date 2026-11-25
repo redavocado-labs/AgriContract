@@ -1,0 +1,56 @@
+meta {
+  name: POST /api/v1/listings (offeredQuantity 0 → 400)
+  type: http
+  seq: 23
+}
+
+post {
+  url: {{product_service_url}}/api/v1/listings
+  body: json
+  auth: none
+}
+
+headers {
+  X-Gateway-Secret: {{gateway_secret}}
+  X-User-Id: {{seller1_sub}}
+  X-User-Role: SELLER
+  Idempotency-Key: {{listing_key_07h}}
+}
+
+body:json {
+  {
+    "productId": "{{product_id}}",
+    "productName": "Ca phe Robusta Dak Lak",
+    "unitOfMeasure": "KG",
+    "offeredQuantity": 0,
+    "minOrderQuantity": 100,
+    "askingUnitPrice": "15000.00",
+    "registryEntryIds": [
+      "{{plot_id}}"
+    ],
+    "regionText": "Buon Ma Thuot, Dak Lak",
+    "declaredQualitySpec": {
+      "commodity": "COFFEE",
+      "type": "ROBUSTA",
+      "moisturePercent": 12.5,
+      "foreignMatterPercent": 0.5,
+      "blackBrokenBeansPercent": 5.0
+    },
+    "packagingDeclaration": "Bao day 60 kg"
+  }
+}
+
+script:pre-request {
+  bru.setVar("listing_key_07h", "listing-" + Date.now() + "-" + Math.random().toString(36).slice(2));
+}
+
+tests {
+  test("should return 400", function() {
+    expect(res.getStatus()).to.equal(400);
+  });
+
+  test("error code is VALIDATION_FAILED", function() {
+    expect(res.getBody().code).to.equal("VALIDATION_FAILED");
+    expect(res.getBody().traceId).to.be.a("string");
+  });
+}

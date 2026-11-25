@@ -1,11 +1,11 @@
 meta {
   name: GET /api/v1/listings/seller (seller's own listings)
   type: http
-  seq: 13
+  seq: 30
 }
 
 get {
-  url: {{product_service_url}}/api/v1/listings/seller
+  url: {{product_service_url}}/api/v1/listings/seller?page=0&size=10
   body: none
   auth: none
 }
