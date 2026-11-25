@@ -267,6 +267,23 @@ describe('NotifyRemedyFinalizedUseCase', () => {
     );
   });
 
+  it('contract-completed/v1 with no deposit left: closed, no transfer above', () => {
+    expect(remedyFinalizedText({ ...completion(), remedyLegs: [] })).toBe(
+      [
+        'Your AgriContract contract is complete: every milestone has settled.',
+        'Nobody breached it. No deposit is still locked for it.',
+        '',
+        `Contract: ${DISPUTE_CONTRACT_ID}`,
+        `Decision: ${DECISION_ID}`,
+        '',
+        'No money moves because of this decision.',
+        '',
+        'The contract is closed.',
+        '',
+      ].join('\n'),
+    );
+  });
+
   it('a quality resolution shows the disposition with the final attribution', () => {
     const body = remedyFinalizedText(
       remedy({

@@ -132,16 +132,21 @@ export function remedyFinalizedText(
         ];
 
   if (isNormalCompletion(command)) {
+    const returned = command.remedyLegs.length > 0;
     return [
       'Your AgriContract contract is complete: every milestone has settled.',
-      'Nobody breached it. The deposits still locked for it are returned.',
+      returned
+        ? 'Nobody breached it. The deposits still locked for it are returned.'
+        : 'Nobody breached it. No deposit is still locked for it.',
       '',
       `Contract: ${command.contractId}`,
       `Decision: ${command.remedyDecisionId}`,
       '',
       ...money,
       '',
-      'The contract is closed once every transfer above has completed.',
+      returned
+        ? 'The contract is closed once every transfer above has completed.'
+        : 'The contract is closed.',
       '',
     ].join('\n');
   }
