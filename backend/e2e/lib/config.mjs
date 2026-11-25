@@ -25,5 +25,7 @@ export const config = {
     operator: { username: 'operator1' },
   },
   /** How long one asynchronous step (outbox, broker, consumer) may take. */
+  /** How long to watch for an effect that must NOT happen (a replay moving money or queuing events). */
+  replayQuietMs: Number(env('E2E_REPLAY_QUIET_MS', '8000')),
   stepTimeoutMs: Number(env('E2E_STEP_TIMEOUT_MS', '60000')),
 };
