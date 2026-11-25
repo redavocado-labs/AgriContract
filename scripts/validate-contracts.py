@@ -51,6 +51,19 @@ def refs(node, path="#"):
             yield from refs(item, f"{path}/{index}")
 
 
+def consumerless_events(node, path="#"):
+    """Event definitions declaring x-consumers: []. The outbox publishes with mandatory=true, so an event
+    no queue is bound to comes back unroutable and stalls every later event of its producer (#638, D101)."""
+    if isinstance(node, dict):
+        if node.get("x-consumers") == []:
+            yield path
+        for key, value in node.items():
+            yield from consumerless_events(value, f"{path}/{key}")
+    elif isinstance(node, list):
+        for i, value in enumerate(node):
+            yield from consumerless_events(value, f"{path}/{i}")
+
+
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
     contracts = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else root / "contracts"
@@ -103,13 +116,16 @@ def main() -> int:
                     errors.append(f"{name}: unresolved $ref {ref!r} at {location}")
         else:
             errors.append(f"{name}: neither an OpenAPI document (openapi:) nor a JSON Schema ($schema:)")
+        for location in consumerless_events(doc):
+            errors.append(f"{name}: event at {location} has x-consumers: [] (the outbox needs a bound queue; "
+                          "drop the event or name its consumer, D101)")
 
     for error in errors:
         print(f"ERROR: {error}", file=sys.stderr)
     if errors:
         return 1
     print(f"validated {len(files)} contract files: YAML parses, no duplicate keys, "
-          "OpenAPI and JSON Schema valid, all $ref resolve")
+          "OpenAPI and JSON Schema valid, all $ref resolve, every event has a consumer")
     return 0
 
 
