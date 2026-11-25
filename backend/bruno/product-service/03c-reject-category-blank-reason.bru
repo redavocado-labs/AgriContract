@@ -1,0 +1,38 @@
+meta {
+  name: PUT /api/v1/admin/categories/:categoryId/reject (blank reason → 400)
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{product_service_url}}/api/v1/admin/categories/{{category_id_reject}}/reject
+  body: json
+  auth: none
+}
+
+headers {
+  X-Gateway-Secret: {{gateway_secret}}
+  X-User-Id: operator-1
+  X-User-Role: OPERATOR
+}
+
+body:json {
+  {
+    "reason": ""
+  }
+}
+
+tests {
+  test("should return 400", function() {
+    expect(res.getStatus()).to.equal(400);
+  });
+
+  test("error code is VALIDATION_FAILED", function() {
+    expect(res.getBody().code).to.equal("VALIDATION_FAILED");
+    expect(res.getBody().traceId).to.be.a("string");
+  });
+}
+
+docs {
+  The category stays PENDING: 04-reject-category rejects it next, which only a PENDING category allows.
+}

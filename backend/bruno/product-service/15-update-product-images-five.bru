@@ -1,0 +1,39 @@
+meta {
+  name: PUT /api/v1/products/:productId/images (5 images, max → 200)
+  type: http
+  seq: 35
+}
+
+put {
+  url: {{product_service_url}}/api/v1/products/{{product_id}}/images
+  body: json
+  auth: none
+}
+
+headers {
+  X-Gateway-Secret: {{gateway_secret}}
+  X-User-Id: {{seller1_sub}}
+  X-User-Role: SELLER
+}
+
+body:json {
+  {
+    "imageUrls": [
+      "https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg",
+      "https://cdn.agricontract.test/products/ca-phe-robusta-2.jpg",
+      "https://cdn.agricontract.test/products/ca-phe-robusta-3.jpg",
+      "https://cdn.agricontract.test/products/ca-phe-robusta-4.jpg",
+      "https://cdn.agricontract.test/products/ca-phe-robusta-5.jpg"
+    ]
+  }
+}
+
+tests {
+  test("should return 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("images has 5 entries", function() {
+    expect(res.getBody().images.length).to.equal(5);
+  });
+}
