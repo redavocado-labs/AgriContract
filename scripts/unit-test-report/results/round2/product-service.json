@@ -1,0 +1,3542 @@
+[
+  {
+    "iterationIndex": 0,
+    "results": [
+      {
+        "test": {
+          "filename": "product-service\\00-propose-category.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/categories",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"Cà Phê Bruno 1795610604441\"\n}"
+        },
+        "response": {
+          "status": 201,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:24 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "categoryId": "8b61f55c-fd7b-4544-82b5-b20b89db8d3f",
+            "name": "Cà Phê Bruno 1795610604441",
+            "status": "PENDING",
+            "rejectionReason": null,
+            "proposedBy": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "commodity": null
+          },
+          "url": "http://localhost/api/v1/categories",
+          "responseTime": 57,
+          "duration": 57,
+          "size": 202
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201",
+            "status": "pass",
+            "uid": "KjXFPbz5mgUWa3LeK5Hkb"
+          },
+          {
+            "description": "should return categoryId",
+            "status": "pass",
+            "uid": "t-nW2dT5OMfgnRUYcLl4z"
+          },
+          {
+            "description": "status should be PENDING",
+            "status": "pass",
+            "uid": "nvgQVftSRVBqdyy1udFHF"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.1182628,
+        "name": "POST /api/v1/categories (propose category)",
+        "path": "product-service\\00-propose-category",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\00b-propose-category-blank-name.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/categories",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:24 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:24.560351555Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "name: must not be blank",
+            "path": "/api/v1/categories",
+            "traceId": "6c5c69c9-ce3e-4ed6-b4b0-3022fc11f619"
+          },
+          "url": "http://localhost/api/v1/categories",
+          "responseTime": 9,
+          "duration": 9,
+          "size": 221
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "urYIWWDz150rQhr7ebk8j"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "LqOuF9X0A2kW7jXZwvqx-"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0138286,
+        "name": "POST /api/v1/categories (blank name → 400)",
+        "path": "product-service\\00b-propose-category-blank-name",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\01-approve-category.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/admin/categories/8b61f55c-fd7b-4544-82b5-b20b89db8d3f/approve",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "operator-1",
+            "X-User-Role": "OPERATOR",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"commodity\": \"COFFEE\"\n}"
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:24 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "categoryId": "8b61f55c-fd7b-4544-82b5-b20b89db8d3f",
+            "name": "Cà Phê Bruno 1795610604441",
+            "status": "APPROVED",
+            "rejectionReason": null,
+            "proposedBy": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "commodity": "COFFEE"
+          },
+          "url": "http://localhost/api/v1/admin/categories/8b61f55c-fd7b-4544-82b5-b20b89db8d3f/approve",
+          "responseTime": 20,
+          "duration": 20,
+          "size": 207
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "Wn0NxAosZKsEa3XLF1Xth"
+          },
+          {
+            "description": "status should be APPROVED",
+            "status": "pass",
+            "uid": "pONeDHzvsS-mJ-HaH5c23"
+          },
+          {
+            "description": "approval stores the commodity the Operator assigned",
+            "status": "pass",
+            "uid": "tbx42D5l4Bf0M_fpwR48D"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0237888,
+        "name": "PUT /api/v1/admin/categories/:categoryId/approve",
+        "path": "product-service\\01-approve-category",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\01b-assign-commodity-already-mapped.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/admin/categories/8b61f55c-fd7b-4544-82b5-b20b89db8d3f/commodity",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "operator-1",
+            "X-User-Role": "OPERATOR",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"commodity\": \"COFFEE\"\n}"
+        },
+        "response": {
+          "status": 409,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:24 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:24.598083971Z",
+            "status": 409,
+            "error": "Conflict",
+            "code": "STATE_CONFLICT",
+            "message": "Category commodity is already assigned",
+            "path": "/api/v1/admin/categories/8b61f55c-fd7b-4544-82b5-b20b89db8d3f/commodity",
+            "traceId": "a29b2e38-c868-4bbd-b36b-50b6e8fe32cb"
+          },
+          "url": "http://localhost/api/v1/admin/categories/8b61f55c-fd7b-4544-82b5-b20b89db8d3f/commodity",
+          "responseTime": 9,
+          "duration": 9,
+          "size": 283
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 409",
+            "status": "pass",
+            "uid": "bgnVp0920STy4DTbVWEkD"
+          },
+          {
+            "description": "error body is the shared ErrorEnvelope",
+            "status": "pass",
+            "uid": "x0fGKnB4olfQYnna_F6gq"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0125375,
+        "name": "PUT /api/v1/admin/categories/:categoryId/commodity (already mapped)",
+        "path": "product-service\\01b-assign-commodity-already-mapped",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\02-propose-category-duplicate.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/categories",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+            "X-User-Role": "BUYER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"ca phe\"\n}"
+        },
+        "response": {
+          "status": 409,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:24 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:24.612028665Z",
+            "status": 409,
+            "error": "Conflict",
+            "code": "DUPLICATE_CATEGORY",
+            "message": "Category already proposed/exists with an equivalent name: ca phe",
+            "path": "/api/v1/categories",
+            "traceId": "3be38379-423d-4c14-b209-34b34b00f80a"
+          },
+          "url": "http://localhost/api/v1/categories",
+          "responseTime": 10,
+          "duration": 10,
+          "size": 260
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 409",
+            "status": "pass",
+            "uid": "wVpNuLaZ2j7OIDcrMx2op"
+          },
+          {
+            "description": "error body is the shared ErrorEnvelope",
+            "status": "pass",
+            "uid": "lIMvWAQJAAKb9U0Lc29Z0"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0140045,
+        "name": "POST /api/v1/categories (duplicate name — diacritics/case-insensitive, blocked even though APPROVED)",
+        "path": "product-service\\02-propose-category-duplicate",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\03-propose-category-for-reject.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/categories",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"Rau Củ Không Rõ 1795610604441\"\n}"
+        },
+        "response": {
+          "status": 201,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:24 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "categoryId": "392e347b-b49e-47a2-81b2-dcc5f4d03c34",
+            "name": "Rau Củ Không Rõ 1795610604441",
+            "status": "PENDING",
+            "rejectionReason": null,
+            "proposedBy": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "commodity": null
+          },
+          "url": "http://localhost/api/v1/categories",
+          "responseTime": 30,
+          "duration": 30,
+          "size": 207
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201",
+            "status": "pass",
+            "uid": "xnFV6TNbIkBb62V-vrZKF"
+          },
+          {
+            "description": "status should be PENDING",
+            "status": "pass",
+            "uid": "PVosuJliUEiHwCQx8AM8R"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0349614,
+        "name": "POST /api/v1/categories (second category, to be rejected)",
+        "path": "product-service\\03-propose-category-for-reject",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\03b-approve-category-as-seller.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/admin/categories/392e347b-b49e-47a2-81b2-dcc5f4d03c34/approve",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"commodity\": \"COFFEE\"\n}"
+        },
+        "response": {
+          "status": 403,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:24 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:24.659669305Z",
+            "status": 403,
+            "error": "Forbidden",
+            "code": "FORBIDDEN",
+            "message": "Forbidden",
+            "path": "/api/v1/admin/categories/392e347b-b49e-47a2-81b2-dcc5f4d03c34/approve",
+            "traceId": "efd56982-3cab-4916-8791-400c70166147"
+          },
+          "url": "http://localhost/api/v1/admin/categories/392e347b-b49e-47a2-81b2-dcc5f4d03c34/approve",
+          "responseTime": 8,
+          "duration": 8,
+          "size": 248
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 403",
+            "status": "pass",
+            "uid": "excwuQoqhKXaasDUSEGzt"
+          },
+          {
+            "description": "error code is FORBIDDEN",
+            "status": "pass",
+            "uid": "oHoWflAbfrdNdkUnpzKdv"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0123153,
+        "name": "PUT /api/v1/admin/categories/:categoryId/approve (SELLER → 403)",
+        "path": "product-service\\03b-approve-category-as-seller",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\03c-reject-category-blank-reason.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/admin/categories/392e347b-b49e-47a2-81b2-dcc5f4d03c34/reject",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "operator-1",
+            "X-User-Role": "OPERATOR",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"reason\": \"\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:24 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:24.670832065Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "reason: must not be blank",
+            "path": "/api/v1/admin/categories/392e347b-b49e-47a2-81b2-dcc5f4d03c34/reject",
+            "traceId": "26f3e2a9-4be6-4b45-b564-eb3b22e20f74"
+          },
+          "url": "http://localhost/api/v1/admin/categories/392e347b-b49e-47a2-81b2-dcc5f4d03c34/reject",
+          "responseTime": 7,
+          "duration": 7,
+          "size": 273
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "F4q6pcA6zOiEIIwyLkx5B"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "4NOc9Vz18YfBUfOKnC20y"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0105332,
+        "name": "PUT /api/v1/admin/categories/:categoryId/reject (blank reason → 400)",
+        "path": "product-service\\03c-reject-category-blank-reason",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\04-reject-category.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/admin/categories/392e347b-b49e-47a2-81b2-dcc5f4d03c34/reject",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "operator-1",
+            "X-User-Role": "OPERATOR",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"reason\": \"Tên không rõ ràng, đề nghị đặt lại\"\n}"
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:24 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "categoryId": "392e347b-b49e-47a2-81b2-dcc5f4d03c34",
+            "name": "Rau Củ Không Rõ 1795610604441",
+            "status": "REJECTED",
+            "rejectionReason": "Tên không rõ ràng, đề nghị đặt lại",
+            "proposedBy": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "commodity": null
+          },
+          "url": "http://localhost/api/v1/admin/categories/392e347b-b49e-47a2-81b2-dcc5f4d03c34/reject",
+          "responseTime": 22,
+          "duration": 22,
+          "size": 254
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "7L51FalnxkpIyyE-3rD5r"
+          },
+          {
+            "description": "status should be REJECTED",
+            "status": "pass",
+            "uid": "nB8zxlCb3zLOaD0aVClkO"
+          },
+          {
+            "description": "rejectionReason should be set",
+            "status": "pass",
+            "uid": "f7p3Ygh8uGz7STkyYMTRj"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0276319,
+        "name": "PUT /api/v1/admin/categories/:categoryId/reject",
+        "path": "product-service\\04-reject-category",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\05-create-product.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/products",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"Ca phe Robusta Dak Lak\",\n  \"unit\": \"kg\",\n  \"categoryId\": \"8b61f55c-fd7b-4544-82b5-b20b89db8d3f\",\n  \"imageUrls\": [\"https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg\", \"https://cdn.agricontract.test/products/ca-phe-robusta-2.jpg\"],\n  \"cropYear\": 2026,\n  \"harvestSeason\": \"Nien vu 2026/27\",\n  \"certifications\": [\"4C (cam ket)\"]\n}"
+        },
+        "response": {
+          "status": 201,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:24 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "productId": "7ec5defb-d794-4dbd-8184-690a598a6012",
+            "name": "Ca phe Robusta Dak Lak",
+            "unit": "kg",
+            "categoryId": "8b61f55c-fd7b-4544-82b5-b20b89db8d3f",
+            "images": [
+              "https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg",
+              "https://cdn.agricontract.test/products/ca-phe-robusta-2.jpg"
+            ],
+            "cropYear": 2026,
+            "harvestSeason": "Nien vu 2026/27",
+            "certifications": [
+              "4C (cam ket)"
+            ]
+          },
+          "url": "http://localhost/api/v1/products",
+          "responseTime": 26,
+          "duration": 26,
+          "size": 367
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201",
+            "status": "pass",
+            "uid": "iCjKcF50g8F435RQl-PPG"
+          },
+          {
+            "description": "should return productId",
+            "status": "pass",
+            "uid": "PVxxD5z_k94SgQB2eP2LZ"
+          },
+          {
+            "description": "should return correct name",
+            "status": "pass",
+            "uid": "4QfUJ7Y2lwYrtf8blZHTT"
+          },
+          {
+            "description": "categoryId should match",
+            "status": "pass",
+            "uid": "rWUkJ18Ho4xOjpH8Vk3iK"
+          },
+          {
+            "description": "images should have 2 entries",
+            "status": "pass",
+            "uid": "4eWTxW4ubqUXrwEHxBv6C"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0343012,
+        "name": "POST /api/v1/products (create product with categoryId + imageUrls)",
+        "path": "product-service\\05-create-product",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\05b-create-product-crop-year-2000.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/products",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"Ca phe Robusta (cropYear 2000)\",\n  \"unit\": \"kg\",\n  \"categoryId\": \"8b61f55c-fd7b-4544-82b5-b20b89db8d3f\",\n  \"imageUrls\": [\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg\"\n  ],\n  \"cropYear\": 2000\n}"
+        },
+        "response": {
+          "status": 201,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:24 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "productId": "e3ac5b9f-5159-40f5-aa84-e9e619b2dafc",
+            "name": "Ca phe Robusta (cropYear 2000)",
+            "unit": "kg",
+            "categoryId": "8b61f55c-fd7b-4544-82b5-b20b89db8d3f",
+            "images": [
+              "https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg"
+            ],
+            "cropYear": 2000,
+            "harvestSeason": null,
+            "certifications": null
+          },
+          "url": "http://localhost/api/v1/products",
+          "responseTime": 18,
+          "duration": 18,
+          "size": 288
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201",
+            "status": "pass",
+            "uid": "dyV74fYh-O4IfwgyFuEbd"
+          },
+          {
+            "description": "cropYear 2000 is kept",
+            "status": "pass",
+            "uid": "HfY4eYxQ7pH-0i95jX27s"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.023715,
+        "name": "POST /api/v1/products (cropYear 2000, limit → 201)",
+        "path": "product-service\\05b-create-product-crop-year-2000",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\05c-create-product-crop-year-2100.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/products",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"Ca phe Robusta (cropYear 2100)\",\n  \"unit\": \"kg\",\n  \"categoryId\": \"8b61f55c-fd7b-4544-82b5-b20b89db8d3f\",\n  \"imageUrls\": [\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg\"\n  ],\n  \"cropYear\": 2100\n}"
+        },
+        "response": {
+          "status": 201,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:24 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "productId": "199dbf6e-ffb3-43ec-a01d-e4bdee038182",
+            "name": "Ca phe Robusta (cropYear 2100)",
+            "unit": "kg",
+            "categoryId": "8b61f55c-fd7b-4544-82b5-b20b89db8d3f",
+            "images": [
+              "https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg"
+            ],
+            "cropYear": 2100,
+            "harvestSeason": null,
+            "certifications": null
+          },
+          "url": "http://localhost/api/v1/products",
+          "responseTime": 16,
+          "duration": 16,
+          "size": 288
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201",
+            "status": "pass",
+            "uid": "A4Tk0BxlF9RuanWrUdszK"
+          },
+          {
+            "description": "cropYear 2100 is kept",
+            "status": "pass",
+            "uid": "7jtH6jmYUfr7XZTt9Zl6G"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0193257,
+        "name": "POST /api/v1/products (cropYear 2100, limit → 201)",
+        "path": "product-service\\05c-create-product-crop-year-2100",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\05d-create-product-crop-year-1999.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/products",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"Ca phe Robusta (cropYear 1999)\",\n  \"unit\": \"kg\",\n  \"categoryId\": \"8b61f55c-fd7b-4544-82b5-b20b89db8d3f\",\n  \"imageUrls\": [\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg\"\n  ],\n  \"cropYear\": 1999\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:24 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:24.786355646Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "cropYear: must be greater than or equal to 2000",
+            "path": "/api/v1/products",
+            "traceId": "91983d4e-2898-413c-a5fb-5bcd02e26a7e"
+          },
+          "url": "http://localhost/api/v1/products",
+          "responseTime": 7,
+          "duration": 7,
+          "size": 243
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "BmfrAYJRYiTYadHy7wVh1"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "e5yfHDzgEE0l6jrlVAzXP"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0102515,
+        "name": "POST /api/v1/products (cropYear 1999, outside 2000..2100 → 400)",
+        "path": "product-service\\05d-create-product-crop-year-1999",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\05e-create-product-crop-year-2101.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/products",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"Ca phe Robusta (cropYear 2101)\",\n  \"unit\": \"kg\",\n  \"categoryId\": \"8b61f55c-fd7b-4544-82b5-b20b89db8d3f\",\n  \"imageUrls\": [\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg\"\n  ],\n  \"cropYear\": 2101\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:24 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:24.797457982Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "cropYear: must be less than or equal to 2100",
+            "path": "/api/v1/products",
+            "traceId": "ea2051da-bd06-48e9-b96b-4004d5320e3a"
+          },
+          "url": "http://localhost/api/v1/products",
+          "responseTime": 7,
+          "duration": 7,
+          "size": 240
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "sPRqd_CH22qrU-xFbsUbk"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "l2VGpj03TkqQIccafFC4Q"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0109359,
+        "name": "POST /api/v1/products (cropYear 2101, outside 2000..2100 → 400)",
+        "path": "product-service\\05e-create-product-crop-year-2101",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\06-create-product-category-not-approved.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/products",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"San Pham Loi\",\n  \"unit\": \"kg\",\n  \"categoryId\": \"392e347b-b49e-47a2-81b2-dcc5f4d03c34\",\n  \"imageUrls\": [\"https://cdn.agricontract.test/products/x.jpg\"]\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:24 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:24.811621465Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "CATEGORY_NOT_APPROVED",
+            "message": "Category is not APPROVED: 392e347b-b49e-47a2-81b2-dcc5f4d03c34",
+            "path": "/api/v1/products",
+            "traceId": "bdcb75da-721a-4015-b8ad-98627e995ef1"
+          },
+          "url": "http://localhost/api/v1/products",
+          "responseTime": 10,
+          "duration": 10,
+          "size": 262
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "fw7OGvRmZOwJB2fTtMkKC"
+          },
+          {
+            "description": "error body is the shared ErrorEnvelope",
+            "status": "pass",
+            "uid": "eRF4Ko2xfmfusVIEPUfjV"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0141998,
+        "name": "POST /api/v1/products (rejected category — 400 CategoryNotApproved)",
+        "path": "product-service\\06-create-product-category-not-approved",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\06b-register-plot.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/plots",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "bruno-plot-ho-nguyen-van-a",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"householdLabel\": \"Hộ Nguyễn Văn A\",\n  \"latitude\": 12.666789,\n  \"longitude\": 108.050123,\n  \"areaHectares\": 1.5,\n  \"accuracyMeters\": 8.5,\n  \"declaredProvince\": \"DAK_LAK\"\n}"
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:24 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "registryEntryId": "2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a",
+            "householdLabel": "Hộ Nguyễn Văn A",
+            "geometryType": "POINT",
+            "geometryWkt": "POINT (108.050123 12.666789)",
+            "geometryHash": "7bf3a61711b5ceb99fb07bfb44ed4fdc4c0b65f92900ea838af31e8b94fee3de",
+            "areaHectares": 1.5,
+            "source": "MANUAL_PIN",
+            "accuracyMeters": 8.5,
+            "verificationLevel": "SELF_DECLARED",
+            "declaredProvince": "DAK_LAK",
+            "geoVerificationStatus": "UNVERIFIED",
+            "geoRiskLevel": null,
+            "importedAt": "2026-11-25T12:43:24.822577963Z"
+          },
+          "url": "http://localhost/api/v1/plots",
+          "responseTime": 15,
+          "duration": 15,
+          "size": 481
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201 or 200",
+            "status": "pass",
+            "uid": "tGYZWsV55sfAXY34DTKcN"
+          },
+          {
+            "description": "plot is a POINT registry entry",
+            "status": "pass",
+            "uid": "fVCxrfFMF9lwCNS10UraA"
+          },
+          {
+            "description": "geometryHash is a SHA-256 hex",
+            "status": "pass",
+            "uid": "Kq_NJKF63u0b_jw-EAPz1"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0205069,
+        "name": "POST /api/v1/plots (manual pin)",
+        "path": "product-service\\06b-register-plot",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07-create-listing.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-1795610604837-n8y2ahns14h",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"7ec5defb-d794-4dbd-8184-690a598a6012\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 500,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15000.00\",\n  \"registryEntryIds\": [\"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 201,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "listingId": "921305cb-1359-4eb7-8b30-76b49f02c174",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "productId": "7ec5defb-d794-4dbd-8184-690a598a6012",
+            "productName": "Ca phe Robusta Dak Lak",
+            "unitOfMeasure": "KG",
+            "offeredQuantity": 500,
+            "quantityAvailable": 500,
+            "minOrderQuantity": 100,
+            "askingUnitPrice": "15000.00",
+            "status": "AVAILABLE",
+            "listingVersionToken": "2026-11-25T12:43:26.380859Z",
+            "registryEntryIds": [
+              "2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a"
+            ],
+            "categoryId": "8b61f55c-fd7b-4544-82b5-b20b89db8d3f",
+            "commodity": "COFFEE",
+            "regionText": "Buon Ma Thuot, Dak Lak",
+            "declaredQualitySpec": {
+              "commodity": "COFFEE",
+              "type": "ROBUSTA",
+              "moisturePercent": 12.5,
+              "foreignMatterPercent": 0.5,
+              "blackBrokenBeansPercent": 5
+            },
+            "legacyQualitySpecMissing": false,
+            "cropYear": 2026,
+            "harvestSeason": "Nien vu 2026/27",
+            "certifications": [
+              "4C (cam ket)"
+            ],
+            "packagingDeclaration": "Bao day 60 kg",
+            "warehouseLocation": null,
+            "estimatedAvailabilityDate": null,
+            "traceabilityEvidencePackageId": null
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 74,
+          "duration": 74,
+          "size": 951
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201",
+            "status": "pass",
+            "uid": "pjJ5k49Uwy5ukK2W4X1n9"
+          },
+          {
+            "description": "should return listingId",
+            "status": "pass",
+            "uid": "y5Pp0Ugi3I-3FHQ651vxE"
+          },
+          {
+            "description": "sellerId should match header",
+            "status": "pass",
+            "uid": "3D4jYiTNS3OdQijSpnZ3v"
+          },
+          {
+            "description": "productName snapshot should be set",
+            "status": "pass",
+            "uid": "HEMNmBP54BZ0Gaml4Th2g"
+          },
+          {
+            "description": "contract field names: kg quantities, 2-decimal VND/kg price, no Phase 1 fields",
+            "status": "pass",
+            "uid": "FmPVIH5PhCzSolF6269wW"
+          },
+          {
+            "description": "status should be AVAILABLE",
+            "status": "pass",
+            "uid": "nR-yoYAZdJoFai-HiS1Cs"
+          },
+          {
+            "description": "coffee goods: commodity from the category, season from the product, declared quality",
+            "status": "pass",
+            "uid": "zXM60uB4Z9CaSn_7sfWXe"
+          },
+          {
+            "description": "listing names the registry plot it comes from",
+            "status": "pass",
+            "uid": "tS00oKqqMXComcgWNa4ng"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 1.5862498999999999,
+        "name": "POST /api/v1/listings (create listing)",
+        "path": "product-service\\07-create-listing",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07b-create-listing-replay.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-1795610604837-n8y2ahns14h",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"7ec5defb-d794-4dbd-8184-690a598a6012\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 500,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15000.00\",\n  \"registryEntryIds\": [\"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "listingId": "921305cb-1359-4eb7-8b30-76b49f02c174",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "productId": "7ec5defb-d794-4dbd-8184-690a598a6012",
+            "productName": "Ca phe Robusta Dak Lak",
+            "unitOfMeasure": "KG",
+            "offeredQuantity": 500,
+            "quantityAvailable": 500,
+            "minOrderQuantity": 100,
+            "askingUnitPrice": "15000.00",
+            "status": "AVAILABLE",
+            "listingVersionToken": "2026-11-25T12:43:26.380859Z",
+            "registryEntryIds": [
+              "2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a"
+            ],
+            "categoryId": "8b61f55c-fd7b-4544-82b5-b20b89db8d3f",
+            "commodity": "COFFEE",
+            "regionText": "Buon Ma Thuot, Dak Lak",
+            "declaredQualitySpec": {
+              "commodity": "COFFEE",
+              "type": "ROBUSTA",
+              "moisturePercent": 12.5,
+              "foreignMatterPercent": 0.5,
+              "blackBrokenBeansPercent": 5
+            },
+            "legacyQualitySpecMissing": false,
+            "cropYear": 2026,
+            "harvestSeason": "Nien vu 2026/27",
+            "certifications": [
+              "4C (cam ket)"
+            ],
+            "packagingDeclaration": "Bao day 60 kg",
+            "warehouseLocation": null,
+            "estimatedAvailabilityDate": null,
+            "traceabilityEvidencePackageId": null
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 26,
+          "duration": 26,
+          "size": 963
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "smWOR3qlNZkzuzh36COW4"
+          },
+          {
+            "description": "returns the listing 07 created",
+            "status": "pass",
+            "uid": "wMdNNfxHvAEYAncM0Kcmv"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0325627,
+        "name": "POST /api/v1/listings (same Idempotency-Key replayed)",
+        "path": "product-service\\07b-create-listing-replay",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07c-create-listing-missing-key.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"7ec5defb-d794-4dbd-8184-690a598a6012\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 500,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15000.00\",\n  \"registryEntryIds\": [\"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:26.461881107Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "MALFORMED_REQUEST",
+            "message": "Malformed request",
+            "path": "/api/v1/listings",
+            "traceId": "75051b80-b6fc-4a7c-b5c8-97a25ca6bf43"
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 7,
+          "duration": 7,
+          "size": 213
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "mAxWiYDkZYXi8mzpjA3ca"
+          },
+          {
+            "description": "error body is the shared ErrorEnvelope",
+            "status": "pass",
+            "uid": "tl5shSXIRhVr8bvvalN7V"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0112877,
+        "name": "POST /api/v1/listings (no Idempotency-Key)",
+        "path": "product-service\\07c-create-listing-missing-key",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07d-create-listing-price-one-decimal.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-1795610606468-o6x6qofo2e",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"7ec5defb-d794-4dbd-8184-690a598a6012\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 500,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15000.0\",\n  \"registryEntryIds\": [\n    \"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"\n  ],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:26.475332127Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "askingUnitPrice: must be a decimal with exactly 2 places, e.g. 55000.00",
+            "path": "/api/v1/listings",
+            "traceId": "3268b0a9-969e-4dbc-b1c2-978149fc853e"
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 8,
+          "duration": 8,
+          "size": 267
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "Wvp5bpjXS87DXQZON2Zh-"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "H6jCTEmAEhTqTYsuw96Nn"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0132476,
+        "name": "POST /api/v1/listings (askingUnitPrice \"15000.0\", one decimal → 400)",
+        "path": "product-service\\07d-create-listing-price-one-decimal",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07e-create-listing-price-three-decimals.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-1795610606481-h9in3rp3x2q",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"7ec5defb-d794-4dbd-8184-690a598a6012\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 500,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15000.000\",\n  \"registryEntryIds\": [\n    \"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"\n  ],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:26.492170785Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "askingUnitPrice: must be a decimal with exactly 2 places, e.g. 55000.00",
+            "path": "/api/v1/listings",
+            "traceId": "699fa3c7-e372-45f9-8fac-ccbc640e8f3b"
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 11,
+          "duration": 11,
+          "size": 267
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "DC2mb-bTWm2R1KxsUfSjs"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "Y5Twef_wCcnpM2rDZpgN0"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0172011,
+        "name": "POST /api/v1/listings (askingUnitPrice \"15000.000\", three decimals → 400)",
+        "path": "product-service\\07e-create-listing-price-three-decimals",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07f-create-listing-min-order-equals-offered.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-1795610606498-2xlcir6due7",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"7ec5defb-d794-4dbd-8184-690a598a6012\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 500,\n  \"minOrderQuantity\": 500,\n  \"askingUnitPrice\": \"15000.00\",\n  \"registryEntryIds\": [\n    \"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"\n  ],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 201,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "listingId": "893ef7c4-2210-4e21-b9a9-6db021256f2f",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "productId": "7ec5defb-d794-4dbd-8184-690a598a6012",
+            "productName": "Ca phe Robusta Dak Lak",
+            "unitOfMeasure": "KG",
+            "offeredQuantity": 500,
+            "quantityAvailable": 500,
+            "minOrderQuantity": 500,
+            "askingUnitPrice": "15000.00",
+            "status": "AVAILABLE",
+            "listingVersionToken": "2026-11-25T12:43:26.530396Z",
+            "registryEntryIds": [
+              "2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a"
+            ],
+            "categoryId": "8b61f55c-fd7b-4544-82b5-b20b89db8d3f",
+            "commodity": "COFFEE",
+            "regionText": "Buon Ma Thuot, Dak Lak",
+            "declaredQualitySpec": {
+              "commodity": "COFFEE",
+              "type": "ROBUSTA",
+              "moisturePercent": 12.5,
+              "foreignMatterPercent": 0.5,
+              "blackBrokenBeansPercent": 5
+            },
+            "legacyQualitySpecMissing": false,
+            "cropYear": 2026,
+            "harvestSeason": "Nien vu 2026/27",
+            "certifications": [
+              "4C (cam ket)"
+            ],
+            "packagingDeclaration": "Bao day 60 kg",
+            "warehouseLocation": null,
+            "estimatedAvailabilityDate": null,
+            "traceabilityEvidencePackageId": null
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 47,
+          "duration": 47,
+          "size": 951
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201",
+            "status": "pass",
+            "uid": "ikVP9-CcunV6NSKNWAvMb"
+          },
+          {
+            "description": "minOrderQuantity equals offeredQuantity",
+            "status": "pass",
+            "uid": "wKBT0SIPnHR3hh1wKsxf9"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0527489,
+        "name": "POST /api/v1/listings (minOrderQuantity = offeredQuantity = 500 → 201)",
+        "path": "product-service\\07f-create-listing-min-order-equals-offered",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07g-create-listing-min-order-above-offered.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-1795610606551-7na9krmgpdd",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"7ec5defb-d794-4dbd-8184-690a598a6012\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 500,\n  \"minOrderQuantity\": 500.001,\n  \"askingUnitPrice\": \"15000.00\",\n  \"registryEntryIds\": [\n    \"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"\n  ],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:26.577126268Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "minOrderQuantity must be positive and not exceed offeredQuantity",
+            "path": "/api/v1/listings",
+            "traceId": "7e50c177-e380-4da6-844d-a7baa1c438ae"
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 26,
+          "duration": 26,
+          "size": 260
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "vSJhEIfympWtEe1hJy3q5"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "Q3bnSJaPaofOJjkQ3IltY"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0312683,
+        "name": "POST /api/v1/listings (minOrderQuantity 500.001 > offeredQuantity 500 → 400)",
+        "path": "product-service\\07g-create-listing-min-order-above-offered",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07h-create-listing-offered-zero.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-1795610606582-3dlwh8jp4d6",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"7ec5defb-d794-4dbd-8184-690a598a6012\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 0,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15000.00\",\n  \"registryEntryIds\": [\n    \"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"\n  ],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:26.590167818Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "offeredQuantity: must be greater than 0",
+            "path": "/api/v1/listings",
+            "traceId": "5a863b65-71c7-4ba1-80d2-4f446b1c55a5"
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 8,
+          "duration": 8,
+          "size": 235
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "9INBcfIvtna_T4Z3VOTqZ"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "9jv1RUhurhVOylgwaV72m"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.012671,
+        "name": "POST /api/v1/listings (offeredQuantity 0 → 400)",
+        "path": "product-service\\07h-create-listing-offered-zero",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07i-create-listing-unit-tan.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-1795610606595-25u6ke9xc2l",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"7ec5defb-d794-4dbd-8184-690a598a6012\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"TAN\",\n  \"offeredQuantity\": 500,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15000.00\",\n  \"registryEntryIds\": [\n    \"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"\n  ],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:26.603499676Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "unitOfMeasure: must be KG",
+            "path": "/api/v1/listings",
+            "traceId": "3406f997-2c17-44da-954c-dd256715d04d"
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 8,
+          "duration": 8,
+          "size": 221
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "MDbWn2HrrUR5_zVLMmIGC"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "r06KO6X2nEjNlTm82sDw7"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.013232,
+        "name": "POST /api/v1/listings (unitOfMeasure \"TAN\" → 400)",
+        "path": "product-service\\07i-create-listing-unit-tan",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\08-get-listing.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8082/api/v1/listings/921305cb-1359-4eb7-8b30-76b49f02c174",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "listingId": "921305cb-1359-4eb7-8b30-76b49f02c174",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "productId": "7ec5defb-d794-4dbd-8184-690a598a6012",
+            "productName": "Ca phe Robusta Dak Lak",
+            "unitOfMeasure": "KG",
+            "offeredQuantity": 500,
+            "quantityAvailable": 500,
+            "minOrderQuantity": 100,
+            "askingUnitPrice": "15000.00",
+            "status": "AVAILABLE",
+            "listingVersionToken": "2026-11-25T12:43:26.380859Z",
+            "registryEntryIds": [
+              "2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a"
+            ],
+            "categoryId": "8b61f55c-fd7b-4544-82b5-b20b89db8d3f",
+            "commodity": "COFFEE",
+            "regionText": "Buon Ma Thuot, Dak Lak",
+            "declaredQualitySpec": {
+              "commodity": "COFFEE",
+              "type": "ROBUSTA",
+              "moisturePercent": 12.5,
+              "foreignMatterPercent": 0.5,
+              "blackBrokenBeansPercent": 5
+            },
+            "legacyQualitySpecMissing": false,
+            "cropYear": 2026,
+            "harvestSeason": "Nien vu 2026/27",
+            "certifications": [
+              "4C (cam ket)"
+            ],
+            "packagingDeclaration": "Bao day 60 kg",
+            "warehouseLocation": null,
+            "estimatedAvailabilityDate": null,
+            "traceabilityEvidencePackageId": null
+          },
+          "url": "http://localhost/api/v1/listings/921305cb-1359-4eb7-8b30-76b49f02c174",
+          "responseTime": 11,
+          "duration": 11,
+          "size": 963
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "2-GXP5IHOZEpFirjxhmCT"
+          },
+          {
+            "description": "listingId matches",
+            "status": "pass",
+            "uid": "DYsRpkN7V8i7gb4eDcJla"
+          },
+          {
+            "description": "status is AVAILABLE",
+            "status": "pass",
+            "uid": "yWg6afSNvZ_V0SltM8-_S"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0149704,
+        "name": "GET /api/v1/listings/:listingId",
+        "path": "product-service\\08-get-listing",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\09-get-active-listings.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8082/api/v1/listings?page=0&size=10",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "content": [
+              {
+                "listingId": "lst-seed-browse-01",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 1000,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "8000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-browse-02",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b02",
+                "productName": "Cà phê Robusta",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "55000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-browse-03",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b03",
+                "productName": "Hồ tiêu đen",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 100,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "120000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-offered",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 800,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "8500.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-neg",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b02",
+                "productName": "Cà phê Robusta",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 300,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "60000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "51ef2a70-95f6-4a53-bdb1-6c9ccc9becaf",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gao ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "15000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-25T12:43:15Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "921305cb-1359-4eb7-8b30-76b49f02c174",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7ec5defb-d794-4dbd-8184-690a598a6012",
+                "productName": "Ca phe Robusta Dak Lak",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": 500,
+                "minOrderQuantity": 100,
+                "askingUnitPrice": "15000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-25T12:43:26.380859Z",
+                "registryEntryIds": [
+                  "2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a"
+                ],
+                "categoryId": "8b61f55c-fd7b-4544-82b5-b20b89db8d3f",
+                "commodity": "COFFEE",
+                "regionText": "Buon Ma Thuot, Dak Lak",
+                "declaredQualitySpec": {
+                  "commodity": "COFFEE",
+                  "type": "ROBUSTA",
+                  "moisturePercent": 12.5,
+                  "foreignMatterPercent": 0.5,
+                  "blackBrokenBeansPercent": 5
+                },
+                "legacyQualitySpecMissing": false,
+                "cropYear": 2026,
+                "harvestSeason": "Nien vu 2026/27",
+                "certifications": [
+                  "4C (cam ket)"
+                ],
+                "packagingDeclaration": "Bao day 60 kg",
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "893ef7c4-2210-4e21-b9a9-6db021256f2f",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7ec5defb-d794-4dbd-8184-690a598a6012",
+                "productName": "Ca phe Robusta Dak Lak",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": 500,
+                "minOrderQuantity": 500,
+                "askingUnitPrice": "15000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-25T12:43:26.530396Z",
+                "registryEntryIds": [
+                  "2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a"
+                ],
+                "categoryId": "8b61f55c-fd7b-4544-82b5-b20b89db8d3f",
+                "commodity": "COFFEE",
+                "regionText": "Buon Ma Thuot, Dak Lak",
+                "declaredQualitySpec": {
+                  "commodity": "COFFEE",
+                  "type": "ROBUSTA",
+                  "moisturePercent": 12.5,
+                  "foreignMatterPercent": 0.5,
+                  "blackBrokenBeansPercent": 5
+                },
+                "legacyQualitySpecMissing": false,
+                "cropYear": 2026,
+                "harvestSeason": "Nien vu 2026/27",
+                "certifications": [
+                  "4C (cam ket)"
+                ],
+                "packagingDeclaration": "Bao day 60 kg",
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              }
+            ],
+            "page": 0,
+            "size": 10,
+            "totalElements": 8,
+            "totalPages": 1,
+            "first": true,
+            "last": true,
+            "empty": false,
+            "reputationStatus": "SIGN_IN_REQUIRED"
+          },
+          "url": "http://localhost/api/v1/listings?page=0&size=10",
+          "responseTime": 19,
+          "duration": 19,
+          "size": 6317
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "dx8Hc4IfNkgdxyS0oAbk4"
+          },
+          {
+            "description": "content is an array",
+            "status": "pass",
+            "uid": "z_Rtg0D_sMjHJ3YZZ3Sal"
+          },
+          {
+            "description": "at least one listing returned",
+            "status": "pass",
+            "uid": "6tRpGOJ2LlZg_Dw56zCGl"
+          },
+          {
+            "description": "totalElements >= 1",
+            "status": "pass",
+            "uid": "MLlGDDLQa798-O1XDmtIY"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0234055,
+        "name": "GET /api/v1/listings (public — all active)",
+        "path": "product-service\\09-get-active-listings",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\09b-get-active-listings-size-100.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8082/api/v1/listings?page=0&size=100",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "content": [
+              {
+                "listingId": "lst-seed-browse-01",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 1000,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "8000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-browse-02",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b02",
+                "productName": "Cà phê Robusta",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "55000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-browse-03",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b03",
+                "productName": "Hồ tiêu đen",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 100,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "120000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-offered",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 800,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "8500.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-neg",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b02",
+                "productName": "Cà phê Robusta",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 300,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "60000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "51ef2a70-95f6-4a53-bdb1-6c9ccc9becaf",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gao ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "15000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-25T12:43:15Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "921305cb-1359-4eb7-8b30-76b49f02c174",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7ec5defb-d794-4dbd-8184-690a598a6012",
+                "productName": "Ca phe Robusta Dak Lak",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": 500,
+                "minOrderQuantity": 100,
+                "askingUnitPrice": "15000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-25T12:43:26.380859Z",
+                "registryEntryIds": [
+                  "2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a"
+                ],
+                "categoryId": "8b61f55c-fd7b-4544-82b5-b20b89db8d3f",
+                "commodity": "COFFEE",
+                "regionText": "Buon Ma Thuot, Dak Lak",
+                "declaredQualitySpec": {
+                  "commodity": "COFFEE",
+                  "type": "ROBUSTA",
+                  "moisturePercent": 12.5,
+                  "foreignMatterPercent": 0.5,
+                  "blackBrokenBeansPercent": 5
+                },
+                "legacyQualitySpecMissing": false,
+                "cropYear": 2026,
+                "harvestSeason": "Nien vu 2026/27",
+                "certifications": [
+                  "4C (cam ket)"
+                ],
+                "packagingDeclaration": "Bao day 60 kg",
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "893ef7c4-2210-4e21-b9a9-6db021256f2f",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7ec5defb-d794-4dbd-8184-690a598a6012",
+                "productName": "Ca phe Robusta Dak Lak",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": 500,
+                "minOrderQuantity": 500,
+                "askingUnitPrice": "15000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-25T12:43:26.530396Z",
+                "registryEntryIds": [
+                  "2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a"
+                ],
+                "categoryId": "8b61f55c-fd7b-4544-82b5-b20b89db8d3f",
+                "commodity": "COFFEE",
+                "regionText": "Buon Ma Thuot, Dak Lak",
+                "declaredQualitySpec": {
+                  "commodity": "COFFEE",
+                  "type": "ROBUSTA",
+                  "moisturePercent": 12.5,
+                  "foreignMatterPercent": 0.5,
+                  "blackBrokenBeansPercent": 5
+                },
+                "legacyQualitySpecMissing": false,
+                "cropYear": 2026,
+                "harvestSeason": "Nien vu 2026/27",
+                "certifications": [
+                  "4C (cam ket)"
+                ],
+                "packagingDeclaration": "Bao day 60 kg",
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              }
+            ],
+            "page": 0,
+            "size": 100,
+            "totalElements": 8,
+            "totalPages": 1,
+            "first": true,
+            "last": true,
+            "empty": false,
+            "reputationStatus": "SIGN_IN_REQUIRED"
+          },
+          "url": "http://localhost/api/v1/listings?page=0&size=100",
+          "responseTime": 21,
+          "duration": 21,
+          "size": 6318
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "upJXx-pMTEuIAfJ0c6Q63"
+          },
+          {
+            "description": "content is an array of at most 100",
+            "status": "pass",
+            "uid": "JG5VxFE3eEsdEgkFkqoaC"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0242698,
+        "name": "GET /api/v1/listings (size 100, max → 200)",
+        "path": "product-service\\09b-get-active-listings-size-100",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\09c-get-active-listings-size-101.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8082/api/v1/listings?page=0&size=101",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:26.677776912Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "size: must be less than or equal to 100",
+            "path": "/api/v1/listings",
+            "traceId": "12043bf1-d93d-4aee-8110-7656f3ccf13d"
+          },
+          "url": "http://localhost/api/v1/listings?page=0&size=101",
+          "responseTime": 8,
+          "duration": 8,
+          "size": 235
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "FLyreAfBrYuA69meLNm36"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "AA8CZGxiIIZEjthVDj65I"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.011708,
+        "name": "GET /api/v1/listings (size 101, outside 1..100 → 400)",
+        "path": "product-service\\09c-get-active-listings-size-101",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\09d-get-active-listings-size-0.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8082/api/v1/listings?page=0&size=0",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:26.688591168Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "size: must be greater than or equal to 1",
+            "path": "/api/v1/listings",
+            "traceId": "5d567ff0-f02b-4f7c-90f3-f5c7bf74fd45"
+          },
+          "url": "http://localhost/api/v1/listings?page=0&size=0",
+          "responseTime": 7,
+          "duration": 7,
+          "size": 236
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "vtYyi9gYYx6Bd5nL1pnmQ"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "xhIyRPHxP2RqpRbiX907T"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0107952,
+        "name": "GET /api/v1/listings (size 0, outside 1..100 → 400)",
+        "path": "product-service\\09d-get-active-listings-size-0",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\10-get-seller-listings.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8082/api/v1/listings/seller?page=0&size=10",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "content": [
+              {
+                "listingId": "lst-seed-browse-01",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 1000,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "8000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-browse-02",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b02",
+                "productName": "Cà phê Robusta",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "55000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-browse-03",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b03",
+                "productName": "Hồ tiêu đen",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 100,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "120000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-offered",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 800,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "8500.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-neg",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b02",
+                "productName": "Cà phê Robusta",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 300,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "60000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-signed",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "8000.00",
+                "status": "CLOSED",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-active",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b03",
+                "productName": "Hồ tiêu đen",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 200,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "110000.00",
+                "status": "CLOSED",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-delivered",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b02",
+                "productName": "Cà phê Robusta",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 300,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "58000.00",
+                "status": "CLOSED",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-settled",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 1000,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "7800.00",
+                "status": "CLOSED",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-cancelled",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b04",
+                "productName": "Sầu riêng Musang King",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 400,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "85000.00",
+                "status": "CLOSED",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              }
+            ],
+            "page": 0,
+            "size": 10,
+            "totalElements": 15,
+            "totalPages": 2,
+            "first": true,
+            "last": false,
+            "empty": false
+          },
+          "url": "http://localhost/api/v1/listings/seller?page=0&size=10",
+          "responseTime": 15,
+          "duration": 15,
+          "size": 6837
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "n8K3wGjj3-4VgDWc0Vsq2"
+          },
+          {
+            "description": "content is an array",
+            "status": "pass",
+            "uid": "v36HDdEOGlrU3SY4N87IA"
+          },
+          {
+            "description": "all listings belong to this seller",
+            "status": "pass",
+            "uid": "RJVFYN6Cp9vkmotcHpqA7"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0188867,
+        "name": "GET /api/v1/listings/seller (seller's own listings)",
+        "path": "product-service\\10-get-seller-listings",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\11-update-listing.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/listings/921305cb-1359-4eb7-8b30-76b49f02c174",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-edit-1795610606712-kn9wv9nhdq7",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"7ec5defb-d794-4dbd-8184-690a598a6012\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 600,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15500.00\",\n  \"registryEntryIds\": [\"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "listingId": "921305cb-1359-4eb7-8b30-76b49f02c174",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "productId": "7ec5defb-d794-4dbd-8184-690a598a6012",
+            "productName": "Ca phe Robusta Dak Lak",
+            "unitOfMeasure": "KG",
+            "offeredQuantity": 600,
+            "quantityAvailable": 600,
+            "minOrderQuantity": 100,
+            "askingUnitPrice": "15500.00",
+            "status": "AVAILABLE",
+            "listingVersionToken": "2026-11-25T12:43:26.762917Z",
+            "registryEntryIds": [
+              "2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a"
+            ],
+            "categoryId": "8b61f55c-fd7b-4544-82b5-b20b89db8d3f",
+            "commodity": "COFFEE",
+            "regionText": "Buon Ma Thuot, Dak Lak",
+            "declaredQualitySpec": {
+              "commodity": "COFFEE",
+              "type": "ROBUSTA",
+              "moisturePercent": 12.5,
+              "foreignMatterPercent": 0.5,
+              "blackBrokenBeansPercent": 5
+            },
+            "legacyQualitySpecMissing": false,
+            "cropYear": 2026,
+            "harvestSeason": "Nien vu 2026/27",
+            "certifications": [
+              "4C (cam ket)"
+            ],
+            "packagingDeclaration": "Bao day 60 kg",
+            "warehouseLocation": null,
+            "estimatedAvailabilityDate": null,
+            "traceabilityEvidencePackageId": null
+          },
+          "url": "http://localhost/api/v1/listings/921305cb-1359-4eb7-8b30-76b49f02c174",
+          "responseTime": 70,
+          "duration": 70,
+          "size": 963
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "n9UTYe-yGfzyB7zMolEwx"
+          },
+          {
+            "description": "offer and price are edited, quantityAvailable = offered - reserved",
+            "status": "pass",
+            "uid": "xJRRgxSIh3CDt1tVoKu-z"
+          },
+          {
+            "description": "the edit issues a new listingVersionToken",
+            "status": "pass",
+            "uid": "P0Hn55UA1g0A2M7dVncFp"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0753805,
+        "name": "PUT /api/v1/listings/:listingId (seller edits the offer, D48)",
+        "path": "product-service\\11-update-listing",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\11b-update-listing-replay.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/listings/921305cb-1359-4eb7-8b30-76b49f02c174",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-edit-1795610606712-kn9wv9nhdq7",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"7ec5defb-d794-4dbd-8184-690a598a6012\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 600,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15500.00\",\n  \"registryEntryIds\": [\"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "listingId": "921305cb-1359-4eb7-8b30-76b49f02c174",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "productId": "7ec5defb-d794-4dbd-8184-690a598a6012",
+            "productName": "Ca phe Robusta Dak Lak",
+            "unitOfMeasure": "KG",
+            "offeredQuantity": 600,
+            "quantityAvailable": 600,
+            "minOrderQuantity": 100,
+            "askingUnitPrice": "15500.00",
+            "status": "AVAILABLE",
+            "listingVersionToken": "2026-11-25T12:43:26.762917Z",
+            "registryEntryIds": [
+              "2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a"
+            ],
+            "categoryId": "8b61f55c-fd7b-4544-82b5-b20b89db8d3f",
+            "commodity": "COFFEE",
+            "regionText": "Buon Ma Thuot, Dak Lak",
+            "declaredQualitySpec": {
+              "commodity": "COFFEE",
+              "type": "ROBUSTA",
+              "moisturePercent": 12.5,
+              "foreignMatterPercent": 0.5,
+              "blackBrokenBeansPercent": 5
+            },
+            "legacyQualitySpecMissing": false,
+            "cropYear": 2026,
+            "harvestSeason": "Nien vu 2026/27",
+            "certifications": [
+              "4C (cam ket)"
+            ],
+            "packagingDeclaration": "Bao day 60 kg",
+            "warehouseLocation": null,
+            "estimatedAvailabilityDate": null,
+            "traceabilityEvidencePackageId": null
+          },
+          "url": "http://localhost/api/v1/listings/921305cb-1359-4eb7-8b30-76b49f02c174",
+          "responseTime": 26,
+          "duration": 26,
+          "size": 963
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "JSsRqiziJeIdm3-R9hEMO"
+          },
+          {
+            "description": "version token unchanged: no second edit",
+            "status": "pass",
+            "uid": "pFTa65Ag35xmcNDpRa60-"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0301581,
+        "name": "PUT /api/v1/listings/:listingId (same Idempotency-Key replayed)",
+        "path": "product-service\\11b-update-listing-replay",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\13-update-product-images.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/products/7ec5defb-d794-4dbd-8184-690a598a6012/images",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"imageUrls\": [\"https://cdn.agricontract.test/products/ca-phe-robusta-new-cover.jpg\"]\n}"
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "productId": "7ec5defb-d794-4dbd-8184-690a598a6012",
+            "name": "Ca phe Robusta Dak Lak",
+            "unit": "kg",
+            "categoryId": "8b61f55c-fd7b-4544-82b5-b20b89db8d3f",
+            "images": [
+              "https://cdn.agricontract.test/products/ca-phe-robusta-new-cover.jpg"
+            ],
+            "cropYear": 2026,
+            "harvestSeason": "Nien vu 2026/27",
+            "certifications": [
+              "4C (cam ket)"
+            ]
+          },
+          "url": "http://localhost/api/v1/products/7ec5defb-d794-4dbd-8184-690a598a6012/images",
+          "responseTime": 22,
+          "duration": 22,
+          "size": 313
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "HldCoAACWifvVU9ily8IB"
+          },
+          {
+            "description": "images fully replaced (only 1 entry now)",
+            "status": "pass",
+            "uid": "lL-hYIRALi5_rodmwEpYG"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0257297,
+        "name": "PUT /api/v1/products/:productId/images (full replace)",
+        "path": "product-service\\13-update-product-images",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\14-update-product-images-invalid.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/products/7ec5defb-d794-4dbd-8184-690a598a6012/images",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"imageUrls\": []\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:26.851774220Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "imageUrls: must not be empty, imageUrls: size must be between 1 and 5",
+            "path": "/api/v1/products/7ec5defb-d794-4dbd-8184-690a598a6012/images",
+            "traceId": "edf0a2a2-95c1-4472-85a2-a084e93be9ac"
+          },
+          "url": "http://localhost/api/v1/products/7ec5defb-d794-4dbd-8184-690a598a6012/images",
+          "responseTime": 9,
+          "duration": 9,
+          "size": 309
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "3h5kRXgjCP1ohR_Zxw8HM"
+          },
+          {
+            "description": "error body is the shared ErrorEnvelope",
+            "status": "pass",
+            "uid": "Xc5wIcLuO4-0pbKka8Vz4"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0130046,
+        "name": "PUT /api/v1/products/:productId/images (validation — empty list rejected)",
+        "path": "product-service\\14-update-product-images-invalid",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\15-update-product-images-five.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/products/7ec5defb-d794-4dbd-8184-690a598a6012/images",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"imageUrls\": [\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-2.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-3.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-4.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-5.jpg\"\n  ]\n}"
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "productId": "7ec5defb-d794-4dbd-8184-690a598a6012",
+            "name": "Ca phe Robusta Dak Lak",
+            "unit": "kg",
+            "categoryId": "8b61f55c-fd7b-4544-82b5-b20b89db8d3f",
+            "images": [
+              "https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg",
+              "https://cdn.agricontract.test/products/ca-phe-robusta-2.jpg",
+              "https://cdn.agricontract.test/products/ca-phe-robusta-3.jpg",
+              "https://cdn.agricontract.test/products/ca-phe-robusta-4.jpg",
+              "https://cdn.agricontract.test/products/ca-phe-robusta-5.jpg"
+            ],
+            "cropYear": 2026,
+            "harvestSeason": "Nien vu 2026/27",
+            "certifications": [
+              "4C (cam ket)"
+            ]
+          },
+          "url": "http://localhost/api/v1/products/7ec5defb-d794-4dbd-8184-690a598a6012/images",
+          "responseTime": 23,
+          "duration": 23,
+          "size": 553
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "QpBG4IRs2e_NJsx1IzNqr"
+          },
+          {
+            "description": "images has 5 entries",
+            "status": "pass",
+            "uid": "ssRSgR0ZeXnAtkEVSTgXl"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0268971,
+        "name": "PUT /api/v1/products/:productId/images (5 images, max → 200)",
+        "path": "product-service\\15-update-product-images-five",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\16-update-product-images-six.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/products/7ec5defb-d794-4dbd-8184-690a598a6012/images",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"imageUrls\": [\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-2.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-3.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-4.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-5.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-6.jpg\"\n  ]\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:43:26 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:43:26.891393438Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "imageUrls: size must be between 1 and 5",
+            "path": "/api/v1/products/7ec5defb-d794-4dbd-8184-690a598a6012/images",
+            "traceId": "9b5b0f04-5318-4b86-b8f6-574cb90362d6"
+          },
+          "url": "http://localhost/api/v1/products/7ec5defb-d794-4dbd-8184-690a598a6012/images",
+          "responseTime": 8,
+          "duration": 8,
+          "size": 279
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "2BTpTcP-UIPafLr0bJeMM"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "SzyGnPx7nrqmFIhdi8xqm"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0125572,
+        "name": "PUT /api/v1/products/:productId/images (6 images, max + 1 → 400)",
+        "path": "product-service\\16-update-product-images-six",
+        "iterationIndex": 0
+      }
+    ],
+    "summary": {
+      "totalRequests": 37,
+      "passedRequests": 37,
+      "failedRequests": 0,
+      "errorRequests": 0,
+      "skippedRequests": 0,
+      "totalAssertions": 0,
+      "passedAssertions": 0,
+      "failedAssertions": 0,
+      "totalTests": 92,
+      "passedTests": 92,
+      "failedTests": 0,
+      "totalPreRequestTests": 0,
+      "passedPreRequestTests": 0,
+      "failedPreRequestTests": 0,
+      "totalPostResponseTests": 0,
+      "passedPostResponseTests": 0,
+      "failedPostResponseTests": 0
+    }
+  }
+]

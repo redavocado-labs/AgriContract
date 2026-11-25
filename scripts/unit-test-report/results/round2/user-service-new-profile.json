@@ -1,0 +1,476 @@
+[
+  {
+    "iterationIndex": 0,
+    "results": [
+      {
+        "test": {
+          "filename": "user-service\\00-get-seller-token.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8180/realms/agricontract/protocol/openid-connect/token",
+          "headers": {
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "data": "grant_type=password&client_id=agricontract-frontend&username=seller1&password=pass123"
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {
+            "cache-control": "no-store",
+            "pragma": "no-cache",
+            "content-length": "2366",
+            "content-type": "application/json",
+            "referrer-policy": "no-referrer",
+            "strict-transport-security": "max-age=31536000; includeSubDomains",
+            "x-content-type-options": "nosniff",
+            "x-frame-options": "SAMEORIGIN",
+            "x-xss-protection": "1; mode=block"
+          },
+          "data": {
+            "access_token": "<redacted:jwt>",
+            "expires_in": 300,
+            "refresh_expires_in": 1800,
+            "refresh_token": "<redacted:jwt>",
+            "token_type": "Bearer",
+            "not-before-policy": 0,
+            "session_state": "386614ab-755b-422f-8987-e9a50ca5e447",
+            "scope": "profile email"
+          },
+          "url": "http://localhost/realms/agricontract/protocol/openid-connect/token",
+          "responseTime": 212,
+          "duration": 212,
+          "size": 2366
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "qaDy285zyHb3azzEfjkQX"
+          },
+          {
+            "description": "access_token is present",
+            "status": "pass",
+            "uid": "wxqeeG1ML9Dvjv1lO_Rqj"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.2719752,
+        "name": "Get Token (seller1)",
+        "path": "user-service\\00-get-seller-token",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "user-service\\00-register-seller.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/users/register",
+          "headers": {
+            "Authorization": "Bearer ********",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"organizationName\": \"Nong Trai ABC\",\n  \"email\": \"seller1@test.com\",\n  \"phone\": \"0901234567\",\n  \"address\": \"Ha Noi\"\n}"
+        },
+        "response": {
+          "status": 201,
+          "statusText": "Created",
+          "headers": {
+            "transfer-encoding": "chunked",
+            "vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "date": "Wed, 25 Nov 2026 12:43:14 GMT",
+            "x-correlation-id": "9e4960d7-6213-4b7f-9171-6093fd8afed5",
+            "referrer-policy": "no-referrer"
+          },
+          "data": {
+            "userId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "organizationName": "Nong Trai ABC",
+            "role": "SELLER",
+            "email": "seller1@test.com",
+            "emailVerified": false,
+            "phone": "0901234567",
+            "address": "Ha Noi",
+            "verificationStatus": "PENDING",
+            "authorizationExpiresAt": null,
+            "verificationEmailSent": false
+          },
+          "url": "http://localhost/api/v1/users/register",
+          "responseTime": 2646,
+          "duration": 2646,
+          "size": 280
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201 on first registration or 200 when the profile exists",
+            "status": "pass",
+            "uid": "vRxTFSWgUs2wAd4DoZusl"
+          },
+          {
+            "description": "body is not wrapped in ApiResponse",
+            "status": "pass",
+            "uid": "PBGZ5Xd4nK_c3AbronNiA"
+          },
+          {
+            "description": "userId is seller1's Keycloak sub",
+            "status": "pass",
+            "uid": "2dlqzTlEw44BlCRGKY-EY"
+          },
+          {
+            "description": "role should be SELLER",
+            "status": "pass",
+            "uid": "7djMTd8tPXZW3BQSI3dXR"
+          },
+          {
+            "description": "a new profile starts PENDING",
+            "status": "pass",
+            "uid": "YdKQ8PLQP04yMPCXLOoSG"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 2.6540646,
+        "name": "POST /api/v1/users/register (201 first time, 200 when the seed already has the profile)",
+        "path": "user-service\\00-register-seller",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "user-service\\01-register-idempotency.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/users/register",
+          "headers": {
+            "Authorization": "Bearer ********",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"organizationName\": \"Nong Trai ABC\",\n  \"email\": \"seller1@test.com\",\n  \"phone\": \"0901234567\",\n  \"address\": \"Ha Noi\"\n}"
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {
+            "transfer-encoding": "chunked",
+            "vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "date": "Wed, 25 Nov 2026 12:43:14 GMT",
+            "x-correlation-id": "9e2cffc6-b34b-4eaf-ae92-3bbc2c34704a",
+            "referrer-policy": "no-referrer"
+          },
+          "data": {
+            "userId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "organizationName": "Nong Trai ABC",
+            "role": "SELLER",
+            "email": "seller1@test.com",
+            "emailVerified": false,
+            "phone": "0901234567",
+            "address": "Ha Noi",
+            "verificationStatus": "PENDING",
+            "authorizationExpiresAt": null
+          },
+          "url": "http://localhost/api/v1/users/register",
+          "responseTime": 20,
+          "duration": 20,
+          "size": 250
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200 on duplicate registration",
+            "status": "pass",
+            "uid": "LTCMNVXXKbS8RauBHBwg4"
+          },
+          {
+            "description": "body is not wrapped in ApiResponse",
+            "status": "pass",
+            "uid": "X-dSsHnjoZfH1cEDhOQ5v"
+          },
+          {
+            "description": "userId is the same",
+            "status": "pass",
+            "uid": "MEJAiVvZoRdI6loNdevl_"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0245982,
+        "name": "POST /api/v1/users/register (idempotency → 200)",
+        "path": "user-service\\01-register-idempotency",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "user-service\\02-get-my-profile.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/users/me",
+          "headers": {
+            "Authorization": "Bearer ********",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {
+            "transfer-encoding": "chunked",
+            "vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "date": "Wed, 25 Nov 2026 12:43:14 GMT",
+            "x-correlation-id": "a7cca9c3-18c3-439f-b882-86adbd4bb949",
+            "referrer-policy": "no-referrer"
+          },
+          "data": {
+            "userId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "organizationName": "Nong Trai ABC",
+            "role": "SELLER",
+            "email": "seller1@test.com",
+            "emailVerified": false,
+            "phone": "0901234567",
+            "address": "Ha Noi",
+            "verificationStatus": "PENDING",
+            "authorizationExpiresAt": null
+          },
+          "url": "http://localhost/api/v1/users/me",
+          "responseTime": 22,
+          "duration": 22,
+          "size": 250
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "2wXnGjO4ne6nNljpBI2RR"
+          },
+          {
+            "description": "body is not wrapped in ApiResponse",
+            "status": "pass",
+            "uid": "leTsTYYUTMehTiB7PrdlT"
+          },
+          {
+            "description": "userId matches registered_user_id",
+            "status": "pass",
+            "uid": "6IIoTqwmF1OASaMXrLBZc"
+          },
+          {
+            "description": "full profile includes phone and address",
+            "status": "pass",
+            "uid": "N2x6bPvemLADU1yGDt-b3"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0256418,
+        "name": "GET /api/v1/users/me",
+        "path": "user-service\\02-get-my-profile",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "user-service\\03-get-profile-by-id.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/users/1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+          "headers": {
+            "Authorization": "Bearer ********",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {
+            "transfer-encoding": "chunked",
+            "vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "date": "Wed, 25 Nov 2026 12:43:14 GMT",
+            "x-correlation-id": "dab6b2c5-ffa4-4337-afd0-657c664bd344",
+            "referrer-policy": "no-referrer"
+          },
+          "data": {
+            "userId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "organizationName": "Nong Trai ABC",
+            "role": "SELLER",
+            "verificationStatus": "PENDING"
+          },
+          "url": "http://localhost/api/v1/users/1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+          "responseTime": 19,
+          "duration": 19,
+          "size": 131
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "ONkn0GxXbvKi6i9qP46Vm"
+          },
+          {
+            "description": "body is not wrapped in ApiResponse",
+            "status": "pass",
+            "uid": "Yc2Ss4EJLYwjG89uXmLxp"
+          },
+          {
+            "description": "userId matches",
+            "status": "pass",
+            "uid": "Hxay8uLi28zMjynCiAIyX"
+          },
+          {
+            "description": "organizationName is set",
+            "status": "pass",
+            "uid": "nAjqT2M9GRnY_ochuapdM"
+          },
+          {
+            "description": "role is present",
+            "status": "pass",
+            "uid": "ChZpbhixVbdfNQOlo39gc"
+          },
+          {
+            "description": "verificationStatus is present",
+            "status": "pass",
+            "uid": "cLM0BW4Dqjyjfg8yl7Tnj"
+          },
+          {
+            "description": "email is not exposed (#108, services use /internal/v1/users)",
+            "status": "pass",
+            "uid": "H40OUjjJ7fHGOUzqR88wc"
+          },
+          {
+            "description": "phone is not exposed (IDOR fix)",
+            "status": "pass",
+            "uid": "9smVySEfP5krc-lzo9GZP"
+          },
+          {
+            "description": "address is not exposed (IDOR fix)",
+            "status": "pass",
+            "uid": "tHQVTxlzIh9Y1pE0vUsJU"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0248702,
+        "name": "GET /api/v1/users/:userId (slim — no PII)",
+        "path": "user-service\\03-get-profile-by-id",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "user-service\\04-unauthorized-no-secret.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/users/me",
+          "headers": {
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 401,
+          "statusText": "Unauthorized",
+          "headers": {
+            "vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+            "www-authenticate": "********",
+            "x-correlation-id": "51be09b7-7972-4004-a99e-a050df1e316c",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-content-type-options": "nosniff",
+            "x-frame-options": "DENY",
+            "x-xss-protection": "0",
+            "referrer-policy": "no-referrer",
+            "content-length": "0"
+          },
+          "data": "",
+          "url": "http://localhost/api/v1/users/me",
+          "responseTime": 10,
+          "duration": 10,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 401 without JWT",
+            "status": "pass",
+            "uid": "9DRL6b5POTUfb1SsuvP6P"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0155023,
+        "name": "GET /api/v1/users/me (no token → 401)",
+        "path": "user-service\\04-unauthorized-no-secret",
+        "iterationIndex": 0
+      }
+    ],
+    "summary": {
+      "totalRequests": 6,
+      "passedRequests": 6,
+      "failedRequests": 0,
+      "errorRequests": 0,
+      "skippedRequests": 0,
+      "totalAssertions": 0,
+      "passedAssertions": 0,
+      "failedAssertions": 0,
+      "totalTests": 24,
+      "passedTests": 24,
+      "failedTests": 0,
+      "totalPreRequestTests": 0,
+      "passedPreRequestTests": 0,
+      "failedPreRequestTests": 0,
+      "totalPostResponseTests": 0,
+      "passedPostResponseTests": 0,
+      "failedPostResponseTests": 0
+    }
+  }
+]
