@@ -1,152 +1,288 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="935" viewBox="0 0 800 935" font-family="Arial" font-size="12">
-<defs><marker id="open" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="black" stroke-width="1.2"/></marker><marker id="tri" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L13,7 L1,13 Z" fill="white" stroke="black"/></marker><marker id="dia" viewBox="0 0 18 10" refX="1" refY="5" markerWidth="18" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,5 L9,1 L17,5 L9,9 Z" fill="black"/></marker></defs>
-<rect x="0" y="0" width="800" height="935" fill="white"/>
-<path d="M140,811.0 L140,840 L312.626953125,840" fill="none" stroke="black" stroke-width="1.1"/>
-<line x1="146.0" y1="818.0" x2="134.0" y2="818.0" stroke="black" stroke-width="1.2"/><line x1="146.0" y1="823.0" x2="134.0" y2="823.0" stroke="black" stroke-width="1.2"/>
-<line x1="301.6" y1="840.0" x2="312.6" y2="847.0" stroke="black" stroke-width="1.2"/><line x1="301.6" y1="840.0" x2="312.6" y2="833.0" stroke="black" stroke-width="1.2"/><circle cx="293.6" cy="840.0" r="4" fill="white" stroke="black" stroke-width="1.2"/>
-<rect x="185.4892578125" y="833.125" width="81.6484375" height="13.75" fill="white"/>
-<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="187.4892578125" y="840.0">is overridden by</tspan></text>
-<rect x="5.0" y="10.0" width="75.4" height="20" fill="white" stroke="black"/>
-<rect x="5.0" y="30.0" width="790" height="251" fill="none" stroke="black"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="13.0" y="20.0">escrow_db</tspan></text>
-<rect x="16.591796875" y="45.0" width="246.81640625" height="221" fill="white" stroke="black" stroke-width="1.2"/>
-<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="140" y="57.5">deposit_leg</tspan></text>
-<line x1="16.591796875" y1="70.0" x2="263.408203125" y2="70.0" stroke="black"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="24.591796875" y="81.5">leg_id : CHAR(36)</tspan></text>
-<line x1="24.591796875" y1="88.0" x2="125.962890625" y2="88.0" stroke="black" stroke-width="0.9"/>
-<line x1="16.591796875" y1="93.0" x2="263.408203125" y2="93.0" stroke="black"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="24.591796875" y="104.5">contract_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="24.591796875" y="119.5">leg : VARCHAR(10)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="24.591796875" y="134.5">user_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="24.591796875" y="149.5">amount : DECIMAL(18,2)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="24.591796875" y="164.5">status : VARCHAR(30)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="24.591796875" y="179.5">request_event_id : CHAR(36) (UQ)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="24.591796875" y="194.5">ledger_entry_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="24.591796875" y="209.5">failed_attempts : INT</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="24.591796875" y="224.5">next_attempt_at : DATETIME(6)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="24.591796875" y="239.5">return_request_event_id : CHAR(36) (UQ)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="24.591796875" y="254.5">return_ledger_entry_id : CHAR(36)</tspan></text>
-<rect x="300.607421875" y="45.0" width="208.78515625" height="116" fill="white" stroke="black" stroke-width="1.2" stroke-dasharray="6,3"/>
-<text text-anchor="middle" dominant-baseline="central" font-size="11" font-style="italic"><tspan x="405" y="56.5">«planned»</tspan></text>
-<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="405" y="72.5">escrow_milestone</tspan></text>
-<line x1="300.607421875" y1="85.0" x2="509.392578125" y2="85.0" stroke="black" stroke-dasharray="6,3"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="308.607421875" y="96.5">milestone_id : CHAR(36)</tspan></text>
-<line x1="308.607421875" y1="103.0" x2="448.666015625" y2="103.0" stroke="black" stroke-width="0.9"/>
-<line x1="300.607421875" y1="108.0" x2="509.392578125" y2="108.0" stroke="black" stroke-dasharray="6,3"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="308.607421875" y="119.5">contract_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="308.607421875" y="134.5">status : VARCHAR(25)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="308.607421875" y="149.5">request_event_id : CHAR(36) (UQ)</tspan></text>
-<rect x="539.255859375" y="45.0" width="241.48828125" height="131" fill="white" stroke="black" stroke-width="1.2" stroke-dasharray="6,3"/>
-<text text-anchor="middle" dominant-baseline="central" font-size="11" font-style="italic"><tspan x="660" y="56.5">«planned»</tspan></text>
-<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="660" y="72.5">remedy_leg_command</tspan></text>
-<line x1="539.255859375" y1="85.0" x2="780.744140625" y2="85.0" stroke="black" stroke-dasharray="6,3"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="547.255859375" y="96.5">remedy_leg_id : CHAR(36)</tspan></text>
-<line x1="547.255859375" y1="103.0" x2="698.005859375" y2="103.0" stroke="black" stroke-width="0.9"/>
-<line x1="539.255859375" y1="108.0" x2="780.744140625" y2="108.0" stroke="black" stroke-dasharray="6,3"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="547.255859375" y="119.5">remedy_decision_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="547.255859375" y="134.5">source_event_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="547.255859375" y="149.5">bank_request_event_id : CHAR(36) (UQ)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="547.255859375" y="164.5">status : VARCHAR(15)</tspan></text>
-<rect x="5.0" y="290.0" width="62.199999999999996" height="20" fill="white" stroke="black"/>
-<rect x="5.0" y="310.0" width="790" height="236" fill="none" stroke="black"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="13.0" y="300.0">bank_db</tspan></text>
-<rect x="37.61328125" y="325.0" width="204.7734375" height="206" fill="white" stroke="black" stroke-width="1.2"/>
-<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="140" y="337.5">ledger_entry</tspan></text>
-<line x1="37.61328125" y1="350.0" x2="242.38671875" y2="350.0" stroke="black"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="45.61328125" y="361.5">entry_id : CHAR(36)</tspan></text>
-<line x1="45.61328125" y1="368.0" x2="158.9921875" y2="368.0" stroke="black" stroke-width="0.9"/>
-<line x1="37.61328125" y1="373.0" x2="242.38671875" y2="373.0" stroke="black"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="45.61328125" y="384.5">source_event_id : CHAR(36) (UQ)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="45.61328125" y="399.5">contract_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="45.61328125" y="414.5">milestone_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="45.61328125" y="429.5">user_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="45.61328125" y="444.5">entry_type : VARCHAR(30)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="45.61328125" y="459.5">fund_type : VARCHAR(30)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="45.61328125" y="474.5">remedy_decision_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="45.61328125" y="489.5">remedy_leg_id : CHAR(36) (UQ)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="45.61328125" y="504.5">amount : DECIMAL(18,2)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="45.61328125" y="519.5">created_at : DATETIME(6)</tspan></text>
-<rect x="319.73828125" y="325.0" width="170.5234375" height="131" fill="white" stroke="black" stroke-width="1.2" stroke-dasharray="6,3"/>
-<text text-anchor="middle" dominant-baseline="central" font-size="11" font-style="italic"><tspan x="405" y="336.5">«planned»</tspan></text>
-<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="405" y="352.5">system_lock</tspan></text>
-<line x1="319.73828125" y1="365.0" x2="490.26171875" y2="365.0" stroke="black" stroke-dasharray="6,3"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="327.73828125" y="376.5">lock_id : CHAR(36)</tspan></text>
-<line x1="327.73828125" y1="383.0" x2="435.78515625" y2="383.0" stroke="black" stroke-width="0.9"/>
-<line x1="319.73828125" y1="388.0" x2="490.26171875" y2="388.0" stroke="black" stroke-dasharray="6,3"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="327.73828125" y="399.5">status : VARCHAR(20)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="327.73828125" y="414.5">verifier_org_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="327.73828125" y="429.5">triggered_at : DATETIME(6)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="327.73828125" y="444.5">released_at : DATETIME(6)</tspan></text>
-<rect x="585.412109375" y="325.0" width="149.17578125" height="86" fill="white" stroke="black" stroke-width="1.2" stroke-dasharray="6,3"/>
-<text text-anchor="middle" dominant-baseline="central" font-size="11" font-style="italic"><tspan x="660" y="336.5">«planned»</tspan></text>
-<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="660" y="352.5">used_nonce</tspan></text>
-<line x1="585.412109375" y1="365.0" x2="734.587890625" y2="365.0" stroke="black" stroke-dasharray="6,3"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="593.412109375" y="376.5">nonce : VARCHAR(64)</tspan></text>
-<line x1="593.412109375" y1="383.0" x2="719.892578125" y2="383.0" stroke="black" stroke-width="0.9"/>
-<line x1="585.412109375" y1="388.0" x2="734.587890625" y2="388.0" stroke="black" stroke-dasharray="6,3"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="593.412109375" y="399.5">seen_at : DATETIME(6)</tspan></text>
-<rect x="5.0" y="555.0" width="101.8" height="20" fill="white" stroke="black"/>
-<rect x="5.0" y="575.0" width="790" height="330" fill="none" stroke="black"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="13.0" y="565.0">reputation_db</tspan></text>
-<rect x="17.693359375" y="590.0" width="244.61328125" height="221" fill="white" stroke="black" stroke-width="1.2"/>
-<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="140" y="602.5">lock_entry</tspan></text>
-<line x1="17.693359375" y1="615.0" x2="262.306640625" y2="615.0" stroke="black"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="25.693359375" y="626.5">entry_id : CHAR(36)</tspan></text>
-<line x1="25.693359375" y1="633.0" x2="139.072265625" y2="633.0" stroke="black" stroke-width="0.9"/>
-<line x1="17.693359375" y1="638.0" x2="262.306640625" y2="638.0" stroke="black"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="25.693359375" y="649.5">source_event_id : CHAR(36) (UQ)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="25.693359375" y="664.5">remedy_decision_id : CHAR(36) (UQ)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="25.693359375" y="679.5">contract_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="25.693359375" y="694.5">user_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="25.693359375" y="709.5">penalized_role : VARCHAR(10)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="25.693359375" y="724.5">base_days : INT</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="25.693359375" y="739.5">repeat_offense_multiplier : DECIMAL(3,2)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="25.693359375" y="754.5">track_record_multiplier : DECIMAL(3,2)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="25.693359375" y="769.5">zero_progress_multiplier : DECIMAL(3,2)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="25.693359375" y="784.5">lock_duration_days : INT</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="25.693359375" y="799.5">locked_until : TIMESTAMP</tspan></text>
-<rect x="302.61328125" y="590.0" width="204.7734375" height="116" fill="white" stroke="black" stroke-width="1.2"/>
-<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="405" y="602.5">completed_contract_fact</tspan></text>
-<line x1="302.61328125" y1="615.0" x2="507.38671875" y2="615.0" stroke="black"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="310.61328125" y="626.5">contract_id : CHAR(36)</tspan></text>
-<line x1="310.61328125" y1="633.0" x2="441.99609375" y2="633.0" stroke="black" stroke-width="0.9"/>
-<line x1="302.61328125" y1="638.0" x2="507.38671875" y2="638.0" stroke="black"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="310.61328125" y="649.5">buyer_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="310.61328125" y="664.5">seller_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="310.61328125" y="679.5">settled_at : DATETIME(6)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="310.61328125" y="694.5">source_event_id : CHAR(36) (UQ)</tspan></text>
-<rect x="573.73046875" y="590.0" width="172.5390625" height="131" fill="white" stroke="black" stroke-width="1.2" stroke-dasharray="6,3"/>
-<text text-anchor="middle" dominant-baseline="central" font-size="11" font-style="italic"><tspan x="660" y="601.5">«planned»</tspan></text>
-<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="660" y="617.5">governance_action_request</tspan></text>
-<line x1="573.73046875" y1="630.0" x2="746.26953125" y2="630.0" stroke="black" stroke-dasharray="6,3"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="581.73046875" y="641.5">request_id : CHAR(36)</tspan></text>
-<line x1="581.73046875" y1="648.0" x2="709.1171875" y2="648.0" stroke="black" stroke-width="0.9"/>
-<line x1="573.73046875" y1="653.0" x2="746.26953125" y2="653.0" stroke="black" stroke-dasharray="6,3"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="581.73046875" y="664.5">action_type : VARCHAR(30)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="581.73046875" y="679.5">target_id : VARCHAR(100)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="581.73046875" y="694.5">status : VARCHAR(15)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="581.73046875" y="709.5">reason : TEXT</tspan></text>
-<rect x="312.626953125" y="760.0" width="184.74609375" height="131" fill="white" stroke="black" stroke-width="1.2"/>
-<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="405" y="772.5">lock_override_event</tspan></text>
-<line x1="312.626953125" y1="785.0" x2="497.373046875" y2="785.0" stroke="black"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="320.626953125" y="796.5">event_id : CHAR(36)</tspan></text>
-<line x1="320.626953125" y1="803.0" x2="436.009765625" y2="803.0" stroke="black" stroke-width="0.9"/>
-<line x1="312.626953125" y1="808.0" x2="497.373046875" y2="808.0" stroke="black"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-style="italic"><tspan x="320.626953125" y="819.5">lock_entry_id : CHAR(36) (FK)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="320.626953125" y="834.5">override_type : VARCHAR(20)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="320.626953125" y="849.5">reason : TEXT</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="320.626953125" y="864.5">proposed_by : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="320.626953125" y="879.5">approved_by : CHAR(36)</tspan></text>
-<rect x="557.61328125" y="760.0" width="204.7734375" height="131" fill="white" stroke="black" stroke-width="1.2"/>
-<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="660" y="772.5">dispute_outcome_fact</tspan></text>
-<line x1="557.61328125" y1="785.0" x2="762.38671875" y2="785.0" stroke="black"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="565.61328125" y="796.5">milestone_id : CHAR(36)</tspan></text>
-<line x1="565.61328125" y1="803.0" x2="705.671875" y2="803.0" stroke="black" stroke-width="0.9"/>
-<line x1="557.61328125" y1="808.0" x2="762.38671875" y2="808.0" stroke="black"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="565.61328125" y="819.5">contract_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="565.61328125" y="834.5">flagged_by_user_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="565.61328125" y="849.5">resolution_favors : VARCHAR(10)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="565.61328125" y="864.5">resolved_at : DATETIME(6)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="565.61328125" y="879.5">source_event_id : CHAR(36) (UQ)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="7.0" y="921.875">Bold underlined: primary key · italic: foreign key · (UQ) unique · dashed «planned»: in the design, not created by Flyway yet</tspan></text>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 2.42.4 (0)
+ -->
+<!-- Title: G Pages: 1 -->
+<svg width="1761pt" height="2541pt"
+ viewBox="0.00 0.00 633.92 914.92" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(2.78 2.78) rotate(0) translate(12.96 901.96)">
+<title>G</title>
+<polygon fill="white" stroke="transparent" points="-12.96,12.96 -12.96,-901.96 620.96,-901.96 620.96,12.96 -12.96,12.96"/>
+<text text-anchor="middle" x="304" y="-7.4" font-family="Arial" font-size="12.00">PK = primary key; FK = physical foreign key; UQ = unique. Selected attributes; see table specifications.</text>
+<g id="clust1" class="cluster">
+<title>cluster_0</title>
+<path fill="white" stroke="#999999" d="M20,-531C20,-531 588,-531 588,-531 594,-531 600,-537 600,-543 600,-543 600,-869 600,-869 600,-875 594,-881 588,-881 588,-881 20,-881 20,-881 14,-881 8,-875 8,-869 8,-869 8,-543 8,-543 8,-537 14,-531 20,-531"/>
+<text text-anchor="middle" x="304" y="-538.4" font-family="Arial" font-size="12.00">escrow_db</text>
+</g>
+<g id="clust4" class="cluster">
+<title>cluster_1</title>
+<path fill="white" stroke="#999999" d="M36,-347C36,-347 496,-347 496,-347 502,-347 508,-353 508,-359 508,-359 508,-511 508,-511 508,-517 502,-523 496,-523 496,-523 36,-523 36,-523 30,-523 24,-517 24,-511 24,-511 24,-359 24,-359 24,-353 30,-347 36,-347"/>
+<text text-anchor="middle" x="266" y="-354.4" font-family="Arial" font-size="12.00">bank_db</text>
+</g>
+<g id="clust6" class="cluster">
+<title>cluster_2</title>
+<path fill="white" stroke="#999999" d="M21,-29C21,-29 562,-29 562,-29 568,-29 574,-35 574,-41 574,-41 574,-327 574,-327 574,-333 568,-339 562,-339 562,-339 21,-339 21,-339 15,-339 9,-333 9,-327 9,-327 9,-41 9,-41 9,-35 15,-29 21,-29"/>
+<text text-anchor="middle" x="291.5" y="-36.4" font-family="Arial" font-size="12.00">reputation_db</text>
+</g>
+<!-- deposit_leg -->
+<g id="node1" class="node">
+<title>deposit_leg</title>
+<polygon fill="#eeeeee" stroke="transparent" points="17,-852.5 17,-871.5 209,-871.5 209,-852.5 17,-852.5"/>
+<text text-anchor="start" x="85.5" y="-860.5" font-family="Arial" font-weight="bold" font-size="10.00">deposit_leg</text>
+<text text-anchor="start" x="21" y="-841.5" font-family="Arial" font-weight="bold" text-decoration="underline" font-size="10.00">leg_id : CHAR(36) (PK)</text>
+<text text-anchor="start" x="21" y="-831.5" font-family="Arial" font-size="10.00">contract_id : CHAR(36)</text>
+<text text-anchor="start" x="21" y="-821.5" font-family="Arial" font-size="10.00">leg : VARCHAR(10)</text>
+<text text-anchor="start" x="21" y="-811.5" font-family="Arial" font-size="10.00">user_id : CHAR(36)</text>
+<text text-anchor="start" x="21" y="-801.5" font-family="Arial" font-size="10.00">amount : DECIMAL(18,2)</text>
+<text text-anchor="start" x="21" y="-791.5" font-family="Arial" font-size="10.00">status : VARCHAR(30)</text>
+<text text-anchor="start" x="21" y="-781.5" font-family="Arial" font-size="10.00">request_event_id : CHAR(36) (UQ)</text>
+<text text-anchor="start" x="21" y="-771.5" font-family="Arial" font-size="10.00">ledger_entry_id : CHAR(36)</text>
+<text text-anchor="start" x="21" y="-761.5" font-family="Arial" font-size="10.00">failed_attempts : INT</text>
+<text text-anchor="start" x="21" y="-751.5" font-family="Arial" font-size="10.00">next_attempt_at : DATETIME(6)</text>
+<text text-anchor="start" x="21" y="-741.5" font-family="Arial" font-size="10.00">return_request_event_id : CHAR(36) (UQ)</text>
+<text text-anchor="start" x="37.5" y="-731.5" font-family="Arial" font-size="10.00">return_ledger_entry_id : CHAR(36)</text>
+<polygon fill="black" stroke="black" points="16,-852.5 16,-852.5 210,-852.5 210,-852.5 16,-852.5"/>
+<polygon fill="none" stroke="black" points="16,-724 16,-873 210,-873 210,-724 16,-724"/>
+</g>
+<!-- escrow_milestone -->
+<g id="node2" class="node">
+<title>escrow_milestone</title>
+<polygon fill="#eeeeee" stroke="transparent" points="228,-842.5 228,-861.5 390,-861.5 390,-842.5 228,-842.5"/>
+<text text-anchor="start" x="266.5" y="-850.5" font-family="Arial" font-weight="bold" font-size="10.00">escrow_milestone</text>
+<text text-anchor="start" x="232" y="-831.5" font-family="Arial" font-weight="bold" text-decoration="underline" font-size="10.00">milestone_id : CHAR(36) (PK)</text>
+<text text-anchor="start" x="232" y="-821.5" font-family="Arial" font-size="10.00">contract_id : CHAR(36)</text>
+<text text-anchor="start" x="232" y="-811.5" font-family="Arial" font-size="10.00">buyer_id : CHAR(36)</text>
+<text text-anchor="start" x="232" y="-801.5" font-family="Arial" font-size="10.00">batch_amount : DECIMAL(18,2)</text>
+<text text-anchor="start" x="232" y="-791.5" font-family="Arial" font-size="10.00">status : VARCHAR(30)</text>
+<text text-anchor="start" x="232" y="-781.5" font-family="Arial" font-size="10.00">request_event_id : CHAR(36) (UQ)</text>
+<text text-anchor="start" x="232" y="-771.5" font-family="Arial" font-size="10.00">ledger_entry_id : CHAR(36)</text>
+<text text-anchor="start" x="232" y="-761.5" font-family="Arial" font-size="10.00">next_attempt_at : DATETIME(6)</text>
+<text text-anchor="start" x="232" y="-751.5" font-family="Arial" font-size="10.00">settlement_event_id : CHAR(36)</text>
+<text text-anchor="start" x="252" y="-741.5" font-family="Arial" font-size="10.00">settled_at : DATETIME(6)</text>
+<polygon fill="black" stroke="black" points="227,-842.5 227,-842.5 391,-842.5 391,-842.5 227,-842.5"/>
+<polygon fill="none" stroke="black" points="227,-734 227,-863 391,-863 391,-734 227,-734"/>
+</g>
+<!-- deposit_leg&#45;&gt;escrow_milestone -->
+<!-- contract_clearance_check -->
+<g id="node6" class="node">
+<title>contract_clearance_check</title>
+<polygon fill="#eeeeee" stroke="transparent" points="42,-633.5 42,-652.5 184,-652.5 184,-633.5 42,-633.5"/>
+<text text-anchor="start" x="53" y="-641.5" font-family="Arial" font-weight="bold" font-size="10.00">contract_clearance_check</text>
+<text text-anchor="start" x="46" y="-622.5" font-family="Arial" font-weight="bold" text-decoration="underline" font-size="10.00">contract_id : CHAR(36) (PK)</text>
+<text text-anchor="start" x="46" y="-612.5" font-family="Arial" font-size="10.00">requested_at : TIMESTAMP(6)</text>
+<text text-anchor="start" x="49" y="-602.5" font-family="Arial" font-size="10.00">checked_at : TIMESTAMP(6)</text>
+<polygon fill="black" stroke="black" points="41,-633.5 41,-633.5 185,-633.5 185,-633.5 41,-633.5"/>
+<polygon fill="none" stroke="black" points="41,-595 41,-654 185,-654 185,-595 41,-595"/>
+</g>
+<!-- deposit_leg&#45;&gt;contract_clearance_check -->
+<!-- settlement_leg -->
+<g id="node3" class="node">
+<title>settlement_leg</title>
+<polygon fill="#eeeeee" stroke="transparent" points="203,-658.5 203,-677.5 365,-677.5 365,-658.5 203,-658.5"/>
+<text text-anchor="start" x="250" y="-666.5" font-family="Arial" font-weight="bold" font-size="10.00">settlement_leg</text>
+<text text-anchor="start" x="207" y="-647.5" font-family="Arial" font-weight="bold" text-decoration="underline" font-size="10.00">leg_id : CHAR(36) (PK)</text>
+<text text-anchor="start" x="207" y="-637.5" font-family="Arial" font-style="italic" font-size="10.00">milestone_id : CHAR(36) (FK)</text>
+<text text-anchor="start" x="207" y="-627.5" font-family="Arial" font-size="10.00">trigger_event_id : CHAR(36)</text>
+<text text-anchor="start" x="207" y="-617.5" font-family="Arial" font-size="10.00">entry_type : VARCHAR(30)</text>
+<text text-anchor="start" x="207" y="-607.5" font-family="Arial" font-size="10.00">amount : DECIMAL(18,2)</text>
+<text text-anchor="start" x="207" y="-597.5" font-family="Arial" font-size="10.00">request_event_id : CHAR(36) (UQ)</text>
+<text text-anchor="start" x="207" y="-587.5" font-family="Arial" font-size="10.00">status : VARCHAR(20)</text>
+<text text-anchor="start" x="223.5" y="-577.5" font-family="Arial" font-size="10.00">ledger_entry_id : CHAR(36)</text>
+<polygon fill="black" stroke="black" points="202,-658.5 202,-658.5 366,-658.5 366,-658.5 202,-658.5"/>
+<polygon fill="none" stroke="black" points="202,-570 202,-679 366,-679 366,-570 202,-570"/>
+</g>
+<!-- escrow_milestone&#45;&gt;settlement_leg -->
+<g id="edge14" class="edge">
+<title>escrow_milestone&#45;&gt;settlement_leg</title>
+<path fill="none" stroke="#333333" d="M298.71,-726.71C297.03,-715.17 295.3,-703.27 293.64,-691.84"/>
+<polygon fill="#333333" stroke="#333333" points="303.12,-732.75 296.2,-733.75 296,-732.37 302.92,-731.36 303.12,-732.75"/>
+<polyline fill="none" stroke="#333333" points="299.76,-733.94 299.26,-730.48 "/>
+<polygon fill="#333333" stroke="#333333" points="302.62,-729.28 295.69,-730.29 295.49,-728.9 302.42,-727.9 302.62,-729.28"/>
+<polyline fill="none" stroke="#333333" points="299.26,-730.48 298.76,-727.02 "/>
+<polygon fill="#333333" stroke="#333333" points="292.81,-686.13 294.92,-678.75 292.31,-682.67 291.81,-679.2 291.81,-679.2 291.81,-679.2 292.31,-682.67 288.69,-679.66 292.81,-686.13 292.81,-686.13"/>
+<ellipse fill="none" stroke="#333333" cx="293.22" cy="-688.9" rx="2.8" ry="2.8"/>
+</g>
+<!-- escrow_remedy_decision -->
+<g id="node4" class="node">
+<title>escrow_remedy_decision</title>
+<polygon fill="#eeeeee" stroke="transparent" points="410,-822.5 410,-841.5 591,-841.5 591,-822.5 410,-822.5"/>
+<text text-anchor="start" x="460.5" y="-830.5" font-family="Arial" font-weight="bold" font-size="10.00">remedy_decision</text>
+<text text-anchor="start" x="414" y="-811.5" font-family="Arial" font-weight="bold" text-decoration="underline" font-size="10.00">remedy_decision_id : CHAR(36) (PK)</text>
+<text text-anchor="start" x="414" y="-801.5" font-family="Arial" font-size="10.00">contract_id : CHAR(36)</text>
+<text text-anchor="start" x="414" y="-791.5" font-family="Arial" font-size="10.00">event_id : CHAR(36)</text>
+<text text-anchor="start" x="414" y="-781.5" font-family="Arial" font-size="10.00">status : VARCHAR(20)</text>
+<text text-anchor="start" x="414" y="-771.5" font-family="Arial" font-size="10.00">reject_reason : VARCHAR(500)</text>
+<text text-anchor="start" x="442" y="-761.5" font-family="Arial" font-size="10.00">created_at : DATETIME(6)</text>
+<polygon fill="black" stroke="black" points="409,-822.5 409,-822.5 592,-822.5 592,-822.5 409,-822.5"/>
+<polygon fill="none" stroke="black" points="408.5,-754 408.5,-843 591.5,-843 591.5,-754 408.5,-754"/>
+</g>
+<!-- escrow_milestone&#45;&gt;escrow_remedy_decision -->
+<!-- escrow_remedy_leg -->
+<g id="node5" class="node">
+<title>escrow_remedy_leg</title>
+<polygon fill="#eeeeee" stroke="transparent" points="385,-668.5 385,-687.5 556,-687.5 556,-668.5 385,-668.5"/>
+<text text-anchor="start" x="443" y="-676.5" font-family="Arial" font-weight="bold" font-size="10.00">remedy_leg</text>
+<text text-anchor="start" x="389" y="-657.5" font-family="Arial" font-weight="bold" text-decoration="underline" font-size="10.00">remedy_leg_id : CHAR(36) (PK)</text>
+<text text-anchor="start" x="389" y="-647.5" font-family="Arial" font-style="italic" font-size="10.00">remedy_decision_id : CHAR(36) (FK)</text>
+<text text-anchor="start" x="389" y="-637.5" font-family="Arial" font-size="10.00">contract_id : CHAR(36)</text>
+<text text-anchor="start" x="389" y="-627.5" font-family="Arial" font-size="10.00">milestone_id : CHAR(36)</text>
+<text text-anchor="start" x="389" y="-617.5" font-family="Arial" font-size="10.00">payee_role : VARCHAR(10)</text>
+<text text-anchor="start" x="389" y="-607.5" font-family="Arial" font-size="10.00">amount : DECIMAL(18,2)</text>
+<text text-anchor="start" x="389" y="-597.5" font-family="Arial" font-size="10.00">request_event_id : CHAR(36) (UQ)</text>
+<text text-anchor="start" x="389" y="-587.5" font-family="Arial" font-size="10.00">status : VARCHAR(20)</text>
+<text text-anchor="start" x="389" y="-577.5" font-family="Arial" font-size="10.00">next_attempt_at : DATETIME(6)</text>
+<text text-anchor="start" x="410" y="-567.5" font-family="Arial" font-size="10.00">ledger_entry_id : CHAR(36)</text>
+<polygon fill="black" stroke="black" points="384,-668.5 384,-668.5 557,-668.5 557,-668.5 384,-668.5"/>
+<polygon fill="none" stroke="black" points="383.5,-560 383.5,-689 556.5,-689 556.5,-560 383.5,-560"/>
+</g>
+<!-- settlement_leg&#45;&gt;escrow_remedy_leg -->
+<!-- escrow_remedy_decision&#45;&gt;escrow_remedy_leg -->
+<g id="edge15" class="edge">
+<title>escrow_remedy_decision&#45;&gt;escrow_remedy_leg</title>
+<path fill="none" stroke="#333333" d="M491.12,-746.61C488.67,-732.51 485.94,-716.9 483.29,-701.7"/>
+<polygon fill="#333333" stroke="#333333" points="495.68,-752.36 488.78,-753.56 488.54,-752.18 495.44,-750.98 495.68,-752.36"/>
+<polyline fill="none" stroke="#333333" points="492.35,-753.65 491.75,-750.2 "/>
+<polygon fill="#333333" stroke="#333333" points="495.08,-748.91 488.18,-750.12 487.94,-748.74 494.84,-747.53 495.08,-748.91"/>
+<polyline fill="none" stroke="#333333" points="491.75,-750.2 491.15,-746.76 "/>
+<polygon fill="#333333" stroke="#333333" points="482.29,-695.97 484.19,-688.53 481.69,-692.52 481.09,-689.07 481.09,-689.07 481.09,-689.07 481.69,-692.52 477.98,-689.61 482.29,-695.97 482.29,-695.97"/>
+<ellipse fill="none" stroke="#333333" cx="482.77" cy="-698.72" rx="2.8" ry="2.8"/>
+</g>
+<!-- contract_clearance_check&#45;&gt;settlement_leg -->
+<!-- ledger_entry -->
+<g id="node7" class="node">
+<title>ledger_entry</title>
+<polygon fill="#eeeeee" stroke="transparent" points="34,-494.5 34,-513.5 193,-513.5 193,-494.5 34,-494.5"/>
+<text text-anchor="start" x="84.5" y="-502.5" font-family="Arial" font-weight="bold" font-size="10.00">ledger_entry</text>
+<text text-anchor="start" x="38" y="-483.5" font-family="Arial" font-weight="bold" text-decoration="underline" font-size="10.00">entry_id : CHAR(36) (PK)</text>
+<text text-anchor="start" x="38" y="-473.5" font-family="Arial" font-size="10.00">source_event_id : CHAR(36) (UQ)</text>
+<text text-anchor="start" x="38" y="-463.5" font-family="Arial" font-size="10.00">contract_id : CHAR(36)</text>
+<text text-anchor="start" x="38" y="-453.5" font-family="Arial" font-size="10.00">milestone_id : CHAR(36)</text>
+<text text-anchor="start" x="38" y="-443.5" font-family="Arial" font-size="10.00">user_id : CHAR(36)</text>
+<text text-anchor="start" x="38" y="-433.5" font-family="Arial" font-size="10.00">entry_type : VARCHAR(30)</text>
+<text text-anchor="start" x="38" y="-423.5" font-family="Arial" font-size="10.00">fund_type : VARCHAR(30)</text>
+<text text-anchor="start" x="38" y="-413.5" font-family="Arial" font-size="10.00">remedy_decision_id : CHAR(36)</text>
+<text text-anchor="start" x="38" y="-403.5" font-family="Arial" font-size="10.00">remedy_leg_id : CHAR(36) (UQ)</text>
+<text text-anchor="start" x="38" y="-393.5" font-family="Arial" font-size="10.00">amount : DECIMAL(18,2)</text>
+<text text-anchor="start" x="55" y="-383.5" font-family="Arial" font-size="10.00">created_at : DATETIME(6)</text>
+<polygon fill="black" stroke="black" points="33,-494.5 33,-494.5 194,-494.5 194,-494.5 33,-494.5"/>
+<polygon fill="none" stroke="black" points="32.5,-376 32.5,-515 193.5,-515 193.5,-376 32.5,-376"/>
+</g>
+<!-- contract_clearance_check&#45;&gt;ledger_entry -->
+<!-- system_lock -->
+<g id="node8" class="node">
+<title>system_lock</title>
+<polygon fill="#eeeeee" stroke="transparent" points="212,-464.5 212,-483.5 342,-483.5 342,-464.5 212,-464.5"/>
+<text text-anchor="start" x="222.5" y="-472.5" font-family="Arial" font-weight="bold" font-size="10.00">«planned» system_lock</text>
+<text text-anchor="start" x="216" y="-453.5" font-family="Arial" font-weight="bold" text-decoration="underline" font-size="10.00">lock_id : CHAR(36) (PK)</text>
+<text text-anchor="start" x="216" y="-443.5" font-family="Arial" font-size="10.00">status : VARCHAR(20)</text>
+<text text-anchor="start" x="216" y="-433.5" font-family="Arial" font-size="10.00">verifier_org_id : CHAR(36)</text>
+<text text-anchor="start" x="216" y="-423.5" font-family="Arial" font-size="10.00">triggered_at : DATETIME(6)</text>
+<text text-anchor="start" x="216.5" y="-413.5" font-family="Arial" font-size="10.00">released_at : DATETIME(6)</text>
+<polygon fill="black" stroke="black" points="211,-464.5 211,-464.5 343,-464.5 343,-464.5 211,-464.5"/>
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="211,-406 211,-485 343,-485 343,-406 211,-406"/>
+</g>
+<!-- ledger_entry&#45;&gt;system_lock -->
+<!-- lock_entry -->
+<g id="node10" class="node">
+<title>lock_entry</title>
+<polygon fill="#eeeeee" stroke="transparent" points="18,-310.5 18,-329.5 208,-329.5 208,-310.5 18,-310.5"/>
+<text text-anchor="start" x="88.5" y="-318.5" font-family="Arial" font-weight="bold" font-size="10.00">lock_entry</text>
+<text text-anchor="start" x="22" y="-299.5" font-family="Arial" font-weight="bold" text-decoration="underline" font-size="10.00">entry_id : CHAR(36) (PK)</text>
+<text text-anchor="start" x="22" y="-289.5" font-family="Arial" font-size="10.00">source_event_id : CHAR(36) (UQ)</text>
+<text text-anchor="start" x="22" y="-279.5" font-family="Arial" font-size="10.00">remedy_decision_id : CHAR(36) (UQ)</text>
+<text text-anchor="start" x="22" y="-269.5" font-family="Arial" font-size="10.00">contract_id : CHAR(36)</text>
+<text text-anchor="start" x="22" y="-259.5" font-family="Arial" font-size="10.00">user_id : CHAR(36)</text>
+<text text-anchor="start" x="22" y="-249.5" font-family="Arial" font-size="10.00">penalized_role : VARCHAR(10)</text>
+<text text-anchor="start" x="22" y="-239.5" font-family="Arial" font-size="10.00">base_days : INT</text>
+<text text-anchor="start" x="22" y="-229.5" font-family="Arial" font-size="10.00">repeat_offense_multiplier : DECIMAL(3,2)</text>
+<text text-anchor="start" x="22" y="-219.5" font-family="Arial" font-size="10.00">track_record_multiplier : DECIMAL(3,2)</text>
+<text text-anchor="start" x="22" y="-209.5" font-family="Arial" font-size="10.00">zero_progress_multiplier : DECIMAL(3,2)</text>
+<text text-anchor="start" x="22" y="-199.5" font-family="Arial" font-size="10.00">lock_duration_days : INT</text>
+<text text-anchor="start" x="54" y="-189.5" font-family="Arial" font-size="10.00">locked_until : TIMESTAMP</text>
+<polygon fill="black" stroke="black" points="17,-310.5 17,-310.5 209,-310.5 209,-310.5 17,-310.5"/>
+<polygon fill="none" stroke="black" points="17,-182 17,-331 209,-331 209,-182 17,-182"/>
+</g>
+<!-- ledger_entry&#45;&gt;lock_entry -->
+<!-- used_nonce -->
+<g id="node9" class="node">
+<title>used_nonce</title>
+<polygon fill="#eeeeee" stroke="transparent" points="362,-449.5 362,-468.5 499,-468.5 499,-449.5 362,-449.5"/>
+<text text-anchor="start" x="376.5" y="-457.5" font-family="Arial" font-weight="bold" font-size="10.00">«planned» used_nonce</text>
+<text text-anchor="start" x="366" y="-438.5" font-family="Arial" font-weight="bold" text-decoration="underline" font-size="10.00">nonce : VARCHAR(64) (PK)</text>
+<text text-anchor="start" x="377.5" y="-428.5" font-family="Arial" font-size="10.00">seen_at : DATETIME(6)</text>
+<polygon fill="black" stroke="black" points="361,-449.5 361,-449.5 500,-449.5 500,-449.5 361,-449.5"/>
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="360.5,-421 360.5,-470 499.5,-470 499.5,-421 360.5,-421"/>
+</g>
+<!-- system_lock&#45;&gt;used_nonce -->
+<!-- completed_contract_fact -->
+<g id="node11" class="node">
+<title>completed_contract_fact</title>
+<polygon fill="#eeeeee" stroke="transparent" points="228,-275.5 228,-294.5 387,-294.5 387,-275.5 228,-275.5"/>
+<text text-anchor="start" x="250.5" y="-283.5" font-family="Arial" font-weight="bold" font-size="10.00">completed_contract_fact</text>
+<text text-anchor="start" x="232" y="-264.5" font-family="Arial" font-weight="bold" text-decoration="underline" font-size="10.00">contract_id : CHAR(36) (PK)</text>
+<text text-anchor="start" x="232" y="-254.5" font-family="Arial" font-size="10.00">buyer_id : CHAR(36)</text>
+<text text-anchor="start" x="232" y="-244.5" font-family="Arial" font-size="10.00">seller_id : CHAR(36)</text>
+<text text-anchor="start" x="232" y="-234.5" font-family="Arial" font-size="10.00">settled_at : DATETIME(6)</text>
+<text text-anchor="start" x="232" y="-224.5" font-family="Arial" font-size="10.00">source_event_id : CHAR(36) (UQ)</text>
+<polygon fill="black" stroke="black" points="227,-275.5 227,-275.5 388,-275.5 388,-275.5 227,-275.5"/>
+<polygon fill="none" stroke="black" points="226.5,-217 226.5,-296 387.5,-296 387.5,-217 226.5,-217"/>
+</g>
+<!-- lock_entry&#45;&gt;completed_contract_fact -->
+<!-- lock_override_event -->
+<g id="node14" class="node">
+<title>lock_override_event</title>
+<polygon fill="#eeeeee" stroke="transparent" points="42,-126.5 42,-145.5 185,-145.5 185,-126.5 42,-126.5"/>
+<text text-anchor="start" x="66.5" y="-134.5" font-family="Arial" font-weight="bold" font-size="10.00">lock_override_event</text>
+<text text-anchor="start" x="46" y="-115.5" font-family="Arial" font-weight="bold" text-decoration="underline" font-size="10.00">event_id : CHAR(36) (PK)</text>
+<text text-anchor="start" x="46" y="-105.5" font-family="Arial" font-style="italic" font-size="10.00">lock_entry_id : CHAR(36) (FK)</text>
+<text text-anchor="start" x="46" y="-95.5" font-family="Arial" font-size="10.00">override_type : VARCHAR(20)</text>
+<text text-anchor="start" x="46" y="-85.5" font-family="Arial" font-size="10.00">reason : TEXT</text>
+<text text-anchor="start" x="46" y="-75.5" font-family="Arial" font-size="10.00">proposed_by : CHAR(36)</text>
+<text text-anchor="start" x="58" y="-65.5" font-family="Arial" font-size="10.00">approved_by : CHAR(36)</text>
+<polygon fill="black" stroke="black" points="41,-126.5 41,-126.5 186,-126.5 186,-126.5 41,-126.5"/>
+<polygon fill="none" stroke="black" points="40.5,-58 40.5,-147 185.5,-147 185.5,-58 40.5,-58"/>
+</g>
+<!-- lock_entry&#45;&gt;lock_override_event -->
+<!-- lock_entry&#45;&gt;lock_override_event -->
+<g id="edge16" class="edge">
+<title>lock_entry&#45;&gt;lock_override_event</title>
+<path fill="none" stroke="#333333" d="M119.74,-174.54C119.71,-169.7 119.65,-164.88 119.55,-160.17"/>
+<polygon fill="#333333" stroke="#333333" points="123.25,-181.02 116.25,-181.03 116.24,-179.63 123.24,-179.62 123.25,-181.02"/>
+<polyline fill="none" stroke="#333333" points="119.75,-181.73 119.74,-178.23 "/>
+<polygon fill="#333333" stroke="#333333" points="123.24,-177.52 116.24,-177.53 116.24,-176.13 123.24,-176.12 123.24,-177.52"/>
+<polyline fill="none" stroke="#333333" points="119.74,-178.23 119.74,-174.73 "/>
+<polygon fill="#333333" stroke="#333333" points="119.38,-154.25 122.33,-147.16 119.28,-150.75 119.18,-147.25 119.18,-147.25 119.18,-147.25 119.28,-150.75 116.03,-147.34 119.38,-154.25 119.38,-154.25"/>
+<ellipse fill="none" stroke="#333333" cx="119.46" cy="-157.05" rx="2.8" ry="2.8"/>
+</g>
+<!-- dispute_outcome_fact -->
+<g id="node12" class="node">
+<title>dispute_outcome_fact</title>
+<polygon fill="#eeeeee" stroke="transparent" points="406,-280.5 406,-299.5 565,-299.5 565,-280.5 406,-280.5"/>
+<text text-anchor="start" x="434" y="-288.5" font-family="Arial" font-weight="bold" font-size="10.00">dispute_outcome_fact</text>
+<text text-anchor="start" x="410" y="-269.5" font-family="Arial" font-weight="bold" text-decoration="underline" font-size="10.00">milestone_id : CHAR(36) (PK)</text>
+<text text-anchor="start" x="410" y="-259.5" font-family="Arial" font-size="10.00">contract_id : CHAR(36)</text>
+<text text-anchor="start" x="410" y="-249.5" font-family="Arial" font-size="10.00">flagged_by_user_id : CHAR(36)</text>
+<text text-anchor="start" x="410" y="-239.5" font-family="Arial" font-size="10.00">resolution_favors : VARCHAR(10)</text>
+<text text-anchor="start" x="410" y="-229.5" font-family="Arial" font-size="10.00">resolved_at : DATETIME(6)</text>
+<text text-anchor="start" x="410" y="-219.5" font-family="Arial" font-size="10.00">source_event_id : CHAR(36) (UQ)</text>
+<polygon fill="black" stroke="black" points="405,-280.5 405,-280.5 566,-280.5 566,-280.5 405,-280.5"/>
+<polygon fill="none" stroke="black" points="404.5,-212 404.5,-301 565.5,-301 565.5,-212 404.5,-212"/>
+</g>
+<!-- completed_contract_fact&#45;&gt;dispute_outcome_fact -->
+<!-- governance_action_request -->
+<g id="node13" class="node">
+<title>governance_action_request</title>
+<polygon fill="#eeeeee" stroke="transparent" points="204,-121.5 204,-140.5 391,-140.5 391,-121.5 204,-121.5"/>
+<text text-anchor="start" x="208" y="-129.5" font-family="Arial" font-weight="bold" font-size="10.00">«planned» governance_action_request</text>
+<text text-anchor="start" x="208" y="-110.5" font-family="Arial" font-weight="bold" text-decoration="underline" font-size="10.00">request_id : CHAR(36) (PK)</text>
+<text text-anchor="start" x="208" y="-100.5" font-family="Arial" font-size="10.00">action_type : VARCHAR(30)</text>
+<text text-anchor="start" x="208" y="-90.5" font-family="Arial" font-size="10.00">target_id : VARCHAR(100)</text>
+<text text-anchor="start" x="208" y="-80.5" font-family="Arial" font-size="10.00">status : VARCHAR(15)</text>
+<text text-anchor="start" x="240" y="-70.5" font-family="Arial" font-size="10.00">reason : TEXT</text>
+<polygon fill="black" stroke="black" points="203,-121.5 203,-121.5 392,-121.5 392,-121.5 203,-121.5"/>
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="202.5,-63 202.5,-142 391.5,-142 391.5,-63 202.5,-63"/>
+</g>
+<!-- lock_override_event&#45;&gt;governance_action_request -->
+</g>
 </svg>
