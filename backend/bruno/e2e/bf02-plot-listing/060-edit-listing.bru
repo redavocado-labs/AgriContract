@@ -1,0 +1,57 @@
+meta {
+  name: BF02-060 Update quantity and price
+  type: http
+  seq: 60
+}
+
+put {
+  url: {{base_url}}/api/v1/listings/{{listing_id}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{seller_token}}
+}
+
+headers {
+  Idempotency-Key: bruno-edit-{{fixture_suffix}}
+}
+
+body:json {
+  {
+    "productId": "{{product_id}}",
+    "productName": "Robusta Bruno {{fixture_suffix}}",
+    "unitOfMeasure": "KG",
+    "offeredQuantity": 5500,
+    "minOrderQuantity": 100,
+    "askingUnitPrice": "95000.00",
+    "registryEntryIds": [
+      "{{plot_id}}"
+    ],
+    "regionText": "Buon Ma Thuot, Dak Lak",
+    "declaredQualitySpec": {
+      "commodity": "COFFEE",
+      "type": "ROBUSTA",
+      "moisturePercent": 12.5,
+      "foreignMatterPercent": 0.5,
+      "blackBrokenBeansPercent": 5
+    },
+    "packagingDeclaration": "Bao day 60 kg"
+  }
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().listingId).to.equal(bru.getVar('listing_id'));
+    expect(res.getBody().quantityAvailable).to.equal(5500);
+    expect(res.getBody().askingUnitPrice).to.equal('95000.00');
+  });
+}
+
+docs {
+  IT-GW
+
+  Product design D48 and ListingController. The fixture has no reservations yet.
+}

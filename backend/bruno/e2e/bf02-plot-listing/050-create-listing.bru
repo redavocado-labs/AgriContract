@@ -1,0 +1,62 @@
+meta {
+  name: BF02-050 Create an available listing
+  type: http
+  seq: 50
+}
+
+post {
+  url: {{base_url}}/api/v1/listings
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{seller_token}}
+}
+
+headers {
+  Idempotency-Key: bruno-listing-{{fixture_suffix}}
+}
+
+body:json {
+  {
+    "productId": "{{product_id}}",
+    "productName": "Robusta Bruno {{fixture_suffix}}",
+    "unitOfMeasure": "KG",
+    "offeredQuantity": 5000,
+    "minOrderQuantity": 100,
+    "askingUnitPrice": "96000.00",
+    "registryEntryIds": [
+      "{{plot_id}}"
+    ],
+    "regionText": "Buon Ma Thuot, Dak Lak",
+    "declaredQualitySpec": {
+      "commodity": "COFFEE",
+      "type": "ROBUSTA",
+      "moisturePercent": 12.5,
+      "foreignMatterPercent": 0.5,
+      "blackBrokenBeansPercent": 5
+    },
+    "packagingDeclaration": "Bao day 60 kg"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) bru.setVar('listing_id', res.getBody().listingId);
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(201);
+    expect(res.getBody().listingId).to.be.a('string');
+    expect(res.getBody().status).to.equal('AVAILABLE');
+    expect(res.getBody().quantityAvailable).to.equal(5000);
+    expect(res.getBody().registryEntryIds).to.deep.equal([bru.getVar('plot_id')]);
+  });
+}
+
+docs {
+  IT-GW
+
+  Product design D48 and ListingController.
+}

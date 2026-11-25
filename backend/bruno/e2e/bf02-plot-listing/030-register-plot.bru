@@ -1,0 +1,49 @@
+meta {
+  name: BF02-030 Register one manual land plot
+  type: http
+  seq: 30
+}
+
+post {
+  url: {{base_url}}/api/v1/plots
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{seller_token}}
+}
+
+headers {
+  Idempotency-Key: bruno-plot-{{fixture_suffix}}
+}
+
+body:json {
+  {
+    "householdLabel": "Bruno {{fixture_suffix}}",
+    "latitude": 12.6642,
+    "longitude": 108.0543,
+    "areaHectares": 1.5,
+    "accuracyMeters": 8.5,
+    "declaredProvince": "DAK_LAK"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) bru.setVar('plot_id', res.getBody().registryEntryId);
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(201);
+    expect(res.getBody().registryEntryId).to.be.a('string');
+    expect(res.getBody().geometryType).to.equal('POINT');
+    expect(res.getBody().source).to.equal('MANUAL_PIN');
+  });
+}
+
+docs {
+  IT-GW
+
+  Product design §2.1 and PlotController.
+}

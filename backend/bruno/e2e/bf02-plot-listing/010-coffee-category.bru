@@ -1,0 +1,57 @@
+meta {
+  name: BF02-010 Resolve an approved coffee category
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{base_url}}/api/v1/categories
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{seller_token}}
+}
+
+script:pre-request {
+  const { gateway, token } = require('./e2e/helpers.js');
+  await token(bru, 'seller');
+  const existing = await gateway(bru, '/api/v1/categories', 'seller');
+  if (existing.status !== 200) throw new Error('GET categories returned ' + existing.status);
+  if (!existing.data.some((item) => item.commodity === 'COFFEE')) {
+    const name = 'Coffee Bruno ' + Date.now();
+    const proposed = await gateway(bru, '/api/v1/categories', 'seller', { method: 'POST', data: { name } });
+    if (proposed.status !== 201 || proposed.data.status !== 'PENDING' || !proposed.data.categoryId) {
+      throw new Error('Category proposal expected 201 PENDING, received ' + proposed.status + ' ' + proposed.data?.code);
+    }
+    await token(bru, 'operator');
+    const approved = await gateway(bru, '/api/v1/admin/categories/' + proposed.data.categoryId + '/approve',
+      'operator', { method: 'PUT', data: { commodity: 'COFFEE' } });
+    if (approved.status !== 200 || approved.data.status !== 'APPROVED' || approved.data.commodity !== 'COFFEE') {
+      throw new Error('Category approval expected 200 APPROVED, received ' + approved.status + ' ' + approved.data?.code);
+    }
+  }
+  bru.setVar('fixture_suffix', Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9));
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    const coffee = res.getBody().find((category) => category.commodity === 'COFFEE');
+    if (coffee) bru.setVar('category_id', coffee.categoryId);
+  }
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().filter((item) => item.commodity === 'COFFEE')).to.have.length(1);
+    expect(bru.getVar('category_id')).to.be.a('string');
+  });
+}
+
+docs {
+  IT-GW
+
+  Product design §2 and CategoryController / AdminCategoryController. A commodity can only have one approved category.
+}
