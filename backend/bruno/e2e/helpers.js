@@ -147,3 +147,27 @@ async function mailCode(bru, email, subject, matchBody = () => true) {
 }
 
 module.exports = { browserLogin, claims, gateway, mailCode, poll, request, token, variable };
+
+async function fixture(bru, folder, items) {
+  for (const [name, expected] of items) {
+    const response = await bru.runRequest(folder + '/' + name);
+    if (!response || !(Array.isArray(expected) ? expected : [expected]).includes(response.status)) {
+      throw new Error(`Fixture ${name} returned ${response?.status ?? 'no response'} ${response?.data?.code ?? ''}`);
+    }
+  }
+}
+
+async function listingFixture(bru) {
+  const provided = variable(bru, 'shared_listing_id');
+  if (provided) {
+    bru.setVar('listing_id', provided);
+  } else {
+    await fixture(bru, 'e2e/bf02-plot-listing', [
+      ['010-coffee-category', 200], ['020-create-product', 201], ['030-register-plot', 201],
+      ['040-plot-eligible', 200], ['050-create-listing', 201], ['060-edit-listing', 200], ['070-public-listing', 200],
+    ]);
+  }
+  if (!bru.getVar('listing_id')) throw new Error('Missing fixture listing ID');
+}
+module.exports.fixture = fixture;
+module.exports.listingFixture = listingFixture;

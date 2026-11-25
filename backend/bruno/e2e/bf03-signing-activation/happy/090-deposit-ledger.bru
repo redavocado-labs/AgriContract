@@ -1,0 +1,36 @@
+meta {
+  name: BF03-090 Verify the two deposit locks
+  type: http
+  seq: 90
+}
+
+get {
+  url: {{bank_service_url}}/internal/v1/bank/ledger?contractId={{contract_id}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Internal-Secret: {{service_internal_secret}}
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    const ledger = res.getBody();
+    for (const [type, amount, user] of [
+      ['LOCK_BUYER_DEPOSIT', '4800000.00', 'buyer1_sub'],
+      ['LOCK_SELLER_DEPOSIT', '2880000.00', 'seller1_sub'],
+    ]) {
+      const entries = ledger.filter((entry) => entry.entryType === type);
+      expect(entries).to.have.length(1);
+      expect(entries[0]).to.include({ contractId: bru.getVar('contract_id'), amount, userId: bru.getEnvVar(user) });
+    }
+  });
+}
+
+docs {
+  IT-DIRECT
+
+  OpenAPI getInternalLedgerEntries; bank design §2. The edited price makes the nominal value 96,000,000 VND.
+}
