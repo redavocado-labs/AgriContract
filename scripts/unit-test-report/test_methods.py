@@ -4,8 +4,10 @@ import glob
 import os
 import re
 
-TEST = re.compile(r"@(?:Test|ParameterizedTest|RepeatedTest)\b[^\n]*\n(?:\s*@[^\n]*\n)*\s*(?:public\s+|protected\s+)?"
-                  r"(?:static\s+)?void\s+(\w+)\s*\(")
+# the annotations between @Test and the signature may span lines (@ValueSource(strings = {...})), so everything up to
+# the first `void name(` is skipped, but not past another @Test
+TEST = re.compile(r"@(?:Test|ParameterizedTest|RepeatedTest)\b(?:(?!@(?:Test|ParameterizedTest|RepeatedTest)\b).)*?"
+                  r"(?:public\s+|protected\s+)?(?:static\s+)?void\s+(\w+)\s*\(", re.S)
 NESTED = re.compile(r"@Nested\s*(?:\n\s*@[^\n]*)*\n\s*(?:public\s+|private\s+|protected\s+)?(?:static\s+)?class\s+(\w+)")
 
 
