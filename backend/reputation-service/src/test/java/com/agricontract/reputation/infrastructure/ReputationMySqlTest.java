@@ -62,6 +62,7 @@ class ReputationMySqlTest {
         @Bean @Primary Clock testClock() { return Clock.fixed(NOW, ZoneOffset.UTC); }
     }
     @Autowired FactRepository facts;
+    @Autowired com.agricontract.reputation.domain.repository.ReputationReadRepository reads;
     @Autowired LockEntryWriter lockWriter;
     @Autowired ProcessLockoutUseCase processLockout;
     @Autowired LockHistoryReader lockHistory;
@@ -97,6 +98,19 @@ class ReputationMySqlTest {
                     .digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
             return useCase.execute(command, fingerprint);
         } catch (java.security.NoSuchAlgorithmException e) { throw new AssertionError(e); }
+    }
+    @Test void flagCountsUseOnlyEachBuyersImmutableFinalOutcomes() {
+        UUID buyer = id(), other = id();
+        assertThat(reads.flagOutcomeCounts(buyer)).isEqualTo(new FlagOutcomeCounts(0, 0));
+        var sellerFavors = new DisputeOutcomeFact(id(), id(), buyer, ResolutionFavors.SELLER, NOW, id());
+        var buyerFavors = new DisputeOutcomeFact(id(), id(), buyer, ResolutionFavors.BUYER, NOW, id());
+        assertThat(facts.append(sellerFavors)).isEqualTo(INSERTED);
+        assertThat(facts.append(sellerFavors)).isEqualTo(DUPLICATE);
+        assertThat(facts.append(buyerFavors)).isEqualTo(INSERTED);
+        facts.append(new DisputeOutcomeFact(id(), id(), other, ResolutionFavors.SELLER, NOW, id()));
+        assertThat(reads.flagOutcomeCounts(buyer)).isEqualTo(new FlagOutcomeCounts(1, 2));
+        assertThat(reads.flagOutcomeCounts(other)).isEqualTo(new FlagOutcomeCounts(1, 1));
+        assertThat(reads.flagOutcomeCounts(buyer)).isEqualTo(new FlagOutcomeCounts(1, 2));
     }
     @Test void productionUseCasePersistsSellerAndDeduplicatesDecision() throws Exception {
         UUID buyer = id(), seller = id();
@@ -334,6 +348,7 @@ class ReputationMySqlTest {
     @Test void simultaneousDisputeDeliveriesCommitOneRow() throws Exception {
         var f = dispute(id());
         assertThat(race(() -> facts.append(f), () -> facts.append(f))).containsExactlyInAnyOrder(INSERTED, DUPLICATE);
+        assertThat(reads.flagOutcomeCounts(f.flaggedByUserId())).isEqualTo(new FlagOutcomeCounts(0, 1));
     }
     @Test void simultaneousConflictingDeliveriesDoNotMutateWinner() throws Exception {
         var a = completed(id());
@@ -471,13 +486,36 @@ class ReputationMySqlTest {
         lock(id(),NOW.minusSeconds(100),NOW.plusSeconds(300));
         var result=mvc.perform(auth(get(route(user)))).andExpect(status().isOk())
                 .andExpect(jsonPath("$.score").value(50)).andExpect(jsonPath("$.locked").value(true))
+                .andExpect(jsonPath("$.flagOutcome.unsuccessful").value(0))
+                .andExpect(jsonPath("$.flagOutcome.total").value(1))
                 .andExpect(jsonPath("$.lockHistory.length()").value(3))
                 .andExpect(jsonPath("$.lockHistory[0].status").value("ACTIVE"))
                 .andExpect(jsonPath("$.lockHistory[1].status").value("UNLOCKED_EARLY"))
                 .andExpect(jsonPath("$.lockHistory[2].status").value("EXPIRED")).andReturn();
         FrozenSchemas.assertResponse("ReputationPublicSummary", json.readTree(result.getResponse().getContentAsString()));
         assertThat(result.getResponse().getContentAsString()).doesNotContain("reason", "proposedBy", "approvedBy",
-                "contractId", "sourceEventId", "email", "phone", "address", "remedyDecisionId");
+                "contractId", "milestoneId", "sourceEventId", "email", "phone", "address", "remedyDecisionId",
+                "flaggedByUserId", "resolutionFavors", "evidence", "percentage");
+    }
+    @Test void flagOutcomesDoNotAlterScoreLockOrHistory() throws Exception {
+        UUID user = id(), other = id();
+        facts.append(completed(user));
+        lock(user, NOW.minusSeconds(10), NOW.plusSeconds(100));
+        var before = json.readTree(mvc.perform(auth(get(route(user)))).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString());
+        var sellerFavors = new DisputeOutcomeFact(id(), id(), user, ResolutionFavors.SELLER, NOW, id());
+        facts.append(sellerFavors);
+        facts.append(sellerFavors);
+        facts.append(dispute(user));
+        facts.append(new DisputeOutcomeFact(id(), id(), other, ResolutionFavors.SELLER, NOW, id()));
+        var after = json.readTree(mvc.perform(auth(get(route(user)))).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString());
+        assertThat(after.get("score")).isEqualTo(before.get("score"));
+        assertThat(after.get("locked")).isEqualTo(before.get("locked"));
+        assertThat(after.get("lockHistory")).isEqualTo(before.get("lockHistory"));
+        assertThat(after.path("flagOutcome").path("unsuccessful").asLong()).isEqualTo(1);
+        assertThat(after.path("flagOutcome").path("total").asLong()).isEqualTo(2);
+        FrozenSchemas.assertResponse("ReputationPublicSummary", after);
     }
     @Test void overriddenAndExpiredLocksRemainInScoreButDoNotLockUser() throws Exception {
         UUID user=id(); facts.append(completed(user));
@@ -493,7 +531,10 @@ class ReputationMySqlTest {
                     .andExpect(jsonPath("$.userId").value(user.toString()))
                     .andExpect(jsonPath("$.score").isEmpty()).andExpect(jsonPath("$.locked").value(false))
                     .andExpect(jsonPath("$.lockHistory").isEmpty()).andReturn();
-            FrozenSchemas.assertResponse("ReputationPublicSummary",json.readTree(result.getResponse().getContentAsString()));
+            var body = json.readTree(result.getResponse().getContentAsString());
+            assertThat(body.path("flagOutcome").path("unsuccessful").asLong()).isZero();
+            assertThat(body.path("flagOutcome").path("total").asLong()).isEqualTo(user.equals(disputeOnly) ? 1 : 0);
+            FrozenSchemas.assertResponse("ReputationPublicSummary", body);
         }
     }
     @ParameterizedTest @ValueSource(strings={"not-a-uuid","1-1-1-1-1"})

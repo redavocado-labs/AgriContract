@@ -71,6 +71,7 @@ class BatchSummaryApplicationTest {
         assertThat(result.locked()).isTrue();
         verify(repository).publicSummaries(List.of(id), now);
         verify(repository).lockHistory(id, now);
+        verify(repository).flagOutcomeCounts(id);
         verify(clock).instant();
         verifyNoMoreInteractions(repository, clock);
     }
