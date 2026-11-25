@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { container } from './docker.mjs';
 
 /*
  * Vietnam business days, on the very calendar contract-service runs with: its
@@ -11,7 +12,7 @@ let holidays;
 
 function holidaySet() {
   holidays ??= new Set(
-    execFileSync('docker', ['exec', process.env.E2E_CONTRACT_CONTAINER ?? 'contract-service', 'printenv', 'VIETNAM_HOLIDAYS'], {
+    execFileSync('docker', ['exec', process.env.E2E_CONTRACT_CONTAINER ?? container('contract-service'), 'printenv', 'VIETNAM_HOLIDAYS'], {
       encoding: 'utf8',
     })
       .trim()

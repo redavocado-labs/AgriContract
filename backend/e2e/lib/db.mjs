@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { container } from './docker.mjs';
 
 /*
  * Read-only SQL on a compose MySQL container, for what the API does not show
@@ -38,7 +39,7 @@ export function milestonesOf(contract) {
 export function contractOutboxCount(contractId) {
   if (!UUID.test(contractId)) throw new Error(`not a contract id: ${contractId}`);
   const [[count]] = query(
-    process.env.E2E_CONTRACT_DB_CONTAINER ?? 'contract-db',
+    process.env.E2E_CONTRACT_DB_CONTAINER ?? container('contract-db'),
     'contract_db',
     `SELECT COUNT(*) FROM event_outbox WHERE envelope LIKE '%${contractId}%'`,
   );
