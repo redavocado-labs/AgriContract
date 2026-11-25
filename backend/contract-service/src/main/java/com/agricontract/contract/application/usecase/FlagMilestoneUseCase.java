@@ -37,7 +37,7 @@ import java.util.UUID;
 /**
  * flagMilestoneIssue (D80, D82). One transaction under the contract and milestone locks: party (403), milestone of the
  * contract (404), the Idempotency-Key (a repeat is a no-op 204), then the contract and milestone state, the confirm
- * window and the consent (409). The milestone becomes AWAITING_SELLER_RESPONSE and milestone.flagged is written. A
+ * window and the consent (409). The milestone becomes AWAITING_SELLER_RESPONSE and the seller's mail is requested (no milestone.flagged, D101). A
  * flag is an allegation: no money or reputation moves, and a mandatory inspection does not block it.
  */
 @Slf4j
@@ -103,7 +103,6 @@ public class FlagMilestoneUseCase {
         consents.append(consent);
         milestone.flagIssue(command.issueType(), now);
         milestones.update(milestone);
-        events.milestoneFlagged(contract, milestone);
         events.milestoneStatusRequested(contract, milestone, MilestoneStatusMail.FLAGGED,
                 calendar.deadline(now, flagSettings.sellerResponseWindowDays()), now);
         idempotencyStore.recordResult(command.actorId(), OPERATION, command.idempotencyKey(),
