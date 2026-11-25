@@ -1,0 +1,39 @@
+meta {
+  name: BF04-091 Record the final ledger before retrying confirmation
+  type: http
+  seq: 91
+}
+
+get {
+  url: {{bank_service_url}}/internal/v1/bank/ledger?contractId={{contract_id}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Internal-Secret: {{service_internal_secret}}
+}
+
+script:pre-request {
+  const { gateway, poll } = require('./e2e/helpers.js');
+  await poll(() => gateway(bru, '/api/v1/contracts/' + bru.getVar('contract_id'), 'buyer'),
+    ({ status, data }) => status === 200 && data.status === 'SETTLED', 'final bank ledger');
+}
+
+script:post-response {
+  if (res.getStatus() === 200) bru.setVar('settled_ledger', res.getBody());
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().filter((row) => row.entryType === 'RELEASE_TO_SELLER' &&
+      row.fundType === 'MILESTONE_PAYMENT')).to.have.length(1);
+  });
+}
+
+docs {
+  IT-DIRECT
+
+  OpenAPI getInternalLedgerEntries and confirmMilestoneClean. Capture after the contract lock is cleared.
+}

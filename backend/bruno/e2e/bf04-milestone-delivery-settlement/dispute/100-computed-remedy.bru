@@ -1,0 +1,36 @@
+meta {
+  name: BF04-200 Arbitrator reads the computed quality remedy
+  type: http
+  seq: 100
+}
+
+get {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}/breach-cases/{{breach_case_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{arbitrator_token}}
+}
+
+script:pre-request {
+  const { gateway, poll, token } = require('./e2e/helpers.js');
+  await token(bru, 'arbitrator');
+  const path = '/api/v1/contracts/' + bru.getVar('contract_id') + '/breach-cases/' + bru.getVar('breach_case_id');
+  await poll(() => gateway(bru, path, 'arbitrator'),
+    ({ status, data }) => status === 200 && data.computedResolution != null, 'inspection remedy');
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().computedResolution.finalBreachingRole).to.equal(null);
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI getBreachCase and milestone escrow D81. No party is at fault within the penalty band.
+}

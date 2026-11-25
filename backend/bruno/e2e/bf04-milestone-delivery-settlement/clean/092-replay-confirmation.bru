@@ -1,0 +1,36 @@
+meta {
+  name: BF04-092 Retry clean confirmation with its original idempotency key
+  type: http
+  seq: 92
+}
+
+post {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}/milestones/{{milestone_id}}/confirm
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+headers {
+  Idempotency-Key: {{confirmation_key}}
+}
+
+body:json {
+  {{confirmation}}
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(204);
+    expect([null, undefined, '']).to.include(res.getBody());
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI confirmMilestoneClean specifies 204 on an exact retry.
+}

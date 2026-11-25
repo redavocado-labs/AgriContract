@@ -1,0 +1,46 @@
+meta {
+  name: BF04-310 Wait for final contract settlement
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+script:pre-request {
+  const { fixture, gateway, poll, token, variable } = require('./e2e/helpers.js');
+  const prior = bru.getVar('clean_contract_id') || variable(bru, 'shared_clean_contract_id');
+  if (prior) {
+    bru.setVar('contract_id', prior);
+    await token(bru, 'buyer');
+  } else {
+    await fixture(bru, 'e2e/bf04-milestone-delivery-settlement/clean', [
+      ['010-funded', 200], ['015-funding-ledger', 200], ['020-upload-seller', 202],
+      ['030-weigh', 204], ['040-upload-buyer', 202], ['050-receive', 204],
+      ['060-confirm', 204], ['070-settled', 200],
+    ]);
+  }
+  await poll(() => gateway(bru, '/api/v1/contracts/' + bru.getVar('contract_id'), 'buyer'),
+    ({ status, data }) => status === 200 && data.status === 'SETTLED', 'contract lock cleared and settled');
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().status).to.equal('SETTLED');
+    expect(res.getBody().contractId).to.equal(bru.getVar('contract_id'));
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI getContract and D94. Reuses the clean contract or creates and settles a separate fixture.
+}

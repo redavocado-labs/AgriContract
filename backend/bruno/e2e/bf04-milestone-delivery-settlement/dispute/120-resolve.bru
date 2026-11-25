@@ -1,0 +1,44 @@
+meta {
+  name: BF04-220 Arbitrator finalizes the no-fault remedy
+  type: http
+  seq: 120
+}
+
+post {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}/breach-cases/{{breach_case_id}}/resolve
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{arbitrator_token}}
+}
+
+headers {
+  Idempotency-Key: {{action_key}}
+}
+
+body:json {
+  {
+    "decisionSource": "INSPECTOR_L1_5",
+    "evidenceRefs": [],
+    "finalBreachingRole": null
+  }
+}
+
+script:pre-request {
+  bru.setVar('action_key', require('crypto').randomUUID());
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(204);
+    expect([null, undefined, '']).to.include(res.getBody());
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI resolveBreachCase and milestone escrow D81. A no-fault decision has no contest delay.
+}

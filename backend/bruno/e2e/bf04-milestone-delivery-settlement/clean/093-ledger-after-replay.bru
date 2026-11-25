@@ -1,0 +1,42 @@
+meta {
+  name: BF04-093 Confirm the exact retry leaves the bank ledger intact
+  type: http
+  seq: 93
+}
+
+get {
+  url: {{bank_service_url}}/internal/v1/bank/ledger?contractId={{contract_id}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Internal-Secret: {{service_internal_secret}}
+}
+
+script:pre-request {
+  const { poll, request, variable } = require('./e2e/helpers.js');
+  const previous = bru.getVar('settled_ledger');
+  let reads = 0;
+  await poll(async () => {
+    const result = await request(bru, {
+      url: variable(bru, 'bank_service_url') + '/internal/v1/bank/ledger?contractId=' + bru.getVar('contract_id'),
+      headers: { 'X-Internal-Secret': variable(bru, 'service_internal_secret') },
+    }, 200);
+    if (JSON.stringify(result.data) !== JSON.stringify(previous)) throw new Error('Bank ledger changed after confirmation retry');
+    return ++reads;
+  }, (count) => count === 3, 'unchanged ledger after retry', 3);
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.deep.equal(bru.getVar('settled_ledger'));
+  });
+}
+
+docs {
+  IT-DIRECT
+
+  OpenAPI getInternalLedgerEntries and milestone escrow §7. Check three reads across two outbox polling intervals.
+}

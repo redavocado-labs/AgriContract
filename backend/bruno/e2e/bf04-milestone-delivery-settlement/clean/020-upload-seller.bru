@@ -1,0 +1,45 @@
+meta {
+  name: BF04-020 Upload evidence as seller
+  type: http
+  seq: 20
+}
+
+post {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}/milestones/{{milestone_id}}/evidence
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{seller_token}}
+}
+
+headers {
+  Idempotency-Key: {{action_key}}
+  Content-Type: image/png
+}
+
+script:pre-request {
+  const { photo } = require('./e2e/milestone.js');
+  bru.setVar('action_key', require('crypto').randomUUID());
+  req.setBody(photo);
+  req.setHeader('Content-Length', String(photo.length));
+}
+
+script:post-response {
+  if (res.getStatus() === 202) bru.setVar('evidence_id', res.getBody().fileId);
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(202);
+    expect(res.getBody().fileId).to.be.a('string');
+    expect(['PROCESSING', 'READY']).to.include(res.getBody().status);
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI uploadMilestoneEvidence. Uses a valid PNG.
+}

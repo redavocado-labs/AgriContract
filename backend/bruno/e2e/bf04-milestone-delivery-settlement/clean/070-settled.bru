@@ -1,0 +1,38 @@
+meta {
+  name: BF04-070 Wait for clean settlement
+  type: http
+  seq: 70
+}
+
+get {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}/milestones/{{milestone_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+script:pre-request {
+  const { milestoneState } = require('./e2e/milestone.js');
+  await milestoneState(bru, (data) => data.milestone?.status === 'SETTLED', 'clean settlement');
+}
+
+script:post-response {
+  if (res.getStatus() === 200) bru.setVar('clean_contract_id', bru.getVar('contract_id'));
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().milestone.status).to.equal('SETTLED');
+    expect(res.getBody().milestone.milestoneId).to.equal(bru.getVar('milestone_id'));
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI getMilestoneDetail; milestone escrow §3.2.
+}
