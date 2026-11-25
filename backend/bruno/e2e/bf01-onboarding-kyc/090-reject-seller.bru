@@ -1,0 +1,35 @@
+meta {
+  name: BF01-090 Operator marks seller KYC REJECTED
+  type: http
+  seq: 90
+}
+
+post {
+  url: {{base_url}}/api/v1/admin/users/{{account_id}}/reject
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{operator_token}}
+}
+
+body:json {
+  {
+    "reason": "Missing authorization document in test fixture"
+  }
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().userId).to.equal(bru.getVar('account_id'));
+    expect(res.getBody().verificationStatus).to.equal('REJECTED');
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI KYC decision and data-governance design §5.4.
+}

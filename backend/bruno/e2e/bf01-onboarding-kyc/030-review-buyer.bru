@@ -1,0 +1,34 @@
+meta {
+  name: BF01-030 Operator opens buyer KYC profile
+  type: http
+  seq: 30
+}
+
+get {
+  url: {{base_url}}/api/v1/admin/users/{{account_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{operator_token}}
+}
+
+script:pre-request {
+  const { token } = require('./e2e/helpers.js');
+  await token(bru, 'operator');
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().userId).to.equal(bru.getVar('account_id'));
+    expect(res.getBody().verificationStatus).to.equal('PENDING');
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI getKycProfile and data-governance design §5.4.
+}
