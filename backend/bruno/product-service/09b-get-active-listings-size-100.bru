@@ -1,0 +1,31 @@
+meta {
+  name: GET /api/v1/listings (size 100, max → 200)
+  type: http
+  seq: 27
+}
+
+get {
+  url: {{product_service_url}}/api/v1/listings?page=0&size=100
+  body: none
+  auth: none
+}
+
+headers {
+  X-Gateway-Secret: {{gateway_secret}}
+}
+
+params:query {
+  page: 0
+  size: 100
+}
+
+tests {
+  test("should return 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("content is an array of at most 100", function() {
+    expect(res.getBody().content).to.be.an("array");
+    expect(res.getBody().content.length).to.be.at.most(100);
+  });
+}

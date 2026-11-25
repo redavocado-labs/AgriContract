@@ -1,0 +1,39 @@
+meta {
+  name: POST /api/v1/products (cropYear 2100, limit → 201)
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{product_service_url}}/api/v1/products
+  body: json
+  auth: none
+}
+
+headers {
+  X-Gateway-Secret: {{gateway_secret}}
+  X-User-Id: {{seller1_sub}}
+  X-User-Role: SELLER
+}
+
+body:json {
+  {
+    "name": "Ca phe Robusta (cropYear 2100)",
+    "unit": "kg",
+    "categoryId": "{{category_id}}",
+    "imageUrls": [
+      "https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg"
+    ],
+    "cropYear": 2100
+  }
+}
+
+tests {
+  test("should return 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("cropYear 2100 is kept", function() {
+    expect(res.getBody().cropYear).to.equal(2100);
+  });
+}

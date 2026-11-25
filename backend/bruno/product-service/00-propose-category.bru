@@ -18,8 +18,13 @@ headers {
 
 body:json {
   {
-    "name": "Cà Phê"
+    "name": "Cà Phê Bruno {{run_tag}}"
   }
+}
+
+script:pre-request {
+  // one tag per run: the seed already has "Cà phê" and earlier runs left their categories behind
+  bru.setEnvVar("run_tag", String(Date.now()));
 }
 
 script:post-response {

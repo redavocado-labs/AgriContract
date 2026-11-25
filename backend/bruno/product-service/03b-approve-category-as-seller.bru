@@ -1,0 +1,38 @@
+meta {
+  name: PUT /api/v1/admin/categories/:categoryId/approve (SELLER → 403)
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{product_service_url}}/api/v1/admin/categories/{{category_id_reject}}/approve
+  body: json
+  auth: none
+}
+
+headers {
+  X-Gateway-Secret: {{gateway_secret}}
+  X-User-Id: {{seller1_sub}}
+  X-User-Role: SELLER
+}
+
+body:json {
+  {
+    "commodity": "COFFEE"
+  }
+}
+
+tests {
+  test("should return 403", function() {
+    expect(res.getStatus()).to.equal(403);
+  });
+
+  test("error code is FORBIDDEN", function() {
+    expect(res.getBody().code).to.equal("FORBIDDEN");
+    expect(res.getBody().traceId).to.be.a("string");
+  });
+}
+
+docs {
+  The category stays PENDING: 04-reject-category rejects it next, which only a PENDING category allows.
+}

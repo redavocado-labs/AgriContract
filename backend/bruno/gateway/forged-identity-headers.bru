@@ -1,0 +1,31 @@
+meta {
+  name: GET /api/v1/users/me (forged X-User-Id / X-User-Role replaced by the JWT)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{base_url}}/api/v1/users/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  X-User-Id: {{seller1_sub}}
+  X-User-Role: ADMIN
+}
+
+tests {
+  test("should return 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("profile is buyer1's, not the forged seller1", function() {
+    expect(res.getBody().userId).to.equal(bru.getEnvVar("buyer1_sub"));
+    expect(res.getBody().role).to.equal("BUYER");
+  });
+}
