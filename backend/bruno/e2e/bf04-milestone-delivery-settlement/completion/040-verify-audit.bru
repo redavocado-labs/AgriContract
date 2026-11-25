@@ -1,0 +1,31 @@
+meta {
+  name: BF04-340 Verify the final chain is intact
+  type: http
+  seq: 40
+}
+
+get {
+  url: {{audit_service_url}}/api/v1/audit/contracts/{{contract_id}}/verification
+  body: none
+  auth: none
+}
+
+headers {
+  X-Gateway-Secret: {{gateway_secret}}
+  X-User-Id: {{buyer1_sub}}
+  X-User-Role: BUYER
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.include({ contractId: bru.getVar('contract_id'), scope: 'CONTRACT', status: 'INTACT' });
+    expect(res.getBody().checkedRecords).to.be.greaterThan(0);
+  });
+}
+
+docs {
+  IT-DIRECT
+
+  OpenAPI verifyContractAuditTrail and hash-chain design §4.6.
+}

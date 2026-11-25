@@ -1,0 +1,46 @@
+meta {
+  name: BF04-170 Seller contests the reported quality defect
+  type: http
+  seq: 70
+}
+
+post {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}/milestones/{{milestone_id}}/respond
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{seller_token}}
+}
+
+headers {
+  Idempotency-Key: {{action_key}}
+}
+
+body:json {
+  {{contest_payload}}
+}
+
+script:pre-request {
+  const { consent, milestoneMail, milestoneState, receiptFields } = require('./e2e/milestone.js');
+  const result = await milestoneState(bru, (data) => data.milestone?.status === 'AWAITING_SELLER_RESPONSE', 'buyer flag');
+  await milestoneMail(bru, 'seller', 'flagged by the buyer', /respond|deadline/i);
+  const [milestone, , sellerWeight, buyerWeight] = receiptFields(bru, result.data);
+  bru.setVar('action_key', require('crypto').randomUUID());
+  bru.setVar('contest_payload', JSON.stringify(consent(
+    'CONTEST_MILESTONE_FLAG', [milestone, sellerWeight, buyerWeight, 'QUALITY'])));
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(204);
+    expect([null, undefined, '']).to.include(res.getBody());
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI respondToMilestoneFlag and notification D96. Checks the seller received the FLAGGED mail.
+}

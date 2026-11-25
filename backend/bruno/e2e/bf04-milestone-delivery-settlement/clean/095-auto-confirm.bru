@@ -1,0 +1,44 @@
+meta {
+  name: BF04-250 Advance a separate fixture receipt and wait for system confirmation
+  type: http
+  seq: 95
+}
+
+get {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}/milestones/{{milestone_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+script:pre-request {
+  const { fixture } = require('./e2e/helpers.js');
+  const { ageBuyerReceipt, auditEvent, milestoneState } = require('./e2e/milestone.js');
+  bru.setVar('shared_contract_id', '');
+  await fixture(bru, 'e2e/bf04-milestone-delivery-settlement/clean', [
+    ['010-funded', 200], ['020-upload-seller', 202], ['030-weigh', 204],
+    ['040-upload-buyer', 202], ['050-receive', 204],
+  ]);
+  ageBuyerReceipt(bru);
+  await milestoneState(bru, (data) => data.milestone?.status === 'SETTLED', 'D78 automatic confirmation', 45);
+  const { data } = await auditEvent(bru, 'milestone.buyer_confirmed');
+  if (!data.records.some((record) => record.sourceEventType === 'milestone.buyer_confirmed' &&
+      record.content.confirmedBy === 'SYSTEM_TIMEOUT')) throw new Error('Audit does not show SYSTEM_TIMEOUT');
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().milestone.status).to.equal('SETTLED');
+    expect(res.getBody().settlement.sellerAmount).to.equal('96000000.00');
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI getMilestoneDetail and milestone escrow D78. The helper backdates only buyer_received_at before waiting for the scheduler.
+}

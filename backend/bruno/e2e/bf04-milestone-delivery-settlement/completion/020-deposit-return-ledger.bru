@@ -1,0 +1,48 @@
+meta {
+  name: BF04-320 Verify the seller was paid and both deposits returned
+  type: http
+  seq: 20
+}
+
+get {
+  url: {{bank_service_url}}/internal/v1/bank/ledger?contractId={{contract_id}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Internal-Secret: {{service_internal_secret}}
+}
+
+script:post-response {
+  if (res.getStatus() === 200) bru.setVar('settled_ledger', res.getBody());
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    const rows = res.getBody();
+    for (const [entryType, fundType, amount, fixture] of [
+      ['RELEASE_TO_SELLER', 'MILESTONE_PAYMENT', '96000000.00', 'seller1_sub'],
+      ['RELEASE_TO_SELLER', 'SELLER_DEPOSIT', '2880000.00', 'seller1_sub'],
+      ['REFUND_TO_BUYER', 'BUYER_DEPOSIT', '4800000.00', 'buyer1_sub'],
+    ]) {
+      const releases = rows.filter((row) => row.entryType === entryType && row.fundType === fundType);
+      expect(releases).to.have.length(1);
+      expect(releases[0]).to.include({ amount, userId: bru.getEnvVar(fixture) });
+    }
+    for (const fund of ['MILESTONE_PAYMENT', 'BUYER_DEPOSIT', 'SELLER_DEPOSIT']) {
+      const total = rows.filter((row) => row.fundType === fund).reduce((net, row) => {
+        const cents = Number(row.amount.replace('.', ''));
+        return net + (row.entryType.startsWith('LOCK_') ? cents : -cents);
+      }, 0);
+      expect(total, fund).to.equal(0);
+    }
+  });
+}
+
+docs {
+  IT-DIRECT
+
+  OpenAPI getInternalLedgerEntries and milestone escrow D94. Groups locks and debits per fund in integer cents.
+}

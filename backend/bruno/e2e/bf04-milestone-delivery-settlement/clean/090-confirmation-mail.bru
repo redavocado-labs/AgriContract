@@ -1,0 +1,34 @@
+meta {
+  name: BF04-090 Verify WEIGHED and CONFIRMED mail recipients
+  type: http
+  seq: 90
+}
+
+get {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}/milestones/{{milestone_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+script:pre-request {
+  const { milestoneMail } = require('./e2e/milestone.js');
+  await milestoneMail(bru, 'buyer', 'weighed by the seller');
+  await Promise.all(['buyer', 'seller'].map((role) => milestoneMail(bru, role, 'settled')));
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().milestone.status).to.equal('SETTLED');
+  });
+}
+
+docs {
+  IT-GW
+
+  D96 notification matrix and NotifyMilestoneStatusUseCase. A gateway milestone read checks settlement after waiting for MailHog.
+}

@@ -1,0 +1,35 @@
+meta {
+  name: BF04-110 Wait for a locked milestone
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}/milestones/{{milestone_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+script:pre-request {
+  const { fundedContract } = require('./e2e/milestone.js');
+  await fundedContract(bru, false);
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().milestone.milestoneId).to.equal(bru.getVar('milestone_id'));
+    expect(res.getBody().milestone.fundingStatus).to.equal('LOCKED');
+    expect(res.getBody().milestone.status).to.equal('IN_PROGRESS');
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI getMilestoneDetail and milestone escrow §4, D63/D64.
+}

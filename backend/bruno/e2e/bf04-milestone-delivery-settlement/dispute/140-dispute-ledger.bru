@@ -1,0 +1,47 @@
+meta {
+  name: BF04-240 Verify seller proceeds and buyer refund
+  type: http
+  seq: 140
+}
+
+get {
+  url: {{bank_service_url}}/internal/v1/bank/ledger?contractId={{contract_id}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Internal-Secret: {{service_internal_secret}}
+}
+
+script:pre-request {
+  const { milestoneState } = require('./e2e/milestone.js');
+  const detail = await milestoneState(bru, (data) => data.milestone?.status === 'SETTLED', 'disputed milestone settlement');
+  bru.setVar('dispute_settlement', detail.data.settlement);
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    const entries = res.getBody().filter((row) => row.milestoneId === bru.getVar('milestone_id'));
+    for (const [entryType, amount, userId] of [
+      ['LOCK_MILESTONE', '96000000.00', bru.getEnvVar('buyer1_sub')],
+      ['RELEASE_TO_SELLER', '94080000.00', bru.getEnvVar('seller1_sub')],
+      ['REFUND_TO_BUYER', '1920000.00', bru.getEnvVar('buyer1_sub')],
+    ]) {
+      const matching = entries.filter((entry) => entry.entryType === entryType);
+      expect(matching).to.have.length(1);
+      expect(matching[0]).to.include({ amount, userId });
+    }
+    expect(bru.getVar('dispute_settlement')).to.include({
+      sellerAmount: '94080000.00',
+      buyerRefundAmount: '1920000.00',
+    });
+  });
+}
+
+docs {
+  IT-DIRECT
+
+  OpenAPI getInternalLedgerEntries; milestone escrow D81. The 2% quality discount is 1,920,000 VND.
+}

@@ -1,0 +1,33 @@
+meta {
+  name: BF04-390 Read the final party audit trail through the gateway
+  type: http
+  seq: 70
+}
+
+get {
+  url: {{base_url}}/api/v1/audit/contracts/{{contract_id}}/records
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+tests {
+  test("status and response contract", () => {
+    expect([200, 404]).to.include(res.getStatus());
+    if (res.getStatus() === 200) {
+      expect(res.getBody().contractId).to.equal(bru.getVar('contract_id'));
+      expect(res.getBody().currentRecordHash).to.equal(res.getBody().records.at(-1).recordHash);
+    } else {
+      expect(res.getBody()).not.to.have.property('records');
+    }
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI getContractAuditTrail and hash-chain design §4.6. Gateway 404 is tracked as Pending (#630).
+}

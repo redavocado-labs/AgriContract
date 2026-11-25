@@ -1,0 +1,32 @@
+meta {
+  name: BF04-360 Check anchor routing and retired flag binding
+  type: http
+  seq: 60
+}
+
+get {
+  url: {{rabbitmq_management_url}}/api/bindings
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Basic {{rabbitmq_basic}}
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    const bindings = res.getBody();
+    expect(bindings.some((binding) => binding.source === 'agricontract.audit' &&
+      binding.routing_key === 'notification.milestone_anchor_requested' &&
+      binding.destination === 'notification-svc.notification.milestone_anchor_requested')).to.equal(true);
+    expect(bindings.some((binding) => binding.routing_key === 'milestone.flagged')).to.equal(false);
+  });
+}
+
+docs {
+  IT-DIRECT
+
+  RabbitMQ management readonly query. Notification topology (#632), notification-commands.yaml and D101.
+}

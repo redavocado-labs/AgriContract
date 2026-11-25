@@ -1,0 +1,66 @@
+meta {
+  name: BF04-190 Inspector submits a Level 1.5 report
+  type: http
+  seq: 90
+}
+
+post {
+  url: {{base_url}}/api/v1/inspections/{{contract_id}}/milestones/{{milestone_id}}/reports
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{inspector_token}}
+}
+
+headers {
+  Idempotency-Key: {{action_key}}
+}
+
+body:json {
+  {{report_payload}}
+}
+
+script:pre-request {
+  const { gateway, poll } = require('./e2e/helpers.js');
+  const upload = '/api/v1/inspections/' + bru.getVar('contract_id') + '/milestones/' + bru.getVar('milestone_id') + '/reports';
+  const data = {
+    reportFileId: bru.getVar('report_file_id'),
+    normalizedResult: {
+      resultSchemaVersion: '1.0',
+      measuredQuantityKg: 1000,
+      acceptedQuantityKg: 1000,
+      measurementStatus: 'COMPLETE',
+      actualQualityMetrics: {
+        commodity: 'COFFEE',
+        type: 'ROBUSTA',
+        moisturePercent: 13.5,
+        foreignMatterPercent: 0.5,
+        blackBrokenBeansPercent: 5,
+      },
+      determinedAt: new Date().toISOString(),
+    },
+  };
+  const actionKey = require('crypto').randomUUID();
+  await poll(async () => {
+    const result = await gateway(bru, upload, 'inspector', { method: 'POST', data, headers: { 'Idempotency-Key': actionKey } });
+    if (![201, 409].includes(result.status)) throw new Error('Inspection report returned ' + result.status + ' ' + result.data?.code);
+    return result;
+  }, ({ status }) => status === 201, 'scanned report submission');
+  bru.setVar('action_key', actionKey);
+  bru.setVar('report_payload', JSON.stringify(data));
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(201);
+    expect([null, undefined, '']).to.include(res.getBody());
+  });
+}
+
+docs {
+  IT-GW
+
+  Inspection design §4 and ReportSubmissionController. Moisture 13.5% is in the penalty band for this fixture.
+}
