@@ -1,0 +1,45 @@
+meta {
+  name: SEC-080 Retry the same valid offer with the original key
+  type: http
+  seq: 80
+}
+
+post {
+  url: {{base_url}}/api/v1/contracts
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+headers {
+  Idempotency-Key: {{offer_key}}
+}
+
+body:json {
+  {{offer_json}}
+}
+
+script:pre-request {
+  const { fixture } = require('./e2e/helpers.js');
+  await fixture(bru, 'e2e/bf03-signing-activation/happy', [
+    ['010-create-offer', 201],
+    ['020-reservation', 200],
+  ]);
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(201);
+    expect(res.getBody().contractId).to.equal(bru.getVar('contract_id'));
+    expect(res.getBody().status).to.equal('OFFERED');
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI createContract and product design D48. Reuses the exact request and verifies inventory remains reserved once.
+}

@@ -1,0 +1,34 @@
+meta {
+  name: SEC-180 Reject a negative contract page index
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{base_url}}/api/v1/contracts?page=-1
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+script:pre-request {
+  const { token } = require('./e2e/helpers.js');
+  await token(bru, 'buyer');
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(400);
+    expect(res.getBody()).to.be.an('object');
+    expect(res.getBody().code).to.be.a('string');
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI listContracts page minimum 0 and ErrorEnvelope.
+}

@@ -1,0 +1,35 @@
+meta {
+  name: SEC-042 INSPECTOR reads kyc queue
+  type: http
+  seq: 42
+}
+
+get {
+  url: {{base_url}}/api/v1/admin/users?verificationStatus=PENDING
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{inspector_token}}
+}
+
+script:pre-request {
+  const { token } = require('./e2e/helpers.js');
+  await token(bru, 'inspector');
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(403);
+    expect(res.getBody()).to.be.an('object');
+    expect(res.getBody().code).to.be.a('string');
+    expect(res.getBody()).not.to.have.property('content');
+  });
+}
+
+docs {
+  IT-GW
+
+  Data-governance design §5.4 and the corresponding OpenAPI x-roles and ErrorEnvelope.
+}

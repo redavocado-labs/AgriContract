@@ -1,0 +1,29 @@
+meta {
+  name: SEC-090 Read inventory after the retried offer
+  type: http
+  seq: 90
+}
+
+get {
+  url: {{base_url}}/api/v1/listings/{{listing_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().listingId).to.equal(bru.getVar('listing_id'));
+    expect(res.getBody().quantityAvailable).to.equal(bru.getVar('available_before_offer') - 1000);
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI createContract and product design D48.
+}

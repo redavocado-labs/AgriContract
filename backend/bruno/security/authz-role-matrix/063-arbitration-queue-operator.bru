@@ -1,0 +1,35 @@
+meta {
+  name: SEC-063 OPERATOR reads arbitration queue
+  type: http
+  seq: 63
+}
+
+get {
+  url: {{base_url}}/api/v1/arbitration/breach-cases?size=10
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{operator_token}}
+}
+
+script:pre-request {
+  const { token } = require('./e2e/helpers.js');
+  await token(bru, 'operator');
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(403);
+    expect(res.getBody()).to.be.an('object');
+    expect(res.getBody().code).to.be.a('string');
+    expect(res.getBody()).not.to.have.property('content');
+  });
+}
+
+docs {
+  IT-GW
+
+  Data-governance design §5.4 and the corresponding OpenAPI x-roles and ErrorEnvelope.
+}

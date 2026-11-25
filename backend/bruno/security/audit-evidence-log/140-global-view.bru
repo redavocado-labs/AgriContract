@@ -1,0 +1,33 @@
+meta {
+  name: SEC-150 Admin read logging records one system event per read
+  type: http
+  seq: 140
+}
+
+get {
+  url: {{base_url}}/api/v1/admin/audit/records?subjectType=SYSTEM&size=2
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{admin_token}}
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    const [global, scoped] = res.getBody().content;
+    expect(global).to.include({ sourceType: 'AUDIT_VIEWED', subjectType: 'SYSTEM' });
+    expect(global.content.scope).to.equal('GLOBAL');
+    expect(scoped).to.include({ sourceType: 'AUDIT_VIEWED', subjectType: 'SYSTEM' });
+    expect(scoped.content).to.include({ scope: 'CONTRACT', contractId: bru.getVar('contract_id') });
+    expect(global.globalSeq).to.equal(scoped.globalSeq + 1);
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI listAuditRecordsForAdmin; hash-chain design §4.6.
+}
