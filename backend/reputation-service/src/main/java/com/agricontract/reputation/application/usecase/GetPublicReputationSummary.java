@@ -27,7 +27,8 @@ public class GetPublicReputationSummary {
             return new PublicSummaryResult(summary.userId(), summary.score(), summary.locked(),
                     summary.lockHistory().stream().map(lock -> new PublicSummaryResult.LockResult(
                             lock.lockedAt(), lock.lockedUntil(), lock.lockDurationDays(),
-                            lock.penalizedRole().name(), lock.status().name())).toList());
+                            lock.penalizedRole().name(), lock.status().name())).toList(),
+                    repository.flagOutcomeCounts(userId));
         });
     }
 }

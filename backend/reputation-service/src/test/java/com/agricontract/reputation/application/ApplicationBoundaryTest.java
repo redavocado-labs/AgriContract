@@ -11,6 +11,7 @@ import com.agricontract.reputation.application.usecase.GetPublicReputationSummar
 import com.agricontract.reputation.application.usecase.GetPublicReputationSummary;
 import com.agricontract.reputation.domain.model.CompletedContractFact;
 import com.agricontract.reputation.domain.model.DisputeOutcomeFact;
+import com.agricontract.reputation.domain.model.FlagOutcomeCounts;
 import com.agricontract.reputation.domain.model.LockHistoryEntry;
 import com.agricontract.reputation.domain.model.ReputationReadProjection;
 import com.agricontract.reputation.domain.model.ResolutionFavors;
@@ -89,6 +90,7 @@ class ApplicationBoundaryTest {
         when(reads.lockHistory(buyer, time)).thenReturn(history);
         when(reads.publicSummaries(List.of(buyer), time)).thenReturn(List.of(new ReputationReadProjection(
                 buyer, ReputationReadProjection.score(4, 1), true)));
+        when(reads.flagOutcomeCounts(buyer)).thenReturn(new FlagOutcomeCounts(1, 2));
         var result = new GetPublicReputationSummary(reads, Clock.fixed(time, ZoneOffset.UTC), new DirectTransactionRunner())
                 .execute(new PublicSummaryQuery(buyer));
         assertThat(result.userId()).isEqualTo(buyer);
@@ -104,7 +106,11 @@ class ApplicationBoundaryTest {
         var tree = new ObjectMapper().findAndRegisterModules()
                 .disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS).valueToTree(response);
         assertThat(tree.properties()).extracting(Map.Entry::getKey)
-                .containsExactlyInAnyOrder("userId", "score", "locked", "lockHistory");
+                .containsExactlyInAnyOrder("userId", "score", "locked", "lockHistory", "flagOutcome");
+        assertThat(tree.path("flagOutcome").path("unsuccessful").asLong()).isEqualTo(1);
+        assertThat(tree.path("flagOutcome").path("total").asLong()).isEqualTo(2);
+        assertThat(tree.path("flagOutcome").properties()).extracting(Map.Entry::getKey)
+                .containsExactlyInAnyOrder("unsuccessful", "total");
         assertThat(tree.path("lockHistory").get(0).properties()).extracting(Map.Entry::getKey)
                 .containsExactlyInAnyOrder("lockedAt", "lockedUntil", "lockDurationDays", "penalizedRole", "status");
         FrozenSchemas.assertResponse("ReputationPublicSummary", tree);

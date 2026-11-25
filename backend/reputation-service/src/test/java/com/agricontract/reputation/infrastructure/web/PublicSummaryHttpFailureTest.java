@@ -83,7 +83,7 @@ class PublicSummaryHttpFailureTest {
         verifyNoInteractions(summary);
     }
     @Test void successfulSummaryRemainsContractCompliant() throws Exception {
-        when(summary.execute(new PublicSummaryQuery(USER))).thenReturn(new PublicSummaryResult(USER, null, false, List.of()));
+        when(summary.execute(new PublicSummaryQuery(USER))).thenReturn(new PublicSummaryResult(USER, null, false, List.of(), new com.agricontract.reputation.domain.model.FlagOutcomeCounts(0, 0)));
         var result = mvc.perform(auth(get(PATH))).andExpect(status().isOk()).andReturn();
         FrozenSchemas.assertResponse("ReputationPublicSummary", json.readTree(result.getResponse().getContentAsString()));
     }

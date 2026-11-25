@@ -4,6 +4,7 @@ import com.agricontract.reputation.domain.model.LockHistoryEntry;
 import com.agricontract.reputation.domain.model.ReputationReadProjection;
 import com.agricontract.reputation.domain.model.ResolutionFavors;
 import com.agricontract.reputation.domain.repository.ReputationReadRepository;
+import com.agricontract.reputation.domain.model.FlagOutcomeCounts;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -64,6 +65,15 @@ public class JdbcReputationReadRepository implements ReputationReadRepository {
         // Missing facts say nothing about user existence; no user-service lookup is needed.
         return userIds.stream().map(id -> byUser.getOrDefault(id,
                 new ReputationReadProjection(id, null, false))).toList();
+    }
+
+    @Override
+    public FlagOutcomeCounts flagOutcomeCounts(UUID userId) {
+        return jdbc.queryForObject("""
+                SELECT COUNT(*) AS total, COUNT(CASE WHEN resolution_favors = 'SELLER' THEN 1 END) AS unsuccessful
+                FROM dispute_outcome_fact WHERE flagged_by_user_id = :userId
+                """, Map.of("userId", userId.toString()), (rs, n) ->
+                new FlagOutcomeCounts(rs.getLong("unsuccessful"), rs.getLong("total")));
     }
 
     @Override
