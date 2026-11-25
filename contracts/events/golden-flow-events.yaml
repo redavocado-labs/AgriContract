@@ -1111,26 +1111,6 @@ $defs:
         x-consumers: [audit-service]
         x-source: milestone-escrow-phase2-design.md sections 3.2.2 and 7.1
         x-note: The weight and evidence are carried by milestone.buyer_received (D76).
-  milestoneFlagged:
-    allOf:
-      - $ref: "./event-envelope.yaml"
-      - type: object
-        properties:
-          eventType: {const: milestone.flagged}
-          producer: {const: contract-service}
-          payload:
-            type: object
-            required: [contractId, milestoneId, flaggedBy, issueType]
-            additionalProperties: false
-            properties:
-              contractId: {$ref: "#/$defs/uuid"}
-              milestoneId: {$ref: "#/$defs/uuid"}
-              flaggedBy: {const: BUYER}
-              issueType: {enum: [QUANTITY, QUALITY], description: D82.}
-        x-publisher: contract-service
-        x-consumers: []
-        x-source: milestone-escrow-phase2-design.md sections 3.2 and 7.1
-        x-note: No mandatory domain consumer. Notification is requested through notification.milestone_status_requested; the actual evidence is already carried by milestone.buyer_received.
   milestoneForceMajeureClaimed:
     allOf:
       - $ref: "./event-envelope.yaml"
@@ -1656,7 +1636,6 @@ oneOf:
   - $ref: "#/$defs/milestoneSellerWeighed"
   - $ref: "#/$defs/milestoneBuyerReceived"
   - $ref: "#/$defs/milestoneBuyerConfirmed"
-  - $ref: "#/$defs/milestoneFlagged"
   - $ref: "#/$defs/milestoneForceMajeureClaimed"
   - $ref: "#/$defs/milestoneForceMajeureResolved"
   - $ref: "#/$defs/milestoneCancelledWithPenalty"

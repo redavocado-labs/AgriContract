@@ -627,8 +627,8 @@ paths:
       description: >-
         milestone-escrow design §3.2.2 (D76, D82). Step 2, dispute: the BUYER flags a BUYER_RECEIVED milestone inside
         buyerConfirmWindowDays. issueType QUANTITY disputes the weight only; QUALITY disputes quality (the inspection
-        checks quantity and metrics). The milestone becomes AWAITING_SELLER_RESPONSE and milestone.flagged is
-        published; no money or reputation consequence. consent is the FLAG_MILESTONE_ISSUE statement;
+        checks quantity and metrics). The milestone becomes AWAITING_SELLER_RESPONSE and the seller is notified
+        through notification.milestone_status_requested (no milestone.flagged event, D101); no money or reputation consequence. consent is the FLAG_MILESTONE_ISSUE statement;
         presentedContentHash is recomputed from the milestone, both recorded weights and issueType. If the seller
         does not respond within sellerResponseWindowDays, a QUANTITY flag settles on the buyer's weight and a QUALITY
         flag is routed to Level 1.5 (D82).
@@ -638,7 +638,7 @@ paths:
         - {$ref: '#/components/parameters/IdempotencyKey'}
       requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/MilestoneFlagRequest'}}}}
       responses:
-        '204': {description: "Milestone is AWAITING_SELLER_RESPONSE and milestone.flagged is published; a repeat of the same Idempotency-Key returns 204."}
+        '204': {description: "Milestone is AWAITING_SELLER_RESPONSE; a repeat of the same Idempotency-Key returns 204."}
         '400': {$ref: '#/components/responses/BadRequest'}
         '401': {$ref: '#/components/responses/Unauthorized'}
         '403': {$ref: '#/components/responses/Forbidden'}
