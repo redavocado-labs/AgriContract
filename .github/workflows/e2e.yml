@@ -60,13 +60,15 @@ jobs:
           INSPECTION_FILE_DOWNLOAD_ENABLED=true
           EOF
 
-      # Only the services the golden flow calls and their dependencies: reputation, analytics and pricing are
-      # not on its path. e2e/compose.e2e.yml only shortens the plot geo-check timeout.
+      # The services the golden flow calls, their dependencies, and reputation-service: it is the only consumer of
+      # milestone.dispute_resolved, and without its queue the mandatory publish stalls contract-service's outbox, so
+      # the contract never settles. Analytics and pricing are not on the path. e2e/compose.e2e.yml only shortens the
+      # plot geo-check timeout.
       - name: Build and start the stack
         run: >-
           docker compose -f docker-compose.yml -f e2e/compose.e2e.yml up -d --build
           api-gateway user-service product-service contract-service escrow-service bank-service
-          inspection-service audit-service notification-service file-service mailhog
+          inspection-service audit-service notification-service file-service reputation-service mailhog
 
       # user_profiles exists once user-service has run its Flyway migrations, so wait for it to start.
       - name: Seed users
