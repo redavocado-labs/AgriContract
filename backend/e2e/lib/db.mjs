@@ -31,7 +31,7 @@ export function milestonesOf(contract) {
   if (!Array.isArray(contract.milestones) || contract.milestones.length === 0) {
     throw new Error(`ContractResponse carries no milestones for ${contract.contractId}`);
   }
-  return contract.milestones.map((summary) => summary.milestone).sort((a, b) => a.milestoneIndex - b.milestoneIndex);
+  return [...contract.milestones].sort((a, b) => a.milestoneIndex - b.milestoneIndex);
 }
 
 /** How many outbox events of contract-service mention the contract: a replayed request must not add one. */
