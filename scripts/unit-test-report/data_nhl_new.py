@@ -81,9 +81,13 @@ MODULES = [
              R("Không có profile (404)", "userId", "Optional rỗng, không coi là service sập", NONE, A,
                "load_noProfile_isEmptyNotUnavailable"),
              R(NONE, "Mã lỗi khác; service sập; quá read timeout; content type không phải JSON", "Fail closed",
-               "UserServiceUnavailableException", A, "load_otherErrorStatus_failsClosed",
+               "EligibilityUnavailableException", A, "load_otherErrorStatus_failsClosed",
                "load_userServiceDown_failsClosed", "load_slowUserService_timesOutAndFailsClosed",
                "load_nonJsonContentType_failsClosed"),
+             R(NONE, "Body không phải JSON hoặc là mảng; thiếu verificationStatus / authorizationExpiresAt / "
+               "lockedUntil; lockedUntil sai định dạng; userId khác người được hỏi", "Fail closed, không coi thiếu "
+               "field là không khoá", "EligibilityUnavailableException", A,
+               "load_malformedOrMismatchedBody_failsClosed"),
          ]),
          ("getEmail()", [
              R("Profile có email đã xác minh", "userId", "Trả email; gửi kèm X-Internal-Secret", NONE, N,
@@ -93,6 +97,8 @@ MODULES = [
              R(NONE, "Quá read timeout; service sập; mã lỗi khác", NONE, "UserServiceUnavailableException", A,
                "getEmail_slowUserService_timesOutAsUnavailable", "getEmail_userServiceDown_isUnavailable",
                "getEmail_otherErrorStatus_isUnavailable"),
+             R(NONE, "Body không phải JSON hoặc là mảng; email null hoặc rỗng; userId khác người được hỏi", NONE,
+               "UserServiceUnavailableException", A, "getEmail_malformedMissingOrMismatchedBody_isUnavailable"),
          ]),
          ("Constructor", [
              R(NONE, "Secret rỗng", NONE, "IllegalArgumentException", A, "constructor_blankSecret_isRejected"),
