@@ -1,0 +1,35 @@
+meta {
+  name: BF03-150 Verify the reservation is released
+  type: http
+  seq: 50
+}
+
+get {
+  url: {{base_url}}/api/v1/listings/{{listing_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+script:pre-request {
+  const { gateway, poll } = require('./e2e/helpers.js');
+  await poll(() => gateway(bru, '/api/v1/listings/' + bru.getVar('listing_id'), 'buyer'),
+    ({ status, data }) => status === 200 && data.quantityAvailable === bru.getVar('available_before_offer'),
+    'listing reservation release');
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().quantityAvailable).to.equal(bru.getVar('available_before_offer'));
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI withdrawOffer; Product design D48.
+}

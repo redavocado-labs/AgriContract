@@ -1,0 +1,63 @@
+meta {
+  name: BF03-010 Create a coffee offer
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{base_url}}/api/v1/contracts
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+headers {
+  Idempotency-Key: {{offer_key}}
+}
+
+body:json {
+  {{offer_json}}
+}
+
+script:pre-request {
+  const { randomUUID } = require('crypto');
+  const { gateway, listingFixture, token, variable } = require('./e2e/helpers.js');
+  const { coffeeTerms, deliveryDate } = require('./e2e/coffee-terms.js');
+  await listingFixture(bru);
+  await token(bru, 'buyer');
+  const listing = await gateway(bru, '/api/v1/listings/' + bru.getVar('listing_id'), 'buyer');
+  if (listing.status !== 200 || !listing.data.listingVersionToken) throw new Error('Fixture listing is unavailable');
+  bru.setVar('offer_key', randomUUID());
+  bru.setVar('available_before_offer', listing.data.quantityAvailable);
+  bru.setVar('delivery_date', deliveryDate(variable(bru, 'vietnam_holidays')));
+  bru.setVar('offer_json', JSON.stringify({
+    listingId: listing.data.listingId,
+    listingVersionToken: listing.data.listingVersionToken,
+    terms: coffeeTerms(bru.getVar('delivery_date')),
+  }));
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setVar('contract_id', res.getBody().contractId);
+    bru.setVar('signed_content_hash', res.getBody().signedContentHash);
+  }
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(201);
+    expect(res.getBody().contractId).to.be.a('string');
+    expect(res.getBody().status).to.equal('OFFERED');
+    expect(res.getBody().signedContentHash).to.match(/^[a-f0-9]{64}$/);
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI createContract. Fixture listing comes from BF-02 or is created through the same APIs.
+}

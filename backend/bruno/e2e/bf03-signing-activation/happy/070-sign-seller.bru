@@ -1,0 +1,48 @@
+meta {
+  name: BF03-070 Sign offer as seller
+  type: http
+  seq: 70
+}
+
+post {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}/sign/verify
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{seller_token}}
+}
+
+headers {
+  Idempotency-Key: {{verify_key}}
+}
+
+body:json {
+  {
+    "otpId": "{{otp_id}}",
+    "otpCode": "{{sign_code}}"
+  }
+}
+
+script:pre-request {
+  const { randomUUID } = require('crypto');
+  const { mailCode, variable } = require('./e2e/helpers.js');
+  bru.setVar('verify_key', randomUUID());
+  bru.setVar('sign_code', await mailCode(bru, variable(bru, 'seller1_email'),
+    '[AgriContract] Your contract signing code',
+    (body) => body.replace(/=\r?\n/g, '').includes(bru.getVar('contract_id'))));
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(204);
+    expect([null, undefined, '']).to.include(res.getBody());
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI verifyOtpAndSign. The OTP is scoped by test contract ID and recipient.
+}
