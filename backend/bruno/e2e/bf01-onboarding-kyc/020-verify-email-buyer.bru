@@ -1,0 +1,41 @@
+meta {
+  name: BF01-020 Confirm buyer email
+  type: http
+  seq: 20
+}
+
+post {
+  url: {{base_url}}/api/v1/users/me/email-verification/confirm
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{account_token}}
+}
+
+body:json {
+  {
+    "code": "{{email_code}}"
+  }
+}
+
+script:pre-request {
+  const { mailCode, variable } = require('./e2e/helpers.js');
+  bru.setVar('email_code', await mailCode(bru, variable(bru, 'account_email'),
+    '[AgriContract] Your email verification code'));
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().userId).to.equal(bru.getVar('account_id'));
+    expect(res.getBody().emailVerified).to.equal(true);
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI confirmEmailVerification and user-service design §4.4.
+}

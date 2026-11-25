@@ -1,0 +1,35 @@
+meta {
+  name: BF01-040 Operator marks buyer KYC VERIFIED
+  type: http
+  seq: 40
+}
+
+post {
+  url: {{base_url}}/api/v1/admin/users/{{account_id}}/verify
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{operator_token}}
+}
+
+body:json {
+  {
+    "authorizationExpiresAt": null
+  }
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().userId).to.equal(bru.getVar('account_id'));
+    expect(res.getBody().verificationStatus).to.equal('VERIFIED');
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI KYC decision and data-governance design §5.4.
+}
