@@ -22,6 +22,9 @@ SEED="${SEED_DIR:-$REPO/backend/scripts/seed}"
 SEED_COMMIT="$(git -C "$SEED" rev-parse --short HEAD)"
 OUT="$HERE/results/$ROUND"
 mkdir -p "$OUT"
+# a report or run.json left from an earlier run must never be read as this run's result (defects.json is written by
+# hand and stays)
+rm -f "$OUT/run.json" "$OUT"/gateway.json "$OUT"/user-service-*.json "$OUT"/product-service.json
 
 reseed() {
   docker exec -i user-db mysql --default-character-set=utf8mb4 -uroot -ppassword user_db < "$SEED/02-user-db.sql"
@@ -29,9 +32,25 @@ reseed() {
     < "$SEED/01-product-db.sql"
 }
 
+REPORTS=()
 bru_run() {  # <folder> <report name>
+  # bru exits non-zero when an assertion fails: that is a result to record, so the exit status is not checked here;
+  # a run that wrote no report is caught by check_reports
   (cd "$REPO/backend/bruno" && npx -y "@usebruno/cli@$BRU_VERSION" run "$1" --env local --sandbox developer \
     --env-var "gateway_secret=$GATEWAY_INTERNAL_SECRET" --reporter-json "$OUT/$2.json") || true
+  REPORTS+=("$2")
+}
+
+check_reports() {  # every run of this round left a JSON report with results, or the round is not published
+  local name ok=1
+  for name in "${REPORTS[@]}"; do
+    if ! python -c 'import json, sys; d = json.load(open(sys.argv[1])); sys.exit(0 if d and all(i.get("results") for i in d) else 1)' \
+        "$OUT/$name.json" 2>/dev/null; then
+      echo "no Bruno report for $name: $OUT/$name.json missing or empty, run.json not written" >&2
+      ok=0
+    fi
+  done
+  [ "$ok" = 1 ]
 }
 
 reseed
@@ -51,6 +70,7 @@ bru_run user-service user-service-seeded-profile
 
 bru_run product-service product-service
 
+check_reports || exit 1
 cat > "$OUT/run.json" <<EOF
 {
   "round": "$ROUND",
