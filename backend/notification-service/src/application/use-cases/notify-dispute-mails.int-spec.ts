@@ -264,8 +264,8 @@ describe('BF-04 milestone, breach and remedy mails on real MySQL and MailHog', (
     );
     const mails = await mailsTo(parties[1].email);
     expect(mails.map((m) => m.Content.Headers.Subject[0]).sort()).toEqual([
-      `[AgriContract] Contract ${DISPUTE_CONTRACT_ID} is complete`,
       `[AgriContract] Decision on contract ${DISPUTE_CONTRACT_ID}`,
+      `[AgriContract] Every milestone of contract ${DISPUTE_CONTRACT_ID} has settled`,
     ]);
     for (const mail of mails) {
       expect(mail.Content.Headers['Content-Transfer-Encoding']).toEqual([
