@@ -23,27 +23,15 @@ export function query(container, database, sql) {
 }
 
 /**
- * The milestones of a contract, in milestoneIndex order. ContractResponse
- * does not carry them on main yet (D99 adds them to the API, 24/11/2026),
- * so until it does they are read from contract-db; the API's list wins as
- * soon as it is filled.
+ * The milestones of a contract, in milestoneIndex order, as the API lists
+ * them (D99: ContractResponse.milestones). A missing list fails the test: it
+ * is the read model the frontend depends on.
  */
 export function milestonesOf(contract) {
-  if (Array.isArray(contract.milestones) && contract.milestones.length > 0) {
-    return [...contract.milestones].sort((a, b) => a.milestoneIndex - b.milestoneIndex);
+  if (!Array.isArray(contract.milestones) || contract.milestones.length === 0) {
+    throw new Error(`ContractResponse carries no milestones for ${contract.contractId}`);
   }
-  if (!UUID.test(contract.contractId)) throw new Error(`not a contract id: ${contract.contractId}`);
-  return query(
-    process.env.E2E_CONTRACT_DB_CONTAINER ?? 'contract-db',
-    'contract_db',
-    `SELECT milestone_id, milestone_index, status, funding_status FROM milestone
-      WHERE contract_id = '${contract.contractId}' ORDER BY milestone_index`,
-  ).map(([milestoneId, milestoneIndex, status, fundingStatus]) => ({
-    milestoneId,
-    milestoneIndex: Number(milestoneIndex),
-    status,
-    fundingStatus,
-  }));
+  return contract.milestones.map((summary) => summary.milestone).sort((a, b) => a.milestoneIndex - b.milestoneIndex);
 }
 
 /** How many outbox events of contract-service mention the contract: a replayed request must not add one. */
