@@ -20,9 +20,16 @@ challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest())
 q = urllib.parse.urlencode({"client_id": "agricontract-frontend", "response_type": "code", "scope": "openid",
                             "redirect_uri": redirect, "code_challenge": challenge, "code_challenge_method": "S256"})
 page = opener.open(f"{realm}/registrations?{q}").read().decode()
-action = html.unescape(re.search(r'id="kc-register-form"[^>]*action="([^"]+)"', page, re.S).group(1))
-fields = re.findall(r'name="([^"]+)"', page)
-print("form fields:", sorted(set(f for f in fields if f not in ("register",))))
+# The default theme renders the form in HTML; the AgriContract theme (Keycloakify) renders it from kcContext.
+form = re.search(r'id="kc-register-form"[^>]*action="([^"]+)"', page, re.S)
+if form:
+    action = html.unescape(form.group(1))
+    fields = re.findall(r'name="([^"]+)"', page)
+    print("form fields:", sorted(set(f for f in fields if f not in ("register",))))
+else:
+    action = re.search(r'"registrationAction"\s*:\s*"([^"]+)"', page).group(1)
+    print("theme: keycloakify",
+          "profile attributes:", sorted(set(re.findall(r'"name"\s*:\s*"(email|username|firstName|lastName|accountType)"', page))))
 data = {"email": email, "username": email, "password": "Passw0rd!x", "password-confirm": "Passw0rd!x",
         "firstName": "Test", "lastName": "User"}
 if account_type is not None:
@@ -30,7 +37,8 @@ if account_type is not None:
 try:
     resp = opener.open(urllib.request.Request(action, urllib.parse.urlencode(data).encode()))
     body = resp.read().decode()
-    errs = re.findall(r'(?:kc-feedback-text|input-error[^"]*)"[^>]*>\s*([^<]+)', body)
+    errs = re.findall(r'(?:kc-feedback-text|input-error[^"]*)"[^>]*>\s*([^<]+)', body) \
+        or re.findall(r'"summary"\s*:\s*"([^"]+)"', body)
     print("REGISTER FAILED", resp.status, [e.strip() for e in errs][:5])
     sys.exit(1)
 except urllib.error.HTTPError as e:

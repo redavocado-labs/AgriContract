@@ -31,6 +31,7 @@
   "registrationEmailAsUsername" : true,
   "rememberMe" : false,
   "verifyEmail" : false,
+  "loginTheme" : "agricontract",
   "loginWithEmailAllowed" : true,
   "duplicateEmailsAllowed" : false,
   "resetPasswordAllowed" : true,
@@ -1511,8 +1512,9 @@
       }
     } ]
   },
-  "internationalizationEnabled" : false,
-  "supportedLocales" : [ ],
+  "internationalizationEnabled" : true,
+  "supportedLocales" : [ "vi", "en" ],
+  "defaultLocale" : "vi",
   "authenticationFlows" : [ {
     "id" : "e8a09f98-0fd7-4b15-bdb4-bead47e9d0d0",
     "alias" : "Account verification options",
