@@ -13,15 +13,18 @@ import sys
 
 import win32com.client
 
-from bruno_results import load_round, row_result
+from bruno_results import load_round, row_defects, row_result
 from data_bruno import DIRECT, GATEWAY, KIND_LABEL, MODULES
 
 CREATOR = "Nguyen Hai Long"
 ISSUE_DATE = "24/11/2026"
 PROJECT_CODE = "AGC"
 SRC, OUT = (os.path.abspath(p) for p in sys.argv[1:3])
-ROUND1 = load_round(os.path.join(os.path.dirname(os.path.abspath(__file__)), "results", "round1"))
-RESULTS = {}  # Round 1 result -> number of cases
+RESULTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+ROUND1 = load_round(os.path.join(RESULTS_DIR, "round1"))
+# Round 2 re-runs every case after the Round 1 defects are fixed (confirmation + regression)
+ROUND2 = load_round(os.path.join(RESULTS_DIR, "round2"))
+RESULTS, RESULTS2 = {}, {}  # round result -> number of cases
 
 assert len({m["sheet"] for m in MODULES}) == len(MODULES), "duplicate sheet name"
 assert all(len(m["sheet"]) <= 31 for m in MODULES)
@@ -78,16 +81,24 @@ cover = wb.Worksheets("Cover")
 cover.Range("B2").Value = "API TEST DOCUMENT"
 cover.Range("B4").Value = "AgriContract"
 cover.Range("B5").Value = PROJECT_CODE
-cover.Range("B6").Formula = '=B5&"_TestReport_v1.0"'
+cover.Range("B6").Formula = '=B5&"_TestReport_v1.1"'
 cover.Range("F4").Value = CREATOR
 cover.Range("F5").Value = "'" + ISSUE_DATE
-cover.Range("F6").Value = "v1.0"
+cover.Range("F6").Value = "v1.1"
 for ref, text in zip(["A11", "B11", "C11", "D11", "E11", "F11"],
                      ["'" + ISSUE_DATE, "v1.0", "Toàn bộ tài liệu", "A",
                       "Bản đầu: test case tích hợp (ITC) từ Bruno collection (backend/bruno) của api-gateway, "
                       "user-service, product-service; Pre-conditions ghi gọi thẳng service hay qua gateway; "
                       "1 dòng = 1 kịch bản; Note ghi request Bruno, Note trống = chưa có request",
                       "SRS v1.7, Report 5.0"]):
+    cover.Range(ref).Value = text
+# row 12 copies row 11's style (the template's record table has one styled row)
+cover.Rows(11).Copy(cover.Rows(12))
+for ref, text in zip(["A12", "B12", "C12", "D12", "E12", "F12"],
+                     ["'25/11/2026", "v1.1", "Test case, Round 1, Round 2", "M",
+                      "Mọi case có request Bruno (48 case, 1 giá trị 1 dòng); Round 1 và Round 2 lấy từ báo cáo JSON "
+                      "của Bruno CLI (results/round1, round2); Round 1 Failed do #647 (seed chưa có verified_email), "
+                      "sửa ở PR #648, Round 2 chạy lại toàn bộ", "#647, #648"]):
     cover.Range(ref).Value = text
 
 # ── Module sheets: one copy of ModuleName1 per sheet ────────────────────────
@@ -121,10 +132,15 @@ for m in MODULES:
             pre = KIND_LABEL[m["kind"]] + ("" if pre == "N/A" else "\n" + pre)
             result = row_result(ROUND1, note, ret)
             RESULTS[result] = RESULTS.get(result, 0) + 1
-            tested = result != "Pending"
+            rounds = []
+            for data, res in ((ROUND1, result), (ROUND2, row_result(ROUND2, note, ret) if ROUND2["runs"] else "")):
+                tested = res not in ("", "Pending")
+                rounds += [res, "'" + data["date"] if tested else "", data["tester"] if tested else ""]
+            if rounds[3]:
+                RESULTS2[rounds[3]] = RESULTS2.get(rounds[3], 0) + 1
+            defects = row_defects(ROUND1, note) if result == "Failed" else ""
             values = [f"ITC{n:03d}", pre, inp, f"Return: {ret}\nException: {exc}\nLog message: N/A", typ,
-                      result, "'" + ROUND1["date"] if tested else "", ROUND1["tester"] if tested else "",
-                      "", "", "", "", "", "", "", f"Bruno: {note}" if note else ""]
+                      *rounds, "", "", "", defects, f"Bruno: {note}" if note else ""]
             rng = sh.Range(sh.Cells(row, 1), sh.Cells(row, 16))
             rng.Value = [values]
             same_font(rng)
@@ -145,16 +161,18 @@ tc = wb.Worksheets("Test Cases")
 tc.Range("D3").Formula = "=Cover!B4"
 tc.Range("D4").Formula = "=Cover!B5"
 tc.Range("D5").Value = (
-    "1. Toàn bộ stack: docker compose up trong backend/ (gateway 8080, user 8081, product 8082, contract 8083, "
-    "Keycloak 8180, RabbitMQ, MySQL 8.0)\n"
-    "2. Bruno CLI: cd backend/bruno && bru run <thư mục> --env local\n"
+    "1. Stack: docker compose -f backend/docker-compose.yml -f scripts/unit-test-report/compose.report52.yml up -d "
+    "api-gateway user-service product-service contract-service (gateway 8080; product 8082 publish qua override; "
+    "Keycloak 8180, realm import mới; RabbitMQ; MySQL 8.0)\n"
+    "2. Chạy: scripts/unit-test-report/run_bruno_report52.sh <round> <tester> (Bruno CLI 3.4.2, --env local, "
+    "gateway_secret = GATEWAY_INTERNAL_SECRET); báo cáo JSON ở scripts/unit-test-report/results/<round>/\n"
     "3. Tài khoản Keycloak: buyer1, seller1, seller2, operator1, admin1 (pass123)\n"
     "4. Seed: backend/scripts/seed/01-product-db.sql, 02-user-db.sql\n"
     "5. product-service: PLOT_GEO_VERIFICATION_TIMEOUT_HOURS=0, PLOT_GEO_VERIFICATION_TIMEOUT_CHECK_MS=1000\n"
     "6. Mọi case là integration test (ITC), 2 kiểu: gọi thẳng service với X-Gateway-Secret (product-service) "
     "hoặc qua gateway {{base_url}} với token Keycloak (api-gateway, user-service); system test theo luồng FE "
     "BF-01..BF-07 không nằm ở đây\n"
-    "7. Note ghi request Bruno; Note trống = case chưa có request")
+    "7. Note ghi request Bruno; Defect IDs ghi issue gây ra case Failed (results/<round>/defects.json)")
 for i, m in enumerate(MODULES):
     r = 9 + i
     if r > 10:
@@ -188,7 +206,11 @@ st.Range("B7").Value = (
     f"{cases - no_bruno} có request Bruno và {no_bruno} chưa có (Note trống). " + (
         f"Round 1 chạy ngày {ROUND1['date']} trên commit {ROUND1['commit']} (Bruno CLI {ROUND1['bruno_cli']}): "
         + ", ".join(f"{RESULTS[k]} {k}" for k in ("Passed", "Failed", "Pending") if RESULTS.get(k))
-        + ". Log: scripts/unit-test-report/results/round1/." if ROUND1["runs"] else "Round 1 chưa chạy (Pending)."))
+        + ". Log: scripts/unit-test-report/results/round1/." if ROUND1["runs"] else "Round 1 chưa chạy (Pending).")
+    + (f" Round 2 (sau khi sửa defect của Round 1, chạy lại toàn bộ) ngày {ROUND2['date']} trên commit "
+       f"{ROUND2['commit']}, seed từ commit {ROUND2.get('seed_commit', ROUND2['commit'])} (PR #648): " + ", ".join(f"{RESULTS2[k]} {k}" for k in ("Passed", "Failed", "Pending")
+                                           if RESULTS2.get(k))
+       + ". Log: scripts/unit-test-report/results/round2/." if ROUND2["runs"] else ""))
 for i, m in enumerate(MODULES):
     r = 12 + i
     if r > 12:

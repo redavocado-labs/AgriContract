@@ -1,0 +1,550 @@
+[
+  {
+    "iterationIndex": 0,
+    "results": [
+      {
+        "test": {
+          "filename": "gateway\\get-token.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8180/realms/agricontract/protocol/openid-connect/token",
+          "headers": {
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "data": "grant_type=password&client_id=agricontract-frontend&username=buyer1&password=pass123"
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {
+            "cache-control": "no-store",
+            "pragma": "no-cache",
+            "content-length": "2356",
+            "content-type": "application/json",
+            "referrer-policy": "no-referrer",
+            "strict-transport-security": "max-age=31536000; includeSubDomains",
+            "x-content-type-options": "nosniff",
+            "x-frame-options": "SAMEORIGIN",
+            "x-xss-protection": "1; mode=block"
+          },
+          "data": {
+            "access_token": "<redacted:jwt>",
+            "expires_in": 300,
+            "refresh_expires_in": 1800,
+            "refresh_token": "<redacted:jwt>",
+            "token_type": "Bearer",
+            "not-before-policy": 0,
+            "session_state": "c668cf1b-c3f9-4c0d-9a7f-5a89877e0760",
+            "scope": "profile email"
+          },
+          "url": "http://localhost/realms/agricontract/protocol/openid-connect/token",
+          "responseTime": 199,
+          "duration": 199,
+          "size": 2356
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.260906,
+        "name": "Get Token (buyer1)",
+        "path": "gateway\\get-token",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "gateway\\public-listings.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/listings",
+          "headers": {
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {
+            "transfer-encoding": "chunked",
+            "vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "date": "Wed, 25 Nov 2026 12:43:06 GMT",
+            "x-correlation-id": "79e3bed8-894b-46f0-8e67-345043b6ae4b",
+            "referrer-policy": "no-referrer"
+          },
+          "data": {
+            "content": [
+              {
+                "listingId": "lst-seed-browse-01",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 1000,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "8000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-browse-02",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b02",
+                "productName": "Cà phê Robusta",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "55000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-browse-03",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b03",
+                "productName": "Hồ tiêu đen",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 100,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "120000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-offered",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 800,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "8500.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-neg",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b02",
+                "productName": "Cà phê Robusta",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 300,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "60000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "51ef2a70-95f6-4a53-bdb1-6c9ccc9becaf",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gao ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "15000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-25T12:43:01Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              }
+            ],
+            "page": 0,
+            "size": 20,
+            "totalElements": 6,
+            "totalPages": 1,
+            "first": true,
+            "last": true,
+            "empty": false,
+            "reputationStatus": "SIGN_IN_REQUIRED"
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 25,
+          "duration": 25,
+          "size": 4341
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200 without token",
+            "status": "pass",
+            "uid": "QXtXvJT8ebjJCQOHv_1GM"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0308437,
+        "name": "GET /api/v1/listings (public, no token)",
+        "path": "gateway\\public-listings",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "gateway\\protected-no-token.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/contracts",
+          "headers": {
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 401,
+          "statusText": "Unauthorized",
+          "headers": {
+            "vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+            "www-authenticate": "********",
+            "x-correlation-id": "2fe2514f-a9e0-4867-93c8-be94974eede2",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-content-type-options": "nosniff",
+            "x-frame-options": "DENY",
+            "x-xss-protection": "0",
+            "referrer-policy": "no-referrer",
+            "content-length": "0"
+          },
+          "data": "",
+          "url": "http://localhost/api/v1/contracts",
+          "responseTime": 9,
+          "duration": 9,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 401 without token",
+            "status": "pass",
+            "uid": "6azIyAXKD95jzF3qIax4Z"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0138018,
+        "name": "GET /api/v1/contracts (protected, no token)",
+        "path": "gateway\\protected-no-token",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "gateway\\protected-with-token.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/contracts",
+          "headers": {
+            "Authorization": "Bearer ********",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {
+            "transfer-encoding": "chunked",
+            "vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "date": "Wed, 25 Nov 2026 12:43:06 GMT",
+            "x-correlation-id": "9eb545f3-7825-4ed8-8b1d-c9f8b5ae416e",
+            "referrer-policy": "no-referrer"
+          },
+          "data": {
+            "content": [],
+            "page": 0,
+            "size": 20,
+            "totalElements": 0,
+            "totalPages": 0,
+            "first": true,
+            "last": true,
+            "empty": true
+          },
+          "url": "http://localhost/api/v1/contracts",
+          "responseTime": 24,
+          "duration": 24,
+          "size": 104
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200 with a valid token",
+            "status": "pass",
+            "uid": "x_uaC98FLrxA1L9o_h3-b"
+          },
+          {
+            "description": "body is a page of contracts",
+            "status": "pass",
+            "uid": "SISGD5o2tp1BvcGpJ6IMW"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0289177,
+        "name": "GET /api/v1/contracts (protected, with token)",
+        "path": "gateway\\protected-with-token",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "gateway\\get-token-wrong-password.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8180/realms/agricontract/protocol/openid-connect/token",
+          "headers": {
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "data": "grant_type=password&client_id=agricontract-frontend&username=buyer1&password=wrong-pass123"
+        },
+        "response": {
+          "status": 401,
+          "statusText": "Unauthorized",
+          "headers": {
+            "cache-control": "no-store",
+            "pragma": "no-cache",
+            "content-length": "72",
+            "content-type": "application/json",
+            "referrer-policy": "no-referrer",
+            "strict-transport-security": "max-age=31536000; includeSubDomains",
+            "x-content-type-options": "nosniff",
+            "x-frame-options": "SAMEORIGIN",
+            "x-xss-protection": "1; mode=block"
+          },
+          "data": {
+            "error": "invalid_grant",
+            "error_description": "Invalid user credentials"
+          },
+          "url": "http://localhost/realms/agricontract/protocol/openid-connect/token",
+          "responseTime": 177,
+          "duration": 177,
+          "size": 72
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 401",
+            "status": "pass",
+            "uid": "UAauwKMcKPSeNGUbmi59f"
+          },
+          {
+            "description": "invalid_grant and no access_token",
+            "status": "pass",
+            "uid": "sbjU7VrTm2CvNyrU0mKn0"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.1820481,
+        "name": "Get Token (buyer1, wrong password → 401)",
+        "path": "gateway\\get-token-wrong-password",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "gateway\\forged-identity-headers.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/users/me",
+          "headers": {
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "ADMIN",
+            "Authorization": "Bearer ********",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {
+            "transfer-encoding": "chunked",
+            "vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "date": "Wed, 25 Nov 2026 12:43:07 GMT",
+            "x-correlation-id": "0bb92818-abb2-4644-932e-1de07d567baf",
+            "referrer-policy": "no-referrer"
+          },
+          "data": {
+            "userId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+            "organizationName": "Công ty TNHH Mua Nông Sản Tám",
+            "role": "BUYER",
+            "email": "buyer1@test.com",
+            "emailVerified": true,
+            "phone": "0901234567",
+            "address": "123 Lê Lợi, Q1, TP.HCM",
+            "verificationStatus": "VERIFIED",
+            "authorizationExpiresAt": null
+          },
+          "url": "http://localhost/api/v1/users/me",
+          "responseTime": 25,
+          "duration": 25,
+          "size": 288
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "9Lhk4ruY_EC_roZHTxvyE"
+          },
+          {
+            "description": "profile is buyer1's, not the forged seller1",
+            "status": "pass",
+            "uid": "YvBz0kNFNscWUvOci05Ms"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0294084,
+        "name": "GET /api/v1/users/me (forged X-User-Id / X-User-Role replaced by the JWT)",
+        "path": "gateway\\forged-identity-headers",
+        "iterationIndex": 0
+      }
+    ],
+    "summary": {
+      "totalRequests": 6,
+      "passedRequests": 6,
+      "failedRequests": 0,
+      "errorRequests": 0,
+      "skippedRequests": 0,
+      "totalAssertions": 0,
+      "passedAssertions": 0,
+      "failedAssertions": 0,
+      "totalTests": 8,
+      "passedTests": 8,
+      "failedTests": 0,
+      "totalPreRequestTests": 0,
+      "passedPreRequestTests": 0,
+      "failedPreRequestTests": 0,
+      "totalPostResponseTests": 0,
+      "passedPostResponseTests": 0,
+      "failedPostResponseTests": 0
+    }
+  }
+]
