@@ -1,7 +1,8 @@
 # Fill the same template as Report 5.1 (template/Report-5.1_Unit_Test_template.xlsx) with the Bruno test cases of
 # data_bruno.py and write Report-5.2. Same steps as fill_report.py (one copy of ModuleName1 per sheet, Test Cases
 # list, Test Statistics rows on Round 1), driven through Excel (COM) so charts, comments and validation survive;
-# it needs Windows with Excel and pywin32. The cases are not run yet, so Round 1 is Pending.
+# it needs Windows with Excel and pywin32. Round 1 comes from the Bruno JSON reports that run_bruno_report52.sh wrote
+# under results/round1/ (see bruno_results.py); without them every case stays Pending.
 # Every case is an integration test: IDs are ITC, Pre-conditions starts with the kind (service called directly or
 # through the gateway), and Test Statistics splits the totals by those two kinds.
 #
@@ -12,12 +13,15 @@ import sys
 
 import win32com.client
 
+from bruno_results import load_round, row_result
 from data_bruno import DIRECT, GATEWAY, KIND_LABEL, MODULES
 
 CREATOR = "Nguyen Hai Long"
 ISSUE_DATE = "24/11/2026"
 PROJECT_CODE = "AGC"
 SRC, OUT = (os.path.abspath(p) for p in sys.argv[1:3])
+ROUND1 = load_round(os.path.join(os.path.dirname(os.path.abspath(__file__)), "results", "round1"))
+RESULTS = {}  # Round 1 result -> number of cases
 
 assert len({m["sheet"] for m in MODULES}) == len(MODULES), "duplicate sheet name"
 assert all(len(m["sheet"]) <= 31 for m in MODULES)
@@ -115,8 +119,12 @@ for m in MODULES:
             n += 1
             copy_row(sh, STYLE_CASE, row)
             pre = KIND_LABEL[m["kind"]] + ("" if pre == "N/A" else "\n" + pre)
+            result = row_result(ROUND1, note, ret)
+            RESULTS[result] = RESULTS.get(result, 0) + 1
+            tested = result != "Pending"
             values = [f"ITC{n:03d}", pre, inp, f"Return: {ret}\nException: {exc}\nLog message: N/A", typ,
-                      "Pending", "", "", "", "", "", "", "", "", "", f"Bruno: {note}" if note else ""]
+                      result, "'" + ROUND1["date"] if tested else "", ROUND1["tester"] if tested else "",
+                      "", "", "", "", "", "", "", f"Bruno: {note}" if note else ""]
             rng = sh.Range(sh.Cells(row, 1), sh.Cells(row, 16))
             rng.Value = [values]
             same_font(rng)
@@ -177,7 +185,10 @@ by_kind = {k: sum(len(c) for m in MODULES if m["kind"] == k for _, c in m["group
 st.Range("B7").Value = (
     f"Integration test (ITC) của 3 module: api-gateway, user-service, product-service, lấy từ Bruno collection "
     f"backend/bruno. {cases} kịch bản: {by_kind[DIRECT]} gọi thẳng service, {by_kind[GATEWAY]} qua gateway; "
-    f"{cases - no_bruno} có request Bruno và {no_bruno} chưa có (Note trống). Round 1 chưa chạy (Pending).")
+    f"{cases - no_bruno} có request Bruno và {no_bruno} chưa có (Note trống). " + (
+        f"Round 1 chạy ngày {ROUND1['date']} trên commit {ROUND1['commit']} (Bruno CLI {ROUND1['bruno_cli']}): "
+        + ", ".join(f"{RESULTS[k]} {k}" for k in ("Passed", "Failed", "Pending") if RESULTS.get(k))
+        + ". Log: scripts/unit-test-report/results/round1/." if ROUND1["runs"] else "Round 1 chưa chạy (Pending)."))
 for i, m in enumerate(MODULES):
     r = 12 + i
     if r > 12:
