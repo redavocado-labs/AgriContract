@@ -211,11 +211,9 @@ match được. Retake (row `FAILED` hoặc `PENDING` quá hạn) xoá cột, n�
 |---|---:|---|
 | `notification.retry.maxAttempts` | 3 | Async events |
 | `notification.retry.initialDelaySeconds` | 5 | Exponential backoff |
-| `notification.softwareBuyerContacts` | ≥2 địa chỉ | Integrity alerts |
-| `notification.adminEmail` | deployment value | Không hardcode production; chỉ nhận mail audit/security/reconciliation |
-| `notification.operatorEmail` | deployment value | Activation/funding fail, hàng đợi vận hành (12/10/2026); hết inspector Level 1.5 (13/11/2026, D49); leg escrow kẹt/trả cọc hết lượt (21/11/2026, D68) |
-| `notification.arbitratorEmail` | deployment value | Breach case/FM cần quyết định (12/10/2026) |
-| `notification.externalVerifierContacts` | deployment value | Key/lock confirmation |
+| `notification.operatorEmail` (`OPERATOR_EMAIL`) | deployment value | Chỉ cho command không mang `recipients`: hết inspector Level 1.5 (D49), leg escrow kẹt/trả cọc hết lượt (D68), lệnh tiền remedy bị từ chối (D93). Không set thì các command này vào DLQ, không đoán địa chỉ |
+
+**Địa chỉ người nhận ở đâu (sửa 26/11/2026):** mọi command khác mang `payload.recipients` bắt buộc (`notification-commands.yaml`), nên notification-service không giữ danh bạ Admin, Arbitrator, Software Buyer hay External Verifier. Service phát command giữ danh sách đó và đưa vào `recipients`: audit-service cho `audit_digest`/`audit_failure`/`milestone_anchor`, bank-service cho `security_lock_changed`/`verifier_key_anchor`/`reconciliation_mismatch`, contract-service cho mail Operator/Arbitrator của hợp đồng. Bản trước liệt kê `notification.softwareBuyerContacts`, `adminEmail`, `arbitratorEmail`, `externalVerifierContacts` ở đây, mâu thuẫn với contract nên đã bỏ. Notification-service chỉ kiểm `recipients[].role` có hợp với từng command không (mail integrity/security chỉ tới staff, §4 + #278), sai thì vào DLQ.
 
 SMTP/SendGrid credential chỉ từ secret/env. MailHog dùng local development.
 
