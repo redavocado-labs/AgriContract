@@ -42,7 +42,7 @@ class UploadLevel15ReportFileTest {
         var service = service();
         when(assignments.active("contract", "milestone")).thenReturn(Optional.of(new TimedAssignment(
                 "commission", "contract", "milestone", "inspector", now.minusSeconds(30), null,
-                1, now.plusSeconds(30), null, "contract-service")));
+                1, now.plusSeconds(30), null, "contract-service", now.plusSeconds(30))));
         assertThat(service.upload("contract", "milestone", "key", "application/pdf", 1,
                 new ByteArrayInputStream(new byte[]{1})).fileId()).isEqualTo("file");
         verify(bindings).bind("file", "commission", now);

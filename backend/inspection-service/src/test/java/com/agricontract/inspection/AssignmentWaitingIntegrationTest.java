@@ -9,7 +9,6 @@ import com.agricontract.inspection.application.exception.EligibilityUnavailableE
 import com.agricontract.inspection.application.dto.Level15AssignmentRequestedCommand;
 import com.agricontract.inspection.application.port.AssignmentAlerts.Stage;
 import com.agricontract.inspection.application.port.InspectorEligibilityPort;
-import com.agricontract.inspection.application.port.FreeCancellationWindow;
 import com.agricontract.inspection.application.port.AuthenticatedInspectorPort;
 import com.agricontract.inspection.application.usecase.InspectionAuthorization;
 import com.agricontract.inspection.application.exception.InspectionAssignmentAccessDeniedException;
@@ -185,7 +184,7 @@ class AssignmentWaitingIntegrationTest {
     }
     @Test void cancellationUsesPersistedDeadlineAfterConfigurationChange() {
         var target = org.springframework.test.util.AopTestUtils.<ManageLevel15Assignments>getUltimateTargetObject(lifecycle);
-        org.springframework.test.util.ReflectionTestUtils.setField(target, "freeCancellationWindow", new FreeCancellationWindow(Duration.ofHours(4)));
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "freeCancellationWindow", Duration.ofHours(4));
         try {
             when(clock.instant()).thenReturn(NOW.plusNanos(123456000));
             when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
@@ -197,7 +196,7 @@ class AssignmentWaitingIntegrationTest {
             var mail = codec.parse(jdbc.queryForObject("SELECT envelope FROM event_outbox WHERE event_type='notification.level1_5_inspector_assignment_requested'", String.class).getBytes(StandardCharsets.UTF_8));
             assertThat(assigned.payload().get("freeCancelUntil")).isEqualTo(stored.freeCancelUntil().toString());
             assertThat(mail.payload().get("freeCancelUntil")).isEqualTo(stored.freeCancelUntil().toString());
-            org.springframework.test.util.ReflectionTestUtils.setField(target, "freeCancellationWindow", new FreeCancellationWindow(Duration.ofHours(1)));
+            org.springframework.test.util.ReflectionTestUtils.setField(target, "freeCancellationWindow", Duration.ofHours(1));
             deliver(cancellation(NOW.plusSeconds(1)));
             var cancelled = codec.parse(jdbc.queryForObject("SELECT envelope FROM event_outbox WHERE event_type='notification.level1_5_inspector_assignment_requested' AND JSON_UNQUOTE(JSON_EXTRACT(envelope,'$.payload.stage'))='CANCELLED'", String.class).getBytes(StandardCharsets.UTF_8));
             var reloaded = assignments.find(before.commissionId()).orElseThrow();
@@ -205,17 +204,15 @@ class AssignmentWaitingIntegrationTest {
             assertThat(reloaded.freeCancelUntil()).isEqualTo(stored.freeCancelUntil());
             assertThat(reloaded.reportDueAt()).isEqualTo(before.reportDueAt());
         } finally {
-            org.springframework.test.util.ReflectionTestUtils.setField(target, "freeCancellationWindow", new FreeCancellationWindow(Duration.ofHours(4)));
+            org.springframework.test.util.ReflectionTestUtils.setField(target, "freeCancellationWindow", Duration.ofHours(4));
         }
     }
-    @Test void historicalAssignmentWithoutDeadlineFailsClosed() {
+    @Test void storedDeadlineCannotBeCleared() {
         when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
         deliver(event());
         var assignment = assignments.active(contract, milestone).orElseThrow();
-        jdbc.update("UPDATE level1_5_inspection_assignment SET free_cancel_until=NULL WHERE commission_id=?", assignment.commissionId());
-        var cancel = cancellation(NOW.plusSeconds(1));
-        assertThatThrownBy(() -> deliver(cancel)).isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Missing stored free cancellation deadline");
+        assertThatThrownBy(() -> jdbc.update("UPDATE level1_5_inspection_assignment SET free_cancel_until=NULL WHERE commission_id=?", assignment.commissionId()))
+                .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
         assertThat(assignments.active(contract, milestone)).isPresent();
         assertThat(count("processed_event")).isEqualTo(1);
         assertThat(events("notification.level1_5_inspector_assignment_requested")).isEqualTo(1);
@@ -292,6 +289,9 @@ class AssignmentWaitingIntegrationTest {
     }
     @Test void cancellationTimestampBeforeBlockedRetryAssignmentStillClosesIt() throws Exception {
         deliver(event());
+        var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(OutboxAssignmentAlerts.class);
+        var captured = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        captured.start(); logger.addAppender(captured);
         var entered = new CountDownLatch(1);
         var release = new CountDownLatch(1);
         var cancellationStarted = new CountDownLatch(1);
@@ -310,6 +310,12 @@ class AssignmentWaitingIntegrationTest {
             } finally { release.countDown(); }
         }
         deliver(cancel);
+        logger.detachAppender(captured); captured.stop();
+        var warnings = captured.list.stream().filter(e -> e.getFormattedMessage().contains("inspection_level15_cancel_time_adjusted")).toList();
+        assertThat(warnings).hasSize(1);
+        assertThat(warnings.getFirst().getLevel()).isEqualTo(ch.qos.logback.classic.Level.WARN);
+        assertThat(warnings.getFirst().getFormattedMessage()).contains(cancel.eventId().toString(), contract, milestone,
+                "cancelledAt=" + NOW.plusSeconds(1), "assignedAt=" + NOW.plusSeconds(10));
         assertThat(cancel.payload().get("cancelledAt")).isEqualTo(NOW.plusSeconds(1).toString());
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM processed_event WHERE event_id=?", Integer.class, cancel.eventId().toString())).isEqualTo(1);
         assertThat(count("level1_5_assignment_waiting")).isZero();
@@ -326,6 +332,21 @@ class AssignmentWaitingIntegrationTest {
         assertThat(codec.parse(json.getBytes(StandardCharsets.UTF_8)).causationId()).isEqualTo(cancel.eventId().toString());
         assertThatThrownBy(() -> transactions.inTransaction(() -> lifecycle.closeConfirmed(contract, milestone, assignmentId, a, NOW.plusSeconds(10))))
                 .isInstanceOf(IllegalStateException.class);
+    }
+    @Test void cancellationTimeWarningIsNotLoggedForRollbackOrNormalOrder() {
+        when(inspectors.loadEligibleInspectors()).thenReturn(List.of(a));
+        deliver(event());
+        var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(OutboxAssignmentAlerts.class);
+        var captured = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        captured.start(); logger.addAppender(captured);
+        try {
+            assertThatThrownBy(() -> transactions.inReadCommittedTransaction(() -> {
+                deliver(cancellation(NOW.minusSeconds(1)));
+                throw new IllegalStateException("rollback");
+            })).isInstanceOf(IllegalStateException.class).hasMessage("rollback");
+            deliver(cancellation(NOW.plusSeconds(1)));
+            assertThat(captured.list.stream().filter(e -> e.getFormattedMessage().contains("inspection_level15_cancel_time_adjusted"))).isEmpty();
+        } finally { logger.detachAppender(captured); captured.stop(); }
     }
     @Test void concurrentDuplicateCancellationHasOneEffect() throws Exception {
         deliver(event());

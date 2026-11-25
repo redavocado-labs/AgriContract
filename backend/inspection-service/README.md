@@ -86,8 +86,8 @@ The review requires persisting `freeCancelUntil`, a change from the current D57 
 Migration V9 adds the stored deadline without changing existing assignment history.
 `inspection.assignment.free-cancel-hours` defaults to 4 and must be between 1
 and 720 hours (30 calendar days); invalid configuration prevents startup.
-Historical rows have no authoritative deadline: a NULL deadline fails cancellation
-closed for investigation instead of fabricating a value. A delayed retry of a previously
+V9 backfills historical assignments using the leader-approved D57 four-hour baseline
+and enforces a non-null deadline. A delayed retry of a previously
 failed request can still create a stale assignment after cancellation (D57); there is no tombstone.
 
 The contract-facing `inspection.level1_5_assigned` event uses exchange

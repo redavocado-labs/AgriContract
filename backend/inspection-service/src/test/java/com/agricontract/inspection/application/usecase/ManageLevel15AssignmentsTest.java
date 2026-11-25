@@ -6,7 +6,6 @@ import com.agricontract.inspection.application.port.AssignmentAlerts;
 import com.agricontract.inspection.application.port.AssignmentWaitingRepository;
 import com.agricontract.inspection.domain.model.WaitingAssignment;
 import com.agricontract.inspection.application.port.InspectorEligibilityPort;
-import com.agricontract.inspection.application.port.FreeCancellationWindow;
 import com.agricontract.inspection.domain.model.TimedAssignment;
 import com.agricontract.inspection.domain.repository.AssignmentLifecycleRepository;
 import com.agricontract.inspection.testsupport.DirectTransactionRunner;
@@ -38,7 +37,7 @@ class ManageLevel15AssignmentsTest {
     private final VietnamBusinessDays calendar = VietnamBusinessDays.fromConfiguration("2026-01-01");
     private final ManageLevel15Assignments lifecycle = new ManageLevel15Assignments(
             assignments, inspectors, calendar, random, alerts, Clock.fixed(NOW, ZoneOffset.UTC), transactions, waiting,
-            new FreeCancellationWindow(java.time.Duration.ofHours(4)));
+            java.time.Duration.ofHours(4));
 
     @BeforeEach
     void reserveNewRequest() {
@@ -156,6 +155,6 @@ class ManageLevel15AssignmentsTest {
 
     private TimedAssignment assignment(Instant deadline) {
         return new TimedAssignment("commission", "contract", "milestone", "a", NOW.minusSeconds(1),
-                null, 1, deadline, "actor", "contract-service");
+                null, 1, deadline, "actor", "contract-service", NOW.plusSeconds(3600));
     }
 }
