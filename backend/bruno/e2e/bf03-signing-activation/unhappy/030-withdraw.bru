@@ -1,0 +1,36 @@
+meta {
+  name: BF03-130 Withdraw the unsigned offer
+  type: http
+  seq: 30
+}
+
+post {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}/withdraw
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+headers {
+  Idempotency-Key: {{withdraw_key}}
+}
+
+script:pre-request {
+  bru.setVar('withdraw_key', require('crypto').randomUUID());
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(204);
+    expect([null, undefined, '']).to.include(res.getBody());
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI withdrawOffer.
+}

@@ -1,0 +1,50 @@
+meta {
+  name: BF03-030 Revise the offered unit price
+  type: http
+  seq: 30
+}
+
+patch {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}/terms
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+headers {
+  Idempotency-Key: {{terms_key}}
+}
+
+body:json {
+  {{terms_json}}
+}
+
+script:pre-request {
+  const { randomUUID } = require('crypto');
+  const { coffeeTerms } = require('./e2e/coffee-terms.js');
+  bru.setVar('old_content_hash', bru.getVar('signed_content_hash'));
+  bru.setVar('terms_key', randomUUID());
+  bru.setVar('terms_json', JSON.stringify(coffeeTerms(bru.getVar('delivery_date'), '96000.00')));
+}
+
+script:post-response {
+  if (res.getStatus() === 200) bru.setVar('signed_content_hash', res.getBody().signedContentHash);
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().contractId).to.equal(bru.getVar('contract_id'));
+    expect(res.getBody().signedContentHash).to.match(/^[a-f0-9]{64}$/);
+    expect(res.getBody().signedContentHash).to.not.equal(bru.getVar('old_content_hash'));
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI updateContractTerms.
+}

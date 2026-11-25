@@ -1,0 +1,59 @@
+meta {
+  name: BF03-060 Request signing code as seller
+  type: http
+  seq: 60
+}
+
+post {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}/sign/initiate
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{seller_token}}
+}
+
+headers {
+  Idempotency-Key: {{sign_key}}
+}
+
+body:json {
+  {
+    "signerRole": "SELLER",
+    "consentStatementVersion": "1.0",
+    "presentedContentHash": "{{signed_content_hash}}"
+  }
+}
+
+script:pre-request {
+  const { randomUUID } = require('crypto');
+  const { browserLogin, claims, variable } = require('./e2e/helpers.js');
+  const accessToken = await browserLogin(bru, {
+    username: variable(bru, 'seller_username'),
+    password: variable(bru, 'seller_password'),
+    credentialId: '',
+  });
+  const authTime = claims(accessToken).auth_time;
+  if (!authTime || Date.now() / 1000 - authTime > 300) throw new Error('Keycloak login is not fresh');
+  bru.setVar('seller_token', accessToken);
+  bru.setVar('sign_key', randomUUID());
+}
+
+script:post-response {
+  if (res.getStatus() === 200) bru.setVar('otp_id', res.getBody().otpId);
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().otpId).to.be.a('string');
+    expect(res.getBody().expiresAt).to.be.a('string');
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI initiateSign; signature design §4 (fresh Keycloak login) and §6 (consent).
+}

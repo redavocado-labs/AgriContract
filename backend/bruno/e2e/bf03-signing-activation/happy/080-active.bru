@@ -1,0 +1,35 @@
+meta {
+  name: BF03-080 Wait for ACTIVE
+  type: http
+  seq: 80
+}
+
+get {
+  url: {{base_url}}/api/v1/contracts/{{contract_id}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{buyer_token}}
+}
+
+script:pre-request {
+  const { gateway, poll } = require('./e2e/helpers.js');
+  await poll(() => gateway(bru, '/api/v1/contracts/' + bru.getVar('contract_id'), 'buyer'),
+    ({ status, data }) => status === 200 && data.status === 'ACTIVE', 'contract activation');
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().contractId).to.equal(bru.getVar('contract_id'));
+    expect(res.getBody().status).to.equal('ACTIVE');
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI getContract and milestone escrow design D63.
+}

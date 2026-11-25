@@ -1,0 +1,28 @@
+meta {
+  name: BF03-160 Confirm withdrawal left no locked money
+  type: http
+  seq: 60
+}
+
+get {
+  url: {{bank_service_url}}/internal/v1/bank/ledger?contractId={{contract_id}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Internal-Secret: {{service_internal_secret}}
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.deep.equal([]);
+  });
+}
+
+docs {
+  IT-DIRECT
+
+  OpenAPI getInternalLedgerEntries. Unsigned offer withdrawal produces no bank entries.
+}
