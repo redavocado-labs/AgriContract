@@ -1,0 +1,26 @@
+meta {
+  name: BF02-070 Read public listing through the gateway
+  type: http
+  seq: 70
+}
+
+get {
+  url: {{base_url}}/api/v1/listings/{{listing_id}}
+  body: none
+  auth: none
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().listingId).to.equal(bru.getVar('listing_id'));
+    expect(res.getBody().status).to.equal('AVAILABLE');
+    expect(res.getBody().quantityAvailable).to.equal(5500);
+  });
+}
+
+docs {
+  IT-GW
+
+  Gateway SecurityConfig public GET listing rule and ListingController.
+}

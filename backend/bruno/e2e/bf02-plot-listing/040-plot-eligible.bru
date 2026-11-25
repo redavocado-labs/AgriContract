@@ -1,0 +1,37 @@
+meta {
+  name: BF02-040 Wait for the plot geo check
+  type: http
+  seq: 40
+}
+
+get {
+  url: {{base_url}}/api/v1/plots?size=100
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{seller_token}}
+}
+
+script:pre-request {
+  const { gateway, poll } = require('./e2e/helpers.js');
+  await poll(() => gateway(bru, '/api/v1/plots?size=100', 'seller'),
+    ({ status, data }) => status === 200 && data.content?.some((plot) =>
+      plot.registryEntryId === bru.getVar('plot_id') && ['VERIFIED', 'UNVERIFIED'].includes(plot.geoVerificationStatus)),
+    'plot eligibility');
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    const plot = res.getBody().content.find((item) => item.registryEntryId === bru.getVar('plot_id'));
+    expect(['VERIFIED', 'UNVERIFIED']).to.include(plot?.geoVerificationStatus);
+  });
+}
+
+docs {
+  IT-GW
+
+  Product design §2.2 and PlotController. Polls for the specific plot.
+}

@@ -1,0 +1,47 @@
+meta {
+  name: BF02-020 Create a Robusta product
+  type: http
+  seq: 20
+}
+
+post {
+  url: {{base_url}}/api/v1/products
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{seller_token}}
+}
+
+body:json {
+  {
+    "name": "Robusta Bruno {{fixture_suffix}}",
+    "unit": "kg",
+    "categoryId": "{{category_id}}",
+    "imageUrls": [
+      "https://example.test/bruno-robusta.jpg"
+    ],
+    "cropYear": 2026,
+    "harvestSeason": "2026/27",
+    "certifications": []
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) bru.setVar('product_id', res.getBody().productId);
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(201);
+    expect(res.getBody().categoryId).to.equal(bru.getVar('category_id'));
+    expect(res.getBody().productId).to.be.a('string');
+  });
+}
+
+docs {
+  IT-GW
+
+  Product design §2 and ProductController.
+}
