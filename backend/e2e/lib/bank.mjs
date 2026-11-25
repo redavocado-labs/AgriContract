@@ -1,3 +1,4 @@
+import { container } from './docker.mjs';
 import { UUID, query } from './db.mjs';
 
 /*
@@ -12,7 +13,7 @@ import { UUID, query } from './db.mjs';
 export function ledgerOf(contractId) {
   if (!UUID.test(contractId)) throw new Error(`not a contract id: ${contractId}`);
   return query(
-    process.env.E2E_BANK_DB_CONTAINER ?? 'bank-db',
+    process.env.E2E_BANK_DB_CONTAINER ?? container('bank-db'),
     'bank_db',
     `SELECT entry_type, fund_type, amount, milestone_id, remedy_leg_id
        FROM ledger_entry WHERE contract_id = '${contractId}' ORDER BY created_at, entry_id`,
