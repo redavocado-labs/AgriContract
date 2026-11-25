@@ -11,6 +11,12 @@ import { setTimeout as sleep } from 'node:timers/promises';
 const docker = (args) => execFileSync('docker', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
 /** The services the golden flow calls or depends on; the infrastructure has healthchecks. */
+/**
+ * The compose container of `service`. E2E_CONTAINER_PREFIX (for example `agricontract-e2e-`) names the
+ * containers of a stack started under its own project, next to a local dev stack that holds the bare names.
+ */
+export const container = (service) => `${process.env.E2E_CONTAINER_PREFIX ?? ''}${service}`;
+
 export const APPLICATION_SERVICES = [
   'api-gateway',
   'user-service',
@@ -22,7 +28,7 @@ export const APPLICATION_SERVICES = [
   'audit-service',
   'notification-service',
   'file-service',
-];
+].map(container);
 
 /** Waits until every container serves, each from its own last start. */
 export async function waitServing(trace, containers, { timeoutMs = 300_000 } = {}) {
