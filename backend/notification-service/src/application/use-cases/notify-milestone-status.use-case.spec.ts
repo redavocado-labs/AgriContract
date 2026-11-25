@@ -196,7 +196,7 @@ describe('milestoneStatusText', () => {
         'To the seller:   105,800,000.00 VND',
         'To the buyer:    4,600,000.00 VND',
         '',
-        'escrow-service pays these amounts out of the milestone payment',
+        'The platform pays these amounts out of the milestone payment',
         'locked for it: to the seller for the goods, and back to the buyer',
         'for the rest.',
         '',

@@ -229,7 +229,7 @@ function textOf(
         ]),
         deadline: 'Deadline:',
         action: [
-          'escrow-service pays these amounts out of the milestone payment',
+          'The platform pays these amounts out of the milestone payment',
           'locked for it: to the seller for the goods, and back to the buyer',
           'for the rest.',
         ],
