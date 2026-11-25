@@ -67,6 +67,17 @@ public class OutboxAssignmentAlerts implements AssignmentAlerts {
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
+    public void cancellationTimeAdjusted(String eventId, TimedAssignment assignment, java.time.Instant cancelledAt) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override public void afterCommit() {
+                LOG.info("inspection_level15_cancel_time_adjusted eventId={} contractId={} milestoneId={} cancelledAt={} endedAt={}",
+                        eventId, assignment.contractId(), assignment.milestoneId(), cancelledAt, assignment.assignedAt());
+            }
+        });
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
     public void waitingChanged(WaitingAssignment waiting, Stage stage, String correlationId, String causationId) {
         UUID eventId = UUID.randomUUID();
         var payload = Map.<String, Object>of("contractId", waiting.contractId(), "milestoneId", waiting.milestoneId(),

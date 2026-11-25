@@ -9,4 +9,5 @@ public interface AssignmentAlerts {
     void assigned(TimedAssignment assignment, String email, String correlationId, String causationId);
     void cancelled(TimedAssignment assignment, String email, String correlationId, String causationId);
     void cancellationNoop(String eventId, String contractId, String milestoneId);
+    void cancellationTimeAdjusted(String eventId, TimedAssignment assignment, java.time.Instant cancelledAt);
 }

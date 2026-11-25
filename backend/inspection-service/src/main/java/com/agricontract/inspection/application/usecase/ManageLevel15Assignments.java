@@ -5,6 +5,7 @@ import com.agricontract.inspection.application.port.AssignmentAlerts;
 import com.agricontract.inspection.application.port.AssignmentWaitingRepository;
 import com.agricontract.inspection.application.port.InspectorEligibilityPort;
 import com.agricontract.inspection.application.port.TransactionRunner;
+import com.agricontract.inspection.application.port.FreeCancellationWindow;
 import com.agricontract.inspection.domain.model.TimedAssignment;
 import com.agricontract.inspection.domain.model.WaitingAssignment;
 import com.agricontract.inspection.domain.repository.AssignmentLifecycleRepository;
@@ -31,8 +32,7 @@ public class ManageLevel15Assignments {
     private final Clock clock;
     private final TransactionRunner transactions;
     private final AssignmentWaitingRepository waiting;
-    @org.springframework.beans.factory.annotation.Value("${inspection.assignment.free-cancel-hours:4}")
-    private long freeCancelHours = 4;
+    private final FreeCancellationWindow freeCancellationWindow;
 
     public void requested(Level15AssignmentRequestedCommand request) {
         transactions.inReadCommittedTransaction(() -> {
@@ -59,17 +59,20 @@ public class ManageLevel15Assignments {
                 alerts.waitingChanged(pending.get(), AssignmentAlerts.Stage.CANCELLED, correlationId, eventId);
             } else if (active.isPresent()) {
                 var assignment = active.get();
-                if (cancelledAt.isBefore(assignment.assignedAt())) {
-                    throw new IllegalStateException("Cancellation predates assignment; requires investigation");
-                }
                 if (assignment.freeCancelUntil() == null) {
                     throw new IllegalStateException("Missing stored free cancellation deadline; requires investigation");
                 }
                 String email = inspectors.loadInspectorEmail(assignment.inspectorId());
-                if (!assignments.end(assignment.commissionId(), cancelledAt)) {
+                // The event can be created while a waiting retry owns the milestone lock.
+                // Keep the source timestamp intact; the lifecycle row cannot end before it starts.
+                Instant endedAt = cancelledAt.isBefore(assignment.assignedAt()) ? assignment.assignedAt() : cancelledAt;
+                if (!assignments.end(assignment.commissionId(), endedAt)) {
                     throw new IllegalStateException("Assignment already ended");
                 }
                 alerts.cancelled(assignment, email, correlationId, eventId);
+                if (cancelledAt.isBefore(assignment.assignedAt())) {
+                    alerts.cancellationTimeAdjusted(eventId, assignment, cancelledAt);
+                }
             } else {
                 alerts.cancellationNoop(eventId, contract, milestone);
             }
@@ -138,7 +141,7 @@ public class ManageLevel15Assignments {
         Instant assigned = now();
         var assignment = new TimedAssignment(UUID.randomUUID().toString(), contract, milestone,
                 inspector, assigned, null, days, calendar.deadline(assigned, days), actor, service,
-                assigned.plus(java.time.Duration.ofHours(freeCancelHours)));
+                assigned.plus(freeCancellationWindow.duration()));
         assignments.insert(assignment);
         alerts.assigned(assignment, email, correlationId, causationId);
     }
