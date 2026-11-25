@@ -12,7 +12,8 @@ Section I corrections (checked against the repository on 24/11/2026):
 * Every Bruno request is an integration test (mentor review R01), not a system test: it calls one service directly
   (X-Gateway-Secret / X-Internal-Secret, or the broker) or goes through the gateway with a Keycloak token. System
   tests follow a user flow on the FE (BF-01..BF-07).
-* JMeter and Playwright are planned: there is no .jmx file and no Playwright dependency in the repository yet.
+* JMeter is planned: there is no .jmx file in the repository yet. Playwright is in use: frontend/tests/qa/*.pw.ts
+  (npm run test:e2e, run in CI) with API responses stubbed in the browser, and @axe-core/playwright for axe scans.
 """
 import copy
 import sys
@@ -82,8 +83,10 @@ for tr in tools.findall(qn("w:tr")):
     elif second == "Apache JMeter":
         set_cell_text(tcs[0], "Load and response-time testing (planned: no test plan in the repository yet)")
     elif second == "Playwright":
-        set_cell_text(tcs[0], "Automated browser tests of the web client (planned: not yet a dependency of "
-                              "frontend/)")
+        set_cell_text(tcs[0], "Automated browser tests of the web client: frontend/tests/qa (*.pw.ts, npm run "
+                              "test:e2e, run in CI), API responses stubbed in the browser; @axe-core/playwright for "
+                              "the accessibility scans")
+        set_cell_text(tcs[3], "1.64")
     elif first == "Test case and statistics workbook":
         set_cell_text(tcs[0], "Unit test case and statistics workbook")
 last = tools.findall(qn("w:tr"))[-1]
@@ -165,7 +168,7 @@ set_par_text(plain(find(d, "Other Test Cases (IT, ST, AT)")),
 fill_change_log(next_table(find(d, "Change Log", tag="w:p")),
                 ["24/11/2026", "M", "Hai Long",
                  "Section I: test strategy and tools corrected to match the code (IT mocks, MockMvc levels, Boundary "
-                 "type, Bruno cases are IT, JMeter and Playwright planned). Section II: test data, test case workbooks "
+                 "type, Bruno cases are IT, JMeter planned, Playwright tests in frontend/tests/qa). Section II: test data, test case workbooks "
                  "(Report-5.2 added)"])
 
 d.save(DOC)
