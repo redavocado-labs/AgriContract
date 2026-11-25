@@ -238,7 +238,7 @@ describe('NotifyRemedyFinalizedUseCase', () => {
         '- 5,520,000.00 VND to the buyer:',
         "  forfeited deposit, from the seller's deposit",
         '',
-        'escrow-service carries out these transfers.',
+        'The platform carries out these transfers.',
         '',
       ].join('\n'),
     );
@@ -249,7 +249,7 @@ describe('NotifyRemedyFinalizedUseCase', () => {
     'decision on this contract.',
   ];
   const CLOSES_ON_RECONCILIATION = [
-    'The contract is not closed yet. It closes once escrow-service confirms',
+    'The contract is not closed yet. It closes once the platform confirms',
     'that all money of the contract has cleared, including the final',
     'milestone payment and any earlier transfer that is still pending.',
   ];
@@ -274,7 +274,7 @@ describe('NotifyRemedyFinalizedUseCase', () => {
         '- 5,520,000.00 VND to the seller:',
         "  payment, from the seller's deposit",
         '',
-        'escrow-service carries out these transfers.',
+        'The platform carries out these transfers.',
         '',
         ...CLOSES_ON_RECONCILIATION,
         '',
