@@ -8,11 +8,15 @@
 #       ../../docs/reports/Report-5.1_Unit_Test.xlsx ../../backend <jest json dir>
 #
 # A sheet whose test class did not run, or failed, stops the run (except FAILED_ROWS).
+# api-gateway, product-service and user-service come from data_nhl.py / data_nhl_new.py instead: each row names its
+# test methods and Round 3 is read per test from results/unit-round3 (surefire_cases.py collect). Without LibreOffice,
+# update_51_nhl.py rebuilds just those sheets in the existing workbook through Excel.
 import glob, json, os, re, sys, time
 import uno
 from com.sun.star.beans import PropertyValue
 from all_modules import MODULES as ROUND1_MODULES
 import data_r2_changes, data_r2_contract, data_r2_core, data_r2_team, data_r2_node
+import data_nhl, data_nhl_new, surefire_cases
 
 ROUND1_DATE, ROUND2_DATE = "31/10/2026", "07/11/2026"
 CREATOR = "Nguyen Minh Cuong"
@@ -34,6 +38,13 @@ def day(d):
 
 MODULES = (data_r2_changes.apply(ROUND1_MODULES) + data_r2_changes.NEW_MODULES + data_r2_contract.MODULES
            + data_r2_core.MODULES + data_r2_team.MODULES + data_r2_node.MODULES)
+# api-gateway, product-service and user-service come from data_nhl*.py: each row names its test methods, so Round 3
+# is read per test from surefire (results/unit-round3); rounds 1-2 keep the history the 10/11 report recorded
+TRACED = data_nhl.MODULES + data_nhl_new.MODULES
+TRACED_SERVICES = {m["module"] for m in TRACED}
+MODULES = [m for m in MODULES if m["module"] not in TRACED_SERVICES] + [dict(m, traced=True) for m in TRACED]
+ROUND3, ROUND3_CASES = surefire_cases.load(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                         "results", "unit-round3"))
 MODULES.sort(key=lambda m: m["module"])  # stable: services together, round 1 sheets first
 assert len({m["sheet"] for m in MODULES}) == len(MODULES), "duplicate sheet name"
 assert all(len(m["sheet"]) <= 31 for m in MODULES)
@@ -74,7 +85,7 @@ for m in MODULES:
             EXECUTED["jest"] += tests
     else:
         tests, failed, skipped = SUREFIRE[(m["module"], m["test_class"])]
-        if failed:
+        if failed and not m.get("traced"):  # a traced row shows its own Failed instead
             sys.exit(f"{m['sheet']}: {failed} failing tests")
         EXECUTED["java"] += tests
 
@@ -184,6 +195,16 @@ for ref, text in zip(["A12", "B12", "C12", "D12", "E12", "F12"],
                       "Tester ghi theo người phụ trách service; 1 dòng = 1 kịch bản", "SRS v1.7"]):
     cell(cover, ref).setString(text)
 
+def write_case(sh, row, values):
+    for col, v in enumerate(values):
+        sh.getCellByPosition(col, row - 1).setString(v)
+        same_font(sh.getCellByPosition(col, row - 1))
+    v = sh.getCellByPosition(5, row - 1).Validation
+    v.setFormula1("$T$2:$T$5")
+    for c in (5, 8, 11):
+        sh.getCellByPosition(c, row - 1).Validation = v
+
+
 # ── Module sheets: one copy of ModuleName1 per test class ───────────────────
 STYLE_HEADER, STYLE_CASE = 1100, 1101
 for i, m in enumerate(MODULES):
@@ -206,10 +227,16 @@ for i, m in enumerate(MODULES):
         row += 1
         for case in cases:
             pre, inp, ret, exc, typ = case[:5]
-            date = case[5] if len(case) > 5 else m.get("date", ROUND1_DATE)
             tester = OWNER[m["module"]]
             n += 1
             copy_row(sh, STYLE_CASE, row, 19)
+            if m.get("traced"):
+                values = [f"UTC{n:03d}", pre, inp, f"Return: {ret}\nException: {exc}\nLog message: N/A", typ] + \
+                    surefire_cases.traced_rounds(m, case, tester, ROUND3, ROUND3_CASES)
+                write_case(sh, row, values)
+                row += 1
+                continue
+            date = case[5] if len(case) > 5 else m.get("date", ROUND1_DATE)
             defect = FAILED_ROWS.get((m["sheet"], inp), "")
             r1 = ["Failed" if defect else "Passed", date, tester]
             # round 2 re-ran the 31/10 sheets; a case added before 07/11 to such a sheet was in it too
@@ -217,13 +244,7 @@ for i, m in enumerate(MODULES):
             values = [f"UTC{n:03d}", pre, inp,
                       f"Return: {ret}\nException: {exc}\nLog message: N/A",
                       typ] + r1 + r2 + ["", "", "", "", defect]
-            for col, v in enumerate(values):
-                sh.getCellByPosition(col, row - 1).setString(v)
-                same_font(sh.getCellByPosition(col, row - 1))
-            v = sh.getCellByPosition(5, row - 1).Validation
-            v.setFormula1("$T$2:$T$5")
-            for c in (5, 8, 11):
-                sh.getCellByPosition(c, row - 1).Validation = v
+            write_case(sh, row, values)
             row += 1
     # leftover sample rows below the data
     if row <= 24:
@@ -270,11 +291,25 @@ cell(st, "B6").setFormula("=$Cover.B6")
 cell(st, "F4").setString(CREATOR)
 cell(st, "F6").setString("10/11/2026")
 services = sorted({m["module"] for m in MODULES})
+
+
+def traced_note():
+    # same text update_51_nhl.py appends
+    rows = [(m, c) for m in MODULES if m.get("traced") for _, cs in m["groups"] for c in cs]
+    res = [surefire_cases.row_result(ROUND3_CASES, m["module"], m["test_class"], c[5]) for m, c in rows]
+    return (f" api-gateway, product-service, user-service: mỗi dòng ghi test method trong Note; Round 1/2 là lịch sử "
+            f"của báo cáo 10/11, Round 3 chạy ngày {ROUND3['date']} trên commit {ROUND3['commit']} "
+            f"({ROUND3.get('command', '')}), kết quả từng test đọc từ surefire "
+            f"(scripts/unit-test-report/results/unit-round3/cases.json); bảng này lấy Round 3 cho 3 service đó. "
+            f"{len(rows)} kịch bản: {res.count('Passed')} Passed, {res.count('Failed')} Failed"
+            + (f", {res.count('')} chưa chạy" if res.count("") else "") + ".")
+
+
 cell(st, "B7").setString(
     f"Unit test của {len(services)} module: {', '.join(services)}. "
     f"Round 1 = lần chạy đầu (31/10/2026 với module cũ, ngày merge với module mới); Round 2 = chạy lại module cũ "
     f"ngày {ROUND2_DATE}. 1 dòng = 1 kịch bản: test lặp lại trên bảng dữ liệu gộp thành 1 dòng. "
-    f"Số test đã chạy thật: {EXECUTED['java']} (JUnit) + {EXECUTED['jest']} (Jest).")
+    f"Số test đã chạy thật: {EXECUTED['java']} (JUnit) + {EXECUTED['jest']} (Jest)." + traced_note())
 for i, m in enumerate(MODULES):
     r = 12 + i
     if r > 12:
@@ -282,8 +317,9 @@ for i, m in enumerate(MODULES):
     s = f"${m['sheet']}"
     st.getCellByPosition(0, r - 1).setValue(i + 1)
     link_to_sheet(st.getCellByPosition(1, r - 1), m["sheet"])
-    # Round 1 row (5) — template pointed at Round 3 (row 7)
-    for col, ref in zip(range(2, 9), ["B5", "C5", "D5", "B9", "C9", "D9", "B3"]):
+    # Round 1 row (5) — template pointed at Round 3 (row 7); traced sheets use their Round 3 run
+    rnd = "7" if m.get("traced") else "5"
+    for col, ref in zip(range(2, 9), [f"B{rnd}", f"C{rnd}", f"D{rnd}", "B9", "C9", "D9", "B3"]):
         st.getCellByPosition(col, r - 1).setFormula(f"={s}.{ref}")
 cell(st, "B7").IsTextWrapped = True
 st.Rows.getByIndex(6).Height = 4 * 520

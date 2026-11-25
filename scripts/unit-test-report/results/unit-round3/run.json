@@ -1,0 +1,11 @@
+{
+  "date": "25/11/2026",
+  "tester": "Nguyen Hai Long",
+  "commit": "614e6ab6",
+  "command": "mvn -pl api-gateway,product-service,user-service -am test",
+  "services": [
+    "api-gateway",
+    "product-service",
+    "user-service"
+  ]
+}

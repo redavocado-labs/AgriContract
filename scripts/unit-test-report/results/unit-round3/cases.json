@@ -1,0 +1,894 @@
+{
+ "api-gateway/ClientIpRateLimitGatewayFilterFactoryTest": {
+  "buckets_areSeparatePerClientIp": "passed",
+  "nonPositiveLimit_isRefused": "passed",
+  "requestsOverTheLimit_areRejectedUntilTheWindowEnds": "passed",
+  "withOneTrustedProxy_bucketIsTheAddressThatProxyAppended": "passed",
+  "withoutTrustedProxy_clientSuppliedForwardedFor_cannotPickANewBucket": "passed"
+ },
+ "api-gateway/CorrelationIdFilterTest": {
+  "resolve_acceptsUpperCaseUuid": "passed",
+  "resolve_replacesAnythingButACanonicalUuid": "passed",
+  "responseHeader_overridesValueSetDownstream": "passed",
+  "withValidHeader_keepsIt": "passed",
+  "withoutHeader_generatesUuid_forDownstreamAndResponse": "passed"
+ },
+ "api-gateway/CorsConfigTest": {
+  "allowlist_isParsedAsExactOriginsWithoutCredentials": "passed",
+  "wildcardOrigin_isRefusedAtStartup": "passed"
+ },
+ "api-gateway/EvidenceUploadRouteTest": {
+  "theEvidenceUpload_isTheOnlyRouteWithA10MiBCap": "passed"
+ },
+ "api-gateway/GatewayBoundaryTest": {
+  "adminUserRoute_withoutToken_isRejected": "passed",
+  "auditHash_withoutJwt_isForwardedWithApiKeyUntouched": "passed",
+  "authenticatedRoute_eachApplicationRole_isForwardedWithThatRole": "passed",
+  "categoryRoute_isForwardedToProductService": "passed",
+  "corsPreflight_fromAllowedOrigin_isAnsweredWithoutToken": "passed",
+  "corsPreflight_fromUnknownOrigin_isForbidden": "passed",
+  "downstreamTimeout_carriesCorrelationId": "passed",
+  "downstreamTimeout_isGatewayTimeoutAndNotFabricated": "passed",
+  "escrowStatement_isParticipantAuthenticated": "passed",
+  "forbiddenAndNotFoundRejections_carryCorrelationId": "passed",
+  "internalRoute_isNotFoundAndNeverForwarded_regardlessOfBearer": "passed",
+  "internalRoute_nonGetMethod_isNotFoundAndNeverForwarded": "passed",
+  "jsonRoute_bodyOverDefaultCap_isRejectedWith413": "passed",
+  "manualPrice_withoutToken_isRejected": "passed",
+  "multiRoleToken_forwardsFullRoleSet": "passed",
+  "participantContractAction_nextToStaffActions_staysAuthenticatedOnly": "passed",
+  "pathTraversalTowardsInternalRoute_isNeverForwarded": "passed",
+  "plotRoute_isForwardedToProductService": "passed",
+  "protectedRoute_forgedIdentityHeaders_downstreamReceivesJwtIdentity": "passed",
+  "protectedRoute_withoutToken_isRejected": "passed",
+  "publicDetailRoute_withUuid_isForwardedAnonymously": "passed",
+  "publicPath_withNonGetMethod_requiresToken": "passed",
+  "publicPriceRoutes_withoutToken_areForwardedAnonymously": "passed",
+  "publicRoute_withInvalidToken_isRejected": "passed",
+  "publicRoute_withoutToken_forwardsWithoutIdentityButWithGatewaySecret": "passed",
+  "removedNotificationRoute_isNotFound": "passed",
+  "reputationPublicSummary_requiresToken": "passed",
+  "requestWithInvalidCorrelationId_isReplaced": "passed",
+  "requestWithValidCorrelationId_keepsIt_evenIfDownstreamEchoesAnother": "passed",
+  "requestWithoutCorrelationId_getsGeneratedOne_downstreamAndOnResponse": "passed",
+  "reservedSiblingOfPublicDetailRoute_withToken_isForwardedWithIdentity": "passed",
+  "reservedSiblingOfPublicDetailRoute_withoutToken_isRejected": "passed",
+  "staffAction_withAnyOtherRole_isForbiddenAndNeverForwarded": "passed",
+  "staffAction_withItsRole_isForwardedWithJwtIdentity": "passed",
+  "unauthenticatedRejection_carriesCorrelationId": "passed",
+  "verifierRoute_bodyAtCap_isForwarded": "passed",
+  "verifierRoute_chunkedBodyOverCap_isRejectedWith413": "passed",
+  "verifierRoute_chunkedBodyUnderCap_isForwardedByteForByte": "passed",
+  "verifierRoute_declaredBodyOverCap_isRejectedWith413": "passed",
+  "verifierRoute_forwardsRawBodyWithoutUserIdentity_evenWithStrayBearer": "passed",
+  "verifierRoute_otherMethod_isNotFound": "passed",
+  "verifierRoute_overPerIpLimit_isRejectedWith429AndNeverForwarded": "passed",
+  "writeRequest_downstreamDropsConnection_isSentExactlyOnce": "passed"
+ },
+ "api-gateway/GatewayJwtIssuerAudienceTest": {
+  "frontendToken_isForwarded": "passed",
+  "tokenForAnotherClientInSameRealm_isRejected": "passed",
+  "tokenFromAnotherIssuer_isRejected": "passed",
+  "tokenWithoutAudience_isRejected": "passed"
+ },
+ "api-gateway/RequestBodyLimitGatewayFilterFactoryTest": {
+  "aCapGivenAsText_isReadToo": "passed",
+  "aRouteWithoutItsOwnCap_keepsTheDefault": "passed",
+  "theEvidenceRoute_takesUpTo10MiB_andNotOneByteMore": "passed"
+ },
+ "api-gateway/UserContextInjectionFilterTest": {
+  "allCanonicalRoles_areForwardedTogether": "passed",
+  "anonymousRequest_forgedAuthTime_isStripped": "passed",
+  "anonymousRequest_forgedIdentityHeaders_areStrippedAndGatewaySecretInjected": "passed",
+  "anonymousRequest_rawAuthorizationHeader_isNotForwarded": "passed",
+  "anyXUserHeaderAndInternalSecret_areStrippedCaseInsensitively": "passed",
+  "authTimeClaimAsInstant_isForwardedAsEpochSeconds": "passed",
+  "authTimeClaim_isForwardedAsEpochSeconds": "passed",
+  "authenticatedRequest_forgedIdentityHeaders_areReplacedByJwtIdentity": "passed",
+  "jwtWithOnlyHousekeepingRoles_isRejectedWithForbidden": "passed",
+  "jwtWithoutEmail_isForwardedWithoutEmailHeader": "passed",
+  "jwtWithoutRoles_isRejectedWithForbidden": "passed",
+  "realmHousekeepingRoles_areNotForwarded": "passed",
+  "tokenWithoutAuthTime_forwardsNoAuthTime_evenIfTheClientSentOne": "passed"
+ },
+ "product-service/ApproveCategoryUseCaseImplTest": {
+  "execute_alreadyApproved_throwsIllegalState": "passed",
+  "execute_notFound_throws": "passed",
+  "execute_pendingCategory_approvesAndSaves": "passed"
+ },
+ "product-service/AssignCategoryCommodityUseCaseImplTest": {
+  "execute_commodityAlreadyAssigned_throwsAndDoesNotSave": "passed",
+  "execute_legacyApprovedCategory_assignsAndSaves": "passed",
+  "execute_notFound_throws": "passed"
+ },
+ "product-service/CategoryControllerTest": {
+  "approveOrReject_asAdminOrSeller_is403": "passed",
+  "approve_missingOrUnknownCommodity_is400": "passed",
+  "approve_withCommodity_is200": "passed",
+  "approve_withoutBody_is400": "passed",
+  "assign_alreadyMapped_is409": "passed",
+  "assign_asAdminOrSeller_is403": "passed",
+  "assign_asOperator_is200": "passed",
+  "assign_missingOrUnknownCommodity_is400": "passed",
+  "listApproved_isBareArrayOfFrozenCategorySummary_legacyCommodityNull": "passed",
+  "listApproved_withoutSignedInCaller_isRefused": "passed",
+  "phase1Paths_areGone": "passed",
+  "reject_asOperator_is200": "passed"
+ },
+ "product-service/CategoryPersistenceTest": {
+  "approvedOnly_orderedByName_legacyCommodityNull": "passed",
+  "noApprovedCategory_isEmpty": "passed"
+ },
+ "product-service/CategoryTest": {
+  "approve_fromPending_statusApprovedAndEventEmitted": "passed",
+  "approve_notPending_throws": "passed",
+  "approve_nullCommodity_throwsAndStaysPending": "passed",
+  "assignCommodity_alreadyAssigned_throws": "passed",
+  "assignCommodity_legacyApproved_becomesApprovedCoffeeWithoutEvent": "passed",
+  "assignCommodity_notApproved_throws": "passed",
+  "assignCommodity_null_throws": "passed",
+  "propose_blankName_throws": "passed",
+  "propose_happyPath_statusPendingNoEvent": "passed",
+  "pullDomainEvents_clearsInternalList": "passed",
+  "reject_blankReason_throws": "passed",
+  "reject_fromPending_statusRejectedAndEventEmitted": "passed",
+  "reject_notPending_throws": "passed"
+ },
+ "product-service/CheckPlotForestBaselineUseCaseImplTest": {
+  "everyPickedPlot_isStampedAsAttempted_beforeItIsChecked": "passed",
+  "oneFailingPlot_doesNotStopTheBatch": "passed",
+  "outsideBaselineCoverage_recordsNothing_soThePlotWaitsForTheTimeout": "passed",
+  "overlapWithNaturalForest_recordsHighRiskWithItsAuditRecord": "passed",
+  "resultDroppedBecauseThePlotChanged_isNotCounted": "passed"
+ },
+ "product-service/ContractCreatedConsumerTest": {
+  "decimalQuantity_isHandedToUseCaseExactly": "passed",
+  "malformedJson_isRejectedToDlq": "passed",
+  "nonPositiveOrNonNumericQuantity_isRejectedToDlq": "passed",
+  "nonUuidContractId_isRejectedToDlq": "passed",
+  "otherEventType_isRejectedToDlq": "passed",
+  "otherProducerOrVersion_isRejectedToDlq": "passed",
+  "unknownEnvelopeField_isRejectedToDlq": "passed",
+  "unknownPayloadField_isRejectedToDlq": "passed",
+  "validEvent_isHandedToUseCaseWithExactQuantity": "passed",
+  "validFixture_matchesFrozenSchema": "passed"
+ },
+ "product-service/ContractLifecycleConsumerTest": {
+  "activated_isHandedToUseCase": "passed",
+  "activationFailed_isHandedToUseCase": "passed",
+  "decimalQuantity_isHandedToUseCaseExactly": "passed",
+  "eventOfAnotherTypeOnTheQueue_isRejectedToDlq": "passed",
+  "fixtures_matchFrozenSchemas": "passed",
+  "nonPositiveOrNonNumericQuantity_isRejectedToDlq": "passed",
+  "nonUuidContractIdOrBadTimestamp_isRejectedToDlq": "passed",
+  "otherProducerOrVersion_isRejectedToDlq": "passed",
+  "signed_isHandedToUseCaseWithExactQuantity": "passed",
+  "unknownPayloadField_isRejectedToDlq": "passed",
+  "withdrawn_isHandedToUseCase": "passed"
+ },
+ "product-service/ContractLifecycleIntegrationTest": {
+  "activatedBeforeSigned_isRetried_withNothingRecorded_thenAppliesInOrder": "passed",
+  "activated_commitsOnce_andAReplayChangesNothing": "passed",
+  "activationFailedAfterCommit_isAnIncident_andRestoresNothing": "passed",
+  "activationFailedOvertakingSigned_releases_andTheLateSignedIsQuiet": "passed",
+  "activationFailed_releasesASignedReservation_restoringOnce_evenWhenRedeliveredOrRepeated": "passed",
+  "concurrentWithdrawnAndActivationFailed_restoreOnce": "passed",
+  "eventThatDoesNotMatchTheReservation_isAlerted_andChangesNothing": "passed",
+  "eventWithoutReservation_isAlerted": "passed",
+  "failedRelease_rollsBackTransitionAndDedupRow_soRedeliveryApplies": "passed",
+  "signedOnAReleasedReservation_withoutActivationFailure_isAnIncident": "passed",
+  "signed_movesToSignedReleasable_withoutCommittingInventory": "passed",
+  "withdrawnAfterACompensationRelease_isQuiet_andRestoresNothingMore": "passed",
+  "withdrawnAfterSigned_isAnIncident_andRestoresNothing": "passed",
+  "withdrawn_onASellerClosedListing_restoresTheCounterButKeepsItClosed": "passed",
+  "withdrawn_releasesOnce": "passed"
+ },
+ "product-service/CreateListingControllerTest": {
+  "contractFieldRules_are400": "passed",
+  "firstRequest_is201_andReplay_is200_bothWithTheBareListing": "passed",
+  "ineligibleSeller_is403": "passed",
+  "missingIdempotencyKey_is400_withTheSharedErrorEnvelope": "passed",
+  "phase1CloseEndpoint_isGone": "passed",
+  "requestAndResponse_matchTheFrozenSchemas": "passed",
+  "requestBody_isReadExactly": "passed",
+  "sameKeyDifferentBody_is409_idempotencyKeyReused": "passed",
+  "unknownField_is400_andNothingRuns": "passed",
+  "update_belowTheReservedQuantity_is409": "passed",
+  "update_byABuyer_is403": "passed",
+  "update_byAnotherSeller_is403_notListingSeller": "passed",
+  "update_byTheOwner_is200_withTheFrozenListingResponse": "passed",
+  "update_withoutIdempotencyKey_is400": "passed",
+  "userServiceUnavailable_is503": "passed",
+  "withoutGatewaySecret_is403_withTheSharedErrorEnvelope": "passed"
+ },
+ "product-service/CreateListingUseCaseImplTest": {
+  "execute_anotherSellersPlot_isForbiddenAndNothingSaved": "passed",
+  "execute_askingUnitPrice_isKeptExactly": "passed",
+  "execute_authorizationExpired_isForbidden": "passed",
+  "execute_blankOrOversizedKey_isRejectedBeforeAnyLookup": "passed",
+  "execute_categoryApprovedBeforeCommodityExisted_isRejectedAsNotCoffee": "passed",
+  "execute_concurrentInsertWithTheSameKey_returnsTheWinner": "passed",
+  "execute_copiesCategoryAndSeasonFromTheProduct_andTakesDeclaredGoodsFromTheRequest": "passed",
+  "execute_happyPath_snapshotsProductCoverImageAndPlots": "passed",
+  "execute_lockEndingExactlyNow_isNoLongerLocked": "passed",
+  "execute_newKey_isCreated": "passed",
+  "execute_noUserProfile_isForbidden": "passed",
+  "execute_plotStillPendingGeoCheck_isRejected": "passed",
+  "execute_productNameNotTheProducts_isRejected": "passed",
+  "execute_qualitySpecWithMoreThanTwoDecimals_isRejected": "passed",
+  "execute_replayWithDifferentPlotsQualityOrPrice_isIdempotencyKeyReused": "passed",
+  "execute_reputationLockedSeller_isForbidden": "passed",
+  "execute_sameKeyAndBody_returnsTheFirstListing_withoutASecondInsert": "passed",
+  "execute_sameKeyWithADifferentBody_isIdempotencyKeyReused": "passed",
+  "execute_samePlotTwice_isRejected": "passed",
+  "execute_sellerNotVerified_isForbidden": "passed",
+  "execute_unknownPlot_getsTheSameAnswerAsAnotherSellersPlot": "passed",
+  "execute_userServiceUnavailable_failsClosedAndNothingIsRead": "passed"
+ },
+ "product-service/CreateProductUseCaseImplTest": {
+  "execute_approvedCategory_createsProduct": "passed",
+  "execute_categoryApprovedBeforeCommodityExisted_isNotCoffee": "passed",
+  "execute_categoryNotFound_throws": "passed",
+  "execute_categoryPending_throwsNotApproved": "passed",
+  "execute_keepsSeasonData_blankHarvestSeasonIsNotDeclared": "passed",
+  "execute_legacyCategoryAfterOperatorAssignsCommodity_createsProduct": "passed",
+  "execute_sameIdDifferentAttributes_throwsConflict": "passed",
+  "execute_sameIdSameAttributes_idempotentReturnsExisting": "passed"
+ },
+ "product-service/DlqMonitorTest": {
+  "everyDlqIsProbed_andEmptyOnesLogNothing": "passed",
+  "failedProbe_logsQueueOnlyAndDoesNotThrow": "passed",
+  "nonEmptyDlq_logsWarning": "passed",
+  "outOfBoundsTiming_isRefused": "passed",
+  "probeConnection_isBoundedAndIsolated": "passed"
+ },
+ "product-service/ErrorDispatchSecurityTest": {
+  "anOrdinaryRequestToErrorIsStillNotOpen": "passed",
+  "errorDispatchRendersTheRealStatusInsteadOfAnEmpty403": "passed",
+  "theErrorDispatchRuleDoesNotOpenBusinessRoutes": "passed"
+ },
+ "product-service/ForestBaselineCheckPersistenceTest": {
+  "aCheckedPlot_isNotPickedUpAgain": "passed",
+  "highRiskPlot_isNotRejected_itCanStillBackAListing": "passed",
+  "manualPinPoint_insideForest_isHighRisk": "passed",
+  "outsideCoverage_staysPending_withNoAuditRecord": "passed",
+  "overlapSetsTheRiskSignal_andEachResultIsAudited": "passed",
+  "staleResult_isDropped_afterAReimportOrTheTimeout": "passed",
+  "uncoveredPlots_thatFillTheBatch_doNotStarveNewerPlots": "passed"
+ },
+ "product-service/GetListingContractSnapshotUseCaseImplTest": {
+  "blankToken_isRejectedWithoutReading": "passed",
+  "coffeeGoodsWithoutPlot_is409StateConflict": "passed",
+  "currentToken_returnsTheListingCopies_matchingBothFrozenSchemas": "passed",
+  "legacyListingWithoutPlotsOrGoods_is409StateConflict": "passed",
+  "legacyListing_withAnyToken_isStillAVersionCheckFirst": "passed",
+  "missingCategory_is409StateConflict": "passed",
+  "nullSeasonData_isSentAsExplicitNull": "passed",
+  "staleToken_is409VersionMismatch_beforeAnythingElseIsRead": "passed",
+  "unknownListing_isNotFound": "passed"
+ },
+ "product-service/GetProductUseCaseImplTest": {
+  "found_returnsTheReadFields": "passed",
+  "unknown_isProductNotFound": "passed"
+ },
+ "product-service/ImportPlotsFromKmlUseCaseImplTest": {
+  "fileWithoutPlacemarks_orWithoutProvince_isRefused": "passed",
+  "goodPlacemarksAreStored_badOnesAreReportedByName": "passed",
+  "labelTooLong_orAreaTooLarge_isRejectedPerPlacemark_andTheRestOfTheFileGoesIn": "passed",
+  "polygonPlacemark_isRegisteredWithItsComputedArea": "passed",
+  "tooManyPlacemarks_isRefusedBeforeAnyIsStored": "passed"
+ },
+ "product-service/InternalUserClientTest": {
+  "constructor_blankSecret_isRejected": "passed",
+  "getEmail_found_readsTheInternalEndpointWithTheServiceSecret": "passed",
+  "getEmail_malformedMissingOrMismatchedBody_isUnavailable": "passed",
+  "getEmail_noProfile_throwsUserProfileNotFound": "passed",
+  "getEmail_otherErrorStatus_isUnavailable": "passed",
+  "getEmail_slowUserService_timesOutAsUnavailable": "passed",
+  "getEmail_userServiceDown_isUnavailable": "passed",
+  "load_lockedUser_carriesLockedUntil": "passed",
+  "load_malformedOrMismatchedBody_failsClosed": "passed",
+  "load_noProfile_isEmptyNotUnavailable": "passed",
+  "load_nonJsonContentType_failsClosed": "passed",
+  "load_otherErrorStatus_failsClosed": "passed",
+  "load_readsTheInternalEndpointWithTheServiceSecret": "passed",
+  "load_slowUserService_timesOutAndFailsClosed": "passed",
+  "load_userServiceDown_failsClosed": "passed"
+ },
+ "product-service/KmlPlacemarkReaderTest": {
+  "badPlacemarks_areRejectedOneByOne_andTheGoodOneStillReads": "passed",
+  "doctype_isRefused_soNoExternalEntityIsEverResolved": "passed",
+  "notKml_isRefused": "passed",
+  "point_areaFromSchemaDataWithDecimalComma": "passed",
+  "point_withAreaInExtendedData": "passed",
+  "point_withoutArea_isReadWithNullArea": "passed",
+  "polygon_withOuterAndInnerRings": "passed"
+ },
+ "product-service/ListActiveListingsUseCaseImplTest": {
+  "anonymous_getsListingsWithoutReputation_andNoLookup": "passed",
+  "anonymous_withReputationFilter_isRejectedBeforeAnyRead": "passed",
+  "emptyPage_doesNotCallReputation": "passed",
+  "minSellerScore_dropsOnlyKnownScoresBelowIt_unratedPasses": "passed",
+  "partialOutage_filtersKnownSellers_keepsUnknownOnes": "passed",
+  "reputationOutage_keepsEveryListing_andFlagsUnavailable": "passed",
+  "signedIn_readsEachSellerOnce_andShowsReputation": "passed"
+ },
+ "product-service/ListMyPlotsUseCaseImplTest": {
+  "noEntries_isEmptyPageWithZeroPages": "passed",
+  "readsOnlyTheCallersEntries_andCountsPages": "passed"
+ },
+ "product-service/ListenerRetryTest": {
+  "malformedDelivery_isAttemptedOnce": "passed",
+  "processingFailure_isAttemptedThreeTimesThenRejected": "passed"
+ },
+ "product-service/ListingContractSnapshotControllerTest": {
+  "currentToken_is200_withBareSnapshot": "passed",
+  "missingToken_is400": "passed",
+  "staleToken_is409_withFrozenCode": "passed",
+  "unknownListing_is404": "passed",
+  "withoutInternalSecret_is401_evenForAGatewayUser": "passed"
+ },
+ "product-service/ListingContractSnapshotIntegrationTest": {
+  "listingEditedAfterTheBuyerRead_refusesTheOldToken": "passed",
+  "registryEntryEditedAfterListingCreate_doesNotChangeTheSnapshot": "passed"
+ },
+ "product-service/ListingInventoryPersistenceTest": {
+  "checkConstraints_rejectOutOfRangeCounters": "passed",
+  "createIdempotencyKey_isFoundPerSeller_andTwoSellersMayUseTheSameKey": "passed",
+  "createIdempotencyKey_secondInsertBySameSeller_isRejectedByTheUniqueKey": "passed",
+  "drainToZero_closesAsInventoryExhausted_andReleaseReopens": "passed",
+  "lastStock_twoConcurrentDecrements_onlyOneWins": "passed",
+  "legacyListingWithoutGoods_staysReadable_andReportsTheMissingQualitySpec": "passed",
+  "legacyNullListing_failsClosedAndStaysNull": "passed",
+  "newListing_persistsQuantityAvailableEqualToOffered": "passed",
+  "newListing_readsBackItsCoffeeGoods": "passed",
+  "nonPositiveQuantity_isRejectedBeforeTouchingTheRow": "passed",
+  "qualitySpecIsAllOrNothing_inTheDatabaseToo": "passed",
+  "release_keepsSellerCloseLegacyCloseAndPause_onlyTheCounterMoves": "passed",
+  "release_neverExceedsOfferedQuantity": "passed",
+  "reservation_roundTripsAndContractIdIsUnique": "passed",
+  "reserveAndRelease_moveAvailablePartiallyCommittedClosedAndBack": "passed",
+  "reserve_belowMinOrderQuantity_changesNothing": "passed",
+  "reserve_doesNotChangeVersionToken": "passed",
+  "reserve_partialFill_thenInsufficientFailsWithoutChange": "passed",
+  "reserve_pausedOrSellerClosed_changesNothing": "passed",
+  "reserve_staleOrForeignToken_changesNothing": "passed",
+  "save_isInsertOnly": "passed",
+  "transition_isConditional_soReplayAppliesOnce": "passed"
+ },
+ "product-service/ListingReservationControllerTest": {
+  "release_is204": "passed",
+  "release_wrongReason_is400": "passed",
+  "reserve_conflict_is409_withFrozenCode": "passed",
+  "reserve_new_is201_withBareBody": "passed",
+  "reserve_nonPositiveQuantity_is400": "passed",
+  "reserve_replay_is200": "passed",
+  "reserve_withoutInternalSecret_is401_evenWithGatewaySecret": "passed"
+ },
+ "product-service/ListingReservationUseCaseIntegrationTest": {
+  "release_afterSignedOrCommitted_isStateConflict": "passed",
+  "release_concurrentReplays_restoreOnce": "passed",
+  "release_failedCounterRestore_rollsBackTheStatus": "passed",
+  "release_keepsASellerClosedListingClosed": "passed",
+  "release_payloadMismatch_isStateConflict": "passed",
+  "release_reopensListingClosedByExhaustion": "passed",
+  "release_restoresOnce_andReplayIsNoOp": "passed",
+  "release_unknownReservation_isNotFound": "passed",
+  "reserve_belowMinOrderQuantity_isInsufficient": "passed",
+  "reserve_concurrentForFinalStock_hasOneWinner": "passed",
+  "reserve_concurrentSameContractId_decrementsOnce": "passed",
+  "reserve_legacyNullListing_failsClosed": "passed",
+  "reserve_partialFill_thenInsufficient": "passed",
+  "reserve_replayAfterRelease_isStateConflict": "passed",
+  "reserve_replayDifferentPayload_isStateConflict": "passed",
+  "reserve_replaySamePayload_returnsSameReservationWithoutSecondDecrement": "passed",
+  "reserve_sellerClosedListingWithStock_isListingStateConflict": "passed",
+  "reserve_staleToken_isVersionMismatch": "passed",
+  "reserve_unknownListing_isNotFound": "passed"
+ },
+ "product-service/ListingSearchControllerTest": {
+  "anonymous_reputationFilter_is401": "passed",
+  "anonymous_searchesWithoutViewer": "passed",
+  "minSellerScore_outOfRange_is400": "passed",
+  "reputationOutage_isStill200": "passed",
+  "signedIn_viewerComesFromThePrincipal_andReputationSitsBesideTheListingFields": "passed"
+ },
+ "product-service/ListingStatusMigrationTest": {
+  "phase1StatusesMapFromQuantities": "passed"
+ },
+ "product-service/ListingTest": {
+  "classifyRejectedReserve_enoughStockAndOpen_isVersionMismatch": "passed",
+  "classifyRejectedReserve_enoughStockButNotOpen_isStateConflict": "passed",
+  "classifyRejectedReserve_quantityProblemsAreInsufficient": "passed",
+  "create_initializesQuantityAvailableFromOfferedQuantity": "passed",
+  "create_minOrderQuantityMissingOrOutOfRange_throws": "passed",
+  "edit_belowTheReservedTotal_isRefusedAndChangesNothing": "passed",
+  "edit_closedListingGettingStockAgain_isRepublished": "passed",
+  "edit_legacyListingWithoutQualitySpec_isRefused": "passed",
+  "edit_legacyNullCounterWithoutReservation_isInitializedFromTheOffer": "passed",
+  "edit_loweringTheOfferToTheReservedTotal_closesAsSellerClose": "passed",
+  "edit_minOrderAboveTheNewOffer_isRefused": "passed",
+  "edit_raisingTheOffer_keepsTheReservedPartOut": "passed",
+  "reconstruct_legacyRow_keepsQuantityAvailableNull": "passed",
+  "versionToken_isCanonicalUtcUpdatedAt": "passed"
+ },
+ "product-service/OrphanReservationReaperIntegrationTest": {
+  "contractCreated_onReservedReservation_isQuietConfirmation": "passed",
+  "contractCreated_withoutReservation_alerts": "passed",
+  "lateContractCreated_afterReap_logsAndAlertsOnce_withoutTouchingInventory": "passed",
+  "reap_alwaysFailingCandidates_doNotStarveNewerOrphans": "passed",
+  "reap_candidatesWithSameCreatedAt_areAllReleasedAcrossPages": "passed",
+  "reap_concurrentRuns_restoreOnce": "passed",
+  "reap_keepsReservationInsideGracePeriod": "passed",
+  "reap_neverTouchesSignedOrCommitted": "passed",
+  "reap_releasesStaleOrphanOnce": "passed",
+  "reap_sellerClosedListing_restoresCounterButStaysClosed": "passed",
+  "reap_skipsReservationWhoseContractCreatedWasRecorded": "passed"
+ },
+ "product-service/OrphanReservationReaperJobTest": {
+  "reapsReservationsCreatedBeforeTheGracePeriod": "passed",
+  "zeroGrace_isRejectedAtStartup": "passed"
+ },
+ "product-service/PlotControllerTest": {
+  "buyer_isForbidden": "passed",
+  "geometryRejectedByTheDomain_is400": "passed",
+  "internalSecretWithAForgedSellerId_isForbidden": "passed",
+  "kml_newHouseholds_is201_withRejectedPlacemarksListed": "passed",
+  "kml_onlyUpdates_is200_andNothingStored_is400": "passed",
+  "kml_over5Mb_is400_withoutCallingTheUseCase": "passed",
+  "kml_withoutOrWithBadProvince_is400": "passed",
+  "listMyPlots_asBuyer_is403": "passed",
+  "listMyPlots_isFrozenPlotRegistryPage_withoutGeometry_ownerFromPrincipal": "passed",
+  "listMyPlots_pagingOutOfRange_is400": "passed",
+  "listMyPlots_pagingWithinBounds_isPassedThrough": "passed",
+  "manualPin_clientCannotChooseGeometryTypeOrSource": "passed",
+  "manualPin_existingHousehold_is200": "passed",
+  "manualPin_new_is201_ownerFromPrincipal": "passed",
+  "manualPin_unknownProvinceOrMissingArea_is400": "passed",
+  "otherContentType_is415": "passed",
+  "withoutGatewaySecret_isForbidden": "passed",
+  "withoutIdempotencyKey_is400": "passed"
+ },
+ "product-service/PlotGeometriesTest": {
+  "coordinateOutsideVietNam_isRejected_includingSwappedLatLng": "passed",
+  "point_over4Hectares_mustBeAPolygon": "passed",
+  "point_roundsToSixDecimalsAndHashesTheCanonicalWkt": "passed",
+  "point_withoutPositiveArea_isRejected": "passed",
+  "polygon_aboveTheHouseholdMaximum_isRejected": "passed",
+  "polygon_areaIsComputedOnTheSphere": "passed",
+  "polygon_holeIsSubtracted": "passed",
+  "polygon_openOrTooShortRing_isRejected": "passed",
+  "polygon_sameShapeFromAnotherStartPointOrDirection_hashesEqual": "passed",
+  "polygon_selfIntersecting_isRejected": "passed"
+ },
+ "product-service/PlotRegistrarTest": {
+  "concurrentInsertOfTheSameHousehold_isAppliedOnTopOfTheWinner": "passed",
+  "labelOver255Characters_isRejectedBeforeTheDatabase": "passed",
+  "newHousehold_isCreatedPending": "passed",
+  "otherIntegrityError_isNotTakenForARace": "passed",
+  "sameHousehold_inAnotherUnicodeForm_updatesTheExistingEntry": "passed"
+ },
+ "product-service/PlotRegistryEntryTest": {
+  "accuracy_isOnlyForAManualPin": "passed",
+  "geoCheck_ambiguousOnlyOverlap_isInconclusive_noOverlap_isLowRisk": "passed",
+  "geoCheck_naturalForestOverlap_isHighRisk_andStillCanBackAListing": "passed",
+  "geoCheck_onlyAppliesToAPendingPlot": "passed",
+  "manualPin_canOnlyDeclareAPoint": "passed",
+  "normalizeLabel_makesNfcAndNfdEqual_butKeepsDiacritics": "passed",
+  "normalizeLabel_over255Characters_isRejected_countedAfterNfc": "passed",
+  "ownership": "passed",
+  "register_startsPendingSelfDeclared_andCannotBackAListingYet": "passed",
+  "reimport_changedGeometry_restartsTheGeoCheck": "passed",
+  "reimport_sameGeometry_keepsTheFinishedGeoCheck": "passed",
+  "unverifiedAndChecked_canBackAListing": "passed"
+ },
+ "product-service/PlotRegistryPersistenceTest": {
+  "geoTimeout_movesOnlyPendingEntriesImportedBeforeTheCutoff": "passed",
+  "householdMatch_isAccentSensitive": "passed",
+  "listingCopy_isNotChangedByALaterReimportOfTheRegistryEntry": "passed",
+  "otherIntegrityError_isNotReportedAsADuplicateHousehold": "passed",
+  "pagedListingReads_carryEachListingsOwnPlots": "passed",
+  "polygon_storedAsSrid4326LongLat_withTheAreaMySqlComputesToo": "passed",
+  "sameHouseholdOfTheSameSeller_isOneRow": "passed",
+  "sellerPage_onlyTheSellersEntries_newestImportFirst_tiesById": "passed"
+ },
+ "product-service/ProductControllerTest": {
+  "anonymous_found_is200_withFrozenProductResponse": "passed",
+  "optionalFields_areSentAsNull": "passed",
+  "unknownOrNonUuidId_is404": "passed"
+ },
+ "product-service/ProductTest": {
+  "create_duplicateImages_throws": "passed",
+  "create_happyPath_setsFieldsAndCoverImage": "passed",
+  "create_invalidUrl_throws": "passed",
+  "create_moreThanFiveImages_throws": "passed",
+  "create_noImages_throws": "passed",
+  "create_nonHttpScheme_throws": "passed",
+  "create_nullImages_throws": "passed",
+  "updateImages_fullReplace_overwritesAll": "passed",
+  "updateImages_invalid_throwsAndKeepsOldState": "passed"
+ },
+ "product-service/ProposeCategoryUseCaseImplTest": {
+  "execute_concurrentDuplicateRace_repositoryDuplicatePropagates": "passed",
+  "execute_duplicateNormalizedName_throwsWithoutCallingUserService": "passed",
+  "execute_newName_savesWithEmailFromUserServiceAndReturnsPending": "passed",
+  "execute_userServiceUnavailable_failsClosedWithoutSaving": "passed"
+ },
+ "product-service/RejectCategoryUseCaseImplTest": {
+  "execute_blankReason_throwsIllegalArgument": "passed",
+  "execute_notFound_throws": "passed",
+  "execute_pendingCategory_rejectsWithReasonAndSaves": "passed"
+ },
+ "product-service/ReputationSummaryClientTest": {
+  "blankSecret_isRejectedAtStartup": "passed",
+  "errorStatus_isAnIncompleteLookup": "passed",
+  "integralDecimalScore_andUpperCaseIdEcho_areAccepted": "passed",
+  "malformedAnswer_leavesEverySellerUnknown_notTrusted": "passed",
+  "moreThanTheBatchLimit_makesNoCall_andIsIncomplete": "passed",
+  "noSellers_makesNoCall": "passed",
+  "nonJsonContentType_isUnknown": "passed",
+  "readsTheWholePageInOneServiceCall_andKeepsOnlyScoreAndLocked": "passed",
+  "sellerMissingFromTheAnswer_isOnlyThatSellerUnknown": "passed",
+  "serviceDown_returnsAnIncompleteLookup_neverThrows": "passed",
+  "slowAnswer_isDroppedAtTheReadTimeout": "passed"
+ },
+ "product-service/ReservationTest": {
+  "create_missingIdentity_throws": "passed",
+  "create_nonPositiveQuantity_throws": "passed",
+  "create_startsReserved": "passed",
+  "isSameRequest_comparesListingAndQuantityByValue": "passed",
+  "status_allowsOnlyCanonicalTransitions": "passed"
+ },
+ "product-service/ReserveListingQuantityUseCaseImplTest": {
+  "concurrentReserveWithSameContractId_isReplayedNotCreated": "passed",
+  "writeConflictWithoutAWinningReservation_propagates": "passed"
+ },
+ "product-service/UpdateListingIntegrationTest": {
+  "anotherSeller_is403_andNothingChanges": "passed",
+  "belowTheReservedTotal_is409_andNothingChanges": "passed",
+  "editChangesTheVersionToken_soABuyerHoldingTheOldOneMustReload": "passed",
+  "editRacingReserveAndRelease_keepsAvailableEqualToOfferedMinusReserved": "passed",
+  "legacyListingWithoutQualitySpec_is400_andStaysReadable": "passed",
+  "legacyNullCounterWithoutReservation_isInitializedFromTheOffer": "passed",
+  "loweringToTheReservedTotal_closes_andAReleaseDoesNotReopen_untilRepublished": "passed",
+  "plotStillPending_is400_andAnotherSellersPlotIsRefused": "passed",
+  "productIdCannotChange": "passed",
+  "raisingTheOffer_keepsReservedOut_D48Example": "passed",
+  "releaseCommittingDuringTheEdit_isNotLost": "passed",
+  "releasedReservations_doNotCountAsReserved": "passed",
+  "replayWithTheSameKey_returnsTheListing_withoutASecondChange": "passed",
+  "reserveCommittingDuringTheEdit_isNotLost": "passed",
+  "sequentialReserveEditRelease_holdTheInvariantAtEveryStep": "passed",
+  "tickingAndUntickingPlots_replacesTheCopies": "passed"
+ },
+ "product-service/UpdateProductImagesUseCaseImplTest": {
+  "execute_existingProduct_fullyReplacesImages": "passed",
+  "execute_invalidImages_throwsAndDoesNotSave": "passed",
+  "execute_notFound_throws": "passed"
+ },
+ "user-service/AdminUserControllerTest": {
+  "assignRole_asAdmin_passesTargetActorAndRole": "passed",
+  "assignRole_asArbitrator_forbidden": "passed",
+  "assignRole_asOperator_forbidden": "passed",
+  "assignRole_extraRoleField_badRequest": "passed",
+  "assignRole_integerRole_badRequest": "passed",
+  "assignRole_lowercaseRole_badRequest": "passed",
+  "assignRole_missingRole_badRequest": "passed",
+  "assignRole_nullRole_badRequest": "passed",
+  "assignRole_numericStringRole_badRequest": "passed",
+  "assignRole_operatorArbitratorSwap_conflict": "passed",
+  "assignRole_ownRole_forbidden": "passed",
+  "assignRole_unknownRole_badRequest": "passed",
+  "assignRole_userNotFound_notFound": "passed",
+  "detail_asAdmin_forbidden": "passed",
+  "detail_asOperator_returnsFullProfileAndPassesActorAndAppRoles": "passed",
+  "detail_asSeller_forbidden": "passed",
+  "detail_auditUnavailable_serviceUnavailableWithoutData": "passed",
+  "detail_internalSecretWithForgedOperatorRole_unauthorized": "passed",
+  "detail_userNotFound_notFound": "passed",
+  "filterRejection_rendersErrorEnvelope": "passed",
+  "list_asAdmin_forbidden": "passed",
+  "list_asOperator_returnsPage": "passed",
+  "list_asSeller_forbidden": "passed",
+  "list_defaults_toFirstPageOfTwenty": "passed",
+  "list_invalidStatus_badRequest": "passed",
+  "list_sizeAboveLimit_badRequest": "passed",
+  "reject_asAdmin_forbidden": "passed",
+  "reject_asOperator_passesReasonAndActor": "passed",
+  "reject_blankReason_badRequest": "passed",
+  "reject_concurrentDecision_conflict": "passed",
+  "reject_duplicateRoleHeader_forbidden": "passed",
+  "reject_unknownField_badRequest": "passed",
+  "unknownAdminPath_asAdmin_forbidden": "passed",
+  "verify_asAdmin_forbidden": "passed",
+  "verify_asArbitrator_forbidden": "passed",
+  "verify_asBuyer_forbidden": "passed",
+  "verify_asOperator_nullExpiryAllowed": "passed",
+  "verify_asOperator_passesActorFromPrincipal": "passed",
+  "verify_duplicateUserIdHeader_forbidden": "passed",
+  "verify_emptyStringExpiry_badRequest": "passed",
+  "verify_epochNumberExpiry_badRequest": "passed",
+  "verify_expiryRejectedByDomain_badRequest": "passed",
+  "verify_gatewaySecretWithoutIdentity_unauthorized": "passed",
+  "verify_internalSecretWithForgedOperatorRole_unauthorized": "passed",
+  "verify_invalidTransition_conflict": "passed",
+  "verify_malformedExpiry_badRequest": "passed",
+  "verify_missingBody_badRequest": "passed",
+  "verify_missingExpiryKey_badRequest": "passed",
+  "verify_misspelledExpiryField_badRequest": "passed",
+  "verify_offsetExpiry_normalizedToUtc": "passed",
+  "verify_selfDecision_forbidden": "passed",
+  "verify_tokenWithOperatorAndArbitrator_forbidden": "passed",
+  "verify_userNotFound_notFound": "passed",
+  "verify_withoutGatewaySecret_forbidden": "passed"
+ },
+ "user-service/ApplyLockChangeUseCaseImplTest": {
+  "appliedLock_publishesWithTheReloadedProfile": "passed",
+  "appliedUnlock_usesTheUnlockStatement": "passed",
+  "olderRevision_isStaleAndPublishesNothing": "passed",
+  "unknownUser_publishesNothing": "passed"
+ },
+ "user-service/AssignUserRoleIntegrationTest": {
+  "adminChangesOwnRole_refusedAndRowUnchanged": "passed",
+  "assignArbitrator_persistsRoleAndAudit": "passed",
+  "operatorToArbitrator_refusedRowUnchangedAndRejectionAudited": "passed",
+  "sameRole_noAudit": "passed"
+ },
+ "user-service/AssignUserRoleUseCaseImplTest": {
+  "execute_adminChangesOwnRole_throwsAndDoesNotUpdate": "passed",
+  "execute_adminReassignsOwnCurrentRole_throwsInsteadOfNoOp": "passed",
+  "execute_arbitratorToOperator_throwsAndAuditsRejectionWithActor": "passed",
+  "execute_newRole_persistsChangeAndRecordsActor": "passed",
+  "execute_operatorToArbitrator_throwsAndAuditsRejectionWithActor": "passed",
+  "execute_sameRole_returnsWithoutUpdateOrAudit": "passed",
+  "execute_userNotFound_throwsAndDoesNotUpdate": "passed"
+ },
+ "user-service/ConfirmEmailVerificationUseCaseImplTest": {
+  "addressProvenByAnotherUserFirst_claimed": "passed",
+  "alreadyVerified_conflict_evenWithoutChallenge": "passed",
+  "codeSentToEarlierAddress_treatedAsExpired": "passed",
+  "expiredCode_conflict": "passed",
+  "keycloakDown_stillVerified": "passed",
+  "locksTheProfileBeforeTheChallenge": "passed",
+  "noAttemptsLeft_conflict_evenWithRightCode": "passed",
+  "noCodeRequested_conflict": "passed",
+  "rightCode_marksVerified_andDeletesChallenge": "passed",
+  "wrongCode_isRejectedResult_withTheAttemptCounted": "passed"
+ },
+ "user-service/DlqMonitorTest": {
+  "emptyDlq_logsNothingAndOnlyCountsPassively": "passed",
+  "failedProbe_logsNoBrokerDetailAndStillClosesTheConnection": "passed",
+  "nonEmptyDlq_logsWarnWithQueueAndCount": "passed",
+  "unreachableBroker_doesNotEscapeTheScheduledRun": "passed",
+  "usesItsOwnBoundedConnectionSettings": "passed"
+ },
+ "user-service/EligibleInspectorBlankSecretTest": {
+  "blankConfiguredSecretNeverGrantsInternalAccess": "passed"
+ },
+ "user-service/EligibleInspectorEndpointTest": {
+  "contextPathDoesNotTurnGatewayIdentityIntoServiceAuthority": "passed",
+  "onlyServiceCredentialReturnsMinimalIdentityArray": "passed",
+  "publicJwtAndGatewayRolesCannotReadPool": "passed"
+ },
+ "user-service/EligibleInspectorQueryTest": {
+  "authoritativePredicateIncludesOnlyVerifiedCurrentlyLicensedInspectors": "passed",
+  "futureReputationLockDoesNotExcludeEligibleInspectorFromEndpoint": "passed"
+ },
+ "user-service/EmailVerificationCodeIssuerTest": {
+  "addressVerifiedByAnotherUser_noCodeSent": "passed",
+  "alreadyVerified_conflict_nothingStoredOrSent": "passed",
+  "emailNotSent_expiresThatChallenge_andPropagates": "passed",
+  "expireFailing_stillReportsTheSendFailure": "passed",
+  "previousCodeExpiredBecauseItWasNotSent_resendAllowedWithinCooldown": "passed",
+  "resendWithinCooldown_conflict": "passed",
+  "storesOnlyTheHash_thenSendsTheCode": "passed"
+ },
+ "user-service/EmailVerificationIntegrationTest": {
+  "firstCodeNotSent_registrationStands_codeExpired_resendAllowedAtOnce": "passed",
+  "firstConfirmOwnsTheAddress_othersAreRefused": "passed",
+  "parallelResendAndConfirm_neverDeadlock": "passed",
+  "parallelResends_withoutChallengeRow_oneSent_restCooldown": "passed",
+  "parallelWrongCodes_eachCostAnAttempt": "passed",
+  "registerAgain_afterVerification_returnsExistingProfile_withoutNewCode": "passed",
+  "register_sendsTheFirstCode_whichConfirmsTheAddress": "passed",
+  "resendWithinCooldown_afterASentCode_refused": "passed",
+  "wrongCode_attemptIsCommitted": "passed"
+ },
+ "user-service/GetInternalUserInfoUseCaseImplTest": {
+  "execute_keepsUnlimitedAuthorizationAndNoLockAsNull": "passed",
+  "execute_returnsAllEligibilityFacts": "passed",
+  "execute_unknownUser_throwsNotFound": "passed",
+  "execute_unverifiedEmail_isNotHandedOut": "passed"
+ },
+ "user-service/GetKycProfileUseCaseImplTest": {
+  "execute_auditWriteFails_propagatesAndReturnsNothing": "passed",
+  "execute_existingUser_auditsReadThenReturnsFullProfile": "passed",
+  "execute_unknownUser_notFoundAndNotAudited": "passed"
+ },
+ "user-service/GetUserInfoUseCaseImplTest": {
+  "execute_returnsPublicFieldsOnly": "passed",
+  "execute_unknownUser_throwsNotFound": "passed"
+ },
+ "user-service/InternalUserControllerTest": {
+  "databaseOutage_failsClosedWithoutUserData": "passed",
+  "gatewayAuthenticatedEndUser_cannotReachInternalPath": "passed",
+  "missingInternalSecret_returns401": "passed",
+  "unknownUser_returns404": "passed",
+  "unlimitedAuthorizationAndNoLock_areWrittenAsExplicitNulls": "passed",
+  "validInternalSecret_returnsExactlyTheFrozenFieldsAtTopLevel": "passed",
+  "wrongInternalSecret_returns401": "passed"
+ },
+ "user-service/KycDecisionConcurrencyTest": {
+  "verifyAndReject_concurrently_onlyOneDecisionIsStored": "passed",
+  "verifyTwice_concurrently_secondReviewerGetsConflict": "passed"
+ },
+ "user-service/KycReadAuditIntegrationTest": {
+  "eachDetailRead_appendsOneRow": "passed",
+  "unknownUser_leavesNoAuditRow": "passed"
+ },
+ "user-service/KycResultOutboxFlowIntegrationTest": {
+  "reject_publishesCommandWithReason": "passed",
+  "resend_reusesTheStoredEventId": "passed",
+  "rolledBackDecision_writesNoCommand": "passed",
+  "verify_publishesFrozenCommandAndMarksRowPublished": "passed"
+ },
+ "user-service/ListEligibleInspectorsUseCaseImplTest": {
+  "executeReturnsEmptyListForEmptyPool": "passed",
+  "executeUsesCurrentClockAndMapsOnlyUserIdsInRepositoryOrder": "passed"
+ },
+ "user-service/ListUsersByVerificationStatusUseCaseImplTest": {
+  "execute_givenStatusAndPage_passesThemToRepository": "passed",
+  "execute_noStatus_defaultsToPendingQueue": "passed"
+ },
+ "user-service/OutboxKycResultPublisherTest": {
+  "decided_eachCallGetsItsOwnEventId": "passed",
+  "decided_pending_refusesToPublish": "passed",
+  "decided_rejected_writesFrozenCommandWithReason": "passed",
+  "decided_unverifiedEmail_publishesNothing": "passed",
+  "decided_verified_writesFrozenCommandWithoutReason": "passed"
+ },
+ "user-service/OutboxLockChangePublisherTest": {
+  "fullUnlock_sendsNullEffectiveUntil": "passed",
+  "lock_reportsTheStoredLockNotTheIncomingOne": "passed",
+  "lock_unverifiedEmail_publishesNothing": "passed"
+ },
+ "user-service/PurgeUnverifiedAccountsUseCaseImplTest": {
+  "asksForAccountsCreatedMoreThan24HoursAgo": "passed",
+  "keycloakUnavailable_deletesNothing": "passed",
+  "oneFailure_doesNotStopTheOthers": "passed",
+  "profileRowsGoBeforeTheKeycloakAccount": "passed",
+  "verifiedHere_isKept_andKeycloakIsToldAgain": "passed"
+ },
+ "user-service/RegisterUserUseCaseImplTest": {
+  "existingUser_returnedUnchanged_withoutAddressCheckOrNewCode": "passed",
+  "newUser_addressClaimedJustAfterTheCheck_stillRegistered_noCode": "passed",
+  "newUser_addressVerifiedByAnotherUser_refused": "passed",
+  "newUser_firstCodeNotSent_stillRegistered": "passed",
+  "newUser_storedUnverified_thenFirstCodeSent": "passed"
+ },
+ "user-service/RejectUserUseCaseImplTest": {
+  "execute_alreadyRejected_throwsConflictAndDoesNotUpdate": "passed",
+  "execute_blankReason_throwsAndDoesNotUpdate": "passed",
+  "execute_pending_rejectsWithReasonServerTimeAndActor": "passed",
+  "execute_staleVersion_propagatesConflictAndDoesNotPublish": "passed",
+  "execute_userNotFound_throwsAndDoesNotUpdate": "passed"
+ },
+ "user-service/ReputationLockConsumerTest": {
+  "extraField_isRejected": "passed",
+  "fixtures_matchFrozenSchemas": "passed",
+  "lockedWithoutLockedUntil_isRejected": "passed",
+  "locked_mapsToLockCommandCarryingTheChain": "passed",
+  "missingCorrelationId_startsTheChainAtThisEvent": "passed",
+  "nonUuidUser_isRejected": "passed",
+  "offsetDateTime_isNormalisedToUtcMicros": "passed",
+  "otherProducerOrType_isRejected": "passed",
+  "revisionBelowOne_orNotAnInteger_isRejected": "passed",
+  "unlockedWithoutEffectiveLockedUntilKey_isRejected": "passed",
+  "unlocked_withNullEffectiveLock_mapsToFullUnlock": "passed"
+ },
+ "user-service/ReputationLockFlowIntegrationTest": {
+  "earlyUnlockOfOneOfTwoLocks_keepsTheRemainingLock": "passed",
+  "fullUnlock_clearsTheLock": "passed",
+  "lock_updatesProjectionAndWritesOneFrozenCommand": "passed",
+  "olderRevision_isIgnoredUsingThePersistedRevision": "passed",
+  "outOfOrderLock_takesTheNewestEffectiveLockEvenWhenShorter": "passed",
+  "redeliveredEvent_isAppliedAndNotifiedOnce": "passed",
+  "schemaViolationOnUnlock_reachesTheDlqWithItsOriginalRoutingKey": "passed",
+  "schemaViolation_goesToTheDlqWithoutRetry": "passed",
+  "unknownUser_isAckedWithoutCommand": "passed"
+ },
+ "user-service/UnverifiedAccountPurgeIntegrationTest": {
+  "abandonedBeforeTheProfileForm_isDeletedFromKeycloak": "passed",
+  "keycloakDown_atConfirm_stillVerifies": "passed",
+  "staffAndSeedAccounts_areNeverTouched": "passed",
+  "unverifiedBeforeTheDeadline_isKept": "passed",
+  "unverifiedPastTheDeadline_isDeletedEverywhere_andTheAddressIsFreeAgain": "passed",
+  "verifiedHere_butKeycloakMissedIt_isKept_andKeycloakIsToldAgain": "passed",
+  "verifiedInKeycloak_isKept": "passed"
+ },
+ "user-service/UseCaseAtomicityIntegrationTest": {
+  "assignRole_auditWriteFails_roleUpdateRollsBack": "passed",
+  "lock_commandWriteFails_projectionRollsBack_andRedeliveryApplies": "passed",
+  "reject_commandWriteFails_decisionRollsBack": "passed",
+  "verify_commandWriteFails_decisionRollsBack_andRetryApplies": "passed"
+ },
+ "user-service/UserControllerTest": {
+  "confirmEmailVerification_malformedCode_badRequest": "passed",
+  "confirmEmailVerification_rightCode_returnsVerifiedProfile": "passed",
+  "confirmEmailVerification_wrongCode_badRequest": "passed",
+  "getMyProfile_gatewaySecretWithoutIdentity_unauthorized": "passed",
+  "getMyProfile_internalSecretWithForgedUserId_unauthorized": "passed",
+  "getMyProfile_readsOwnerFromPrincipal": "passed",
+  "getPublicUser_authenticated_returnsPublicFieldsOnly": "passed",
+  "getPublicUser_gatewaySecretWithoutIdentity_unauthorized": "passed",
+  "getPublicUser_internalSecret_unauthorized": "passed",
+  "getPublicUser_unknownUser_notFound": "passed",
+  "getPublicUser_withoutAnySecret_forbidden": "passed",
+  "register_addressClaimedByAnotherUser_conflict": "passed",
+  "register_existingUser_is200_withStoredEmail": "passed",
+  "register_forgedEmailHeaders_areIgnored": "passed",
+  "register_missingOrMalformedEmail_is400": "passed",
+  "register_new_firstCodeNotSent_is201_andSaysSo": "passed",
+  "register_new_takesEmailFromBody_is201": "passed",
+  "requestEmailVerification_usesPrincipal_accepted": "passed",
+  "requestEmailVerification_withoutPrincipal_unauthorized": "passed"
+ },
+ "user-service/UserProfileEmailVerificationTest": {
+  "create_bodyEmailIsUnverified": "passed",
+  "markEmailVerified_codeForAnotherAddress_refused": "passed",
+  "markEmailVerified_contactEmailBecomesRecipient": "passed",
+  "updateContactInfo_newAddress_dropsProof": "passed",
+  "updateContactInfo_sameAddress_keepsProof": "passed"
+ },
+ "user-service/UserProfileRepositoryImplListTest": {
+  "findByVerificationStatus_otherStatus": "passed",
+  "findByVerificationStatus_pagesWithPlainPageAndSize": "passed",
+  "findByVerificationStatus_returnsOnlyThatStatus_oldestFirst": "passed"
+ },
+ "user-service/UserProfileRepositoryImplLockProjectionTest": {
+  "findById_readsLockProjection": "passed",
+  "kycDecisionUpdate_keepsLockWrittenAfterLoad": "passed",
+  "newProfile_isNotLocked": "passed"
+ },
+ "user-service/UserProfileTest": {
+  "assignRole_adminToArbitrator_allowed": "passed",
+  "assignRole_arbitratorToOperator_rejectedAndKeepsRole": "passed",
+  "assignRole_blankActor_throwsAndKeepsRole": "passed",
+  "assignRole_newRole_changesRole": "passed",
+  "assignRole_null_throws": "passed",
+  "assignRole_operatorToArbitrator_rejectedAndKeepsRole": "passed",
+  "assignRole_sameRole_noOp": "passed",
+  "assignRole_selfChange_throwsAndKeepsRole": "passed",
+  "assignRole_selfSameRole_throwsBeforeNoOp": "passed",
+  "create_addsUserRegisteredEvent": "passed",
+  "create_hasNoKycDecision": "passed",
+  "create_setsFieldsAndStatusPending": "passed",
+  "pending_cannotBeResubmitted": "passed",
+  "pullDomainEvents_clearsListAfterPull": "passed",
+  "reconstitute_doesNotAddDomainEvents": "passed",
+  "reconstitute_restoresKycDecision": "passed",
+  "reject_pendingToRejected_recordsDecision": "passed",
+  "reject_requiresActorAndDecisionTime": "passed",
+  "reject_requiresNonBlankReason": "passed",
+  "rejected_cannotBeVerifiedOrRejectedAgain": "passed",
+  "resubmit_rejectedToPending_clearsReasonKeepsDecisionHistory": "passed",
+  "resubmittedProfile_canBeVerified": "passed",
+  "updateContactInfo_ignoresNull": "passed",
+  "updateContactInfo_updatesSuccessfully": "passed",
+  "verified_cannotTransitionFurther": "passed",
+  "verifyAndReject_actorCannotDecideOwnProfile": "passed",
+  "verify_allowsNullExpiryForIndefiniteAuthorization": "passed",
+  "verify_pendingToVerified_recordsDecision": "passed",
+  "verify_rejectsExpiryNotAfterDecision": "passed",
+  "verify_requiresActorAndDecisionTime": "passed"
+ },
+ "user-service/VerifyUserUseCaseImplTest": {
+  "execute_alreadyVerified_throwsConflictAndDoesNotUpdate": "passed",
+  "execute_expiryNotAfterNow_throwsAndDoesNotUpdate": "passed",
+  "execute_pending_verifiesWithServerTimeAndActor": "passed",
+  "execute_selfVerification_throwsAndDoesNotUpdate": "passed",
+  "execute_staleVersion_propagatesConflictAndDoesNotPublish": "passed",
+  "execute_truncatesDecisionTimeToDatabasePrecision": "passed",
+  "execute_userNotFound_throwsAndDoesNotUpdate": "passed"
+ }
+}
