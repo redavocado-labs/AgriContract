@@ -70,7 +70,7 @@ public class OutboxAssignmentAlerts implements AssignmentAlerts {
     public void cancellationTimeAdjusted(String eventId, TimedAssignment assignment, java.time.Instant cancelledAt) {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override public void afterCommit() {
-                LOG.info("inspection_level15_cancel_time_adjusted eventId={} contractId={} milestoneId={} cancelledAt={} endedAt={}",
+                LOG.warn("inspection_level15_cancel_time_adjusted eventId={} contractId={} milestoneId={} cancelledAt={} assignedAt={}",
                         eventId, assignment.contractId(), assignment.milestoneId(), cancelledAt, assignment.assignedAt());
             }
         });

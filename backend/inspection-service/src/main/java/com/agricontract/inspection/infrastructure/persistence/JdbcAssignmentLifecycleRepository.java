@@ -24,7 +24,7 @@ public class JdbcAssignmentLifecycleRepository implements AssignmentLifecycleRep
             rs.getString("inspector_id"), rs.getTimestamp("assigned_at").toInstant(),
             instant(rs.getTimestamp("ended_at")), rs.getInt("report_due_business_days"),
             rs.getTimestamp("report_due_at").toInstant(), rs.getString("initiated_by_actor_id"),
-            rs.getString("assigned_by_service"), instant(rs.getTimestamp("free_cancel_until")));
+            rs.getString("assigned_by_service"), rs.getTimestamp("free_cancel_until").toInstant());
     private static Instant instant(Timestamp value) { return value == null ? null : value.toInstant(); }
 
     @Override

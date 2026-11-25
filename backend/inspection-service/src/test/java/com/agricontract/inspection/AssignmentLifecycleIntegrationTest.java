@@ -343,8 +343,8 @@ class AssignmentLifecycleIntegrationTest {
         jdbc.update("""
                 INSERT INTO level1_5_inspection_assignment
                 (commission_id,contract_id,milestone_id,inspector_id,assigned_at,assigned_by_service,
-                 report_due_business_days,report_due_at)
-                VALUES (?,?,?,?,?,'contract-service',?,?)
+                 report_due_business_days,report_due_at,free_cancel_until)
+                VALUES (?,?,?,?,?,'contract-service',?,?,CURRENT_TIMESTAMP(6))
                 """, UUID.randomUUID().toString(),contract,milestone,a,Timestamp.from(NOW),days,
                 secondsAfterAssignment == null ? null : Timestamp.from(NOW.plusSeconds(secondsAfterAssignment)));
     }
@@ -363,8 +363,8 @@ class AssignmentLifecycleIntegrationTest {
             jdbc.update("""
                 INSERT INTO level1_5_inspection_assignment
                 (commission_id,contract_id,milestone_id,inspector_id,assigned_at,assigned_by_service,
-                 report_due_business_days,report_due_at)
-                VALUES (?,?,?,?,?,'contract-service',30,?)
+                 report_due_business_days,report_due_at,free_cancel_until)
+                VALUES (?,?,?,?,?,'contract-service',30,?,CURRENT_TIMESTAMP(6))
                 """, UUID.randomUUID().toString(),contract,UUID.randomUUID().toString(),a,
                     Timestamp.from(NOW),Timestamp.from(NOW.plusSeconds(86400*42)));
         }

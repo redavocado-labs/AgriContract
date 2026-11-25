@@ -5,12 +5,12 @@ import com.agricontract.inspection.application.port.AssignmentAlerts;
 import com.agricontract.inspection.application.port.AssignmentWaitingRepository;
 import com.agricontract.inspection.application.port.InspectorEligibilityPort;
 import com.agricontract.inspection.application.port.TransactionRunner;
-import com.agricontract.inspection.application.port.FreeCancellationWindow;
 import com.agricontract.inspection.domain.model.TimedAssignment;
 import com.agricontract.inspection.domain.model.WaitingAssignment;
 import com.agricontract.inspection.domain.repository.AssignmentLifecycleRepository;
 import com.agricontract.calendar.VietnamBusinessDays;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -32,7 +32,7 @@ public class ManageLevel15Assignments {
     private final Clock clock;
     private final TransactionRunner transactions;
     private final AssignmentWaitingRepository waiting;
-    private final FreeCancellationWindow freeCancellationWindow;
+    @lombok.NonNull private final Duration freeCancellationWindow;
 
     public void requested(Level15AssignmentRequestedCommand request) {
         transactions.inReadCommittedTransaction(() -> {
@@ -59,9 +59,6 @@ public class ManageLevel15Assignments {
                 alerts.waitingChanged(pending.get(), AssignmentAlerts.Stage.CANCELLED, correlationId, eventId);
             } else if (active.isPresent()) {
                 var assignment = active.get();
-                if (assignment.freeCancelUntil() == null) {
-                    throw new IllegalStateException("Missing stored free cancellation deadline; requires investigation");
-                }
                 String email = inspectors.loadInspectorEmail(assignment.inspectorId());
                 // The event can be created while a waiting retry owns the milestone lock.
                 // Keep the source timestamp intact; the lifecycle row cannot end before it starts.
@@ -141,7 +138,7 @@ public class ManageLevel15Assignments {
         Instant assigned = now();
         var assignment = new TimedAssignment(UUID.randomUUID().toString(), contract, milestone,
                 inspector, assigned, null, days, calendar.deadline(assigned, days), actor, service,
-                assigned.plus(freeCancellationWindow.duration()));
+                assigned.plus(freeCancellationWindow));
         assignments.insert(assignment);
         alerts.assigned(assignment, email, correlationId, causationId);
     }

@@ -13,13 +13,13 @@ class AssignmentConfigurationTest {
     @Test void freeCancellationWindowDefaultsToFourHours() {
         new ApplicationContextRunner().withUserConfiguration(AssignmentConfiguration.class)
                 .withPropertyValues("VIETNAM_HOLIDAYS=2026-01-01")
-                .run(context -> assertThat(context.getBean(com.agricontract.inspection.application.port.FreeCancellationWindow.class).duration()).isEqualTo(java.time.Duration.ofHours(4)));
+                .run(context -> assertThat(context.getBean(java.time.Duration.class)).isEqualTo(java.time.Duration.ofHours(4)));
     }
 
     @Test void customFreeCancellationWindowIsBound() {
         new ApplicationContextRunner().withUserConfiguration(AssignmentConfiguration.class)
                 .withPropertyValues("VIETNAM_HOLIDAYS=2026-01-01", "inspection.assignment.free-cancel-hours=12")
-                .run(context -> assertThat(context.getBean(com.agricontract.inspection.application.port.FreeCancellationWindow.class).duration()).isEqualTo(java.time.Duration.ofHours(12)));
+                .run(context -> assertThat(context.getBean(java.time.Duration.class)).isEqualTo(java.time.Duration.ofHours(12)));
     }
 
     @ParameterizedTest

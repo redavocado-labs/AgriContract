@@ -217,7 +217,7 @@ class ScaffoldBoundaryTest {
         String commission = UUID.randomUUID().toString();
         String file = UUID.randomUUID().toString();
         Instant now = Instant.now();
-        jdbc.update("INSERT INTO level1_5_inspection_assignment (commission_id,contract_id,milestone_id,inspector_id,assigned_at,assigned_by_service,report_due_business_days,report_due_at) VALUES (?,?,?,?,?,'test-fixture',1,?)",
+        jdbc.update("INSERT INTO level1_5_inspection_assignment (commission_id,contract_id,milestone_id,inspector_id,assigned_at,assigned_by_service,report_due_business_days,report_due_at,free_cancel_until) VALUES (?,?,?,?,?,'test-fixture',1,?,CURRENT_TIMESTAMP(6))",
                 commission, CONTRACT, MILESTONE, INSPECTOR_A, Timestamp.from(now.minusSeconds(60)), Timestamp.from(now.plusSeconds(86400)));
         jdbc.update("INSERT INTO level1_5_report_file(file_id,commission_id,uploaded_at) VALUES (?,?,?)", file, commission, Timestamp.from(now));
         when(files.getReady(file)).thenReturn(new byte[]{1, 2, 3});
@@ -259,7 +259,7 @@ class ScaffoldBoundaryTest {
                     .content(body.replace(file, UUID.randomUUID().toString())))
                     .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("REPORT_STATE_CONFLICT"));
             String later = UUID.randomUUID().toString();
-            jdbc.update("INSERT INTO level1_5_inspection_assignment (commission_id,contract_id,milestone_id,inspector_id,assigned_at,ended_at,assigned_by_service,report_due_business_days,report_due_at) VALUES (?,?,?,?,?,?,'test-fixture',1,?)",
+            jdbc.update("INSERT INTO level1_5_inspection_assignment (commission_id,contract_id,milestone_id,inspector_id,assigned_at,ended_at,assigned_by_service,report_due_business_days,report_due_at,free_cancel_until) VALUES (?,?,?,?,?,?,'test-fixture',1,?,CURRENT_TIMESTAMP(6))",
                     later, CONTRACT, MILESTONE, INSPECTOR_A, Timestamp.from(now.plusSeconds(1)),
                     Timestamp.from(now.plusSeconds(2)), Timestamp.from(now.plusSeconds(86400)));
             try {
@@ -287,7 +287,7 @@ class ScaffoldBoundaryTest {
     void unassociatedAndNotReadyFilesFailClosedThroughSecurityChain() throws Exception {
         String commission = UUID.randomUUID().toString(); String file = UUID.randomUUID().toString();
         Instant now = Instant.now();
-        jdbc.update("INSERT INTO level1_5_inspection_assignment (commission_id,contract_id,milestone_id,inspector_id,assigned_at,assigned_by_service,report_due_business_days,report_due_at) VALUES (?,?,?,?,?,'test-fixture',1,?)",
+        jdbc.update("INSERT INTO level1_5_inspection_assignment (commission_id,contract_id,milestone_id,inspector_id,assigned_at,assigned_by_service,report_due_business_days,report_due_at,free_cancel_until) VALUES (?,?,?,?,?,'test-fixture',1,?,CURRENT_TIMESTAMP(6))",
                 commission, CONTRACT, MILESTONE, INSPECTOR_A, Timestamp.from(now.minusSeconds(60)), Timestamp.from(now.plusSeconds(86400)));
         String body = """
                 {"reportFileId":"%s","normalizedResult":{"resultSchemaVersion":"1.0",
@@ -329,7 +329,7 @@ class ScaffoldBoundaryTest {
     void authorizedUploadBindsFileAndReplaysThroughGatewaySecurityContext() throws Exception {
         String commission = UUID.randomUUID().toString(); String file = UUID.randomUUID().toString();
         Instant now = Instant.now();
-        jdbc.update("INSERT INTO level1_5_inspection_assignment (commission_id,contract_id,milestone_id,inspector_id,assigned_at,assigned_by_service,report_due_business_days,report_due_at) VALUES (?,?,?,?,?,'test-fixture',1,?)",
+        jdbc.update("INSERT INTO level1_5_inspection_assignment (commission_id,contract_id,milestone_id,inspector_id,assigned_at,assigned_by_service,report_due_business_days,report_due_at,free_cancel_until) VALUES (?,?,?,?,?,'test-fixture',1,?,CURRENT_TIMESTAMP(6))",
                 commission, CONTRACT, MILESTONE, INSPECTOR_A, Timestamp.from(now.minusSeconds(60)), Timestamp.from(now.plusSeconds(86400)));
         when(files.storeOnBehalfOf(eq(INSPECTOR_A), eq("upload-key"), eq("application/pdf"), eq(3L), any()))
                 .thenReturn(new com.agricontract.inspection.application.port.ReportFileStore.StoredFile(file, "PROCESSING"));
@@ -352,7 +352,7 @@ class ScaffoldBoundaryTest {
     void concurrentUploadReplaysBindOneFileToTheSameAssignment() throws Exception {
         String commission = UUID.randomUUID().toString(); String file = UUID.randomUUID().toString();
         Instant now = Instant.now(); var rendezvous = new CountDownLatch(2);
-        jdbc.update("INSERT INTO level1_5_inspection_assignment (commission_id,contract_id,milestone_id,inspector_id,assigned_at,assigned_by_service,report_due_business_days,report_due_at) VALUES (?,?,?,?,?,'test-fixture',1,?)",
+        jdbc.update("INSERT INTO level1_5_inspection_assignment (commission_id,contract_id,milestone_id,inspector_id,assigned_at,assigned_by_service,report_due_business_days,report_due_at,free_cancel_until) VALUES (?,?,?,?,?,'test-fixture',1,?,CURRENT_TIMESTAMP(6))",
                 commission, CONTRACT, MILESTONE, INSPECTOR_A, Timestamp.from(now.minusSeconds(60)), Timestamp.from(now.plusSeconds(86400)));
         when(files.storeOnBehalfOf(eq(INSPECTOR_A), eq("concurrent-key"), eq("application/pdf"), eq(3L), any()))
                 .thenAnswer(call -> {
@@ -498,8 +498,8 @@ class ScaffoldBoundaryTest {
     private void insert(String id, String contract, String milestone, String inspector, Instant endedAt) {
         jdbc.update("INSERT INTO level1_5_inspection_assignment "
                         + "(commission_id, contract_id, milestone_id, inspector_id, assigned_at, ended_at, assigned_by_service, "
-                        + "report_due_business_days, report_due_at) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", id, contract, milestone, inspector,
+                        + "report_due_business_days, report_due_at, free_cancel_until) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP(6))", id, contract, milestone, inspector,
                 Timestamp.from(ASSIGNED), endedAt == null ? null : Timestamp.from(endedAt), "test-fixture",
                 1, Timestamp.from(ASSIGNED.plusSeconds(86400)));
     }
