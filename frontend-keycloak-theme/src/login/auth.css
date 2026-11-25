@@ -96,3 +96,22 @@
     transition: none !important;
   }
 }
+.auth-role-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 0.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 14px;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+.auth-role-option:has(input:checked) {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+.auth-role-option input {
+  accent-color: var(--color-primary);
+}
