@@ -20,9 +20,12 @@ memory/
 CLAUDE.md
 GEMINI.md
 .claude/
-backend/scripts/
+backend/scripts/*
 !backend/scripts/dev-seed.sh
 !backend/scripts/run-e2e.sh
+!backend/scripts/run-e2e-full.sh
+!backend/scripts/e2e/
+!backend/scripts/e2e/**
 !backend/scripts/seed/
 !backend/scripts/seed/**
 
