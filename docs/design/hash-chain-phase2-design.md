@@ -28,7 +28,6 @@ metadata:
 | `milestone.seller_weighed`                     | ✅         | Mang `sellerDeclaredWeight` — input gốc để tính Delta 1/Delta 2, cần chứng minh không bị sửa sau khi cân          |
 | `milestone.buyer_received` (**24/11/2026, D98**) | ✅ | Mang `buyerReceivedWeight` — input gốc tính Delta 2 (D76: buyer nhận 2 bước, số cân nằm ở bước nhận, không ở bước xác nhận) |
 | `milestone.buyer_confirmed` | ✅ | **Sửa 24/11/2026 (D98):** không mang số cân (chỉ `confirmedBy` BUYER/SYSTEM_TIMEOUT) — vào chain vì là mốc buyer chấp nhận lô hàng không lỗi, căn cứ tất toán sạch |
-| `milestone.flagged`                            | ❌         | Chỉ là tín hiệu "buyer bấm nút", không mang số liệu riêng — số liệu thật đã nằm ở `buyer_confirmed`               |
 | `milestone.force_majeure_claimed`              | ✅         | Bằng chứng bất khả kháng seller nộp — cơ sở miễn/không miễn penalty, giá trị pháp lý cao (Điều 156/351 BLDS 2015) |
 | `milestone.force_majeure_resolved`             | ✅         | Quyết định APPROVE/REJECT của Admin/Level 1.5 — kết quả tranh chấp, bắt buộc immutable                            |
 | `milestone.settled`                            | ✅         | Kết quả cuối, số tiền release — bắt buộc                                                                          |
@@ -72,7 +71,7 @@ Cả 3 dùng chung schema `AuditRecord` §3 — `content` mang payload đã ký 
 | `SECURITY_LOCK_TRIGGERED` / `SECURITY_UNLOCK_TRIGGERED` | `bank.security_lock_changed {action}` | bank-service |
 | `STRUCTURING_REPORT` | `bank.suspicious_report_created` | bank-service (bank §3.4b) |
 | `AML_RISK_CLEARED` | `reputation.elevated_risk_cleared` | reputation-service (reputation §8 mục 6 — quyết định gỡ `ELEVATED_RISK` phải defensible) |
-| `BREACH_REPORTED` (**mới 19/07/2026**) | `breach.reported` | contract-service (milestone-escrow §6.4 — thời điểm mở cáo buộc + notice là bằng chứng then chốt khi tranh cãi wrongful termination / cure deadline; trước đây `milestone.flagged` bị coi "không đáng vào chain" — với attribution model, mốc cáo buộc thành evidence bắt buộc) |
+| `BREACH_REPORTED` (**mới 19/07/2026**) | `breach.reported` | contract-service (milestone-escrow §6.4 — thời điểm mở cáo buộc + notice là bằng chứng then chốt khi tranh cãi wrongful termination / cure deadline; mốc cáo buộc là evidence bắt buộc; event `milestone.flagged` đã bỏ 26/11/2026, D101) |
 | `REMEDY_FINALIZED` (**mới 19/07/2026**) | `remedy.finalized` | contract-service (kết luận attribution + remedyLegs — chính là RemedyDecision mà escrow/reputation thực thi theo; phải bất biến + timestamp độc lập để defensible trước VIAC/toà) |
 | `CONTRACT_TERMINATED` (**mới 19/07/2026**) | `contract.terminated` | contract-service (terminationType + finalBreachingRole — gồm cả `MUTUAL_REPLACEMENT` với cặp con trỏ supersede: chain chứng minh được hợp đồng cũ đóng sạch và hợp đồng mới nối đúng) |
 | `CONTRACT_SETTLED` (**mới 24/11/2026, D98**) | `contract.settled` | contract-service (hợp đồng hoàn tất sau khi tiền về hết — §6.8 milestone-escrow; đối xứng `CONTRACT_TERMINATED`, dòng cuối của chuỗi hợp đồng) |
