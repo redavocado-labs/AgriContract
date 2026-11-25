@@ -71,10 +71,12 @@ jobs:
       # user_profiles exists once user-service has run its Flyway migrations, so wait for it to start.
       - name: Seed users
         run: |
+          started=false
           for i in $(seq 1 90); do
-            docker logs user-service 2>&1 | grep -q 'Started UserServiceApplication' && break
+            if docker logs user-service 2>&1 | grep -q 'Started UserServiceApplication'; then started=true; break; fi
             sleep 5
           done
+          if [ "$started" != true ]; then echo 'user-service did not start within 450 s' >&2; exit 1; fi
           docker exec -i user-db mysql --default-character-set=utf8mb4 -uroot -ppassword user_db \
             < scripts/seed/02-user-db.sql
 
