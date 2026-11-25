@@ -1,0 +1,29 @@
+meta {
+  name: SEC-170 Verify exactly two audit records were appended
+  type: http
+  seq: 160
+}
+
+get {
+  url: {{base_url}}/api/v1/admin/audit/verification
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{admin_token}}
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.include({ status: 'INTACT', scope: 'GLOBAL' });
+    expect(res.getBody().checkedRecords).to.equal(bru.getVar('audit_baseline') + 2);
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI verifyGlobalAuditChain and hash-chain design §4.6. Verification itself is read only.
+}

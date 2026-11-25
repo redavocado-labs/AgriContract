@@ -1,0 +1,31 @@
+meta {
+  name: SEC-140 Admin reads the same contract trail
+  type: http
+  seq: 130
+}
+
+get {
+  url: {{base_url}}/api/v1/admin/audit/contracts/{{contract_id}}/records
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{admin_token}}
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().currentRecordHash).to.equal(bru.getVar('party_trail').currentRecordHash);
+    expect(res.getBody().records.map((entry) => entry.recordId))
+      .to.deep.equal(bru.getVar('party_trail').records.map((entry) => entry.recordId));
+    expect(res.getBody().records[0]).to.include.keys('prevHashSubject', 'prevHashGlobal', 'globalSeq');
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI getContractAuditTrailForAdmin; hash-chain design §4.6.
+}
