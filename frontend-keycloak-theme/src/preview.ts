@@ -31,6 +31,16 @@ export function installPreview() {
   if (context.pageId === "register.ftl") {
     context.profile.attributesByName = {
       email: context.profile.attributesByName.email,
+      accountType: {
+        name: "accountType",
+        required: true,
+        readOnly: false,
+        validators: { options: { options: ["BUYER", "SELLER"] } },
+        annotations: {
+          inputType: "select",
+          inputOptionLabels: { BUYER: "Người mua", SELLER: "Người bán" },
+        },
+      },
     };
     context.recaptchaRequired = false;
     context.termsAcceptanceRequired = false;

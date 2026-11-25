@@ -22,7 +22,10 @@ const { useI18n, ofTypeI18n } = i18nBuilder
         "Sử dụng liên kết gửi tới email đã đăng ký để đặt lại mật khẩu của bạn.",
       loginDescription:
         "Chào mừng trở lại. Đăng nhập để quản lý hợp đồng của bạn.",
-      registerDescription: "Tạo tài khoản bằng email và mật khẩu của bạn.",
+      registerDescription:
+        "Tạo tài khoản bằng email, chọn vai trò người mua hoặc người bán.",
+      accountTypeLabel: "Bạn tham gia với vai trò",
+      accountTypeRequired: "Vui lòng chọn người mua hoặc người bán.",
       resetDescription:
         "Nhập email hoặc tên đăng nhập đã đăng ký. Nếu tài khoản hợp lệ, bạn sẽ nhận được email hướng dẫn đặt lại mật khẩu.",
       updateDescription: "Chọn mật khẩu mới để bảo vệ tài khoản của bạn.",
@@ -57,7 +60,10 @@ const { useI18n, ofTypeI18n } = i18nBuilder
         "Sử dụng liên kết gửi tới email đã đăng ký để đặt lại mật khẩu của bạn.",
       loginDescription:
         "Chào mừng trở lại. Đăng nhập để quản lý hợp đồng của bạn.",
-      registerDescription: "Tạo tài khoản bằng email và mật khẩu của bạn.",
+      registerDescription:
+        "Tạo tài khoản bằng email, chọn vai trò người mua hoặc người bán.",
+      accountTypeLabel: "Bạn tham gia với vai trò",
+      accountTypeRequired: "Vui lòng chọn người mua hoặc người bán.",
       resetDescription:
         "Nhập email hoặc tên đăng nhập đã đăng ký. Nếu tài khoản hợp lệ, bạn sẽ nhận được email hướng dẫn đặt lại mật khẩu.",
       updateDescription: "Chọn mật khẩu mới để bảo vệ tài khoản của bạn.",

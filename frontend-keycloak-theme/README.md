@@ -7,7 +7,7 @@ Theme đăng nhập độc lập, tên `agricontract`, Keycloakify **11.16.0**, 
 Chỉ tùy biến `login.ftl`, `register.ftl`, `login-reset-password.ftl`, `login-update-password.ftl`, `info.ftl`, `error.ftl`. Các trang khác dùng `DefaultPage` và `Template` của Keycloakify; CSS tùy biến chỉ được nạp khi mở trang tùy biến. Không tạo account theme hay email theme.
 
 - Đăng nhập, ghi nhớ phiên, liên kết đăng ký/quên mật khẩu tuân theo các cờ và URL do Keycloak cung cấp. Identity provider chỉ xuất hiện nếu realm thực sự cấu hình; không có nút VNeID giả.
-- Đăng ký chỉ thu email, mật khẩu và nhập lại mật khẩu. Không tạo hồ sơ tổ chức, không gán BUYER/SELLER, không giả lập trạng thái VERIFIED.
+- Đăng ký thu email, vai trò (người mua/người bán, lấy từ thuộc tính `accountType` của realm, D47), mật khẩu và nhập lại mật khẩu. Theme chỉ gửi lựa chọn; Keycloak gắn realm role qua provider `infra/keycloak/role-spi`. Không tạo hồ sơ tổ chức, không giả lập trạng thái VERIFIED.
 - Quên mật khẩu dùng liên kết email của Keycloak. Không dựng OTP/SMS 6 số từ mockup vì backend xác thực hiện tại không cung cấp luồng đó.
 - Mật khẩu được gửi bằng HTML POST tới action URL của Keycloak, giữ các tham số phiên do server tạo. Không password grant, không lưu mật khẩu/token, không gọi API nghiệp vụ.
 - Form dùng react-hook-form + zod cho kiểm tra rỗng/email/khớp mật khẩu; Keycloak quyết định chính sách mật khẩu và xác thực cuối cùng.
@@ -47,6 +47,10 @@ npm run dev
 ```
 
 Mở `http://localhost:5174/?page=login.ftl`. Thay `page` bằng một trong sáu tên FTL ở trên; thêm `&error=1` để xem banner lỗi. Preview có nhãn rõ ràng, dùng fixture của Keycloakify, ngăn gửi form và chỉ được nạp khi `import.meta.env.DEV`. Đây không phải bằng chứng nghiệp vụ backend đã hoàn tất.
+
+## Trong stack compose
+
+`backend/docker-compose.yml` build theme này vào image Keycloak (Dockerfile `backend/infra/keycloak`, build context `theme-src`), không cần Node/Maven trên máy. Realm đặt `loginTheme=agricontract`, mặc định `vi`. Realm chỉ import lần đầu: sau khi đổi realm, xoá volume `backend_keycloak_data` một lần.
 
 ## Kiểm thử Keycloak riêng
 

@@ -25,26 +25,31 @@ export function useKeycloakForm<T extends FieldValues>(
       HTMLFormElement.prototype.submit.call(element);
     })(event);
   }
+  function error(
+    name: Path<T>,
+    kcContext: KcContext,
+    serverField = name as string,
+  ): string | undefined {
+    const clientError = form.formState.errors[name]?.message;
+    if (typeof clientError === "string") return clientError;
+    return kcContext.messagesPerField.existsError(serverField)
+      ? kcContext.messagesPerField.get(serverField)
+      : undefined;
+  }
   function field(
     name: Path<T>,
     kcContext: KcContext,
     serverField = name as string,
   ): TextInputProps {
     const { ref, ...registration } = form.register(name);
-    const clientError = form.formState.errors[name]?.message;
     return {
       ...registration,
       inputRef: ref,
       id: name,
-      error:
-        typeof clientError === "string"
-          ? clientError
-          : kcContext.messagesPerField.existsError(serverField)
-            ? kcContext.messagesPerField.get(serverField)
-            : undefined,
+      error: error(name, kcContext, serverField),
     };
   }
-  return { onSubmit, submitting, field };
+  return { onSubmit, submitting, field, error, register: form.register };
 }
 
 export { TextInput, z };
