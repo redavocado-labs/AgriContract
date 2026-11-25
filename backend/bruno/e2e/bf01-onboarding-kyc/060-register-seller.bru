@@ -1,0 +1,61 @@
+meta {
+  name: BF01-060 Register seller profile
+  type: http
+  seq: 60
+}
+
+post {
+  url: {{base_url}}/api/v1/users/register
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{account_token}}
+}
+
+body:json {
+  {
+    "organizationName": "Bruno Test Farm",
+    "email": "{{account_email}}",
+    "phone": "0901234567",
+    "address": "Ha Noi"
+  }
+}
+
+script:pre-request {
+  const { browserLogin, claims } = require('./e2e/helpers.js');
+  const username = 'bruno-seller-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9);
+  const email = username + '@example.test';
+  bru.setVar('account_email', email);
+  const accessToken = await browserLogin(bru, {
+    username, email, firstName: 'Bruno', lastName: 'Test',
+    accountType: 'SELLER',
+    password: 'LocalBruno-Test-782!', 'password-confirm': 'LocalBruno-Test-782!',
+  }, true);
+  if (!claims(accessToken).realm_access?.roles?.includes('SELLER')) {
+    throw new Error('New account is missing the requested SELLER role');
+  }
+  bru.setVar('account_token', accessToken);
+}
+
+script:post-response {
+  if (res.getStatus() === 201) bru.setVar('account_id', res.getBody().userId);
+}
+
+tests {
+  test("status and response contract", () => {
+    expect(res.getStatus()).to.equal(201);
+    const profile = res.getBody();
+    expect(profile.userId).to.be.a('string');
+    expect(profile.role).to.equal('SELLER');
+    expect(profile.verificationStatus).to.equal('PENDING');
+    expect(profile.verificationEmailSent).to.equal(true);
+  });
+}
+
+docs {
+  IT-GW
+
+  OpenAPI registerUser and Keycloak D47 (registration role).
+}
