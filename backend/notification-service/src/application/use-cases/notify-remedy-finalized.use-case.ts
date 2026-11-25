@@ -15,9 +15,11 @@ import { reasonLines } from './breach-reasons';
  * `notification.remedy_finalized_requested` -> both parties (design §4; D96).
  * Every finalized RemedyDecision, three shapes:
  * - the normal completion (D94): SYSTEM, no breach case, no fault, no
- *   quality, no milestone named. The contract is complete and the remaining
- *   deposits go back. Its own kind, CONTRACT_COMPLETED, since nothing was
- *   decided against anyone;
+ *   quality, no milestone named, written when the last milestone settles.
+ *   The remaining deposits go back; the contract stays ACTIVE until escrow
+ *   reports all of its money cleared (D93), so the mail does not call it
+ *   closed. Its own kind, CONTRACT_COMPLETED, since this decision finds no
+ *   new breach (an earlier one may have);
  * - a quality resolution: the inspection's qualityDisposition, shown with
  *   the final attribution (the contract's x-quality-notification-invariant);
  * - any other decision, with or without a party at fault.
@@ -42,7 +44,7 @@ export class NotifyRemedyFinalizedUseCase {
       ? COMMAND_KINDS.contractCompleted
       : COMMAND_KINDS.remedyFinalized;
     const subject = completion
-      ? `[AgriContract] Contract ${command.contractId} is complete`
+      ? `[AgriContract] Every milestone of contract ${command.contractId} has settled`
       : `[AgriContract] Decision on contract ${command.contractId}`;
     const body = remedyFinalizedText(command);
 
@@ -132,21 +134,33 @@ export function remedyFinalizedText(
         ];
 
   if (isNormalCompletion(command)) {
-    const returned = command.remedyLegs.length > 0;
+    // D93/D94: this decision is written when the last milestone settles, but
+    // the contract stays ACTIVE until escrow reports every fund of it cleared.
+    const deposits =
+      command.remedyLegs.length === 0
+        ? [
+            'No deposit is still locked for the contract, so this decision',
+            'moves no money.',
+          ]
+        : [
+            'This decision returns the deposits still locked for the contract.',
+            ...money,
+          ];
     return [
-      'Your AgriContract contract is complete: every milestone has settled.',
-      returned
-        ? 'Nobody breached it. The deposits still locked for it are returned.'
-        : 'Nobody breached it. No deposit is still locked for it.',
+      'Every milestone of your AgriContract contract has settled, and the',
+      'platform has made its completion decision.',
       '',
       `Contract: ${command.contractId}`,
       `Decision: ${command.remedyDecisionId}`,
       '',
-      ...money,
+      'This decision finds no new breach. It does not change any earlier',
+      'decision on this contract.',
       '',
-      returned
-        ? 'The contract is closed once every transfer above has completed.'
-        : 'The contract is closed.',
+      ...deposits,
+      '',
+      'The contract is not closed yet. It closes once escrow-service confirms',
+      'that all money of the contract has cleared, including the final',
+      'milestone payment and any earlier transfer that is still pending.',
       '',
     ].join('\n');
   }
