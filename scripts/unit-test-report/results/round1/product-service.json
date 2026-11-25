@@ -1,0 +1,3370 @@
+[
+  {
+    "iterationIndex": 0,
+    "results": [
+      {
+        "test": {
+          "filename": "product-service\\00-propose-category.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/categories",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"Cà Phê Bruno 1795610470062\"\n}"
+        },
+        "response": {
+          "status": 503,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:10 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:10.132447273Z",
+            "status": 503,
+            "error": "Service Unavailable",
+            "code": "USER_SERVICE_UNAVAILABLE",
+            "message": "User service unavailable, please retry",
+            "path": "/api/v1/categories",
+            "traceId": "5a9dafba-efef-4d4e-8863-c5a5afae1489"
+          },
+          "url": "http://localhost/api/v1/categories",
+          "responseTime": 33,
+          "duration": 33,
+          "size": 251
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201",
+            "status": "fail",
+            "error": "expected 503 to equal 201",
+            "actual": 503,
+            "expected": 201,
+            "stack": "AssertionError: expected 503 to equal 201\n    at <repo>/backend\\bruno\\product-service\\00-propose-category.bru:5:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\00-propose-category.bru:4:1\n    at <repo>/backend\\bruno\\product-service\\00-propose-category.bru:15:3\n    at <repo>/backend\\bruno\\product-service\\00-propose-category.bru:16:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "BtMJUXbWULCn1hGbvi90m"
+          },
+          {
+            "description": "should return categoryId",
+            "status": "fail",
+            "error": "expected undefined to be a string",
+            "stack": "AssertionError: expected undefined to be a string\n    at <repo>/backend\\bruno\\product-service\\00-propose-category.bru:9:42\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\00-propose-category.bru:8:1\n    at <repo>/backend\\bruno\\product-service\\00-propose-category.bru:15:3\n    at <repo>/backend\\bruno\\product-service\\00-propose-category.bru:16:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "fMHRxwlCkfjc7C0VN26Of"
+          },
+          {
+            "description": "status should be PENDING",
+            "status": "fail",
+            "error": "expected 503 to equal 'PENDING'",
+            "actual": 503,
+            "expected": "PENDING",
+            "stack": "AssertionError: expected 503 to equal 'PENDING'\n    at <repo>/backend\\bruno\\product-service\\00-propose-category.bru:13:35\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\00-propose-category.bru:12:1\n    at <repo>/backend\\bruno\\product-service\\00-propose-category.bru:15:3\n    at <repo>/backend\\bruno\\product-service\\00-propose-category.bru:16:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "LLVd0LfwuRTFN9iK_2tXt"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.1032713,
+        "name": "POST /api/v1/categories (propose category)",
+        "path": "product-service\\00-propose-category",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\00b-propose-category-blank-name.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/categories",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:10 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:10.168853829Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "name: must not be blank",
+            "path": "/api/v1/categories",
+            "traceId": "bc425d53-f932-48ef-8ff2-b9f70b019f16"
+          },
+          "url": "http://localhost/api/v1/categories",
+          "responseTime": 8,
+          "duration": 8,
+          "size": 221
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "uS8DlKvWTw_ltXEtkvtRX"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "N-CEn_13hlQcN9ee5ZdTf"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0150996,
+        "name": "POST /api/v1/categories (blank name → 400)",
+        "path": "product-service\\00b-propose-category-blank-name",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\01-approve-category.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/admin/categories/{{category_id}}/approve",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "operator-1",
+            "X-User-Role": "OPERATOR",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"commodity\": \"COFFEE\"\n}"
+        },
+        "response": {
+          "status": 404,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:10 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:10.183636747Z",
+            "status": 404,
+            "error": "Not Found",
+            "code": "CATEGORY_NOT_FOUND",
+            "message": "Category not found with id: {{category_id}}",
+            "path": "/api/v1/admin/categories/%7B%7Bcategory_id%7D%7D/approve",
+            "traceId": "beae9f2d-1a9f-4acb-80d0-5a2f52bd5adf"
+          },
+          "url": "http://localhost/api/v1/admin/categories/%7B%7Bcategory_id%7D%7D/approve",
+          "responseTime": 11,
+          "duration": 11,
+          "size": 278
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "fail",
+            "error": "expected 404 to equal 200",
+            "actual": 404,
+            "expected": 200,
+            "stack": "AssertionError: expected 404 to equal 200\n    at <repo>/backend\\bruno\\product-service\\01-approve-category.bru:5:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\01-approve-category.bru:4:1\n    at <repo>/backend\\bruno\\product-service\\01-approve-category.bru:15:3\n    at <repo>/backend\\bruno\\product-service\\01-approve-category.bru:16:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "wblsW1y50HDQoEyOm0DZe"
+          },
+          {
+            "description": "status should be APPROVED",
+            "status": "fail",
+            "error": "expected 404 to equal 'APPROVED'",
+            "actual": 404,
+            "expected": "APPROVED",
+            "stack": "AssertionError: expected 404 to equal 'APPROVED'\n    at <repo>/backend\\bruno\\product-service\\01-approve-category.bru:9:35\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\01-approve-category.bru:8:1\n    at <repo>/backend\\bruno\\product-service\\01-approve-category.bru:15:3\n    at <repo>/backend\\bruno\\product-service\\01-approve-category.bru:16:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "ciS7Q0o74Ye8O7XQ8SQPy"
+          },
+          {
+            "description": "approval stores the commodity the Operator assigned",
+            "status": "fail",
+            "error": "expected undefined to equal 'COFFEE'",
+            "expected": "COFFEE",
+            "stack": "AssertionError: expected undefined to equal 'COFFEE'\n    at <repo>/backend\\bruno\\product-service\\01-approve-category.bru:13:38\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\01-approve-category.bru:12:1\n    at <repo>/backend\\bruno\\product-service\\01-approve-category.bru:15:3\n    at <repo>/backend\\bruno\\product-service\\01-approve-category.bru:16:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "7cwFzCI9Ex_-HA8zU9zf_"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0157472,
+        "name": "PUT /api/v1/admin/categories/:categoryId/approve",
+        "path": "product-service\\01-approve-category",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\01b-assign-commodity-already-mapped.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/admin/categories/{{category_id}}/commodity",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "operator-1",
+            "X-User-Role": "OPERATOR",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"commodity\": \"COFFEE\"\n}"
+        },
+        "response": {
+          "status": 404,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:10 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:10.200137442Z",
+            "status": 404,
+            "error": "Not Found",
+            "code": "CATEGORY_NOT_FOUND",
+            "message": "Category not found with id: {{category_id}}",
+            "path": "/api/v1/admin/categories/%7B%7Bcategory_id%7D%7D/commodity",
+            "traceId": "4627776a-348d-4140-9d24-3e2f3dce804c"
+          },
+          "url": "http://localhost/api/v1/admin/categories/%7B%7Bcategory_id%7D%7D/commodity",
+          "responseTime": 11,
+          "duration": 11,
+          "size": 280
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 409",
+            "status": "fail",
+            "error": "expected 404 to equal 409",
+            "actual": 404,
+            "expected": 409,
+            "stack": "AssertionError: expected 404 to equal 409\n    at <repo>/backend\\bruno\\product-service\\01b-assign-commodity-already-mapped.bru:6:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\01b-assign-commodity-already-mapped.bru:5:1\n    at <repo>/backend\\bruno\\product-service\\01b-assign-commodity-already-mapped.bru:13:3\n    at <repo>/backend\\bruno\\product-service\\01b-assign-commodity-already-mapped.bru:14:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "m1vqpViHQlSW2FB7ABHUS"
+          },
+          {
+            "description": "error body is the shared ErrorEnvelope",
+            "status": "pass",
+            "uid": "X5dJNMwWjsmCIpJjDymmb"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0157782,
+        "name": "PUT /api/v1/admin/categories/:categoryId/commodity (already mapped)",
+        "path": "product-service\\01b-assign-commodity-already-mapped",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\02-propose-category-duplicate.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/categories",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+            "X-User-Role": "BUYER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"ca phe\"\n}"
+        },
+        "response": {
+          "status": 409,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:10 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:10.217042104Z",
+            "status": 409,
+            "error": "Conflict",
+            "code": "DUPLICATE_CATEGORY",
+            "message": "Category already proposed/exists with an equivalent name: ca phe",
+            "path": "/api/v1/categories",
+            "traceId": "59d9fe4e-87d4-4eef-892a-c8881929708e"
+          },
+          "url": "http://localhost/api/v1/categories",
+          "responseTime": 12,
+          "duration": 12,
+          "size": 260
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 409",
+            "status": "pass",
+            "uid": "b6wd7NDLskESeE2YRHs5d"
+          },
+          {
+            "description": "error body is the shared ErrorEnvelope",
+            "status": "pass",
+            "uid": "2am8GCY_uL_w368oQwm_u"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0162603,
+        "name": "POST /api/v1/categories (duplicate name — diacritics/case-insensitive, blocked even though APPROVED)",
+        "path": "product-service\\02-propose-category-duplicate",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\03-propose-category-for-reject.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/categories",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"Rau Củ Không Rõ 1795610470062\"\n}"
+        },
+        "response": {
+          "status": 503,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:10 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:10.240587545Z",
+            "status": 503,
+            "error": "Service Unavailable",
+            "code": "USER_SERVICE_UNAVAILABLE",
+            "message": "User service unavailable, please retry",
+            "path": "/api/v1/categories",
+            "traceId": "4247c4ee-731a-4adc-9330-75453884af3a"
+          },
+          "url": "http://localhost/api/v1/categories",
+          "responseTime": 20,
+          "duration": 20,
+          "size": 251
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201",
+            "status": "fail",
+            "error": "expected 503 to equal 201",
+            "actual": 503,
+            "expected": 201,
+            "stack": "AssertionError: expected 503 to equal 201\n    at <repo>/backend\\bruno\\product-service\\03-propose-category-for-reject.bru:5:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\03-propose-category-for-reject.bru:4:1\n    at <repo>/backend\\bruno\\product-service\\03-propose-category-for-reject.bru:11:3\n    at <repo>/backend\\bruno\\product-service\\03-propose-category-for-reject.bru:12:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "3CPOkNCE79Bgi4gPfttAR"
+          },
+          {
+            "description": "status should be PENDING",
+            "status": "fail",
+            "error": "expected 503 to equal 'PENDING'",
+            "actual": 503,
+            "expected": "PENDING",
+            "stack": "AssertionError: expected 503 to equal 'PENDING'\n    at <repo>/backend\\bruno\\product-service\\03-propose-category-for-reject.bru:9:35\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\03-propose-category-for-reject.bru:8:1\n    at <repo>/backend\\bruno\\product-service\\03-propose-category-for-reject.bru:11:3\n    at <repo>/backend\\bruno\\product-service\\03-propose-category-for-reject.bru:12:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "vZg1rT-uHxpGYYqmUm4pe"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.027191,
+        "name": "POST /api/v1/categories (second category, to be rejected)",
+        "path": "product-service\\03-propose-category-for-reject",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\03b-approve-category-as-seller.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/admin/categories/{{category_id_reject}}/approve",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"commodity\": \"COFFEE\"\n}"
+        },
+        "response": {
+          "status": 403,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:10 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:10.257885466Z",
+            "status": 403,
+            "error": "Forbidden",
+            "code": "FORBIDDEN",
+            "message": "Forbidden",
+            "path": "/api/v1/admin/categories/%7B%7Bcategory_id_reject%7D%7D/approve",
+            "traceId": "2a0906f3-3144-4724-83d3-40b848ed70c1"
+          },
+          "url": "http://localhost/api/v1/admin/categories/%7B%7Bcategory_id_reject%7D%7D/approve",
+          "responseTime": 8,
+          "duration": 8,
+          "size": 242
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 403",
+            "status": "pass",
+            "uid": "-kM-j8bZRjdybHmxuJh_c"
+          },
+          {
+            "description": "error code is FORBIDDEN",
+            "status": "pass",
+            "uid": "7aLUc-8mi7ayOyNI-o74z"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0134032,
+        "name": "PUT /api/v1/admin/categories/:categoryId/approve (SELLER → 403)",
+        "path": "product-service\\03b-approve-category-as-seller",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\03c-reject-category-blank-reason.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/admin/categories/{{category_id_reject}}/reject",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "operator-1",
+            "X-User-Role": "OPERATOR",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"reason\": \"\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:10 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:10.270084233Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "reason: must not be blank",
+            "path": "/api/v1/admin/categories/%7B%7Bcategory_id_reject%7D%7D/reject",
+            "traceId": "77fc8d1d-7def-436c-95bc-aac17db1e002"
+          },
+          "url": "http://localhost/api/v1/admin/categories/%7B%7Bcategory_id_reject%7D%7D/reject",
+          "responseTime": 7,
+          "duration": 7,
+          "size": 267
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "6hNBnNHL865hTKHGKAVgb"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "XqbmJbr978J_75d0R-xBH"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.011927,
+        "name": "PUT /api/v1/admin/categories/:categoryId/reject (blank reason → 400)",
+        "path": "product-service\\03c-reject-category-blank-reason",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\04-reject-category.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/admin/categories/{{category_id_reject}}/reject",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "operator-1",
+            "X-User-Role": "OPERATOR",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"reason\": \"Tên không rõ ràng, đề nghị đặt lại\"\n}"
+        },
+        "response": {
+          "status": 404,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:10 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:10.286908516Z",
+            "status": 404,
+            "error": "Not Found",
+            "code": "CATEGORY_NOT_FOUND",
+            "message": "Category not found with id: {{category_id_reject}}",
+            "path": "/api/v1/admin/categories/%7B%7Bcategory_id_reject%7D%7D/reject",
+            "traceId": "83b4da95-0225-464b-8e14-a24c66f63c88"
+          },
+          "url": "http://localhost/api/v1/admin/categories/%7B%7Bcategory_id_reject%7D%7D/reject",
+          "responseTime": 13,
+          "duration": 13,
+          "size": 291
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "fail",
+            "error": "expected 404 to equal 200",
+            "actual": 404,
+            "expected": 200,
+            "stack": "AssertionError: expected 404 to equal 200\n    at <repo>/backend\\bruno\\product-service\\04-reject-category.bru:5:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\04-reject-category.bru:4:1\n    at <repo>/backend\\bruno\\product-service\\04-reject-category.bru:15:3\n    at <repo>/backend\\bruno\\product-service\\04-reject-category.bru:16:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "QduXs0n5n3KGHLTpQgpPv"
+          },
+          {
+            "description": "status should be REJECTED",
+            "status": "fail",
+            "error": "expected 404 to equal 'REJECTED'",
+            "actual": 404,
+            "expected": "REJECTED",
+            "stack": "AssertionError: expected 404 to equal 'REJECTED'\n    at <repo>/backend\\bruno\\product-service\\04-reject-category.bru:9:35\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\04-reject-category.bru:8:1\n    at <repo>/backend\\bruno\\product-service\\04-reject-category.bru:15:3\n    at <repo>/backend\\bruno\\product-service\\04-reject-category.bru:16:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "GEc_txOwOpGT_H1yW3g3c"
+          },
+          {
+            "description": "rejectionReason should be set",
+            "status": "fail",
+            "error": "expected undefined to equal 'Tên không rõ ràng, đề nghị đặt lại'",
+            "expected": "Tên không rõ ràng, đề nghị đặt lại",
+            "stack": "AssertionError: expected undefined to equal 'Tên không rõ ràng, đề nghị đặt lại'\n    at <repo>/backend\\bruno\\product-service\\04-reject-category.bru:13:44\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\04-reject-category.bru:12:1\n    at <repo>/backend\\bruno\\product-service\\04-reject-category.bru:15:3\n    at <repo>/backend\\bruno\\product-service\\04-reject-category.bru:16:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "kzZyxzO5b_5CJmKm5jXwD"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0199813,
+        "name": "PUT /api/v1/admin/categories/:categoryId/reject",
+        "path": "product-service\\04-reject-category",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\05-create-product.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/products",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"Ca phe Robusta Dak Lak\",\n  \"unit\": \"kg\",\n  \"categoryId\": \"{{category_id}}\",\n  \"imageUrls\": [\"https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg\", \"https://cdn.agricontract.test/products/ca-phe-robusta-2.jpg\"],\n  \"cropYear\": 2026,\n  \"harvestSeason\": \"Nien vu 2026/27\",\n  \"certifications\": [\"4C (cam ket)\"]\n}"
+        },
+        "response": {
+          "status": 404,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:10 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:10.308503542Z",
+            "status": 404,
+            "error": "Not Found",
+            "code": "CATEGORY_NOT_FOUND",
+            "message": "Category not found with id: {{category_id}}",
+            "path": "/api/v1/products",
+            "traceId": "65e282d6-aad8-4afa-864b-af6308c23be8"
+          },
+          "url": "http://localhost/api/v1/products",
+          "responseTime": 13,
+          "duration": 13,
+          "size": 238
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201",
+            "status": "fail",
+            "error": "expected 404 to equal 201",
+            "actual": 404,
+            "expected": 201,
+            "stack": "AssertionError: expected 404 to equal 201\n    at <repo>/backend\\bruno\\product-service\\05-create-product.bru:5:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\05-create-product.bru:4:1\n    at <repo>/backend\\bruno\\product-service\\05-create-product.bru:23:3\n    at <repo>/backend\\bruno\\product-service\\05-create-product.bru:24:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "3w_hsMuQPkgg2MA3AdHDh"
+          },
+          {
+            "description": "should return productId",
+            "status": "fail",
+            "error": "expected undefined to be a string",
+            "stack": "AssertionError: expected undefined to be a string\n    at <repo>/backend\\bruno\\product-service\\05-create-product.bru:9:41\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\05-create-product.bru:8:1\n    at <repo>/backend\\bruno\\product-service\\05-create-product.bru:23:3\n    at <repo>/backend\\bruno\\product-service\\05-create-product.bru:24:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "cHawqkv44hF4PTGdDoGMB"
+          },
+          {
+            "description": "should return correct name",
+            "status": "fail",
+            "error": "expected undefined to equal 'Ca phe Robusta Dak Lak'",
+            "expected": "Ca phe Robusta Dak Lak",
+            "stack": "AssertionError: expected undefined to equal 'Ca phe Robusta Dak Lak'\n    at <repo>/backend\\bruno\\product-service\\05-create-product.bru:13:33\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\05-create-product.bru:12:1\n    at <repo>/backend\\bruno\\product-service\\05-create-product.bru:23:3\n    at <repo>/backend\\bruno\\product-service\\05-create-product.bru:24:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "hLZQl5sk7aSm9V8BUIgag"
+          },
+          {
+            "description": "images should have 2 entries",
+            "status": "fail",
+            "error": "Cannot read properties of undefined (reading 'length')",
+            "stack": "TypeError: Cannot read properties of undefined (reading 'length')\n    at <repo>/backend\\bruno\\product-service\\05-create-product.bru:21:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\05-create-product.bru:20:1\n    at <repo>/backend\\bruno\\product-service\\05-create-product.bru:23:3\n    at <repo>/backend\\bruno\\product-service\\05-create-product.bru:24:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "TypeError",
+            "uid": "g7wezlf3unaPUWOSs6dME"
+          },
+          {
+            "description": "categoryId should match",
+            "status": "pass",
+            "uid": "TCgbCoexSIL_Kgc6mUE6p"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0206653,
+        "name": "POST /api/v1/products (create product with categoryId + imageUrls)",
+        "path": "product-service\\05-create-product",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\05b-create-product-crop-year-2000.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/products",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"Ca phe Robusta (cropYear 2000)\",\n  \"unit\": \"kg\",\n  \"categoryId\": \"{{category_id}}\",\n  \"imageUrls\": [\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg\"\n  ],\n  \"cropYear\": 2000\n}"
+        },
+        "response": {
+          "status": 404,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:10 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:10.326530266Z",
+            "status": 404,
+            "error": "Not Found",
+            "code": "CATEGORY_NOT_FOUND",
+            "message": "Category not found with id: {{category_id}}",
+            "path": "/api/v1/products",
+            "traceId": "903ce330-5463-4228-99f5-48e9ba694168"
+          },
+          "url": "http://localhost/api/v1/products",
+          "responseTime": 12,
+          "duration": 12,
+          "size": 238
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201",
+            "status": "fail",
+            "error": "expected 404 to equal 201",
+            "actual": 404,
+            "expected": 201,
+            "stack": "AssertionError: expected 404 to equal 201\n    at <repo>/backend\\bruno\\product-service\\05b-create-product-crop-year-2000.bru:5:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\05b-create-product-crop-year-2000.bru:4:1\n    at <repo>/backend\\bruno\\product-service\\05b-create-product-crop-year-2000.bru:11:3\n    at <repo>/backend\\bruno\\product-service\\05b-create-product-crop-year-2000.bru:12:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "Pzz9wc3uxpgprcV2dyCLL"
+          },
+          {
+            "description": "cropYear 2000 is kept",
+            "status": "fail",
+            "error": "expected undefined to equal 2000",
+            "expected": 2000,
+            "stack": "AssertionError: expected undefined to equal 2000\n    at <repo>/backend\\bruno\\product-service\\05b-create-product-crop-year-2000.bru:9:37\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\05b-create-product-crop-year-2000.bru:8:1\n    at <repo>/backend\\bruno\\product-service\\05b-create-product-crop-year-2000.bru:11:3\n    at <repo>/backend\\bruno\\product-service\\05b-create-product-crop-year-2000.bru:12:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "mQSDTuBd7XDzf4QFyimSu"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0166331,
+        "name": "POST /api/v1/products (cropYear 2000, limit → 201)",
+        "path": "product-service\\05b-create-product-crop-year-2000",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\05c-create-product-crop-year-2100.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/products",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"Ca phe Robusta (cropYear 2100)\",\n  \"unit\": \"kg\",\n  \"categoryId\": \"{{category_id}}\",\n  \"imageUrls\": [\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg\"\n  ],\n  \"cropYear\": 2100\n}"
+        },
+        "response": {
+          "status": 404,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:10 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:10.344236523Z",
+            "status": 404,
+            "error": "Not Found",
+            "code": "CATEGORY_NOT_FOUND",
+            "message": "Category not found with id: {{category_id}}",
+            "path": "/api/v1/products",
+            "traceId": "686d148e-e5b7-49f4-ad2a-1f245a5d20c3"
+          },
+          "url": "http://localhost/api/v1/products",
+          "responseTime": 13,
+          "duration": 13,
+          "size": 238
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201",
+            "status": "fail",
+            "error": "expected 404 to equal 201",
+            "actual": 404,
+            "expected": 201,
+            "stack": "AssertionError: expected 404 to equal 201\n    at <repo>/backend\\bruno\\product-service\\05c-create-product-crop-year-2100.bru:5:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\05c-create-product-crop-year-2100.bru:4:1\n    at <repo>/backend\\bruno\\product-service\\05c-create-product-crop-year-2100.bru:11:3\n    at <repo>/backend\\bruno\\product-service\\05c-create-product-crop-year-2100.bru:12:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "Au4HozZSqsN7EbH2JgJpK"
+          },
+          {
+            "description": "cropYear 2100 is kept",
+            "status": "fail",
+            "error": "expected undefined to equal 2100",
+            "expected": 2100,
+            "stack": "AssertionError: expected undefined to equal 2100\n    at <repo>/backend\\bruno\\product-service\\05c-create-product-crop-year-2100.bru:9:37\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\05c-create-product-crop-year-2100.bru:8:1\n    at <repo>/backend\\bruno\\product-service\\05c-create-product-crop-year-2100.bru:11:3\n    at <repo>/backend\\bruno\\product-service\\05c-create-product-crop-year-2100.bru:12:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "nexpdial6vtsvQMqrAmhL"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0177087,
+        "name": "POST /api/v1/products (cropYear 2100, limit → 201)",
+        "path": "product-service\\05c-create-product-crop-year-2100",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\05d-create-product-crop-year-1999.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/products",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"Ca phe Robusta (cropYear 1999)\",\n  \"unit\": \"kg\",\n  \"categoryId\": \"{{category_id}}\",\n  \"imageUrls\": [\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg\"\n  ],\n  \"cropYear\": 1999\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:10 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:10.360704701Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "cropYear: must be greater than or equal to 2000",
+            "path": "/api/v1/products",
+            "traceId": "5fcdba54-da65-473f-a551-443b23ea7f69"
+          },
+          "url": "http://localhost/api/v1/products",
+          "responseTime": 10,
+          "duration": 10,
+          "size": 243
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "DvQyAR-nlnLH9hskX2DhT"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "ELGGZzAzvAR9O1qnXz9DI"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0150298,
+        "name": "POST /api/v1/products (cropYear 1999, outside 2000..2100 → 400)",
+        "path": "product-service\\05d-create-product-crop-year-1999",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\05e-create-product-crop-year-2101.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/products",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"Ca phe Robusta (cropYear 2101)\",\n  \"unit\": \"kg\",\n  \"categoryId\": \"{{category_id}}\",\n  \"imageUrls\": [\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg\"\n  ],\n  \"cropYear\": 2101\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:10 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:10.372798365Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "cropYear: must be less than or equal to 2100",
+            "path": "/api/v1/products",
+            "traceId": "00fa70df-9674-48b3-81c8-118b544cdb74"
+          },
+          "url": "http://localhost/api/v1/products",
+          "responseTime": 8,
+          "duration": 8,
+          "size": 240
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "PzEFOAiBFkOPdVniM2-sl"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "jA8qXUE41inSWwXmzIh44"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0119013,
+        "name": "POST /api/v1/products (cropYear 2101, outside 2000..2100 → 400)",
+        "path": "product-service\\05e-create-product-crop-year-2101",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\06-create-product-category-not-approved.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/products",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"name\": \"San Pham Loi\",\n  \"unit\": \"kg\",\n  \"categoryId\": \"{{category_id_reject}}\",\n  \"imageUrls\": [\"https://cdn.agricontract.test/products/x.jpg\"]\n}"
+        },
+        "response": {
+          "status": 404,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:10 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:10.388599536Z",
+            "status": 404,
+            "error": "Not Found",
+            "code": "CATEGORY_NOT_FOUND",
+            "message": "Category not found with id: {{category_id_reject}}",
+            "path": "/api/v1/products",
+            "traceId": "ccc55561-2571-426f-87fc-5900940398dd"
+          },
+          "url": "http://localhost/api/v1/products",
+          "responseTime": 12,
+          "duration": 12,
+          "size": 245
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "fail",
+            "error": "expected 404 to equal 400",
+            "actual": 404,
+            "expected": 400,
+            "stack": "AssertionError: expected 404 to equal 400\n    at <repo>/backend\\bruno\\product-service\\06-create-product-category-not-approved.bru:5:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\06-create-product-category-not-approved.bru:4:1\n    at <repo>/backend\\bruno\\product-service\\06-create-product-category-not-approved.bru:12:3\n    at <repo>/backend\\bruno\\product-service\\06-create-product-category-not-approved.bru:13:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "6ALoXa1pGSs9BRFVZkd3a"
+          },
+          {
+            "description": "error body is the shared ErrorEnvelope",
+            "status": "pass",
+            "uid": "RYhO_Dv0fmSY8oAHaZin2"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0166029,
+        "name": "POST /api/v1/products (rejected category — 400 CategoryNotApproved)",
+        "path": "product-service\\06-create-product-category-not-approved",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\06b-register-plot.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/plots",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "bruno-plot-ho-nguyen-van-a",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"householdLabel\": \"Hộ Nguyễn Văn A\",\n  \"latitude\": 12.666789,\n  \"longitude\": 108.050123,\n  \"areaHectares\": 1.5,\n  \"accuracyMeters\": 8.5,\n  \"declaredProvince\": \"DAK_LAK\"\n}"
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:10 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "registryEntryId": "2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a",
+            "householdLabel": "Hộ Nguyễn Văn A",
+            "geometryType": "POINT",
+            "geometryWkt": "POINT (108.050123 12.666789)",
+            "geometryHash": "7bf3a61711b5ceb99fb07bfb44ed4fdc4c0b65f92900ea838af31e8b94fee3de",
+            "areaHectares": 1.5,
+            "source": "MANUAL_PIN",
+            "accuracyMeters": 8.5,
+            "verificationLevel": "SELF_DECLARED",
+            "declaredProvince": "DAK_LAK",
+            "geoVerificationStatus": "UNVERIFIED",
+            "geoRiskLevel": null,
+            "importedAt": "2026-11-25T12:41:10.403099412Z"
+          },
+          "url": "http://localhost/api/v1/plots",
+          "responseTime": 22,
+          "duration": 22,
+          "size": 481
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201 or 200",
+            "status": "pass",
+            "uid": "NKE3nvzUauAubi8ZjY3yX"
+          },
+          {
+            "description": "plot is a POINT registry entry",
+            "status": "pass",
+            "uid": "Gh0j3hvl3q6l6ujUQ8DDM"
+          },
+          {
+            "description": "geometryHash is a SHA-256 hex",
+            "status": "pass",
+            "uid": "a4LDEaMtb-yTEaTPSxtm6"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0277477,
+        "name": "POST /api/v1/plots (manual pin)",
+        "path": "product-service\\06b-register-plot",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07-create-listing.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-1795610470422-qfc996yew5s",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 500,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15000.00\",\n  \"registryEntryIds\": [\"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:11 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:11.942407662Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "productId: must not be blank",
+            "path": "/api/v1/listings",
+            "traceId": "e473534b-c0cd-476f-a38b-4dbf6cf5d393"
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 10,
+          "duration": 10,
+          "size": 224
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201",
+            "status": "fail",
+            "error": "expected 400 to equal 201",
+            "actual": 400,
+            "expected": 201,
+            "stack": "AssertionError: expected 400 to equal 201\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:5:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:4:1\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:47:3\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:48:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "UpprzuupMwqxdbfwpwKO9"
+          },
+          {
+            "description": "should return listingId",
+            "status": "fail",
+            "error": "expected undefined to be a string",
+            "stack": "AssertionError: expected undefined to be a string\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:9:41\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:8:1\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:47:3\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:48:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "3ZE0PO93DORiqXHwKytd-"
+          },
+          {
+            "description": "sellerId should match header",
+            "status": "fail",
+            "error": "expected undefined to equal '1a5a2ddd-56b9-492a-b966-99f436e0fc85'",
+            "expected": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "stack": "AssertionError: expected undefined to equal '1a5a2ddd-56b9-492a-b966-99f436e0fc85'\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:13:37\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:12:1\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:47:3\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:48:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "PEGH6gQ-vmEK66p4Z8GoQ"
+          },
+          {
+            "description": "productName snapshot should be set",
+            "status": "fail",
+            "error": "expected undefined to equal 'Ca phe Robusta Dak Lak'",
+            "expected": "Ca phe Robusta Dak Lak",
+            "stack": "AssertionError: expected undefined to equal 'Ca phe Robusta Dak Lak'\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:17:40\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:16:1\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:47:3\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:48:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "QelJH3koKkZaUhiJo3aHT"
+          },
+          {
+            "description": "contract field names: kg quantities, 2-decimal VND/kg price, no Phase 1 fields",
+            "status": "fail",
+            "error": "expected undefined to equal 'KG'",
+            "expected": "KG",
+            "stack": "AssertionError: expected undefined to equal 'KG'\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:22:33\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:20:1\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:47:3\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:48:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "Lr0a9x4SS_5B_TS61NMzB"
+          },
+          {
+            "description": "status should be AVAILABLE",
+            "status": "fail",
+            "error": "expected 400 to equal 'AVAILABLE'",
+            "actual": 400,
+            "expected": "AVAILABLE",
+            "stack": "AssertionError: expected 400 to equal 'AVAILABLE'\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:32:35\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:31:1\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:47:3\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:48:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "Pj4_G1Fu0fCX1WjN5kU_T"
+          },
+          {
+            "description": "coffee goods: commodity from the category, season from the product, declared quality",
+            "status": "fail",
+            "error": "expected undefined to equal 'COFFEE'",
+            "expected": "COFFEE",
+            "stack": "AssertionError: expected undefined to equal 'COFFEE'\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:37:29\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:35:1\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:47:3\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:48:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "PwGBMGjqcR3jOfeyFMus-"
+          },
+          {
+            "description": "listing names the registry plot it comes from",
+            "status": "fail",
+            "error": "expected undefined to deeply equal [ Array(1) ]",
+            "expected": [
+              "2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a"
+            ],
+            "stack": "AssertionError: expected undefined to deeply equal [ Array(1) ]\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:45:50\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:44:1\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:47:3\n    at <repo>/backend\\bruno\\product-service\\07-create-listing.bru:48:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "rRwbJp2gbLBn7mBUvgApY"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 1.5299963,
+        "name": "POST /api/v1/listings (create listing)",
+        "path": "product-service\\07-create-listing",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07b-create-listing-replay.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-1795610470422-qfc996yew5s",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 500,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15000.00\",\n  \"registryEntryIds\": [\"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:11 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:11.959845627Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "productId: must not be blank",
+            "path": "/api/v1/listings",
+            "traceId": "5c69e196-9dd4-431b-9961-734716361da5"
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 8,
+          "duration": 8,
+          "size": 224
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "fail",
+            "error": "expected 400 to equal 200",
+            "actual": 400,
+            "expected": 200,
+            "stack": "AssertionError: expected 400 to equal 200\n    at <repo>/backend\\bruno\\product-service\\07b-create-listing-replay.bru:6:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\07b-create-listing-replay.bru:5:1\n    at <repo>/backend\\bruno\\product-service\\07b-create-listing-replay.bru:12:3\n    at <repo>/backend\\bruno\\product-service\\07b-create-listing-replay.bru:13:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "mZzNMLc5UyFIijU0nrrPK"
+          },
+          {
+            "description": "returns the listing 07 created",
+            "status": "fail",
+            "error": "expected undefined to equal '51ef2a70-95f6-4a53-bdb1-6c9ccc9becaf'",
+            "expected": "51ef2a70-95f6-4a53-bdb1-6c9ccc9becaf",
+            "stack": "AssertionError: expected undefined to equal '51ef2a70-95f6-4a53-bdb1-6c9ccc9becaf'\n    at <repo>/backend\\bruno\\product-service\\07b-create-listing-replay.bru:10:38\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\07b-create-listing-replay.bru:9:1\n    at <repo>/backend\\bruno\\product-service\\07b-create-listing-replay.bru:12:3\n    at <repo>/backend\\bruno\\product-service\\07b-create-listing-replay.bru:13:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "APvzw49lTv-GCyLy3NylP"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0132246,
+        "name": "POST /api/v1/listings (same Idempotency-Key replayed)",
+        "path": "product-service\\07b-create-listing-replay",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07c-create-listing-missing-key.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 500,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15000.00\",\n  \"registryEntryIds\": [\"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:11 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:11.972343554Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "MALFORMED_REQUEST",
+            "message": "Malformed request",
+            "path": "/api/v1/listings",
+            "traceId": "93361019-28f7-4200-8b57-248b1b8e058a"
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 8,
+          "duration": 8,
+          "size": 213
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "aK3TlUEsGJLD9XTX_sCsP"
+          },
+          {
+            "description": "error body is the shared ErrorEnvelope",
+            "status": "pass",
+            "uid": "s4N7SpurpYhGVFvdu4aqi"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0127349,
+        "name": "POST /api/v1/listings (no Idempotency-Key)",
+        "path": "product-service\\07c-create-listing-missing-key",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07d-create-listing-price-one-decimal.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-1795610471978-nc2bjh2es5f",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 500,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15000.0\",\n  \"registryEntryIds\": [\n    \"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"\n  ],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:11 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:11.990306914Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "askingUnitPrice: must be a decimal with exactly 2 places, e.g. 55000.00, productId: must not be blank",
+            "path": "/api/v1/listings",
+            "traceId": "ff937e52-5e92-4969-9960-fe3de64f2ab3"
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 10,
+          "duration": 10,
+          "size": 297
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "TtcAesUEyFYwhWTgiVv4t"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "gehFVwFjy4DC5Y-GR6SBz"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0176064,
+        "name": "POST /api/v1/listings (askingUnitPrice \"15000.0\", one decimal → 400)",
+        "path": "product-service\\07d-create-listing-price-one-decimal",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07e-create-listing-price-three-decimals.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-1795610471996-6qn2t9mujq",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 500,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15000.000\",\n  \"registryEntryIds\": [\n    \"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"\n  ],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:12 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:12.013624804Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "askingUnitPrice: must be a decimal with exactly 2 places, e.g. 55000.00, productId: must not be blank",
+            "path": "/api/v1/listings",
+            "traceId": "dd58d5d0-ac11-44a3-84d3-9bcee674f412"
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 17,
+          "duration": 17,
+          "size": 297
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "xtKQuRYXdHALNuXo3wOBZ"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "2J3z6BsYL8Ihh5WhIahCv"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.025856,
+        "name": "POST /api/v1/listings (askingUnitPrice \"15000.000\", three decimals → 400)",
+        "path": "product-service\\07e-create-listing-price-three-decimals",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07f-create-listing-min-order-equals-offered.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-1795610472021-v2sykzud85",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 500,\n  \"minOrderQuantity\": 500,\n  \"askingUnitPrice\": \"15000.00\",\n  \"registryEntryIds\": [\n    \"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"\n  ],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:12 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:12.034926863Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "productId: must not be blank",
+            "path": "/api/v1/listings",
+            "traceId": "eec0cffe-a15e-4d79-91e7-ca83122a6b8d"
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 12,
+          "duration": 12,
+          "size": 224
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201",
+            "status": "fail",
+            "error": "expected 400 to equal 201",
+            "actual": 400,
+            "expected": 201,
+            "stack": "AssertionError: expected 400 to equal 201\n    at <repo>/backend\\bruno\\product-service\\07f-create-listing-min-order-equals-offered.bru:5:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\07f-create-listing-min-order-equals-offered.bru:4:1\n    at <repo>/backend\\bruno\\product-service\\07f-create-listing-min-order-equals-offered.bru:13:3\n    at <repo>/backend\\bruno\\product-service\\07f-create-listing-min-order-equals-offered.bru:14:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "G1CLWOktQreJiXdIiN--U"
+          },
+          {
+            "description": "minOrderQuantity equals offeredQuantity",
+            "status": "fail",
+            "error": "expected undefined to equal 500",
+            "expected": 500,
+            "stack": "AssertionError: expected undefined to equal 500\n    at <repo>/backend\\bruno\\product-service\\07f-create-listing-min-order-equals-offered.bru:9:45\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\07f-create-listing-min-order-equals-offered.bru:8:1\n    at <repo>/backend\\bruno\\product-service\\07f-create-listing-min-order-equals-offered.bru:13:3\n    at <repo>/backend\\bruno\\product-service\\07f-create-listing-min-order-equals-offered.bru:14:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "GPx5R2TdTWQY6c7ztrP51"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.020596,
+        "name": "POST /api/v1/listings (minOrderQuantity = offeredQuantity = 500 → 201)",
+        "path": "product-service\\07f-create-listing-min-order-equals-offered",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07g-create-listing-min-order-above-offered.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-1795610472043-7uowtjqpsbx",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 500,\n  \"minOrderQuantity\": 500.001,\n  \"askingUnitPrice\": \"15000.00\",\n  \"registryEntryIds\": [\n    \"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"\n  ],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:12 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:12.055842130Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "productId: must not be blank",
+            "path": "/api/v1/listings",
+            "traceId": "fb16a736-9edd-43f5-94af-11d9b3063e77"
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 12,
+          "duration": 12,
+          "size": 224
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "gpc2TRsf5SPsn-UX3d3Bx"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "4r1w3fKXEfzHSeXGcD3ku"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0206653,
+        "name": "POST /api/v1/listings (minOrderQuantity 500.001 > offeredQuantity 500 → 400)",
+        "path": "product-service\\07g-create-listing-min-order-above-offered",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07h-create-listing-offered-zero.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-1795610472064-hzkmjzklgwm",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 0,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15000.00\",\n  \"registryEntryIds\": [\n    \"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"\n  ],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:12 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:12.082126368Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "productId: must not be blank, offeredQuantity: must be greater than 0",
+            "path": "/api/v1/listings",
+            "traceId": "fadedf8e-a549-4e1c-be1a-39bb6a08f398"
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 17,
+          "duration": 17,
+          "size": 265
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "ZfxCwu5xAsGudgsrdKexi"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "VtreUTCqCx5hAx31ol8PH"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0258216,
+        "name": "POST /api/v1/listings (offeredQuantity 0 → 400)",
+        "path": "product-service\\07h-create-listing-offered-zero",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\07i-create-listing-unit-tan.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8082/api/v1/listings",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-1795610472089-xztiliisbm",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"TAN\",\n  \"offeredQuantity\": 500,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15000.00\",\n  \"registryEntryIds\": [\n    \"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"\n  ],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:12 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:12.103173541Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "productId: must not be blank, unitOfMeasure: must be KG",
+            "path": "/api/v1/listings",
+            "traceId": "2d864296-c5d3-4be8-9a84-2f718a8cc3ff"
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 14,
+          "duration": 14,
+          "size": 251
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "A-x14N__haz61NwN6Tb3F"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "2k2-hl09rPMsV-RT2WB-N"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0217397,
+        "name": "POST /api/v1/listings (unitOfMeasure \"TAN\" → 400)",
+        "path": "product-service\\07i-create-listing-unit-tan",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\08-get-listing.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8082/api/v1/listings/51ef2a70-95f6-4a53-bdb1-6c9ccc9becaf",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:12 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "listingId": "51ef2a70-95f6-4a53-bdb1-6c9ccc9becaf",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+            "productName": "Gao ST25",
+            "unitOfMeasure": "KG",
+            "offeredQuantity": 500,
+            "quantityAvailable": null,
+            "minOrderQuantity": null,
+            "askingUnitPrice": "15000.00",
+            "status": "AVAILABLE",
+            "listingVersionToken": "2026-11-25T12:41:00Z",
+            "registryEntryIds": [],
+            "categoryId": null,
+            "commodity": null,
+            "regionText": null,
+            "declaredQualitySpec": null,
+            "legacyQualitySpecMissing": true,
+            "cropYear": null,
+            "harvestSeason": null,
+            "certifications": null,
+            "packagingDeclaration": null,
+            "warehouseLocation": null,
+            "estimatedAvailabilityDate": null,
+            "traceabilityEvidencePackageId": null
+          },
+          "url": "http://localhost/api/v1/listings/51ef2a70-95f6-4a53-bdb1-6c9ccc9becaf",
+          "responseTime": 24,
+          "duration": 24,
+          "size": 685
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "VBT-nve58ZCgtr0fq8bTW"
+          },
+          {
+            "description": "listingId matches",
+            "status": "pass",
+            "uid": "J9pjqPUzjvz3W0GxM3FME"
+          },
+          {
+            "description": "status is AVAILABLE",
+            "status": "pass",
+            "uid": "nVxf_Hq3aST0HYVAfnYu4"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0348656,
+        "name": "GET /api/v1/listings/:listingId",
+        "path": "product-service\\08-get-listing",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\09-get-active-listings.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8082/api/v1/listings?page=0&size=10",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:12 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "content": [
+              {
+                "listingId": "lst-seed-browse-01",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 1000,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "8000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-browse-02",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b02",
+                "productName": "Cà phê Robusta",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "55000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-browse-03",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b03",
+                "productName": "Hồ tiêu đen",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 100,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "120000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-offered",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 800,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "8500.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-neg",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b02",
+                "productName": "Cà phê Robusta",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 300,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "60000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "51ef2a70-95f6-4a53-bdb1-6c9ccc9becaf",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gao ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "15000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-25T12:41:00Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              }
+            ],
+            "page": 0,
+            "size": 10,
+            "totalElements": 6,
+            "totalPages": 1,
+            "first": true,
+            "last": true,
+            "empty": false,
+            "reputationStatus": "SIGN_IN_REQUIRED"
+          },
+          "url": "http://localhost/api/v1/listings?page=0&size=10",
+          "responseTime": 25,
+          "duration": 25,
+          "size": 4341
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "EBEXm_QxW0cSMoWAbNIo5"
+          },
+          {
+            "description": "content is an array",
+            "status": "pass",
+            "uid": "gFpLemU2cQ0T58C4XH6MO"
+          },
+          {
+            "description": "at least one listing returned",
+            "status": "pass",
+            "uid": "nwzoqF-qQ_73Qaf0qFC_b"
+          },
+          {
+            "description": "totalElements >= 1",
+            "status": "pass",
+            "uid": "DSLHUgsBKPIYh3nnbYgyl"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0323864,
+        "name": "GET /api/v1/listings (public — all active)",
+        "path": "product-service\\09-get-active-listings",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\09b-get-active-listings-size-100.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8082/api/v1/listings?page=0&size=100",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:12 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "content": [
+              {
+                "listingId": "lst-seed-browse-01",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 1000,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "8000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-browse-02",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b02",
+                "productName": "Cà phê Robusta",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "55000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-browse-03",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b03",
+                "productName": "Hồ tiêu đen",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 100,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "120000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-offered",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 800,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "8500.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "lst-seed-neg",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b02",
+                "productName": "Cà phê Robusta",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 300,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "60000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              },
+              {
+                "listingId": "51ef2a70-95f6-4a53-bdb1-6c9ccc9becaf",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gao ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "15000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-25T12:41:00Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null,
+                "sellerReputation": null
+              }
+            ],
+            "page": 0,
+            "size": 100,
+            "totalElements": 6,
+            "totalPages": 1,
+            "first": true,
+            "last": true,
+            "empty": false,
+            "reputationStatus": "SIGN_IN_REQUIRED"
+          },
+          "url": "http://localhost/api/v1/listings?page=0&size=100",
+          "responseTime": 20,
+          "duration": 20,
+          "size": 4342
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "yaja4lNZws09-XslvxGgh"
+          },
+          {
+            "description": "content is an array of at most 100",
+            "status": "pass",
+            "uid": "cYdm8Cg4wPC13_j0q3piS"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0240542,
+        "name": "GET /api/v1/listings (size 100, max → 200)",
+        "path": "product-service\\09b-get-active-listings-size-100",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\09c-get-active-listings-size-101.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8082/api/v1/listings?page=0&size=101",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:12 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:12.211866902Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "size: must be less than or equal to 100",
+            "path": "/api/v1/listings",
+            "traceId": "dbedef78-9194-4ddc-8f98-78e9093972d5"
+          },
+          "url": "http://localhost/api/v1/listings?page=0&size=101",
+          "responseTime": 11,
+          "duration": 11,
+          "size": 235
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "tY1sRtqkdLjwY6A-dAQ4t"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "iY3P05MtK92g__0du5f6s"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0142307,
+        "name": "GET /api/v1/listings (size 101, outside 1..100 → 400)",
+        "path": "product-service\\09c-get-active-listings-size-101",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\09d-get-active-listings-size-0.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8082/api/v1/listings?page=0&size=0",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:12 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:12.224799378Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "size: must be greater than or equal to 1",
+            "path": "/api/v1/listings",
+            "traceId": "ed522be2-b8e2-46c0-b111-44ad4cb10089"
+          },
+          "url": "http://localhost/api/v1/listings?page=0&size=0",
+          "responseTime": 9,
+          "duration": 9,
+          "size": 236
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "s_z6Kw4qqa9Lh9T8iAD1M"
+          },
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "pass",
+            "uid": "iIuTsQlmHXPMxURhxrQX8"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0131716,
+        "name": "GET /api/v1/listings (size 0, outside 1..100 → 400)",
+        "path": "product-service\\09d-get-active-listings-size-0",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\10-get-seller-listings.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8082/api/v1/listings/seller?page=0&size=10",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:12 GMT",
+            "keep-alive": "timeout=60",
+            "connection": "keep-alive"
+          },
+          "data": {
+            "content": [
+              {
+                "listingId": "lst-seed-browse-01",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 1000,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "8000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-browse-02",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b02",
+                "productName": "Cà phê Robusta",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "55000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-browse-03",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b03",
+                "productName": "Hồ tiêu đen",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 100,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "120000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-offered",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 800,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "8500.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-neg",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b02",
+                "productName": "Cà phê Robusta",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 300,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "60000.00",
+                "status": "AVAILABLE",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-signed",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 500,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "8000.00",
+                "status": "CLOSED",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-active",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b03",
+                "productName": "Hồ tiêu đen",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 200,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "110000.00",
+                "status": "CLOSED",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-delivered",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b02",
+                "productName": "Cà phê Robusta",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 300,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "58000.00",
+                "status": "CLOSED",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-settled",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b01",
+                "productName": "Gạo tẻ ST25",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 1000,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "7800.00",
+                "status": "CLOSED",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              },
+              {
+                "listingId": "lst-seed-cancelled",
+                "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                "productId": "7e4d2b9c-3a1f-4e85-b6d0-5c2a9f8e3b04",
+                "productName": "Sầu riêng Musang King",
+                "unitOfMeasure": "KG",
+                "offeredQuantity": 400,
+                "quantityAvailable": null,
+                "minOrderQuantity": null,
+                "askingUnitPrice": "85000.00",
+                "status": "CLOSED",
+                "listingVersionToken": "2026-11-14T10:11:55Z",
+                "registryEntryIds": [],
+                "categoryId": null,
+                "commodity": null,
+                "regionText": null,
+                "declaredQualitySpec": null,
+                "legacyQualitySpecMissing": true,
+                "cropYear": null,
+                "harvestSeason": null,
+                "certifications": null,
+                "packagingDeclaration": null,
+                "warehouseLocation": null,
+                "estimatedAvailabilityDate": null,
+                "traceabilityEvidencePackageId": null
+              }
+            ],
+            "page": 0,
+            "size": 10,
+            "totalElements": 13,
+            "totalPages": 2,
+            "first": true,
+            "last": false,
+            "empty": false
+          },
+          "url": "http://localhost/api/v1/listings/seller?page=0&size=10",
+          "responseTime": 23,
+          "duration": 23,
+          "size": 6837
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "c7s3hV0p6FvYMCAhCQ0ws"
+          },
+          {
+            "description": "content is an array",
+            "status": "pass",
+            "uid": "XZXzvR1jHSf9UiEZ4c40m"
+          },
+          {
+            "description": "all listings belong to this seller",
+            "status": "pass",
+            "uid": "sblTFEpbytVp4b5vHmbT1"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0296226,
+        "name": "GET /api/v1/listings/seller (seller's own listings)",
+        "path": "product-service\\10-get-seller-listings",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\11-update-listing.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/listings/51ef2a70-95f6-4a53-bdb1-6c9ccc9becaf",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-edit-1795610472259-twzerzsxje",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 600,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15500.00\",\n  \"registryEntryIds\": [\"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:12 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:12.269489264Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "productId: must not be blank",
+            "path": "/api/v1/listings/51ef2a70-95f6-4a53-bdb1-6c9ccc9becaf",
+            "traceId": "02b7d618-3b18-45c0-a1b4-09f033be9075"
+          },
+          "url": "http://localhost/api/v1/listings/51ef2a70-95f6-4a53-bdb1-6c9ccc9becaf",
+          "responseTime": 9,
+          "duration": 9,
+          "size": 261
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "fail",
+            "error": "expected 400 to equal 200",
+            "actual": 400,
+            "expected": 200,
+            "stack": "AssertionError: expected 400 to equal 200\n    at <repo>/backend\\bruno\\product-service\\11-update-listing.bru:5:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\11-update-listing.bru:4:1\n    at <repo>/backend\\bruno\\product-service\\11-update-listing.bru:20:3\n    at <repo>/backend\\bruno\\product-service\\11-update-listing.bru:21:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "96nhaMv7e7Lrr-CB9OxbO"
+          },
+          {
+            "description": "offer and price are edited, quantityAvailable = offered - reserved",
+            "status": "fail",
+            "error": "expected undefined to equal 600",
+            "expected": 600,
+            "stack": "AssertionError: expected undefined to equal 600\n    at <repo>/backend\\bruno\\product-service\\11-update-listing.bru:11:35\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\11-update-listing.bru:9:1\n    at <repo>/backend\\bruno\\product-service\\11-update-listing.bru:20:3\n    at <repo>/backend\\bruno\\product-service\\11-update-listing.bru:21:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "s4a4BWRyZJlzewcVh9MpK"
+          },
+          {
+            "description": "the edit issues a new listingVersionToken",
+            "status": "fail",
+            "error": "expected undefined to be a string",
+            "stack": "AssertionError: expected undefined to be a string\n    at <repo>/backend\\bruno\\product-service\\11-update-listing.bru:18:51\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\11-update-listing.bru:17:1\n    at <repo>/backend\\bruno\\product-service\\11-update-listing.bru:20:3\n    at <repo>/backend\\bruno\\product-service\\11-update-listing.bru:21:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "WxpKROxDLZhPMt3aSaY7n"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0166378,
+        "name": "PUT /api/v1/listings/:listingId (seller edits the offer, D48)",
+        "path": "product-service\\11-update-listing",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\11b-update-listing-replay.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/listings/51ef2a70-95f6-4a53-bdb1-6c9ccc9becaf",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "Idempotency-Key": "listing-edit-1795610472259-twzerzsxje",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"productId\": \"\",\n  \"productName\": \"Ca phe Robusta Dak Lak\",\n  \"unitOfMeasure\": \"KG\",\n  \"offeredQuantity\": 600,\n  \"minOrderQuantity\": 100,\n  \"askingUnitPrice\": \"15500.00\",\n  \"registryEntryIds\": [\"2e4f37ee-e4ac-46e8-bf40-ac3f0e21f28a\"],\n  \"regionText\": \"Buon Ma Thuot, Dak Lak\",\n  \"declaredQualitySpec\": {\n    \"commodity\": \"COFFEE\",\n    \"type\": \"ROBUSTA\",\n    \"moisturePercent\": 12.5,\n    \"foreignMatterPercent\": 0.5,\n    \"blackBrokenBeansPercent\": 5.0\n  },\n  \"packagingDeclaration\": \"Bao day 60 kg\"\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:12 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:12.288155915Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "productId: must not be blank",
+            "path": "/api/v1/listings/51ef2a70-95f6-4a53-bdb1-6c9ccc9becaf",
+            "traceId": "007dbcda-171b-45a6-943d-68c9259f4486"
+          },
+          "url": "http://localhost/api/v1/listings/51ef2a70-95f6-4a53-bdb1-6c9ccc9becaf",
+          "responseTime": 11,
+          "duration": 11,
+          "size": 261
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "fail",
+            "error": "expected 400 to equal 200",
+            "actual": 400,
+            "expected": 200,
+            "stack": "AssertionError: expected 400 to equal 200\n    at <repo>/backend\\bruno\\product-service\\11b-update-listing-replay.bru:6:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\11b-update-listing-replay.bru:5:1\n    at <repo>/backend\\bruno\\product-service\\11b-update-listing-replay.bru:12:3\n    at <repo>/backend\\bruno\\product-service\\11b-update-listing-replay.bru:13:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "qJvmZCXcFLMwv6iETRL6J"
+          },
+          {
+            "description": "version token unchanged: no second edit",
+            "status": "pass",
+            "uid": "7-tplJQUxvPxKFmgf2dm8"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0168664,
+        "name": "PUT /api/v1/listings/:listingId (same Idempotency-Key replayed)",
+        "path": "product-service\\11b-update-listing-replay",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\13-update-product-images.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/products//images",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"imageUrls\": [\"https://cdn.agricontract.test/products/ca-phe-robusta-new-cover.jpg\"]\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:12 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:12.301+00:00",
+            "status": 400,
+            "error": "Bad Request",
+            "path": "/api/v1/products//images"
+          },
+          "url": "http://localhost/api/v1/products//images",
+          "responseTime": 7,
+          "duration": 7,
+          "size": 114
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "fail",
+            "error": "expected 400 to equal 200",
+            "actual": 400,
+            "expected": 200,
+            "stack": "AssertionError: expected 400 to equal 200\n    at <repo>/backend\\bruno\\product-service\\13-update-product-images.bru:5:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\13-update-product-images.bru:4:1\n    at <repo>/backend\\bruno\\product-service\\13-update-product-images.bru:12:3\n    at <repo>/backend\\bruno\\product-service\\13-update-product-images.bru:13:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "Kj2fy2ch0dTB9hg5ShgZ7"
+          },
+          {
+            "description": "images fully replaced (only 1 entry now)",
+            "status": "fail",
+            "error": "Cannot read properties of undefined (reading 'length')",
+            "stack": "TypeError: Cannot read properties of undefined (reading 'length')\n    at <repo>/backend\\bruno\\product-service\\13-update-product-images.bru:9:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\13-update-product-images.bru:8:1\n    at <repo>/backend\\bruno\\product-service\\13-update-product-images.bru:12:3\n    at <repo>/backend\\bruno\\product-service\\13-update-product-images.bru:13:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "TypeError",
+            "uid": "qSpFM0howFadpyOQhxCsP"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0131817,
+        "name": "PUT /api/v1/products/:productId/images (full replace)",
+        "path": "product-service\\13-update-product-images",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\14-update-product-images-invalid.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/products//images",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"imageUrls\": []\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:12 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:12.312+00:00",
+            "status": 400,
+            "error": "Bad Request",
+            "path": "/api/v1/products//images"
+          },
+          "url": "http://localhost/api/v1/products//images",
+          "responseTime": 7,
+          "duration": 7,
+          "size": 114
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "error body is the shared ErrorEnvelope",
+            "status": "fail",
+            "error": "expected undefined to be a string",
+            "stack": "AssertionError: expected undefined to be a string\n    at <repo>/backend\\bruno\\product-service\\14-update-product-images-invalid.bru:9:36\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\14-update-product-images-invalid.bru:8:1\n    at <repo>/backend\\bruno\\product-service\\14-update-product-images-invalid.bru:12:3\n    at <repo>/backend\\bruno\\product-service\\14-update-product-images-invalid.bru:13:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "nG_aYuEqqR3SrgtOGr8LZ"
+          },
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "5LLhmUw6fMZtYi8LC1gfx"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0110198,
+        "name": "PUT /api/v1/products/:productId/images (validation — empty list rejected)",
+        "path": "product-service\\14-update-product-images-invalid",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\15-update-product-images-five.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/products//images",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"imageUrls\": [\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-2.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-3.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-4.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-5.jpg\"\n  ]\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:12 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:12.323+00:00",
+            "status": 400,
+            "error": "Bad Request",
+            "path": "/api/v1/products//images"
+          },
+          "url": "http://localhost/api/v1/products//images",
+          "responseTime": 7,
+          "duration": 7,
+          "size": 114
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "fail",
+            "error": "expected 400 to equal 200",
+            "actual": 400,
+            "expected": 200,
+            "stack": "AssertionError: expected 400 to equal 200\n    at <repo>/backend\\bruno\\product-service\\15-update-product-images-five.bru:5:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\15-update-product-images-five.bru:4:1\n    at <repo>/backend\\bruno\\product-service\\15-update-product-images-five.bru:11:3\n    at <repo>/backend\\bruno\\product-service\\15-update-product-images-five.bru:12:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "-_k5T-4zcyn3jNkWnexy9"
+          },
+          {
+            "description": "images has 5 entries",
+            "status": "fail",
+            "error": "Cannot read properties of undefined (reading 'length')",
+            "stack": "TypeError: Cannot read properties of undefined (reading 'length')\n    at <repo>/backend\\bruno\\product-service\\15-update-product-images-five.bru:9:30\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\15-update-product-images-five.bru:8:1\n    at <repo>/backend\\bruno\\product-service\\15-update-product-images-five.bru:11:3\n    at <repo>/backend\\bruno\\product-service\\15-update-product-images-five.bru:12:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "TypeError",
+            "uid": "OSlTgsUhbDEEhC7z9uANH"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0109341,
+        "name": "PUT /api/v1/products/:productId/images (5 images, max → 200)",
+        "path": "product-service\\15-update-product-images-five",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "product-service\\16-update-product-images-six.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8082/api/v1/products//images",
+          "headers": {
+            "X-Gateway-Secret": "<redacted:GATEWAY_INTERNAL_SECRET>",
+            "X-User-Id": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "X-User-Role": "SELLER",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"imageUrls\": [\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-1.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-2.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-3.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-4.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-5.jpg\",\n    \"https://cdn.agricontract.test/products/ca-phe-robusta-6.jpg\"\n  ]\n}"
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": {
+            "content-type": "application/json",
+            "transfer-encoding": "chunked",
+            "date": "Wed, 25 Nov 2026 12:41:12 GMT",
+            "connection": "close"
+          },
+          "data": {
+            "timestamp": "2026-11-25T12:41:12.336+00:00",
+            "status": 400,
+            "error": "Bad Request",
+            "path": "/api/v1/products//images"
+          },
+          "url": "http://localhost/api/v1/products//images",
+          "responseTime": 8,
+          "duration": 8,
+          "size": 114
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "error code is VALIDATION_FAILED",
+            "status": "fail",
+            "error": "expected undefined to equal 'VALIDATION_FAILED'",
+            "expected": "VALIDATION_FAILED",
+            "stack": "AssertionError: expected undefined to equal 'VALIDATION_FAILED'\n    at <repo>/backend\\bruno\\product-service\\16-update-product-images-six.bru:9:33\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\product-service\\16-update-product-images-six.bru:8:1\n    at <repo>/backend\\bruno\\product-service\\16-update-product-images-six.bru:12:3\n    at <repo>/backend\\bruno\\product-service\\16-update-product-images-six.bru:13:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "7u8ijHrPEyx4CRhx47Llb"
+          },
+          {
+            "description": "should return 400",
+            "status": "pass",
+            "uid": "9M26Pz8fF9L46vK3JBbxk"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0134588,
+        "name": "PUT /api/v1/products/:productId/images (6 images, max + 1 → 400)",
+        "path": "product-service\\16-update-product-images-six",
+        "iterationIndex": 0
+      }
+    ],
+    "summary": {
+      "totalRequests": 37,
+      "passedRequests": 19,
+      "failedRequests": 18,
+      "errorRequests": 0,
+      "skippedRequests": 0,
+      "totalAssertions": 0,
+      "passedAssertions": 0,
+      "failedAssertions": 0,
+      "totalTests": 92,
+      "passedTests": 49,
+      "failedTests": 43,
+      "totalPreRequestTests": 0,
+      "passedPreRequestTests": 0,
+      "failedPreRequestTests": 0,
+      "totalPostResponseTests": 0,
+      "passedPostResponseTests": 0,
+      "failedPostResponseTests": 0
+    }
+  }
+]

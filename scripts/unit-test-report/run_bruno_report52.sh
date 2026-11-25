@@ -17,7 +17,9 @@ BRU_VERSION="3.4.2"
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/../.." && pwd)"
-SEED="$REPO/backend/scripts/seed"
+# SEED_DIR: seed from another checkout, e.g. a fix not merged yet; run.json records its commit
+SEED="${SEED_DIR:-$REPO/backend/scripts/seed}"
+SEED_COMMIT="$(git -C "$SEED" rev-parse --short HEAD)"
 OUT="$HERE/results/$ROUND"
 mkdir -p "$OUT"
 
@@ -55,7 +57,9 @@ cat > "$OUT/run.json" <<EOF
   "date": "$(date +%d/%m/%Y)",
   "tester": "$TESTER",
   "commit": "$(git -C "$REPO" rev-parse --short HEAD)",
-  "bruno_cli": "$BRU_VERSION"
+  "bruno_cli": "$BRU_VERSION",
+  "seed_commit": "$SEED_COMMIT"
 }
 EOF
+python "$HERE/redact_reports.py" "$OUT"
 echo "reports in $OUT"

@@ -1,0 +1,475 @@
+[
+  {
+    "iterationIndex": 0,
+    "results": [
+      {
+        "test": {
+          "filename": "user-service\\00-get-seller-token.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8180/realms/agricontract/protocol/openid-connect/token",
+          "headers": {
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "data": "grant_type=password&client_id=agricontract-frontend&username=seller1&password=pass123"
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {
+            "cache-control": "no-store",
+            "pragma": "no-cache",
+            "content-length": "2366",
+            "content-type": "application/json",
+            "referrer-policy": "no-referrer",
+            "strict-transport-security": "max-age=31536000; includeSubDomains",
+            "x-content-type-options": "nosniff",
+            "x-frame-options": "SAMEORIGIN",
+            "x-xss-protection": "1; mode=block"
+          },
+          "data": {
+            "access_token": "<redacted:jwt>",
+            "expires_in": 300,
+            "refresh_expires_in": 1800,
+            "refresh_token": "<redacted:jwt>",
+            "token_type": "Bearer",
+            "not-before-policy": 0,
+            "session_state": "bfc9c28d-2c52-4b5f-984f-0ad55b1ee0ff",
+            "scope": "profile email"
+          },
+          "url": "http://localhost/realms/agricontract/protocol/openid-connect/token",
+          "responseTime": 189,
+          "duration": 189,
+          "size": 2366
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "atN_J_4_HZQ2n8vuEoPkj"
+          },
+          {
+            "description": "access_token is present",
+            "status": "pass",
+            "uid": "O9WhcaqVrFKN4ekcwGz4b"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.2544117,
+        "name": "Get Token (seller1)",
+        "path": "user-service\\00-get-seller-token",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "user-service\\00-register-seller.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/users/register",
+          "headers": {
+            "Authorization": "Bearer ********",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"organizationName\": \"Nong Trai ABC\",\n  \"email\": \"seller1@test.com\",\n  \"phone\": \"0901234567\",\n  \"address\": \"Ha Noi\"\n}"
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {
+            "transfer-encoding": "chunked",
+            "vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "date": "Wed, 25 Nov 2026 12:43:20 GMT",
+            "x-correlation-id": "fa997d39-9da5-4a98-b2df-a152eb891e86",
+            "referrer-policy": "no-referrer"
+          },
+          "data": {
+            "userId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "organizationName": "HTX Nông Nghiệp Xanh Cần Thơ",
+            "role": "SELLER",
+            "email": "seller1@test.com",
+            "emailVerified": true,
+            "phone": "0907654321",
+            "address": "456 Hùng Vương, Ninh Kiều, Cần Thơ",
+            "verificationStatus": "VERIFIED",
+            "authorizationExpiresAt": null
+          },
+          "url": "http://localhost/api/v1/users/register",
+          "responseTime": 23,
+          "duration": 23,
+          "size": 307
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 201 on first registration or 200 when the profile exists",
+            "status": "pass",
+            "uid": "rqVW9n3cFcyzu1Ml7L29B"
+          },
+          {
+            "description": "body is not wrapped in ApiResponse",
+            "status": "pass",
+            "uid": "QNtJv1pTJs6ZLLND4JkDC"
+          },
+          {
+            "description": "userId is seller1's Keycloak sub",
+            "status": "pass",
+            "uid": "CbCmHjNGoVqkyrsuxGigF"
+          },
+          {
+            "description": "role should be SELLER",
+            "status": "pass",
+            "uid": "Sjfpz2a-tY1f2r_RKThro"
+          },
+          {
+            "description": "a new profile starts PENDING",
+            "status": "pass",
+            "uid": "bo6zP3P-6Gy4JeIIAIO5w"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0307572,
+        "name": "POST /api/v1/users/register (201 first time, 200 when the seed already has the profile)",
+        "path": "user-service\\00-register-seller",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "user-service\\01-register-idempotency.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/users/register",
+          "headers": {
+            "Authorization": "Bearer ********",
+            "content-type": "application/json"
+          },
+          "data": "{\n  \"organizationName\": \"Nong Trai ABC\",\n  \"email\": \"seller1@test.com\",\n  \"phone\": \"0901234567\",\n  \"address\": \"Ha Noi\"\n}"
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {
+            "transfer-encoding": "chunked",
+            "vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "date": "Wed, 25 Nov 2026 12:43:20 GMT",
+            "x-correlation-id": "a9eebee0-b365-4782-9f41-aff70a88e521",
+            "referrer-policy": "no-referrer"
+          },
+          "data": {
+            "userId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "organizationName": "HTX Nông Nghiệp Xanh Cần Thơ",
+            "role": "SELLER",
+            "email": "seller1@test.com",
+            "emailVerified": true,
+            "phone": "0907654321",
+            "address": "456 Hùng Vương, Ninh Kiều, Cần Thơ",
+            "verificationStatus": "VERIFIED",
+            "authorizationExpiresAt": null
+          },
+          "url": "http://localhost/api/v1/users/register",
+          "responseTime": 20,
+          "duration": 20,
+          "size": 307
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200 on duplicate registration",
+            "status": "pass",
+            "uid": "NsNfqRdCHhGQHmM7ge_IK"
+          },
+          {
+            "description": "body is not wrapped in ApiResponse",
+            "status": "pass",
+            "uid": "-fHw_RA0FI-3_VgcMzB7y"
+          },
+          {
+            "description": "userId is the same",
+            "status": "pass",
+            "uid": "LpZQyDtNAcBRPDGKYqkX4"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0256535,
+        "name": "POST /api/v1/users/register (idempotency → 200)",
+        "path": "user-service\\01-register-idempotency",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "user-service\\02-get-my-profile.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/users/me",
+          "headers": {
+            "Authorization": "Bearer ********",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {
+            "transfer-encoding": "chunked",
+            "vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "date": "Wed, 25 Nov 2026 12:43:20 GMT",
+            "x-correlation-id": "b17978f1-9acb-4863-ac33-58594b4a973c",
+            "referrer-policy": "no-referrer"
+          },
+          "data": {
+            "userId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "organizationName": "HTX Nông Nghiệp Xanh Cần Thơ",
+            "role": "SELLER",
+            "email": "seller1@test.com",
+            "emailVerified": true,
+            "phone": "0907654321",
+            "address": "456 Hùng Vương, Ninh Kiều, Cần Thơ",
+            "verificationStatus": "VERIFIED",
+            "authorizationExpiresAt": null
+          },
+          "url": "http://localhost/api/v1/users/me",
+          "responseTime": 18,
+          "duration": 18,
+          "size": 307
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "Fv9cGA_U_hNwdv-schEW1"
+          },
+          {
+            "description": "body is not wrapped in ApiResponse",
+            "status": "pass",
+            "uid": "1_mK0Kxrbbm6y77cf_Yf2"
+          },
+          {
+            "description": "userId matches registered_user_id",
+            "status": "pass",
+            "uid": "4tIgCzfZRPZpg8ohuHgwG"
+          },
+          {
+            "description": "full profile includes phone and address",
+            "status": "pass",
+            "uid": "y6i2SRUZ_HTFhLm-nJX8F"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0225151,
+        "name": "GET /api/v1/users/me",
+        "path": "user-service\\02-get-my-profile",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "user-service\\03-get-profile-by-id.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/users/1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+          "headers": {
+            "Authorization": "Bearer ********",
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {
+            "transfer-encoding": "chunked",
+            "vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+            "x-content-type-options": "nosniff",
+            "x-xss-protection": "0",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-frame-options": "DENY",
+            "content-type": "application/json",
+            "date": "Wed, 25 Nov 2026 12:43:20 GMT",
+            "x-correlation-id": "f3ec821b-5246-4033-bc65-5175b594a6db",
+            "referrer-policy": "no-referrer"
+          },
+          "data": {
+            "userId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "organizationName": "HTX Nông Nghiệp Xanh Cần Thơ",
+            "role": "SELLER",
+            "verificationStatus": "VERIFIED"
+          },
+          "url": "http://localhost/api/v1/users/1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+          "responseTime": 18,
+          "duration": 18,
+          "size": 153
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 200",
+            "status": "pass",
+            "uid": "JbyNi0ey3_gPhQCo_fUdi"
+          },
+          {
+            "description": "body is not wrapped in ApiResponse",
+            "status": "pass",
+            "uid": "0UKbsSPxQx63-Z790Ir6d"
+          },
+          {
+            "description": "userId matches",
+            "status": "pass",
+            "uid": "AKj0ikLhFQNberPioulZ5"
+          },
+          {
+            "description": "organizationName is set",
+            "status": "pass",
+            "uid": "BqGAujFjPuUkJLBil5F5l"
+          },
+          {
+            "description": "role is present",
+            "status": "pass",
+            "uid": "Re_Cf8FM1hRQ34jqpyFEt"
+          },
+          {
+            "description": "verificationStatus is present",
+            "status": "pass",
+            "uid": "d5zxDzvG0p_z-4rcAZgIJ"
+          },
+          {
+            "description": "email is not exposed (#108, services use /internal/v1/users)",
+            "status": "pass",
+            "uid": "FRORoSl2u2MLmL1OsjhC8"
+          },
+          {
+            "description": "phone is not exposed (IDOR fix)",
+            "status": "pass",
+            "uid": "zfA-bqo7ZsHveC-gaEF25"
+          },
+          {
+            "description": "address is not exposed (IDOR fix)",
+            "status": "pass",
+            "uid": "DMZOOI9RVHjOyA-hfx1Ep"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.023497,
+        "name": "GET /api/v1/users/:userId (slim — no PII)",
+        "path": "user-service\\03-get-profile-by-id",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "user-service\\04-unauthorized-no-secret.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/users/me",
+          "headers": {
+            "content-type": null
+          }
+        },
+        "response": {
+          "status": 401,
+          "statusText": "Unauthorized",
+          "headers": {
+            "vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+            "www-authenticate": "********",
+            "x-correlation-id": "29fbb69e-3b8e-49f1-981f-9ada7de108bf",
+            "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+            "pragma": "no-cache",
+            "expires": "0",
+            "x-content-type-options": "nosniff",
+            "x-frame-options": "DENY",
+            "x-xss-protection": "0",
+            "referrer-policy": "no-referrer",
+            "content-length": "0"
+          },
+          "data": "",
+          "url": "http://localhost/api/v1/users/me",
+          "responseTime": 8,
+          "duration": 8,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "should return 401 without JWT",
+            "status": "pass",
+            "uid": "3y5xoG_sDhgQusjlgABMb"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0133496,
+        "name": "GET /api/v1/users/me (no token → 401)",
+        "path": "user-service\\04-unauthorized-no-secret",
+        "iterationIndex": 0
+      }
+    ],
+    "summary": {
+      "totalRequests": 6,
+      "passedRequests": 6,
+      "failedRequests": 0,
+      "errorRequests": 0,
+      "skippedRequests": 0,
+      "totalAssertions": 0,
+      "passedAssertions": 0,
+      "failedAssertions": 0,
+      "totalTests": 24,
+      "passedTests": 24,
+      "failedTests": 0,
+      "totalPreRequestTests": 0,
+      "passedPreRequestTests": 0,
+      "failedPreRequestTests": 0,
+      "totalPostResponseTests": 0,
+      "passedPostResponseTests": 0,
+      "failedPostResponseTests": 0
+    }
+  }
+]

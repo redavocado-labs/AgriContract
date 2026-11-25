@@ -20,7 +20,7 @@ def load_round(folder):
             meta.update(json.load(f))
     runs = {}  # "folder/file.bru" -> [(http status, all tests passed, failure text)]
     for path in sorted(glob.glob(os.path.join(folder, "*.json"))):
-        if os.path.basename(path) == "run.json":
+        if os.path.basename(path) in ("run.json", "defects.json"):
             continue
         with open(path, encoding="utf-8") as f:
             report = json.load(f)
@@ -33,6 +33,11 @@ def load_round(folder):
                 text = r.get("error") or "; ".join(f"{t.get('description')}: {t.get('error', '')}" for t in failed)
                 runs.setdefault(name, []).append(((r.get("response") or {}).get("status"), ok, text))
     meta["runs"] = runs
+    defects_path = os.path.join(folder, "defects.json")
+    meta["defects"] = {}
+    if os.path.exists(defects_path):
+        with open(defects_path, encoding="utf-8") as f:
+            meta["defects"] = {k: v for k, v in json.load(f).items() if not k.startswith("_")}
     return meta
 
 
@@ -56,9 +61,11 @@ def expected_statuses(ret):
 def row_result(round_data, note, ret):
     if not note or not round_data["runs"]:
         return "Pending"
-    want = expected_statuses(ret)
     verdicts = []
-    for name in note_files(note):
+    files = note_files(note)
+    for i, name in enumerate(files):
+        # earlier requests set the case up (03 proposes the category 04 rejects): only the last one is the action
+        want = expected_statuses(ret) if i == len(files) - 1 else set()
         runs = round_data["runs"].get(name, [])
         matching = [r for r in runs if not want or r[0] in want]
         if matching:
@@ -83,3 +90,9 @@ def _single_purpose(name, round_data):
 def failures(round_data):
     return {name: [t for _, ok, t in runs if not ok] for name, runs in round_data["runs"].items()
             if any(not ok for _, ok, _ in runs)}
+
+
+def row_defects(round_data, note):
+    # defects.json maps a failed request to the issue that explains it
+    ids = [round_data["defects"].get(name) for name in note_files(note)] if note else []
+    return ", ".join(sorted({i for i in ids if i}))

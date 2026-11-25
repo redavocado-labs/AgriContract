@@ -1,0 +1,21 @@
+{
+  "_why": "#647: seed profiles have no verified_email, so product-service cannot read the proposer's email and answers 503 on POST /api/v1/categories; every later request that needs the new category, product or listing fails with it (404 / 400).",
+  "product-service/00-propose-category.bru": "#647",
+  "product-service/01-approve-category.bru": "#647",
+  "product-service/01b-assign-commodity-already-mapped.bru": "#647",
+  "product-service/03-propose-category-for-reject.bru": "#647",
+  "product-service/04-reject-category.bru": "#647",
+  "product-service/05-create-product.bru": "#647",
+  "product-service/05b-create-product-crop-year-2000.bru": "#647",
+  "product-service/05c-create-product-crop-year-2100.bru": "#647",
+  "product-service/06-create-product-category-not-approved.bru": "#647",
+  "product-service/07-create-listing.bru": "#647",
+  "product-service/07b-create-listing-replay.bru": "#647",
+  "product-service/07f-create-listing-min-order-equals-offered.bru": "#647",
+  "product-service/11-update-listing.bru": "#647",
+  "product-service/11b-update-listing-replay.bru": "#647",
+  "product-service/13-update-product-images.bru": "#647",
+  "product-service/14-update-product-images-invalid.bru": "#647",
+  "product-service/15-update-product-images-five.bru": "#647",
+  "product-service/16-update-product-images-six.bru": "#647"
+}
