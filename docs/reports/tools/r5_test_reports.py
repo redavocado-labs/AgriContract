@@ -75,7 +75,8 @@ set_par_text(plain(find(d, "[Provide the test result, statistics")),
              "Report-5.2_Test_Report.xlsx, which so far covers api-gateway, user-service and product-service. System "
              "tests (FE flows BF-01..BF-07) and acceptance tests have not been run yet, so their columns are \"-\". "
              "A defect is a GitHub issue opened from a failed case; its severity follows the issue priority "
-             "(P0 Critical, P1 Major, P2 and P3 Minor).")
+             "(P0 Critical, P1 Major, P2 Minor). #449 has no priority and is classed Minor because only test code "
+             "is affected.")
 
 # ---------------------------------------------------------------- II.3.1 Summary Table
 summary = next_table(find(d, "3.1 Summary Table"))
@@ -111,9 +112,10 @@ summary.remove(dots)
 levels = next_table(find(d, "3.2 Test Levels"))
 _, tot, crit, major = rows(levels)
 write_row(tot, ["Total Defects", "-", "1", "1", "-", "-", "2",
-                "#449 (UT, P3: the topology test matches a comment), #647 (IT, P1: seed without verified_email)"])
+                "#449 (UT, Minor: test code only, the topology test matches a comment), #647 (IT, P1: seed without "
+                "verified_email)"])
 write_row(crit, ["Open Defects (Critical)", "-", "0", "0", "-", "-", "0", ""])
-write_row(major, ["Open Defects (Major)", "-", "0", "1", "-", "-", "1", "#647, fix in PR #648 under review"])
+write_row(major, ["Open Defects (Major)", "-", "0", "0", "-", "-", "0", "#647 fixed in PR #648 (closed 25/11/2026)"])
 
 # ---------------------------------------------------------------- II.3.3 Work Product's Defects
 products = next_table(find(d, "3.3 Work Product"))
