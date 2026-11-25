@@ -130,7 +130,7 @@ export function remedyFinalizedText(
           'Money, as decided (each line names who receives it):',
           ...command.remedyLegs.flatMap(legLines),
           '',
-          'escrow-service carries out these transfers.',
+          'The platform carries out these transfers.',
         ];
 
   if (isNormalCompletion(command)) {
@@ -158,7 +158,7 @@ export function remedyFinalizedText(
       '',
       ...deposits,
       '',
-      'The contract is not closed yet. It closes once escrow-service confirms',
+      'The contract is not closed yet. It closes once the platform confirms',
       'that all money of the contract has cleared, including the final',
       'milestone payment and any earlier transfer that is still pending.',
       '',
