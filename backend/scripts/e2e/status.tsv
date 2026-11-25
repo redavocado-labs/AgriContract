@@ -1,0 +1,17 @@
+BF01	BF01-100	Purge unverified Keycloak accounts	IT-DIRECT	Pending		Keycloak creation timestamp drives the purge; no time-shift fixture is wired.
+BF03	BF03-170	Failed deposit lock, operator retry, and bilateral activation cancellation	IT-GW	Pending		No deterministic insufficient-funds fixture was exercised.
+BF04	BF04-260	Seller silence and fault-based contest expiry	IT-GW	Pending		Time-dependent cases not exercised.
+BF04	BF04-270	OTP concession and agreed dispute settlement	IT-GW	Pending		D92 subflows not exercised.
+BF04	BF04-280	Funding reminder and funding failure mail	IT-GW	Pending	#239	Future funding schedule and failure fixture not exercised.
+BF04	BF04-290	Pre-receipt reminder email	IT-GW	Pending		Time-dependent case not exercised.
+BF04	BF04-370	Milestone settlement email with .ots	IT-GW	N/A		Audit-service has not implemented publishing notification.milestone_anchor_requested.
+BF04	BF04-380	Other audit and security notifications	IT-GW	Pending	#278	Notification consumer work is pending.
+BF05	BF05-020	Funding cure and buyer funding breach	IT-GW	N/A	#239	Implementation is pending.
+BF05	BF05-030	Basket A timeout breaches and Delta 1	IT-GW	N/A	#240	Implementation is pending.
+BF05	BF05-040	Termination for breach	IT-GW	N/A	#242	Implementation is pending.
+BF05	BF05-050	Force majeure claim, review and contest	IT-GW	N/A	#244	Implementation is pending.
+BF06	BF06-010	Mutual termination	IT-GW	N/A	#242	No matching controller.
+BF06	BF06-020	Mutual replacement and supersession	IT-GW	N/A	#243	No matching controller.
+BF07	BF07-020	External Verifier emergency lock and unlock	IT-GW	N/A		Bank has no controller for the frozen lock and unlock paths.
+BF07	BF07-030	User lock propagation	IT-GW	Pending		Reputation read exists; a lock-producing fixture was not exercised.
+Security	SEC-120	Keycloak brute force protection	IT-DIRECT	Pending	#522	Realm protection work is pending.
