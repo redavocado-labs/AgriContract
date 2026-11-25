@@ -38,18 +38,29 @@ def outcome(result):
     return "Passed" if checks and all(check["status"] == "pass" for check in checks) else "Failed"
 
 
+# The gateway answers 401/403 with an empty body instead of an ErrorEnvelope; tracked, owner api-gateway.
+GATEWAY_EMPTY_DENIAL_ISSUE = "#663"
+
+
+def empty_auth_denial(result):
+    response = (result or {}).get("response") or {}
+    return response.get("data") in (None, "") and response.get("status") in (401, 403)
+
+
 def failure_text(case_id, title, reference, location, result, reporter):
     request = result.get("request") or {}
     response = result.get("response") or {}
     data = response.get("data")
-    stripped_envelope = data in (None, "") and response.get("status") in (401, 403)
+    stripped_envelope = empty_auth_denial(result)
     if isinstance(data, dict):
         data = {key: data[key] for key in ("code", "message", "correlationId", "status") if key in data}
     checks = result.get("testResults") or []
     error = result.get("error") or next((check.get("error") for check in checks if check["status"] == "fail"), "")
     suspect = "api-gateway authentication or authorization filter" if stripped_envelope else "See service logs for the endpoint owner"
-    spec_line = {401: 2390, 403: 2391}.get(response.get("status"))
-    contract = f" and contracts/openapi/golden-flow-api.yaml:{spec_line}" if stripped_envelope else ""
+    spec_response = {401: "Unauthorized", 403: "Forbidden"}.get(response.get("status"))
+    tracked = f"- Tracked in {GATEWAY_EMPTY_DENIAL_ISSUE}\n" if stripped_envelope else ""
+    contract = (f" and contracts/openapi/golden-flow-api.yaml components.responses.{spec_response}"
+                if stripped_envelope else "")
     return (
         f"## {case_id} {title}\n\n"
         f"- Request `{request.get('method', '?')} {request.get('url', '?')}`\n"
@@ -58,6 +69,7 @@ def failure_text(case_id, title, reference, location, result, reporter):
         f"- Assertion or runner error `{md(error)}`\n"
         f"- Severity {('security' if case_id.startswith('SEC-') else 'business flow')}\n"
         f"- Suspected source {suspect}\n"
+        f"{tracked}"
         f"- Evidence [{reporter.name}]({reporter.name}) and the corresponding service logs in `logs/`\n"
     )
 
@@ -92,6 +104,8 @@ def main():
             issue = ""
             if case_id == "BF04-390" and status == "Passed" and result["response"]["status"] == 404:
                 status, issue = "Pending", "#630"
+            if status == "Failed" and empty_auth_denial(result):
+                issue = GATEWAY_EMPTY_DENIAL_ISSUE
             add(flow, case_id, title, kind, status, evidence, issue)
             if status == "Failed":
                 findings.append(failure_text(case_id, title, reference, location.resolve(), result, reporter))
