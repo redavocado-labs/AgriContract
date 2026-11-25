@@ -227,7 +227,7 @@ class FlagAndRespondIntegrationTest {
     }
 
     @Test
-    void theBuyerFlags_theMilestoneAwaitsTheSeller_withOneFlaggedEvent_andNoMoneyEvent() throws Exception {
+    void theBuyerFlags_theMilestoneAwaitsTheSeller_withOneFlaggedMail_andNoMoneyEvent() throws Exception {
         receivedByTheBuyer(first, "9000");
         UUID key = UUID.randomUUID();
 
@@ -248,16 +248,14 @@ class FlagAndRespondIntegrationTest {
                 + " 'FLAG_MILESTONE_ISSUE' AND actor_role = 'BUYER' AND statement_code ="
                 + " 'FLAG_MILESTONE_ISSUE_AS_BUYER'", Integer.class, first.milestoneId())).isEqualTo(1);
 
-        List<JsonNode> flaggedEvents = events("milestone.flagged");
-        assertThat(flaggedEvents).hasSize(1);
-        FrozenSchemas.assertEvent("milestoneFlagged", flaggedEvents.get(0));
-        JsonNode payload = flaggedEvents.get(0).get("payload");
-        assertThat(payload.fieldNames()).toIterable().containsExactlyInAnyOrder("contractId", "milestoneId",
-                "flaggedBy", "issueType");
-        assertThat(payload.get("contractId").asText()).isEqualTo(id());
-        assertThat(payload.get("milestoneId").asText()).isEqualTo(first.milestoneId());
-        assertThat(payload.get("flaggedBy").asText()).isEqualTo("BUYER");
-        assertThat(payload.get("issueType").asText()).isEqualTo("QUANTITY");
+        // D101: no milestone.flagged (it had no consumer and stalled the outbox, #638); the seller gets the FLAGGED mail.
+        assertThat(events("milestone.flagged")).isEmpty();
+        List<JsonNode> flaggedMails = flaggedMails();
+        assertThat(flaggedMails).hasSize(1);
+        JsonNode mail = flaggedMails.get(0).get("payload");
+        assertThat(mail.get("milestoneId").asText()).isEqualTo(first.milestoneId());
+        assertThat(mail.at("/statusData/issueType").asText()).isEqualTo("QUANTITY");
+        assertThat(mail.get("deadline").isNull()).isFalse();
         assertThat(events("milestone.settled")).isEmpty();
         assertThat(events("milestone.dispute_resolved")).isEmpty();
         assertThat(events("breach.reported")).isEmpty();
@@ -265,13 +263,13 @@ class FlagAndRespondIntegrationTest {
 
         // The same Idempotency-Key again: 204, no new row.
         flag.execute(flagCommand(first, BUYER, key, FlagIssueType.QUANTITY));
-        assertThat(events("milestone.flagged")).hasSize(1);
+        assertThat(flaggedMails()).hasSize(1);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM consent_evidence WHERE subject_id = ? AND action_type ="
                 + " 'FLAG_MILESTONE_ISSUE'", Integer.class, first.milestoneId())).isEqualTo(1);
         // A second flag with a new key is refused: the milestone is no longer BUYER_RECEIVED.
         assertCode(() -> flag.execute(flagCommandWithHash(first, BUYER, UUID.randomUUID(), FlagIssueType.QUANTITY,
                 "a".repeat(64))), ContractConflictException.MILESTONE_ACTION_NOT_ALLOWED);
-        assertThat(events("milestone.flagged")).hasSize(1);
+        assertThat(flaggedMails()).hasSize(1);
     }
 
     @Test
@@ -310,7 +308,7 @@ class FlagAndRespondIntegrationTest {
         assertThatThrownBy(() -> flag.requireBuyerOfMilestone(other.getContractId().value(), first.milestoneId(),
                 BUYER)).isInstanceOf(MilestoneNotFoundException.class);
         assertThat(reload(first).status()).isEqualTo(MilestoneStatus.BUYER_RECEIVED);
-        assertThat(events("milestone.flagged")).isEmpty();
+        assertThat(flaggedMails()).isEmpty();
     }
 
     @Test
@@ -331,7 +329,7 @@ class FlagAndRespondIntegrationTest {
         assertCode(() -> flag.execute(flagCommand(first, BUYER, UUID.randomUUID(), FlagIssueType.QUANTITY)),
                 ContractConflictException.MILESTONE_ACTION_NOT_ALLOWED);
         assertThat(reload(first).status()).isEqualTo(MilestoneStatus.BUYER_RECEIVED);
-        assertThat(events("milestone.flagged")).isEmpty();
+        assertThat(flaggedMails()).isEmpty();
     }
 
     @Test
@@ -349,7 +347,7 @@ class FlagAndRespondIntegrationTest {
 
         assertThat(reload(first).status()).isEqualTo(MilestoneStatus.BUYER_RECEIVED);
         assertThat(reload(first).flag()).isNull();
-        assertThat(events("milestone.flagged")).isEmpty();
+        assertThat(flaggedMails()).isEmpty();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM consent_evidence WHERE action_type ="
                 + " 'FLAG_MILESTONE_ISSUE' AND subject_id = ?", Integer.class, first.milestoneId())).isZero();
     }
@@ -674,6 +672,12 @@ class FlagAndRespondIntegrationTest {
                         throw new IllegalStateException(e);
                     }
                 }).filter(e -> id().equals(e.at("/payload/contractId").asText())).toList();
+    }
+
+    /** The FLAGGED status mails of this test's contract: one per accepted flag. */
+    private List<JsonNode> flaggedMails() {
+        return events("notification.milestone_status_requested").stream()
+                .filter(e -> "FLAGGED".equals(e.at("/payload/statusType").asText())).toList();
     }
 
     // ---- helpers ----
