@@ -16,12 +16,13 @@
  */
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import { setTimeout as sleep } from 'node:timers/promises';
 import { test } from 'node:test';
+import { config } from '../lib/config.mjs';
 import { ledgerOf, remainingLock } from '../lib/bank.mjs';
-import { milestonesOf } from '../lib/db.mjs';
+import { contractOutboxCount, milestonesOf } from '../lib/db.mjs';
 import { APPLICATION_SERVICES, restart } from '../lib/docker.mjs';
 import * as f from '../lib/flow.mjs';
-import { waitFor } from '../lib/poll.mjs';
 import { cannotActivateToday, runScenario } from '../lib/scenario.mjs';
 
 const ZERO = { BUYER_DEPOSIT: '0.00', SELLER_DEPOSIT: '0.00', MILESTONE_PAYMENT: '0.00' };
@@ -90,8 +91,12 @@ test('golden flow: sign, activate, clean milestone, disputed milestone, settle w
 
     // Replay: the clean confirmation sent again with its Idempotency-Key settles nothing twice.
     trace.step('replay the clean confirmation');
+    const outboxBefore = contractOutboxCount(offered.contractId);
     await f.confirmClean(api, trace, t, offered.contractId, clean.milestoneId, confirmKey);
-    await waitFor(trace, 'nothing new in the ledger after the replay', async () => ledgerOf(offered.contractId), () => true);
+    // Give the outbox poller and the escrow/bank consumers a few cycles: a replay that queued a new event
+    // would show as a new outbox row or ledger row within them.
+    await sleep(config.replayQuietMs);
+    assert.equal(contractOutboxCount(offered.contractId), outboxBefore, 'the replay queued a new outbox event');
     assert.deepEqual(ledgerOf(offered.contractId), ledger);
   });
 });

@@ -45,3 +45,14 @@ export function milestonesOf(contract) {
     fundingStatus,
   }));
 }
+
+/** How many outbox events of contract-service mention the contract: a replayed request must not add one. */
+export function contractOutboxCount(contractId) {
+  if (!UUID.test(contractId)) throw new Error(`not a contract id: ${contractId}`);
+  const [[count]] = query(
+    process.env.E2E_CONTRACT_DB_CONTAINER ?? 'contract-db',
+    'contract_db',
+    `SELECT COUNT(*) FROM event_outbox WHERE envelope LIKE '%${contractId}%'`,
+  );
+  return Number(count);
+}
