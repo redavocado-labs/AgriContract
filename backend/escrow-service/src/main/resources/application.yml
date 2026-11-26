@@ -49,10 +49,10 @@ bank-service:
   url: ${BANK_SERVICE_URL:http://localhost:8086}
 
 service:
-  internal-secret: ${SERVICE_INTERNAL_SECRET:changeme-internal}
+  internal-secret: ${SERVICE_INTERNAL_SECRET}
 
 gateway:
-  internal-secret: ${GATEWAY_INTERNAL_SECRET:changeme}
+  internal-secret: ${GATEWAY_INTERNAL_SECRET}
 
 springdoc:
   api-docs:
