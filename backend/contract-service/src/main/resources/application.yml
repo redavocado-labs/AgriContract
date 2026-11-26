@@ -37,10 +37,10 @@ agricontract:
       exchange: agricontract.contracts
 
 gateway:
-  internal-secret: ${GATEWAY_INTERNAL_SECRET:changeme}
+  internal-secret: ${GATEWAY_INTERNAL_SECRET}
 
 service:
-  internal-secret: ${SERVICE_INTERNAL_SECRET:changeme-internal}
+  internal-secret: ${SERVICE_INTERNAL_SECRET}
 
 
 feign:
