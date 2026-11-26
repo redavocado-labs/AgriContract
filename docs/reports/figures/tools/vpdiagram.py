@@ -176,7 +176,8 @@ class Diagram:
         """Crow's foot entity: name, primary key compartment (bold, underlined), then foreign keys (italic) and
         other columns (plain) in one compartment. A key line may end in " (FK)" / " (UQ)"; that tag is not bold.
         ghost=True: an entity drawn in another part, a dashed grey box with its name only.
-        planned=True: a table not created yet, dashed border and «planned» above the name."""
+        planned=True: a table not created yet, dashed border and «planned» above the name; a string instead of True
+        is shown as that stereotype (e.g. "earlier design")."""
         if ghost:
             n = Node(id, "ghost", cx, top + 13, text_w(name) + 24, 26, name)
         else:
@@ -507,7 +508,8 @@ class Diagram:
                 o.append(f'<rect x="{x0}" y="{y0}" width="{n.w}" height="{n.h}" fill="white" stroke="black" '
                          f'stroke-width="1.2"{dash}/>')
                 if n.planned:
-                    o.append(svg_text(n.cx, y0 + 4 + LINE_H / 2, "\u00abplanned\u00bb", size=11, italic=True))
+                    o.append(svg_text(n.cx, y0 + 4 + LINE_H / 2, "\u00ab" + _stereo(n.planned) + "\u00bb", size=11,
+                                      italic=True))
                 o.append(svg_text(n.cx, y0 + n.head - 5 - LINE_H / 2, n.text))
                 y = y0 + n.head
                 for block, kind in ((n.pk, "pk"), (n.fk + n.cols, "rest")):
@@ -615,7 +617,7 @@ class Diagram:
                              f'fontSize={FONT_SIZE};html=1;" vertex="1" parent="1"><mxGeometry x="{x0}" y="{y0}" '
                              f'width="{n.w}" height="{n.h}" as="geometry"/></mxCell>')
                 continue
-            head = ("<i>&laquo;planned&raquo;</i><br>" if n.planned else "") + html.escape(n.text)
+            head = ("<i>&laquo;" + html.escape(_stereo(n.planned)) + "&raquo;</i><br>" if n.planned else "") + html.escape(n.text)
             dashed = "dashed=1;" if n.planned else ""
             cells.append(f'<mxCell id="{n.id}" value={q(head)} style="swimlane;fontStyle=0;html=1;{dashed}'
                          f'whiteSpace=wrap;startSize={n.head};fillColor=#FFFFFF;strokeColor=#000000;'
@@ -764,6 +766,10 @@ def overlap_1d(a, b, c, d) -> bool:
 
 def shared(e1: Edge, e2: Edge) -> bool:
     return e1.src == e2.src or e1.dst == e2.dst
+
+
+def _stereo(planned) -> str:
+    return planned if isinstance(planned, str) else "planned"
 
 
 def path_with_jumps(points, verticals, r=5.0) -> str:

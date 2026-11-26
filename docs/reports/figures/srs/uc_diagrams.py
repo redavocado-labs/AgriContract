@@ -47,7 +47,7 @@ def buyer():
     d.extend("uc20", "uc16")
     d.extend("uc34", "uc33")
     d.extend("uc35", "uc33")
-    d.include("uc35", "uc38")
+    d.include("uc33", "uc38")
     d.assoc("uc30", "bank")
     return d
 
@@ -78,10 +78,10 @@ def seller():
 
 
 def parties():
-    d = UseCaseDiagram("uc_parties", 790, 640, (165, 15, 650, 625))
-    d.actor("party", 95, 335, "Contract\nParty")
-    d.actor("buyer", 95, 165, "Buyer")
-    d.actor("seller", 95, 505, "Seller")
+    d = UseCaseDiagram("uc_parties", 790, 830, (165, 15, 650, 815))
+    d.actor("party", 60, 420, "Contract\nParty")
+    d.actor("buyer", 60, 225, "Buyer")
+    d.actor("seller", 60, 620, "Seller")
     a1, a2 = 215, 465
     d.stack(a1, 45, [("uc21", "UC21 Negotiate\nContract Terms"), ("uc22", "UC22 Sign Contract")])
     d.stack(a2, cy(d, "uc22") + 40, [("uc23", "UC23 Activate\nContract")])
@@ -91,13 +91,14 @@ def parties():
     d.stack(a1, (cy(d, "uc26") + cy(d, "uc27")) / 2 - 18.5, [("uc25", "UC25 View Contracts")])
     d.stack(a1, max(d.els["uc25"].cy + 18.5, d.els["uc27"].cy) + 14, [
         ("uc29", "UC29 Handle\nActivation Failure"), ("uc31", "UC31 Adjust\nMilestone Price"),
-        ("uc40", "UC40 Report Breach")])
+        ("uc40", "UC40 Report Breach"), ("uc56", "UC56 Concede\nMilestone Dispute"),
+        ("uc57", "UC57 Propose or Accept\nDispute Settlement"), ("uc58", "UC58 Withdraw or Refuse\nSettlement Proposal")])
     d.stack(a2, cy(d, "uc40") - 26, [("uc38", "UC38 Upload\nEvidence File")])
     d.system("email", 718, cy(d, "uc22") - 30, "Email\nService")
     d.system("bank", 718, cy(d, "uc23") + 10, "Custodian\nBank")
     d.generalize("buyer", "party")
     d.generalize("seller", "party")
-    for u in ("uc21", "uc22", "uc25", "uc29", "uc31", "uc40"):
+    for u in ("uc21", "uc22", "uc25", "uc29", "uc31", "uc40", "uc56", "uc57", "uc58"):
         d.assoc("party", u)
     d.extend("uc23", "uc22")
     for u in ("uc24", "uc26", "uc27", "uc28"):

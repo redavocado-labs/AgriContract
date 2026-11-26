@@ -1,1 +1,313 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1318" viewBox="0 0 1080 1318"><defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L7 4L0 8" fill="none" stroke="#111" stroke-width="1.1"/></marker><marker id="diamond" markerWidth="13" markerHeight="9" refX="0" refY="4.5" orient="auto"><path d="M0 4.5L6 0L12 4.5L6 9Z" fill="#111"/></marker></defs><rect width="100%" height="100%" fill="white"/><rect x="289.0" y="389" width="774.0" height="533" fill="none" stroke="#111" stroke-width="1.25"/><rect x="289.0" y="294" width="774.0" height="640" fill="none" stroke="#111" stroke-width="1.25"/><rect x="289.0" y="1012" width="774.0" height="123" fill="none" stroke="#111" stroke-width="1.25"/><rect x="289.0" y="946" width="774.0" height="276" fill="none" stroke="#111" stroke-width="1.25"/><path d="M72.0,84 L72.0,1308" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4"  /><path d="M189.0,84 L189.0,1308" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4"  /><path d="M306.0,84 L306.0,1308" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4"  /><path d="M423.0,84 L423.0,1308" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4"  /><path d="M540.0,84 L540.0,1308" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4"  /><path d="M657.0,84 L657.0,1308" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4"  /><path d="M774.0,84 L774.0,1308" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4"  /><path d="M891.0,84 L891.0,1308" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4"  /><path d="M1008.0,84 L1008.0,1308" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4"  /><path d="M72.0,141 L189.0,141" fill="none" stroke="#111" stroke-width="1.25"  marker-end="url(#arrow)" /><path d="M189.0,179 L306.0,179" fill="none" stroke="#111" stroke-width="1.25"  marker-end="url(#arrow)" /><path d="M306.0,214 L423.0,214" fill="none" stroke="#111" stroke-width="1.25"  marker-end="url(#arrow)" /><path d="M306.0,247 L423.0,247" fill="none" stroke="#111" stroke-width="1.25"  marker-end="url(#arrow)" /><path d="M423.0,279 L306.0,279" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arrow)" /><path d="M306.0,343 L540.0,343" fill="none" stroke="#111" stroke-width="1.25"  marker-end="url(#arrow)" /><path d="M540.0,377 L306.0,377" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arrow)" /><path d="M306.0,438 L540.0,438" fill="none" stroke="#111" stroke-width="1.25"  marker-end="url(#arrow)" /><path d="M289.0,518 L1063.0,518" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4"  /><path d="M306.0,565 L657.0,565" fill="none" stroke="#111" stroke-width="1.25"  marker-end="url(#arrow)" /><path d="M657.0,599 L306.0,599" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arrow)" /><path d="M306.0,629 L774.0,629" fill="none" stroke="#111" stroke-width="1.25"  marker-end="url(#arrow)" /><path d="M774.0,726 L306.0,726" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arrow)" /><path d="M306.0,758 L891.0,758" fill="none" stroke="#111" stroke-width="1.25"  marker-end="url(#arrow)" /><path d="M891.0,872 L306.0,872" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arrow)" /><path d="M306.0,904 L540.0,904" fill="none" stroke="#111" stroke-width="1.25"  marker-end="url(#arrow)" /><path d="M306.0,995 L1008.0,995" fill="none" stroke="#111" stroke-width="1.25"  marker-end="url(#arrow)" /><path d="M306.0,1061 L891.0,1061" fill="none" stroke="#111" stroke-width="1.25"  marker-end="url(#arrow)" /><path d="M306.0,1093 L189.0,1093" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arrow)" /><path d="M189.0,1123 L72.0,1123" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arrow)" /><path d="M289.0,1147 L1063.0,1147" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4"  /><path d="M306.0,1252 L189.0,1252" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arrow)" /><path d="M189.0,1286 L72.0,1286" fill="none" stroke="#111" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arrow)" /><circle cx="72.0" cy="15" r="8" stroke="#111" fill="white" stroke-width="1.25"/><path d="M72.0,23 L72.0,43" fill="none" stroke="#111" stroke-width="1.25"   /><path d="M57.0,30 L87.0,30" fill="none" stroke="#111" stroke-width="1.25"   /><path d="M59.0,57 L72.0,43 L85.0,57" fill="none" stroke="#111" stroke-width="1.25"   /><text x="72.0" y="70" font-family="Arial, Liberation Sans, sans-serif" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">Buyer /</text><text x="72.0" y="85" font-family="Arial, Liberation Sans, sans-serif" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">Seller</text><rect x="136.5" y="9" width="105.0" height="75" fill="white" stroke="#111" stroke-width="1.25"/><text x="189.0" y="28.0" font-family="Arial, Liberation Sans, sans-serif" font-size="13" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">:Contract</text><text x="189.0" y="43.0" font-family="Arial, Liberation Sans, sans-serif" font-size="13" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">Signing</text><text x="189.0" y="58.0" font-family="Arial, Liberation Sans, sans-serif" font-size="13" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">Controller</text><rect x="253.5" y="9" width="105.0" height="75" fill="white" stroke="#111" stroke-width="1.25"/><text x="306.0" y="35.5" font-family="Arial, Liberation Sans, sans-serif" font-size="13" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">:InitiateSign</text><text x="306.0" y="50.5" font-family="Arial, Liberation Sans, sans-serif" font-size="13" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">UseCase</text><rect x="370.5" y="9" width="105.0" height="75" fill="white" stroke="#111" stroke-width="1.25"/><text x="423.0" y="35.5" font-family="Arial, Liberation Sans, sans-serif" font-size="13" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">:Signer</text><text x="423.0" y="50.5" font-family="Arial, Liberation Sans, sans-serif" font-size="13" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">Eligibility</text><rect x="487.5" y="9" width="105.0" height="75" fill="white" stroke="#111" stroke-width="1.25"/><text x="540.0" y="35.5" font-family="Arial, Liberation Sans, sans-serif" font-size="13" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">:Idempotency</text><text x="540.0" y="50.5" font-family="Arial, Liberation Sans, sans-serif" font-size="13" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">Store</text><rect x="604.5" y="9" width="105.0" height="75" fill="white" stroke="#111" stroke-width="1.25"/><text x="657.0" y="35.5" font-family="Arial, Liberation Sans, sans-serif" font-size="13" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">:Contract</text><text x="657.0" y="50.5" font-family="Arial, Liberation Sans, sans-serif" font-size="13" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">Repository</text><rect x="721.5" y="9" width="105.0" height="75" fill="white" stroke="#111" stroke-width="1.25"/><text x="774.0" y="35.5" font-family="Arial, Liberation Sans, sans-serif" font-size="13" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">:SigningConsent</text><text x="774.0" y="50.5" font-family="Arial, Liberation Sans, sans-serif" font-size="13" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">Recorder</text><rect x="838.5" y="9" width="105.0" height="75" fill="white" stroke="#111" stroke-width="1.25"/><text x="891.0" y="35.5" font-family="Arial, Liberation Sans, sans-serif" font-size="13" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">:OtpChallenge</text><text x="891.0" y="50.5" font-family="Arial, Liberation Sans, sans-serif" font-size="13" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">Issuer</text><rect x="955.5" y="9" width="105.0" height="75" fill="white" stroke="#111" stroke-width="1.25"/><text x="1008.0" y="35.5" font-family="Arial, Liberation Sans, sans-serif" font-size="13" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">:OtpEmail</text><text x="1008.0" y="50.5" font-family="Arial, Liberation Sans, sans-serif" font-size="13" text-anchor="middle" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">Port</text><rect x="78.0" y="102" width="492.0" height="37" fill="white" stroke="none" stroke-width="1.25"/><text x="78.0" y="117" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">1: POST /api/v1/contracts/{id}/sign/initiate</text><text x="78.0" y="135" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">(Idempotency-Key, signerRole, consent version, content hash)</text><rect x="195.0" y="158" width="180.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="195.0" y="173" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">1.1: execute(command)</text><rect x="312.0" y="193" width="284.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="312.0" y="208" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">1.1.1: requireFreshLogin(authTime)</text><rect x="312.0" y="226" width="260.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="312.0" y="241" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">1.1.2: requireEligible(actorId)</text><rect x="312.0" y="258" width="148.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="312.0" y="273" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">signer : UserInfo</text><rect x="293.0" y="295" width="70" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="293.0" y="307" font-family="Arial, Liberation Sans, sans-serif" font-size="12" text-anchor="start" font-weight="bold" font-style="normal" text-decoration="none" fill="#111">critical</text><rect x="365.0" y="295" width="694.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="365.0" y="307" font-family="Arial, Liberation Sans, sans-serif" font-size="12" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">[TransactionRunner.inTransaction(() → issueOrReplay(command))]</text><rect x="312.0" y="322" width="356.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="312.0" y="337" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">claim(actorId, operation, key, requestHash)</text><rect x="312.0" y="356" width="135" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="312.0" y="371" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">outcome</text><rect x="293.0" y="390" width="70" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="293.0" y="402" font-family="Arial, Liberation Sans, sans-serif" font-size="12" text-anchor="start" font-weight="bold" font-style="normal" text-decoration="none" fill="#111">alt</text><rect x="365.0" y="390" width="694.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="365.0" y="402" font-family="Arial, Liberation Sans, sans-serif" font-size="12" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">[REPLAY: same request hash]</text><rect x="312.0" y="417" width="276.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="312.0" y="432" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">resultOf(actorId, operation, key)</text><rect x="315.0" y="454" width="568.0" height="52" fill="white" stroke="#111" stroke-width="1.25"/><text x="322.0" y="472" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">Load existing challenge and check isUsable(now, maxAttempts).</text><text x="322.0" y="490" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">Inactive → OTP_CHALLENGE_NOT_ACTIVE; conflict key → reject.</text><rect x="296.0" y="519" width="760.0" height="18" fill="white" stroke="none" stroke-width="1.25"/><text x="296.0" y="531" font-family="Arial, Liberation Sans, sans-serif" font-size="12" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">[FIRST: new request]</text><rect x="312.0" y="544" width="172.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="312.0" y="559" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">findById(contractId)</text><rect x="312.0" y="578" width="135" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="312.0" y="593" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">contract</text><rect x="312.0" y="608" width="548.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="312.0" y="623" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">record(contract, actorId, signerRole, version, hash, correlationId)</text><rect x="432.0" y="644" width="568.0" height="52" fill="white" stroke="#111" stroke-width="1.25"/><text x="439.0" y="662" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">contract.consentToSign(...); consentEvidenceRepository.append(evidence).</text><text x="439.0" y="680" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">Caller transaction required; validate current statement and content hash.</text><rect x="312.0" y="705" width="212.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="312.0" y="720" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">consent : ConsentEvidence</text><rect x="312.0" y="737" width="284.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="312.0" y="752" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">issue(contract, consent, authTime)</text><rect x="432.0" y="772" width="568.0" height="70" fill="white" stroke="#111" stroke-width="1.25"/><text x="439.0" y="790" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">SIGN_CONTRACT; bind actor, role, contract, hash and consent.</text><text x="439.0" y="808" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">Supersede usable earlier codes; cooldown 60 s / 5 per hour;</text><text x="439.0" y="826" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">HMAC of 6-digit OTP; expiry 300 s; insert challenge.</text><rect x="312.0" y="851" width="135" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="312.0" y="866" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">otp : IssuedOtp</text><rect x="312.0" y="883" width="364.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="312.0" y="898" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">recordResult(actorId, operation, key, otpId)</text><rect x="293.0" y="947" width="70" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="293.0" y="959" font-family="Arial, Liberation Sans, sans-serif" font-size="12" text-anchor="start" font-weight="bold" font-style="normal" text-decoration="none" fill="#111">alt</text><rect x="365.0" y="947" width="694.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="365.0" y="959" font-family="Arial, Liberation Sans, sans-serif" font-size="12" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">[fresh challenge; after commit]</text><rect x="312.0" y="974" width="135" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="312.0" y="989" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">send(OtpEmail)</text><rect x="293.0" y="1013" width="70" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="293.0" y="1025" font-family="Arial, Liberation Sans, sans-serif" font-size="12" text-anchor="start" font-weight="bold" font-style="normal" text-decoration="none" fill="#111">break</text><rect x="365.0" y="1013" width="694.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="365.0" y="1025" font-family="Arial, Liberation Sans, sans-serif" font-size="12" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">[OtpEmailNotSentException]</text><rect x="312.0" y="1040" width="300.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="312.0" y="1055" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">expire(otpId) [separate transaction]</text><rect x="195.0" y="1072" width="252.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="195.0" y="1087" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">throw OtpEmailNotSentException</text><rect x="78.0" y="1102" width="148.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="78.0" y="1117" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">502 ErrorEnvelope</text><rect x="296.0" y="1148" width="760.0" height="18" fill="white" stroke="none" stroke-width="1.25"/><text x="296.0" y="1160" font-family="Arial, Liberation Sans, sans-serif" font-size="12" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">[replayed challenge]</text><rect x="315.0" y="1176" width="568.0" height="34" fill="white" stroke="#111" stroke-width="1.25"/><text x="322.0" y="1194" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">Return existing usable challenge; do not send another email.</text><rect x="195.0" y="1231" width="292.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="195.0" y="1246" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">SignChallengeView(otpId, expiresAt)</text><rect x="78.0" y="1265" width="204.0" height="19" fill="white" stroke="none" stroke-width="1.25"/><text x="78.0" y="1280" font-family="Arial, Liberation Sans, sans-serif" font-size="15" text-anchor="start" font-weight="normal" font-style="normal" text-decoration="none" fill="#111">200 InitiateSignResponse</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1330" height="2313" viewBox="0 0 1330 2313" font-family="Arial" font-size="12">
+<defs><marker id="fill" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 Z" fill="black"/></marker><marker id="open" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="black"/></marker></defs>
+<rect width="1330" height="2313" fill="white"/>
+<circle cx="55.416666666666664" cy="17" r="6" fill="white" stroke="black"/><line x1="55.416666666666664" y1="23" x2="55.416666666666664" y2="37" stroke="black"/><line x1="46.416666666666664" y1="28" x2="64.41666666666666" y2="28" stroke="black"/><line x1="55.416666666666664" y1="37" x2="47.416666666666664" y2="47" stroke="black"/><line x1="55.416666666666664" y1="37" x2="63.416666666666664" y2="47" stroke="black"/>
+<line x1="55.416666666666664" y1="86" x2="55.416666666666664" y2="2303" stroke="black" stroke-dasharray="5,4"/>
+<text text-anchor="middle" dominant-baseline="central" font-size="11"><tspan x="55.416666666666664" y="61.125">Buyer /</tspan><tspan x="55.416666666666664" y="74.875">Seller</tspan></text>
+<line x1="166.25" y1="86" x2="166.25" y2="2303" stroke="black" stroke-dasharray="5,4"/>
+<rect x="131.095703125" y="10" width="70.30859375" height="76" fill="white" stroke="black"/>
+<text text-anchor="middle" dominant-baseline="central" font-size="11"><tspan x="166.25" y="41.125">:Frontend</tspan><tspan x="166.25" y="54.875">(React SPA)</tspan></text>
+<line x1="277.0833333333333" y1="86" x2="277.0833333333333" y2="2303" stroke="black" stroke-dasharray="5,4"/>
+<rect x="248.23958333333331" y="10" width="57.6875" height="76" fill="white" stroke="black"/>
+<text text-anchor="middle" dominant-baseline="central" font-size="11"><tspan x="277.0833333333333" y="34.25">:Contract</tspan><tspan x="277.0833333333333" y="48.0">Signing</tspan><tspan x="277.0833333333333" y="61.75">Controller</tspan></text>
+<line x1="387.9166666666667" y1="86" x2="387.9166666666667" y2="2303" stroke="black" stroke-dasharray="5,4"/>
+<rect x="358.7643229166667" y="10" width="58.3046875" height="76" fill="white" stroke="black"/>
+<text text-anchor="middle" dominant-baseline="central" font-size="11"><tspan x="387.9166666666667" y="34.25">:Global</tspan><tspan x="387.9166666666667" y="48.0">Exception</tspan><tspan x="387.9166666666667" y="61.75">Handler</tspan></text>
+<line x1="498.75" y1="86" x2="498.75" y2="2303" stroke="black" stroke-dasharray="5,4"/>
+<rect x="465.01171875" y="10" width="67.4765625" height="76" fill="white" stroke="black"/>
+<text text-anchor="middle" dominant-baseline="central" font-size="11"><tspan x="498.75" y="41.125">:InitiateSign</tspan><tspan x="498.75" y="54.875">UseCase</tspan></text>
+<line x1="609.5833333333333" y1="86" x2="609.5833333333333" y2="2303" stroke="black" stroke-dasharray="5,4"/>
+<rect x="583.1848958333333" y="10" width="52.796875" height="76" fill="white" stroke="black"/>
+<text text-anchor="middle" dominant-baseline="central" font-size="11"><tspan x="609.5833333333333" y="41.125">:Signer</tspan><tspan x="609.5833333333333" y="54.875">Eligibility</tspan></text>
+<line x1="720.4166666666666" y1="86" x2="720.4166666666666" y2="2303" stroke="black" stroke-dasharray="5,4"/>
+<rect x="682.4010416666666" y="10" width="76.03125" height="76" fill="white" stroke="black"/>
+<text text-anchor="middle" dominant-baseline="central" font-size="11"><tspan x="720.4166666666666" y="41.125">:Idempotency</tspan><tspan x="720.4166666666666" y="54.875">Store</tspan></text>
+<line x1="831.2499999999999" y1="86" x2="831.2499999999999" y2="2303" stroke="black" stroke-dasharray="5,4"/>
+<rect x="799.9609374999999" y="10" width="62.578125" height="76" fill="white" stroke="black"/>
+<text text-anchor="middle" dominant-baseline="central" font-size="11"><tspan x="831.2499999999999" y="41.125">:Contract</tspan><tspan x="831.2499999999999" y="54.875">Repository</tspan></text>
+<line x1="942.0833333333333" y1="86" x2="942.0833333333333" y2="2303" stroke="black" stroke-dasharray="5,4"/>
+<rect x="914.4622395833333" y="10" width="55.2421875" height="76" fill="white" stroke="black"/>
+<text text-anchor="middle" dominant-baseline="central" font-size="11"><tspan x="942.0833333333333" y="34.25">:Signing</tspan><tspan x="942.0833333333333" y="48.0">Consent</tspan><tspan x="942.0833333333333" y="61.75">Recorder</tspan></text>
+<line x1="1052.9166666666667" y1="86" x2="1052.9166666666667" y2="2303" stroke="black" stroke-dasharray="5,4"/>
+<rect x="1023.1471354166667" y="10" width="59.5390625" height="76" fill="white" stroke="black"/>
+<text text-anchor="middle" dominant-baseline="central" font-size="11"><tspan x="1052.9166666666667" y="34.25">:Otp</tspan><tspan x="1052.9166666666667" y="48.0">Challenge</tspan><tspan x="1052.9166666666667" y="61.75">Issuer</tspan></text>
+<line x1="1163.75" y1="86" x2="1163.75" y2="2303" stroke="black" stroke-dasharray="5,4"/>
+<rect x="1134.60546875" y="10" width="58.2890625" height="76" fill="white" stroke="black"/>
+<text text-anchor="middle" dominant-baseline="central" font-size="11"><tspan x="1163.75" y="41.125">:OtpEmail</tspan><tspan x="1163.75" y="54.875">Port</tspan></text>
+<line x1="1274.5833333333333" y1="86" x2="1274.5833333333333" y2="2303" stroke="black" stroke-dasharray="5,4"/>
+<rect x="1237.1809895833333" y="10" width="74.8046875" height="76" fill="white" stroke="black"/>
+<text text-anchor="middle" dominant-baseline="central" font-size="11"><tspan x="1274.5833333333333" y="41.125">:Database</tspan><tspan x="1274.5833333333333" y="54.875">(contract_db)</tspan></text>
+<rect x="604.5833333333333" y="211" width="10" height="117" fill="white" stroke="black"/>
+<rect x="604.5833333333333" y="351" width="10" height="132" fill="white" stroke="black"/>
+<rect x="1269.5833333333333" y="555" width="10" height="23" fill="white" stroke="black"/>
+<rect x="715.4166666666666" y="532" width="10" height="69" fill="white" stroke="black"/>
+<rect x="1269.5833333333333" y="782" width="10" height="23" fill="white" stroke="black"/>
+<rect x="715.4166666666666" y="759" width="10" height="69" fill="white" stroke="black"/>
+<rect x="1269.5833333333333" y="940" width="10" height="23" fill="white" stroke="black"/>
+<rect x="826.2499999999999" y="917" width="10" height="69" fill="white" stroke="black"/>
+<rect x="1269.5833333333333" y="1555" width="10" height="8" fill="white" stroke="black"/>
+<rect x="937.0833333333333" y="1241" width="10" height="345" fill="white" stroke="black"/>
+<rect x="1269.5833333333333" y="1671" width="10" height="23" fill="white" stroke="black"/>
+<rect x="1269.5833333333333" y="1852" width="10" height="8" fill="white" stroke="black"/>
+<rect x="1047.9166666666667" y="1609" width="10" height="274" fill="white" stroke="black"/>
+<rect x="1269.5833333333333" y="1929" width="10" height="8" fill="white" stroke="black"/>
+<rect x="715.4166666666666" y="1906" width="10" height="39" fill="white" stroke="black"/>
+<rect x="1158.75" y="2008" width="10" height="8" fill="white" stroke="black"/>
+<rect x="1269.5833333333333" y="2101" width="10" height="8" fill="white" stroke="black"/>
+<rect x="1047.9166666666667" y="2065" width="10" height="52" fill="white" stroke="black"/>
+<rect x="493.75" y="188" width="10" height="2049" fill="white" stroke="black"/>
+<rect x="272.0833333333333" y="165" width="10" height="2095" fill="white" stroke="black"/>
+<rect x="161.25" y="129" width="10" height="2154" fill="white" stroke="black"/>
+<rect x="6.0" y="219" width="1318.0" height="97" fill="none" stroke="black"/>
+<path d="M6.0,235 L32.8359375,235 L40.8359375,227 L40.8359375,219" fill="white" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11" font-weight="bold"><tspan x="12.0" y="227.0">alt</tspan></text>
+<rect x="44.8359375" y="220" width="142.796875" height="14" fill="white"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="46.8359375" y="227.0">[SignerNotEligibleException]</tspan></text>
+<rect x="6.0" y="359" width="1318.0" height="97" fill="none" stroke="black"/>
+<path d="M6.0,375 L32.8359375,375 L40.8359375,367 L40.8359375,359" fill="white" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11" font-weight="bold"><tspan x="12.0" y="367.0">alt</tspan></text>
+<rect x="44.8359375" y="360" width="142.796875" height="14" fill="white"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="46.8359375" y="367.0">[SignerNotEligibleException]</tspan></text>
+<rect x="6.0" y="491" width="1318.0" height="1464" fill="none" stroke="black"/>
+<path d="M6.0,507 L55.4609375,507 L63.4609375,499 L63.4609375,491" fill="white" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11" font-weight="bold"><tspan x="12.0" y="499.0">critical</tspan></text>
+<rect x="67.4609375" y="492" width="330.85546875" height="14" fill="white"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="69.4609375" y="499.0">[TransactionRunner.inTransaction(() → issueOrReplay(command))]</tspan></text>
+<rect x="14.0" y="609" width="1302.0" height="97" fill="none" stroke="black"/>
+<path d="M14.0,625 L40.8359375,625 L48.8359375,617 L48.8359375,609" fill="white" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11" font-weight="bold"><tspan x="20.0" y="617.0">alt</tspan></text>
+<rect x="52.8359375" y="610" width="300.19921875" height="14" fill="white"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="54.8359375" y="617.0">[IdempotencyKeyReusedException  [outcome = CONFLICT]]</tspan></text>
+<rect x="457.3333333333333" y="718" width="858.6666666666667" height="278" fill="none" stroke="black"/>
+<path d="M457.3333333333333,734 L484.1692708333333,734 L492.1692708333333,726 L492.1692708333333,718" fill="white" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11" font-weight="bold"><tspan x="463.3333333333333" y="726.0">alt</tspan></text>
+<rect x="496.1692708333333" y="719" width="107.421875" height="14" fill="white"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="498.1692708333333" y="726.0">[outcome = REPLAY]</tspan></text>
+<line x1="457.3333333333333" y1="884" x2="1316.0" y2="884" stroke="black" stroke-dasharray="6,4"/>
+<rect x="461.3333333333333" y="886" width="90.49609375" height="14" fill="white"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="463.3333333333333" y="893.0">[outcome = NEW]</tspan></text>
+<rect x="14.0" y="1008" width="1302.0" height="97" fill="none" stroke="black"/>
+<path d="M14.0,1024 L40.8359375,1024 L48.8359375,1016 L48.8359375,1008" fill="white" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11" font-weight="bold"><tspan x="20.0" y="1016.0">alt</tspan></text>
+<rect x="52.8359375" y="1009" width="295.0390625" height="14" fill="white"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="54.8359375" y="1016.0">[ContractConflictException  [replayed challenge not usable]]</tspan></text>
+<rect x="14.0" y="1117" width="1302.0" height="97" fill="none" stroke="black"/>
+<path d="M14.0,1133 L40.8359375,1133 L48.8359375,1125 L48.8359375,1117" fill="white" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11" font-weight="bold"><tspan x="20.0" y="1125.0">alt</tspan></text>
+<rect x="52.8359375" y="1118" width="214.921875" height="14" fill="white"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="54.8359375" y="1125.0">[ContractNotFoundException  [no contract]]</tspan></text>
+<rect x="14.0" y="1309" width="1302.0" height="97" fill="none" stroke="black"/>
+<path d="M14.0,1325 L40.8359375,1325 L48.8359375,1317 L48.8359375,1309" fill="white" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11" font-weight="bold"><tspan x="20.0" y="1317.0">alt</tspan></text>
+<rect x="52.8359375" y="1310" width="317.625" height="14" fill="white"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="54.8359375" y="1317.0">[UnauthorizedContractAccessException  [caller is not that party]]</tspan></text>
+<rect x="14.0" y="1418" width="1302.0" height="110" fill="none" stroke="black"/>
+<path d="M14.0,1434 L40.8359375,1434 L48.8359375,1426 L48.8359375,1418" fill="white" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11" font-weight="bold"><tspan x="20.0" y="1426.0">alt</tspan></text>
+<rect x="52.8359375" y="1419" width="209.40625" height="14" fill="white"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="54.8359375" y="1426.0">[ContractConflictException  [a check fails]]</tspan></text>
+<rect x="14.0" y="1702" width="1302.0" height="97" fill="none" stroke="black"/>
+<path d="M14.0,1718 L40.8359375,1718 L48.8359375,1710 L48.8359375,1702" fill="white" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11" font-weight="bold"><tspan x="20.0" y="1710.0">alt</tspan></text>
+<rect x="52.8359375" y="1703" width="278.5078125" height="14" fill="white"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="54.8359375" y="1710.0">[ContractConflictException  [cooldown 60 s / 5 per hour]]</tspan></text>
+<rect x="6.0" y="1967" width="1318.0" height="243" fill="none" stroke="black"/>
+<path d="M6.0,1983 L37.1015625,1983 L45.1015625,1975 L45.1015625,1967" fill="white" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11" font-weight="bold"><tspan x="12.0" y="1975.0">opt</tspan></text>
+<rect x="49.1015625" y="1968" width="219.1875" height="14" fill="white"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="51.1015625" y="1975.0">[fresh challenge (not a replay); after commit]</tspan></text>
+<rect x="14.0" y="2024" width="1302.0" height="172" fill="none" stroke="black"/>
+<path d="M14.0,2040 L40.8359375,2040 L48.8359375,2032 L48.8359375,2024" fill="white" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11" font-weight="bold"><tspan x="20.0" y="2032.0">alt</tspan></text>
+<rect x="52.8359375" y="2025" width="143.390625" height="14" fill="white"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="54.8359375" y="2032.0">[OtpEmailNotSentException]</tspan></text>
+<rect x="65.41666666666666" y="114" width="169.078125" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="67.41666666666666" y="120.5">1: tick the consent and press Sign</tspan></text>
+<line x1="55.416666666666664" y1="129" x2="161.25" y2="129" stroke="black" marker-end="url(#fill)"/>
+<rect x="176.25" y="137" width="405.4921875" height="26" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="178.25" y="143.125">1.1: POST /api/v1/contracts/{id}/sign/initiate</tspan><tspan x="178.25" y="156.875">(Idempotency-Key, signerRole, consentStatementVersion, presentedContentHash)</tspan></text>
+<line x1="171.25" y1="165" x2="272.0833333333333" y2="165" stroke="black" marker-end="url(#fill)"/>
+<rect x="287.0833333333333" y="173" width="128.71875" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="289.0833333333333" y="179.5">1.1.1: execute(command)</tspan></text>
+<line x1="282.0833333333333" y1="188" x2="493.75" y2="188" stroke="black" marker-end="url(#fill)"/>
+<rect x="508.75" y="196" width="185.7890625" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="510.75" y="202.5">1.1.1.1: requireFreshLogin(authTime)</tspan></text>
+<line x1="503.75" y1="211" x2="604.5833333333333" y2="211" stroke="black" marker-end="url(#fill)"/>
+<rect x="397.9166666666667" y="245" width="323.16406250000006" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="399.9166666666667" y="251.5">throw SignerNotEligibleException  → handleSignerNotEligible(ex)</tspan></text>
+<line x1="604.5833333333333" y1="260" x2="387.9166666666667" y2="260" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="176.25" y="268" width="217.3515625" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="178.25" y="274.5">403 ErrorEnvelope(STEP_UP_REQUIRED)</tspan></text>
+<line x1="387.9166666666667" y1="283" x2="171.25" y2="283" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="65.41666666666666" y="291" width="121.9921875" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="67.41666666666666" y="297.5">show the error message</tspan></text>
+<line x1="161.25" y1="306" x2="55.416666666666664" y2="306" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="508.75" y="336" width="154.40625" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="510.75" y="342.5">1.1.1.2: requireEligible(actorId)</tspan></text>
+<line x1="503.75" y1="351" x2="604.5833333333333" y2="351" stroke="black" marker-end="url(#fill)"/>
+<rect x="397.9166666666667" y="385" width="323.16406250000006" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="399.9166666666667" y="391.5">throw SignerNotEligibleException  → handleSignerNotEligible(ex)</tspan></text>
+<line x1="604.5833333333333" y1="400" x2="387.9166666666667" y2="400" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="176.25" y="408" width="856.27734375" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="178.25" y="414.5">403 ErrorEnvelope(SIGNER_PROFILE_NOT_FOUND | SIGNER_NOT_VERIFIED | SIGNER_AUTHORIZATION_EXPIRED | SIGNER_LOCKED | SIGNER_EMAIL_MISSING)</tspan></text>
+<line x1="387.9166666666667" y1="423" x2="171.25" y2="423" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="65.41666666666666" y="431" width="121.9921875" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="67.41666666666666" y="437.5">show the error message</tspan></text>
+<line x1="161.25" y1="446" x2="55.416666666666664" y2="446" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="508.75" y="468" width="84.6953125" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="510.75" y="474.5">signer : UserInfo</tspan></text>
+<line x1="604.5833333333333" y1="483" x2="503.75" y2="483" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="508.75" y="517" width="335.53125" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="510.75" y="523.5">1.1.1.3: claim(actorId, OPERATION, idempotencyKey, requestHash)</tspan></text>
+<line x1="503.75" y1="532" x2="715.4166666666666" y2="532" stroke="black" marker-end="url(#fill)"/>
+<rect x="730.4166666666666" y="540" width="399.5664062499999" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="732.4166666666666" y="546.5">1.1.1.3.1: INSERT idempotency_record (duplicate key → SELECT request_hash)</tspan></text>
+<line x1="725.4166666666666" y1="555" x2="1269.5833333333333" y2="555" stroke="black" marker-end="url(#fill)"/>
+<rect x="730.4166666666666" y="563" width="88.3671875" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="732.4166666666666" y="569.5">row / stored hash</tspan></text>
+<line x1="1269.5833333333333" y1="578" x2="725.4166666666666" y2="578" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="508.75" y="586" width="196.34375" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="510.75" y="592.5">outcome : NEW | REPLAY | CONFLICT</tspan></text>
+<line x1="715.4166666666666" y1="601" x2="503.75" y2="601" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="397.9166666666667" y="635" width="394.08593750000006" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="399.9166666666667" y="641.5">throw IdempotencyKeyReusedException  → handleIdempotencyKeyReused(ex)</tspan></text>
+<line x1="493.75" y1="650" x2="387.9166666666667" y2="650" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="176.25" y="658" width="263.8046875" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="178.25" y="664.5">409 ErrorEnvelope(IDEMPOTENCY_KEY_REUSED)</tspan></text>
+<line x1="387.9166666666667" y1="673" x2="171.25" y2="673" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="65.41666666666666" y="681" width="121.9921875" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="67.41666666666666" y="687.5">show the error message</tspan></text>
+<line x1="161.25" y1="696" x2="55.416666666666664" y2="696" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="508.75" y="744" width="280.70703125" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="510.75" y="750.5">1.1.1.4: resultOf(actorId, OPERATION, idempotencyKey)</tspan></text>
+<line x1="503.75" y1="759" x2="715.4166666666666" y2="759" stroke="black" marker-end="url(#fill)"/>
+<rect x="730.4166666666666" y="767" width="282.56640625" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="732.4166666666666" y="773.5">1.1.1.4.1: SELECT result_ref FROM idempotency_record</tspan></text>
+<line x1="725.4166666666666" y1="782" x2="1269.5833333333333" y2="782" stroke="black" marker-end="url(#fill)"/>
+<rect x="730.4166666666666" y="790" width="28.4609375" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="732.4166666666666" y="796.5">otpId</tspan></text>
+<line x1="1269.5833333333333" y1="805" x2="725.4166666666666" y2="805" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="508.75" y="813" width="28.4609375" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="510.75" y="819.5">otpId</tspan></text>
+<line x1="715.4166666666666" y1="828" x2="503.75" y2="828" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="508.75" y="902" width="139.109375" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="510.75" y="908.5">1.1.1.5: findById(contractId)</tspan></text>
+<line x1="503.75" y1="917" x2="826.2499999999999" y2="917" stroke="black" marker-end="url(#fill)"/>
+<rect x="841.2499999999999" y="925" width="192.6757812500001" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="843.2499999999999" y="931.5">1.1.1.5.1: SELECT … FROM contracts</tspan></text>
+<line x1="836.2499999999999" y1="940" x2="1269.5833333333333" y2="940" stroke="black" marker-end="url(#fill)"/>
+<rect x="841.2499999999999" y="948" width="21.7265625" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="843.2499999999999" y="954.5">row</tspan></text>
+<line x1="1269.5833333333333" y1="963" x2="836.2499999999999" y2="963" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="508.75" y="971" width="99.390625" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="510.75" y="977.5">Optional&lt;Contract&gt;</tspan></text>
+<line x1="826.2499999999999" y1="986" x2="503.75" y2="986" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="397.9166666666667" y="1034" width="310.89843750000006" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="399.9166666666667" y="1040.5">throw ContractConflictException  → handleContractConflict(ex)</tspan></text>
+<line x1="493.75" y1="1049" x2="387.9166666666667" y2="1049" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="176.25" y="1057" width="273.5859375" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="178.25" y="1063.5">409 ErrorEnvelope(OTP_CHALLENGE_NOT_ACTIVE)</tspan></text>
+<line x1="387.9166666666667" y1="1072" x2="171.25" y2="1072" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="65.41666666666666" y="1080" width="121.9921875" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="67.41666666666666" y="1086.5">show the error message</tspan></text>
+<line x1="161.25" y1="1095" x2="55.416666666666664" y2="1095" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="397.9166666666667" y="1143" width="292.57812500000006" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="399.9166666666667" y="1149.5">throw ContractNotFoundException  → handleNotFound(ex)</tspan></text>
+<line x1="831.2499999999999" y1="1158" x2="387.9166666666667" y2="1158" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="176.25" y="1166" width="238.71875" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="178.25" y="1172.5">404 ErrorEnvelope(CONTRACT_NOT_FOUND)</tspan></text>
+<line x1="387.9166666666667" y1="1181" x2="171.25" y2="1181" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="65.41666666666666" y="1189" width="121.9921875" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="67.41666666666666" y="1195.5">show the error message</tspan></text>
+<line x1="161.25" y1="1204" x2="55.416666666666664" y2="1204" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="508.75" y="1226" width="496.77734375" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="510.75" y="1232.5">1.1.1.6: record(contract, actorId, signerRole, statementVersion, presentedContentHash, correlationId)</tspan></text>
+<line x1="503.75" y1="1241" x2="937.0833333333333" y2="1241" stroke="black" marker-end="url(#fill)"/>
+<rect x="397.9166666666667" y="1335" width="362.28125000000006" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="399.9166666666667" y="1341.5">throw UnauthorizedContractAccessException  → handleUnauthorized(ex)</tspan></text>
+<line x1="937.0833333333333" y1="1350" x2="387.9166666666667" y2="1350" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="176.25" y="1358" width="167.828125" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="178.25" y="1364.5">403 ErrorEnvelope(FORBIDDEN)</tspan></text>
+<line x1="387.9166666666667" y1="1373" x2="171.25" y2="1373" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="65.41666666666666" y="1381" width="121.9921875" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="67.41666666666666" y="1387.5">show the error message</tspan></text>
+<line x1="161.25" y1="1396" x2="55.416666666666664" y2="1396" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="397.9166666666667" y="1444" width="310.89843750000006" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="399.9166666666667" y="1450.5">throw ContractConflictException  → handleContractConflict(ex)</tspan></text>
+<line x1="937.0833333333333" y1="1459" x2="387.9166666666667" y2="1459" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="176.25" y="1467" width="714.69140625" height="26" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="178.25" y="1473.125">409 ErrorEnvelope(CONTRACT_HAS_NO_COFFEE_TERMS | CONTRACT_NOT_SIGNABLE | CONTRACT_ALREADY_SIGNED_BY_ACTOR |</tspan><tspan x="178.25" y="1486.875">CONSENT_STATEMENT_OUTDATED | PRESENTED_CONTENT_HASH_MISMATCH)</tspan></text>
+<line x1="387.9166666666667" y1="1495" x2="171.25" y2="1495" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="65.41666666666666" y="1503" width="121.9921875" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="67.41666666666666" y="1509.5">show the error message</tspan></text>
+<line x1="161.25" y1="1518" x2="55.416666666666664" y2="1518" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="952.0833333333333" y="1540" width="184.578125" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="954.0833333333333" y="1546.5">1.1.1.6.1: INSERT consent_evidence</tspan></text>
+<line x1="947.0833333333333" y1="1555" x2="1269.5833333333333" y2="1555" stroke="black" marker-end="url(#fill)"/>
+<rect x="508.75" y="1571" width="137.90625" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="510.75" y="1577.5">consent : ConsentEvidence</tspan></text>
+<line x1="937.0833333333333" y1="1586" x2="503.75" y2="1586" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="508.75" y="1594" width="212.0625" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="510.75" y="1600.5">1.1.1.7: issue(contract, consent, authTime)</tspan></text>
+<line x1="503.75" y1="1609" x2="1047.9166666666667" y2="1609" stroke="black" marker-end="url(#fill)"/>
+<rect x="1062.9166666666667" y="1617" width="166.42578125" height="52" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="1064.9166666666667" y="1622.375">1.1.1.7.1: UPDATE signature_otp</tspan><tspan x="1064.9166666666667" y="1636.125">(expire usable codes);</tspan><tspan x="1064.9166666666667" y="1649.875">SELECT MAX(sent_at),</tspan><tspan x="1064.9166666666667" y="1663.625">COUNT last hour</tspan></text>
+<line x1="1057.9166666666667" y1="1671" x2="1269.5833333333333" y2="1671" stroke="black" marker-end="url(#fill)"/>
+<rect x="1062.9166666666667" y="1679" width="125.6640625" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="1064.9166666666667" y="1685.5">lastSentAt, sentLastHour</tspan></text>
+<line x1="1269.5833333333333" y1="1694" x2="1057.9166666666667" y2="1694" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="397.9166666666667" y="1728" width="310.89843750000006" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="399.9166666666667" y="1734.5">throw ContractConflictException  → handleContractConflict(ex)</tspan></text>
+<line x1="1047.9166666666667" y1="1743" x2="387.9166666666667" y2="1743" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="176.25" y="1751" width="423.54296875" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="178.25" y="1757.5">409 ErrorEnvelope(OTP_RESEND_TOO_SOON | OTP_RESEND_LIMIT_REACHED)</tspan></text>
+<line x1="387.9166666666667" y1="1766" x2="171.25" y2="1766" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="65.41666666666666" y="1774" width="121.9921875" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="67.41666666666666" y="1780.5">show the error message</tspan></text>
+<line x1="161.25" y1="1789" x2="55.416666666666664" y2="1789" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="1062.9166666666667" y="1811" width="162.5625" height="39" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="1064.9166666666667" y="1816.75">1.1.1.7.2: INSERT signature_otp</tspan><tspan x="1064.9166666666667" y="1830.5">(HMAC of the code,</tspan><tspan x="1064.9166666666667" y="1844.25">expires in 300 s)</tspan></text>
+<line x1="1057.9166666666667" y1="1852" x2="1269.5833333333333" y2="1852" stroke="black" marker-end="url(#fill)"/>
+<rect x="508.75" y="1868" width="78.5859375" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="510.75" y="1874.5">otp : IssuedOtp</tspan></text>
+<line x1="1047.9166666666667" y1="1883" x2="503.75" y2="1883" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="508.75" y="1891" width="334.3125" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="510.75" y="1897.5">1.1.1.8: recordResult(actorId, OPERATION, idempotencyKey, otpId)</tspan></text>
+<line x1="503.75" y1="1906" x2="715.4166666666666" y2="1906" stroke="black" marker-end="url(#fill)"/>
+<rect x="730.4166666666666" y="1914" width="309.5820312499999" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="732.4166666666666" y="1920.5">1.1.1.8.1: UPDATE idempotency_record SET result_ref = otpId</tspan></text>
+<line x1="725.4166666666666" y1="1929" x2="1269.5833333333333" y2="1929" stroke="black" marker-end="url(#fill)"/>
+<rect x="508.75" y="1993" width="120.15625" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="510.75" y="1999.5">1.1.1.9: send(OtpEmail)</tspan></text>
+<line x1="503.75" y1="2008" x2="1158.75" y2="2008" stroke="black" marker-end="url(#fill)"/>
+<rect x="508.75" y="2050" width="111.609375" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="510.75" y="2056.5">1.1.1.10: expire(otpId)</tspan></text>
+<line x1="503.75" y1="2065" x2="1047.9166666666667" y2="2065" stroke="black" marker-end="url(#fill)"/>
+<rect x="1062.9166666666667" y="2073" width="172.54296875" height="26" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="1064.9166666666667" y="2079.125">1.1.1.10.1: UPDATE signature_otp</tspan><tspan x="1064.9166666666667" y="2092.875">SET expires_at = now</tspan></text>
+<line x1="1057.9166666666667" y1="2101" x2="1269.5833333333333" y2="2101" stroke="black" marker-end="url(#fill)"/>
+<rect x="397.9166666666667" y="2125" width="324.35156250000006" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="399.9166666666667" y="2131.5">throw OtpEmailNotSentException  → handleOtpEmailNotSent(ex)</tspan></text>
+<line x1="493.75" y1="2140" x2="387.9166666666667" y2="2140" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="176.25" y="2148" width="229.5703125" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="178.25" y="2154.5">502 ErrorEnvelope(OTP_EMAIL_NOT_SENT)</tspan></text>
+<line x1="387.9166666666667" y1="2163" x2="171.25" y2="2163" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="65.41666666666666" y="2171" width="121.9921875" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="67.41666666666666" y="2177.5">show the error message</tspan></text>
+<line x1="161.25" y1="2186" x2="55.416666666666664" y2="2186" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="287.0833333333333" y="2222" width="182.94921875" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="289.0833333333333" y="2228.5">SignChallengeView(otpId, expiresAt)</tspan></text>
+<line x1="493.75" y1="2237" x2="282.0833333333333" y2="2237" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="176.25" y="2245" width="213.109375" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="178.25" y="2251.5">200 InitiateSignResponse(otpId, expiresAt)</tspan></text>
+<line x1="272.0833333333333" y1="2260" x2="171.25" y2="2260" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<rect x="65.41666666666666" y="2268" width="228.80078124999997" height="13" fill="white" opacity="0.85"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="67.41666666666666" y="2274.5">show the OTP input and the expiry countdown</tspan></text>
+<line x1="161.25" y1="2283" x2="55.416666666666664" y2="2283" stroke="black" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<line x1="503.75" y1="855.0" x2="510.75" y2="855.0" stroke="black" stroke-dasharray="4,3"/>
+<path d="M510.75,836 L710.27734375,836 L718.27734375,844 L718.27734375,874 L510.75,874 Z" fill="white" stroke="black"/><path d="M710.27734375,836 L710.27734375,844 L718.27734375,844" fill="none" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="518.75" y="848.125">challenges.findById(otpId);</tspan><tspan x="518.75" y="861.875">challenge.isUsable(now, maxAttempts)</tspan></text>
+<line x1="937.0833333333333" y1="1275.0" x2="930.0833333333333" y2="1275.0" stroke="black" stroke-dasharray="4,3"/>
+<path d="M535.3450520833333,1249 L922.0833333333333,1249 L930.0833333333333,1257 L930.0833333333333,1301 L535.3450520833333,1301 Z" fill="white" stroke="black"/><path d="M922.0833333333333,1249 L922.0833333333333,1257 L930.0833333333333,1257" fill="none" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="543.3450520833333" y="1261.25">contract.consentToSign(…) checks: caller is the party, coffee terms exist,</tspan><tspan x="543.3450520833333" y="1275.0">status OFFERED | NEGOTIATING, not signed yet, current statement version,</tspan><tspan x="543.3450520833333" y="1288.75">presentedContentHash = terms hash</tspan></text>
+</svg>

@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 from vpdiagram import Diagram  # noqa: E402
 
-d = Diagram("fig06b_class_signing_domain", width=722, height=1030, allow_crossings=True)
+d = Diagram("fig06b_class_signing_domain", width=722, height=1200, allow_crossings=True)
 L, R, WL, WR = 170, 535, 300, 310  # columns 20-320 and 380-690, channel 320-380
 
 d.klass("contract", L, 20, "Contract", "entity", attrs=[
@@ -23,6 +23,10 @@ d.klass("contract", L, 20, "Contract", "entity", attrs=[
     "- status : ContractStatus",
     "- version : Long",
     "- signedHashes : Map<SignerRole, String>",
+    "- reservedQuantity : BigDecimal",
+    "- pendingTerminalDecisionId : String",
+    "- pendingTerminalStatus : ContractStatus",
+    "- settledAt : Instant",
 ], ops=[
     "+ reviseCoffeeTerms(userId : String,",
     "      revised : CanonicalTerms) : void",
@@ -39,10 +43,11 @@ d.klass("contract", L, 20, "Contract", "entity", attrs=[
     "      : Signature",
     "+ roleOf(userId : String) : Optional<SignerRole>",
     "+ getSignedRoles() : Set<SignerRole>",
+    "+ getReservedQuantity() : BigDecimal",
     "+ withdraw(userId : String) : SignerRole",
     "+ activate() : void",
 ], w=WL)
-d.klass("terms", L, 520, "CanonicalTerms", "value object", attrs=[
+d.klass("terms", L, 610, "CanonicalTerms", "value object", attrs=[
     "+ snapshot : ContractTermsSnapshot",
     "+ canonicalJson : String",
     "+ signedContentHash : String",
@@ -55,12 +60,13 @@ d.klass("terms", L, 520, "CanonicalTerms", "value object", attrs=[
     "__      : CanonicalTerms",
     "__+ sha256(canonicalJson : String) : String",
 ], w=WL)
-d.klass("status", L, 760, "ContractStatus", "enumeration", attrs=[
+d.klass("status", L, 850, "ContractStatus", "enumeration", attrs=[
     "OFFERED", "NEGOTIATING", "SIGNED", "ACTIVE", "SETTLED", "ACTIVATION_REFUND_PENDING", "ACTIVATION_FAILED",
     "WITHDRAWN"], ops=None, w=WL)
-d.klass("role", 85, 940, "SignerRole", "enumeration", attrs=["BUYER", "SELLER"], ops=None, w=130)
-d.klass("action", 240, 940, "ConsentActionType", "enumeration", attrs=["SIGN_CONTRACT", "CANCEL_ACTIVATION"], ops=None,
-        w=160)
+d.klass("role", L, 1030, "SignerRole", "enumeration", attrs=["BUYER", "SELLER"], ops=None, w=130)
+d.klass("action", R, 1000, "ConsentActionType", "enumeration", attrs=[
+    "SIGN_CONTRACT", "CANCEL_ACTIVATION", "DECLARE_SELLER_WEIGHT", "RECORD_BUYER_RECEIPT", "CONFIRM_CLEAN_RECEIPT",
+    "FLAG_MILESTONE_ISSUE", "CONTEST_MILESTONE_FLAG", "CONCEDE_DISPUTE", "SETTLE_DISPUTE"], ops=None, w=190)
 
 d.klass("signature", R, 20, "Signature", "entity", attrs=[
     "+ signatureId : UUID",
@@ -118,15 +124,15 @@ def y(node, frac):
     x0, y0, x1, y1 = n[node].box()
     return y0 + (y1 - y0) * frac
 
-d.rel("composition", "contract", "b", "terms", "t", label="coffeeTerms 0..1", label_at=(L + 8, y("contract", 1) + 14))
+d.rel("composition", "contract", "b", "terms", "t")
 d.rel("dependency", "contract", "r", "signature", "l", s_off=y("signature", .4) - n["contract"].cy,
-      d_off=y("signature", .4) - n["signature"].cy, label="«create»", label_at=(326, y("signature", .4) - 18))
+      d_off=y("signature", .4) - n["signature"].cy)
 d.rel("dependency", "contract", "r", "consent", "l", s_off=y("consent", .35) - n["contract"].cy,
-      d_off=y("consent", .35) - n["consent"].cy, label="«create»", label_at=(326, y("consent", .35) - 18))
-d.rel("association", "signature", "b", "consent", "t", label="consentId", label_at=(R + 6, y("signature", 1) + 8))
-d.rel("association", "otp", "t", "consent", "b", label="consentId", label_at=(R + 6, y("otp", 0) - 26))
+      d_off=y("consent", .35) - n["consent"].cy)
+d.rel("association", "signature", "b", "consent", "t")
+d.rel("association", "otp", "t", "consent", "b")
 d.rel("association", "signature", "r", "otp", "r", (706, y("signature", .5)), (706, y("otp", .08)),
-      d_off=y("otp", .08) - n["otp"].cy, label="otpId", label_at=(691, y("signature", .5) - 17))
+      d_off=y("otp", .08) - n["otp"].cy)
 
 if __name__ == "__main__":
     d.write(Path(__file__).resolve().parent)
