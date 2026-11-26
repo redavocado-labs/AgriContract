@@ -50,7 +50,8 @@ export async function freshLogin(username) {
   const page = await fetch(authUrl, { redirect: 'manual' });
   jar.take(page);
   const html = await page.text();
-  const action = /<form[^>]*id="kc-form-login"[^>]*action="([^"]+)"/.exec(html)?.[1]
+  const action = kcContextUrl(html, 'loginAction')
+    ?? /<form[^>]*id="kc-form-login"[^>]*action="([^"]+)"/.exec(html)?.[1]
     ?? /<form[^>]*action="([^"]+login-actions\/authenticate[^"]*)"/.exec(html)?.[1];
   if (!action) throw new Error(`no login form for ${username} (status ${page.status})`);
 
@@ -107,3 +108,14 @@ class CookieJar {
 const base64url = (buf) => Buffer.from(buf).toString('base64url');
 
 const decodeEntities = (s) => s.replaceAll('&amp;', '&');
+
+/*
+ * The Keycloakify theme (#665) draws the form in the browser, so the page has
+ * no <form action>; the URL is in the kcContext script as
+ * `"loginAction": "..."`, a JSON string. The form regexes stay for the stock
+ * theme.
+ */
+const kcContextUrl = (html, key) => {
+  const quoted = new RegExp(`"${key}"\\s*:\\s*("(?:[^"\\\\]|\\\\.)*")`).exec(html)?.[1];
+  return quoted === undefined ? undefined : JSON.parse(quoted);
+};
