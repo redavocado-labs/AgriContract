@@ -63,7 +63,7 @@
       <text x="20" y="156" fill="#6b8f7b">messaging</text>
       <text x="276" y="156" fill="#e6efe9" text-anchor="end">RabbitMQ</text>
       <text x="20" y="184" fill="#6b8f7b">license</text>
-      <text x="276" y="184" fill="#e6efe9" text-anchor="end">Apache-2.0</text>
+      <text x="276" y="184" fill="#e6efe9" text-anchor="end">PolyForm NC 1.0</text>
     </g>
   </g>
 </svg>

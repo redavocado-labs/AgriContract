@@ -179,4 +179,6 @@ CI runs only the jobs whose paths changed, and `ci-gate` must be green before a 
 
 ## License
 
-[Apache License 2.0](LICENSE).
+[PolyForm Noncommercial 1.0.0](LICENSE). You may read, study, run, modify and demo AgriContract for any noncommercial purpose: personal use, learning, research, teaching, and use by schools, charities and public bodies.
+
+Commercial use, such as running it for a business or building it into a paid product or service, needs a separate license from the authors. Open an issue or contact [@RedAvocado22](https://github.com/RedAvocado22) to ask.
