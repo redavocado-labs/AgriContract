@@ -67,9 +67,19 @@ cv["B4"], cv["B5"] = "AgriContract", "AGC"
 cv["F4"], cv["F5"], cv["F6"] = CREATOR, ISSUE_DATE, "v1.0"
 cv["B6"] = '=B5&"_DefectLog_v1.0"'
 cv["A11"], cv["B11"], cv["C11"], cv["D11"] = ISSUE_DATE, "v1.0", "Toàn bộ tài liệu", "A"
-cv["E11"] = ("Bản đầu: %d defect thật từ CI (GitHub Actions), Report 5.2 Round 1 và các vòng E2E; Tester là người "
-             "kích hoạt lần chạy; mỗi defect có commit, log, bản sửa và lần chạy lại" % len(DEFECTS))
+cv["E11"] = ("Bản đầu: 16 defect thật từ CI (GitHub Actions), Report 5.2 Round 1 và các vòng E2E; Tester là người "
+             "kích hoạt lần chạy; mỗi defect có commit, log, bản sửa và lần chạy lại")
 cv["F11"] = "Report 5.0, 5.1, 5.2; #670"
+# Later changes: one row each under the first, same version (date, item, A/D/M, description, reference)
+CHANGES = [
+    ("27/11/2026", "Defect List", "A", "Thêm DEF-17: image Java thiếu module luật kiến trúc, stack không build từ main",
+     "#288, PR #678"),
+]
+for row, (date, item, kind, text, ref) in enumerate(CHANGES, start=12):
+    for col, value in zip("ABCDEF", (date, "v1.0", item, kind, text, ref)):
+        cell = cv[f"{col}{row}"]
+        cell.value = value
+        cell._style = copy(cv[f"{col}11"]._style)
 
 # Defect List (from ModuleName1)
 ws = wb["ModuleName1"]
