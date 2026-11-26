@@ -1,6 +1,7 @@
 const compositionRoot = '^src/(?:config(?:/|$)|[^/]+\\.ts$)';
-const persistenceAndMessaging =
-  '(?:@nestjs|@golevelup|@aws-sdk)/|(?:mysql2|typeorm|knex|amqplib|amqp-connection-manager|nodemailer|ioredis|redis)(?:/|$)';
+const sharedEventing = '^\\.\\./shared/node-eventing/';
+const frameworkPackages =
+  '(?:@nestjs|@golevelup|@aws-sdk)/|(?:@agricontract/eventing|mysql2|typeorm|knex|amqplib|amqp-connection-manager|nodemailer|ioredis|redis|cheerio)(?:/|$)';
 
 module.exports = {
   forbidden: [
@@ -14,7 +15,7 @@ module.exports = {
       name: 'domain-no-framework',
       severity: 'error',
       from: { path: '^src/domain/' },
-      to: { path: `(?:^|/)node_modules/(?:${persistenceAndMessaging})` },
+      to: { path: [`(?:^|/)node_modules/(?:${frameworkPackages})`, sharedEventing] },
     },
     {
       name: 'application-not-to-infra',
@@ -32,7 +33,7 @@ module.exports = {
   // src/config and source files at the root of src are composition roots.
   // They may wire any layer. Domain and application cannot import them.
   options: {
-    doNotFollow: { path: '(^|/)node_modules/' },
+    doNotFollow: { path: `(^|/)node_modules/|${sharedEventing}` },
     exclude: { path: '(^|/)test/|\\.(?:int-)?spec\\.ts$' },
     tsPreCompilationDeps: true,
   },
