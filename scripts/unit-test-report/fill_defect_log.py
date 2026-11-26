@@ -1,9 +1,9 @@
-# Write Report 5.3 (defect log, #670) from data_defects.py, on the Report 5.1 template so Cover and the statistics
+# Write Report 5.5 (defect log, #670) from data_defects.py, on the Report 5.1 template so Cover and the statistics
 # sheet look like 5.1/5.2. Pure openpyxl (Linux): the template's ModuleName1 sheet is reused for the defect list,
 # its header and body cell styles are copied to the new columns; Test Cases is dropped.
 #
 #   python fill_defect_log.py template/Report-5.1_Unit_Test_template.xlsx \
-#       ../../docs/reports/Report-5.3_Defect_Log.xlsx
+#       ../../docs/reports/Report-5.5_Defect_Log.xlsx
 import sys
 from copy import copy
 
