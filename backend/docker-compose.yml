@@ -446,6 +446,7 @@ services:
       NOTIFICATION_SERVICE_URL: http://notification-service:8085
       KEYCLOAK_URL: http://keycloak:8080
       KEYCLOAK_USER_SERVICE_SECRET: ${KEYCLOAK_USER_SERVICE_SECRET:?KEYCLOAK_USER_SERVICE_SECRET must be set in .env}
+      EMAIL_VERIFICATION_PEPPER: ${EMAIL_VERIFICATION_PEPPER:?EMAIL_VERIFICATION_PEPPER must be set in .env}
       # D59: unverified self-registered accounts are deleted this long after creation; demo: PT10M.
       UNVERIFIED_ACCOUNT_MAX_AGE: ${UNVERIFIED_ACCOUNT_MAX_AGE:-PT24H}
     depends_on:
@@ -502,6 +503,7 @@ services:
       PRODUCT_SERVICE_URL: http://product-service:8082
       USER_SERVICE_URL: http://user-service:8081
       NOTIFICATION_SERVICE_URL: http://notification-service:8085
+      OTP_PEPPER: ${OTP_PEPPER:?OTP_PEPPER must be set in .env}
       # D71: milestone evidence is streamed to file-service (storeOnBehalfOf), never exposed by the gateway.
       FILE_SERVICE_URL: http://file-service:8089
       # Shared Vietnam business-day calendar (#295, D42 cancel window). Dev default only: production sets it from the
