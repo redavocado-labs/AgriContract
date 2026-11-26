@@ -14,4 +14,3 @@ BF06	BF06-010	Mutual termination	IT-GW	N/A	#242	No matching controller.
 BF06	BF06-020	Mutual replacement and supersession	IT-GW	N/A	#243	No matching controller.
 BF07	BF07-020	External Verifier emergency lock and unlock	IT-GW	N/A		Bank has no controller for the frozen lock and unlock paths.
 BF07	BF07-030	User lock propagation	IT-GW	Pending		Reputation read exists; a lock-producing fixture was not exercised.
-Security	SEC-120	Keycloak brute force protection	IT-DIRECT	Pending	#522	Realm protection work is pending.
