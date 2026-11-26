@@ -146,4 +146,12 @@ DEFECTS = [
          cause="Seed 02-user-db.sql thiếu email đã xác minh nên product-service không đọc được email người đề xuất",
          fix=("#647, PR #648", "eb11bd4d", LONG), status="Closed",
          retest=("25/11/2026", "36caa3c9", "Passed", "scripts/unit-test-report/results/round2/")),
+    dict(id="DEF-17", test="5.2 GoldenFlow ITC001 (e2e.yml, bước Build and start the stack)", level="IT", module="9 service Java (Dockerfile)",
+         title="Stack không build được từ main: image Java thiếu module luật kiến trúc",
+         expected="docker compose build dựng đủ image từ main, golden flow chạy",
+         actual="Child module /app/shared/java-arch-rules of /app/pom.xml does not exist, không image Java nào build được",
+         severity="High", found=("27/11/2026", "44202a49", CUONG, RUN + "45887466927"),
+         cause="#673 thêm module shared vào pom cha nhưng 9 Dockerfile copy từng module bằng tay, không có module mới; E2E trên PR không chạy nên chỉ lộ trên main",
+         fix=("#288, PR #678", "1affea11", CUONG), status="Closed",
+         retest=("27/11/2026", "e1d33257", "Passed", RUN + "45888671217")),
 ]
