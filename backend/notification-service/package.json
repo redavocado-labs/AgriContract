@@ -21,7 +21,8 @@
     "test:int": "jest --testRegex \"\\.int-spec\\.ts$\" --runInBand",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand"
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "arch": "depcruise src"
   },
   "dependencies": {
     "@agricontract/eventing": "file:../shared/node-eventing",
@@ -52,6 +53,7 @@
     "@types/supertest": "^7.0.0",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
+    "dependency-cruiser": "18.9.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
