@@ -1,0 +1,7 @@
+# Test-only values, loaded on top of the main application.yml.
+
+gateway:
+  internal-secret: test-gateway-secret
+
+service:
+  internal-secret: test-internal-secret
