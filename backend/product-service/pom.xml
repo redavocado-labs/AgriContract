@@ -16,6 +16,12 @@
     <dependencies>
         <dependency>
             <groupId>com.agricontract</groupId>
+            <artifactId>java-arch-rules</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.agricontract</groupId>
             <artifactId>java-eventing</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -5,6 +5,12 @@
     <artifactId>audit-service</artifactId>
     <name>AgriContract Audit Service</name>
     <dependencies>
+        <dependency>
+            <groupId>com.agricontract</groupId>
+            <artifactId>java-arch-rules</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-jdbc</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-amqp</artifactId></dependency>
