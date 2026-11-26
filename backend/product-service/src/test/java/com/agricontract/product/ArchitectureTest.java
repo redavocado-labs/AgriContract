@@ -11,7 +11,7 @@ import com.tngtech.archunit.lang.ArchRule;
 class ArchitectureTest {
     @ArchTest
     static final ArchRule layers = LayerRules.forService("com.agricontract.product",
-            // known: orphan-reservation age is supplied through @Value. See #537.
+            // known: orphan-reservation reaper batch size is supplied through @Value. See #537.
             ReapOrphanReservationsUseCaseImpl.class);
 
     @ArchTest
