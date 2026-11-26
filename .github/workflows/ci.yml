@@ -374,6 +374,22 @@ jobs:
     if: needs.changes.outputs.analytics == 'true'
     runs-on: ubuntu-latest
 
+    # For the real-MySQL suites (#288). Same image, database and host port as the compose analytics-db.
+    # Each suite creates and drops its own database, so the user needs CREATE/DROP: root.
+    services:
+      analytics-db:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: analytics_db
+        ports:
+          - 3316:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h localhost"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
     steps:
       - uses: actions/checkout@v4
 
@@ -389,6 +405,8 @@ jobs:
       # postinstall builds shared/node-eventing, which the service imports.
       - name: Typecheck, test and build
         working-directory: backend/analytics-service
+        env:
+          ANALYTICS_TEST_MYSQL_URL: mysql://root:password@127.0.0.1:3316/analytics_db
         run: |
           npm ci
           npm run arch
@@ -401,6 +419,21 @@ jobs:
     if: needs.changes.outputs.pricing == 'true'
     runs-on: ubuntu-latest
 
+    # For the real-MySQL suite (#288). Same image, database and host port as the compose pricing-db.
+    services:
+      pricing-db:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: pricing_db
+        ports:
+          - 3318:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h localhost"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
     steps:
       - uses: actions/checkout@v4
 
@@ -411,11 +444,16 @@ jobs:
           cache: 'npm'
           cache-dependency-path: backend/pricing-service/package-lock.json
 
-      - name: Check architecture
+      - name: Typecheck, test and build
         working-directory: backend/pricing-service
+        env:
+          PRICING_TEST_MYSQL_URL: mysql://root:password@127.0.0.1:3318/pricing_db
         run: |
           npm ci
           npm run arch
+          npm run typecheck
+          npm test
+          npm run build
 
   file-service:
     needs: changes
