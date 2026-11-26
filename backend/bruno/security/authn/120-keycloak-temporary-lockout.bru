@@ -1,0 +1,67 @@
+meta {
+  name: SEC-120 Repeated incorrect passwords temporarily lock a new Keycloak account
+  type: http
+  seq: 120
+}
+
+post {
+  url: {{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token
+  body: formUrlEncoded
+  auth: none
+}
+
+body:form-urlencoded {
+  client_id: {{client_id}}
+  grant_type: password
+  username: {{lockout_username}}
+  password: {{lockout_password}}
+}
+
+script:pre-request {
+  const { randomUUID } = require('crypto');
+  const { browserLogin, request, variable } = require('./e2e/helpers.js');
+  const username = 'bruno-lockout-' + randomUUID() + '@example.test';
+  const password = 'LocalBruno-Test-782!';
+  await browserLogin(bru, {
+    username, email: username, firstName: 'Bruno', lastName: 'Lockout',
+    accountType: 'BUYER', password, 'password-confirm': password,
+  }, true);
+
+  const url = variable(bru, 'keycloak_url') + '/realms/' + variable(bru, 'realm') + '/protocol/openid-connect/token';
+  const grant = (candidate, status) => request(bru, {
+    method: 'POST',
+    url,
+    data: new URLSearchParams({
+      client_id: variable(bru, 'client_id'), grant_type: 'password',
+      username, password: candidate,
+    }).toString(),
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+  }, status);
+
+  const baseline = await grant(password, 200);
+  if (!baseline.data.access_token) throw new Error('Fresh account could not obtain a baseline token');
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const failure = await grant('WrongBruno-Test-782!', 401);
+    if (failure.data.error !== 'invalid_grant') throw new Error('Incorrect password did not produce invalid_grant');
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+  }
+
+  bru.setVar('lockout_username', username);
+  bru.setVar('lockout_password', password);
+}
+
+tests {
+  test("the correct password is denied after five incorrect passwords", () => {
+    expect(res.getStatus()).to.equal(401);
+    expect(res.getBody()).to.include({ error: 'invalid_grant' });
+    expect(res.getBody()).not.to.have.property('access_token');
+  });
+}
+
+docs {
+  IT-DIRECT
+
+  Uses a disposable account and verifies that the correct password works before five failures.
+  Waits 1.2 seconds between attempts to exercise the failure counter beyond Keycloak's 1-second quick-login window.
+}
