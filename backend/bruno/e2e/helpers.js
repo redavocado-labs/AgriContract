@@ -57,6 +57,13 @@ async function token(bru, role) {
   return accessToken;
 }
 
+// The Keycloakify theme (#665) draws its forms in the browser, so the page has no <form action>: the URLs are in
+// the kcContext script as JSON strings ("loginAction": "..."). The HTML regexes stay for the stock theme.
+function kcContextUrl(html, key) {
+  const quoted = html.match(new RegExp(`"${key}"\\s*:\\s*("(?:[^"\\\\]|\\\\.)*")`))?.[1];
+  return quoted === undefined ? undefined : JSON.parse(quoted);
+}
+
 async function browserLogin(bru, credentials, register = false) {
   const redirectUri = 'http://localhost:5173/bruno-callback';
   const verifier = randomUUID() + randomUUID();
@@ -89,7 +96,8 @@ async function browserLogin(bru, credentials, register = false) {
   rememberCookies(page);
   let html = page.data;
   if (register) {
-    const link = html.match(/href="([^"]+login-actions\/registration[^"]*)"/)?.[1];
+    const link = kcContextUrl(html, 'registrationUrl')
+      ?? html.match(/href="([^"]+login-actions\/registration[^"]*)"/)?.[1];
     if (!link) throw new Error('Keycloak registration link is missing');
     const registration = await request(bru, {
       url: localLink(link),
@@ -99,7 +107,8 @@ async function browserLogin(bru, credentials, register = false) {
     rememberCookies(registration);
     html = registration.data;
   }
-  const action = html.match(/<form[^>]*action="([^"]+login-actions\/(?:authenticate|registration)[^"]*)"/)?.[1];
+  const action = kcContextUrl(html, register ? 'registrationAction' : 'loginAction')
+    ?? html.match(/<form[^>]*action="([^"]+login-actions\/(?:authenticate|registration)[^"]*)"/)?.[1];
   if (!action) throw new Error('Keycloak form action is missing');
   const submitted = await request(bru, {
     method: 'POST',
