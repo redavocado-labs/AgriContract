@@ -7,6 +7,7 @@ COPY pom.xml ./pom.xml
 COPY shared/java-eventing/pom.xml ./shared/java-eventing/pom.xml
 COPY shared/java-web-error/pom.xml ./shared/java-web-error/pom.xml
 COPY shared/java-business-calendar/pom.xml ./shared/java-business-calendar/pom.xml
+COPY shared/java-arch-rules/pom.xml ./shared/java-arch-rules/pom.xml
 COPY api-gateway/pom.xml ./api-gateway/pom.xml
 COPY user-service/pom.xml ./user-service/pom.xml
 COPY product-service/pom.xml ./product-service/pom.xml
@@ -21,6 +22,7 @@ RUN --mount=type=cache,target=/root/.m2 mvn $MVN_OPTS dependency:go-offline -pl 
 COPY shared/java-eventing/src ./shared/java-eventing/src
 COPY shared/java-web-error/src ./shared/java-web-error/src
 COPY shared/java-business-calendar/src ./shared/java-business-calendar/src
+COPY shared/java-arch-rules/src ./shared/java-arch-rules/src
 COPY api-gateway/src ./api-gateway/src
 RUN --mount=type=cache,target=/root/.m2 mvn $MVN_OPTS clean package -pl api-gateway -am -DskipTests -q
 
