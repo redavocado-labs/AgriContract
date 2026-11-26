@@ -36,7 +36,7 @@
   "duplicateEmailsAllowed" : false,
   "resetPasswordAllowed" : true,
   "editUsernameAllowed" : false,
-  "bruteForceProtected" : false,
+  "bruteForceProtected" : true,
   "permanentLockout" : false,
   "maxTemporaryLockouts" : 0,
   "maxFailureWaitSeconds" : 900,
@@ -44,7 +44,8 @@
   "waitIncrementSeconds" : 60,
   "quickLoginCheckMilliSeconds" : 1000,
   "maxDeltaTimeSeconds" : 43200,
-  "failureFactor" : 30,
+  "failureFactor" : 5,
+  "passwordPolicy" : "length(8) and notUsername",
   "roles" : {
     "realm" : [ {
       "id" : "fe1b0147-10fc-4849-a779-e2cb068bfd0b",
@@ -528,8 +529,8 @@
     "totp" : false,
     "credentials" : [ {
       "type" : "password",
-      "value" : "pass123",
-      "temporary" : false
+      "secretData" : "{\"value\":\"k1abBvTAT+SLQavVwxM8RWqatCs5lRTDTMN5Wo70T1/80HfkCa12kP91YN5q+qf75mnnj9bhYVIssYEabD7xdA==\",\"salt\":\"Ixc9fPQLye/w5CTf0bFySg==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}"
     } ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
@@ -547,8 +548,8 @@
     "totp" : false,
     "credentials" : [ {
       "type" : "password",
-      "value" : "pass123",
-      "temporary" : false
+      "secretData" : "{\"value\":\"K2iAGuHvfDYLURgd2Xsqozvjw+qQUS+1o21Z1B722zCRM3nEigvr5bHP/Eweha52dMZOoWbz8y1aRpJU2skqsw==\",\"salt\":\"9qxRnusLq8ABP/MMnHaA3A==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}"
     } ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
@@ -566,8 +567,8 @@
     "totp" : false,
     "credentials" : [ {
       "type" : "password",
-      "value" : "pass123",
-      "temporary" : false
+      "secretData" : "{\"value\":\"vo7R8srQsmuCcgCnKL37/BVxtnnFoUKRbNGyo+6RTg5Z1ugiEtyUcdfPWaqpGCUG2ON97JJBTONpcKxezBHwLA==\",\"salt\":\"23IK8173nqagN/pHkgjShw==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}"
     } ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
