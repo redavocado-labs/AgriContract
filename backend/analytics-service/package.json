@@ -17,7 +17,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "migrate": "node dist/infrastructure/persistence/migrate.js"
+    "migrate": "node dist/infrastructure/persistence/migrate.js",
+    "arch": "depcruise src"
   },
   "dependencies": {
     "@agricontract/eventing": "file:../shared/node-eventing",
@@ -40,6 +41,7 @@
     "@types/node": "^22.20.5",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
+    "dependency-cruiser": "18.9.0",
     "jest": "^30.0.0",
     "js-yaml": "^4.1.0",
     "ts-jest": "^29.2.5",
