@@ -1,14 +1,25 @@
 name: E2E
 
 # The golden flow (#149) on the whole compose stack, built from this commit. It builds every service image and runs
-# them together, so it is too slow for every pull request: it runs on main, on a schedule, and on demand (a PR can
-# be checked with "Run workflow" on its branch).
+# them together, so it is too slow for every pull request: it runs on main, on a schedule, on demand ("Run
+# workflow" on a branch), and on the pull requests listed below.
 on:
   push:
     branches: [main]
     paths:
       - 'backend/**'
       - 'contracts/**'
+      - 'frontend-keycloak-theme/**'
+      - '.github/workflows/e2e.yml'
+  # A pull request runs it only when it touches what the flow logs in and starts through (#666: the Keycloakify
+  # theme of #665 broke the login helpers and was only seen on main). Ordinary service changes stay on push.
+  pull_request:
+    paths:
+      - 'backend/infra/**'
+      - 'backend/docker-compose.yml'
+      - 'frontend-keycloak-theme/**'
+      - 'backend/e2e/**'
+      - 'backend/bruno/e2e/**'
       - '.github/workflows/e2e.yml'
   schedule:
     # 01:00 UTC = 08:00 in Vietnam, Monday to Friday: a scenario that activates a contract needs a Vietnam
