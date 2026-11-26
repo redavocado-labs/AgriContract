@@ -39,6 +39,7 @@ jobs:
               - 'backend/shared/java-eventing/**'
               - 'backend/shared/java-web-error/**'
               - 'backend/shared/java-business-calendar/**'
+              - 'backend/shared/java-arch-rules/**'
               - '.github/workflows/**'
             api-gateway: 'backend/api-gateway/**'
             user-service: ['backend/user-service/**', 'contracts/**']
@@ -81,7 +82,7 @@ jobs:
           EVENT: ${{ github.event_name }}
         run: |
           # Keep in sync with the filters above (step 2 of "adding a Java service").
-          all='["shared/java-eventing","shared/java-web-error","shared/java-business-calendar","api-gateway","user-service","product-service","contract-service","escrow-service","reputation-service","inspection-service","bank-service","audit-service"]'
+          all='["shared/java-eventing","shared/java-web-error","shared/java-business-calendar","shared/java-arch-rules","api-gateway","user-service","product-service","contract-service","escrow-service","reputation-service","inspection-service","bank-service","audit-service"]'
           if [ "$EVENT" = "push" ] || echo "$CHANGES" | jq -e 'index("all")' > /dev/null; then
             java="$all"
             notification=true
@@ -273,7 +274,7 @@ jobs:
       # Services resolve the shared library from the local repo, so install it (and the parent pom) first.
       - name: Install shared modules
         working-directory: backend
-        run: mvn -B -q -pl shared/java-eventing,shared/java-web-error,shared/java-business-calendar -am install -DskipTests --no-transfer-progress
+        run: mvn -B -q -pl shared/java-eventing,shared/java-web-error,shared/java-business-calendar,shared/java-arch-rules -am install -DskipTests --no-transfer-progress
 
       # No -amd: a shared library change is in "all", so every service already has its own job; -amd only tested
       # each service a second time.
