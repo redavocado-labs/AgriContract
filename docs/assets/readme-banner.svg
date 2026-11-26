@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-labelledby="t d">
+  <title id="t">AgriContract</title>
+  <desc id="d">AgriContract: forward contracts for Vietnamese coffee, enforced by milestone escrow.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1410"/>
+      <stop offset="1" stop-color="#0f1d17"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.18" cy="0.55" r="0.55">
+      <stop offset="0" stop-color="#22c55e" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#22c55e" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#1f3a2c" stroke-width="1" opacity="0.45"/>
+    </pattern>
+  </defs>
+
+  <rect width="1280" height="360" rx="14" fill="url(#bg)"/>
+  <rect width="1280" height="360" rx="14" fill="url(#grid)"/>
+  <rect width="1280" height="360" rx="14" fill="url(#glow)"/>
+
+  <!-- top rail -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#6b8f7b" letter-spacing="1.5">
+    <text x="48" y="44">AGRICONTRACT  /  MAIN  /  CAPSTONE PHASE 2</text>
+    <text x="1232" y="44" text-anchor="end">github.com/redavocado-labs/AgriContract</text>
+  </g>
+  <line x1="48" y1="60" x2="1232" y2="60" stroke="#1f3a2c"/>
+
+  <!-- mark: coffee bean -->
+  <g transform="translate(92 190)">
+    <circle r="44" fill="none" stroke="#22c55e" stroke-width="2.5" opacity="0.9"/>
+    <circle r="56" fill="none" stroke="#22c55e" stroke-width="1" stroke-dasharray="3 7" opacity="0.6"/>
+    <ellipse rx="20" ry="28" transform="rotate(-28)" fill="#22c55e"/>
+    <path d="M-6 -24 C 8 -10, -8 8, 6 24" transform="rotate(-28)" fill="none" stroke="#0b1410" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <!-- wordmark -->
+  <g font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700">
+    <text x="176" y="214" font-size="84" fill="#f2f7f4">agri</text>
+    <text x="352" y="214" font-size="84" fill="#3f5f4e">/</text>
+    <text x="392" y="214" font-size="84" fill="#4ade80">contract</text>
+  </g>
+  <text x="180" y="260" font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="22" fill="#a9c2b4">
+    Forward contracts for Vietnamese coffee, enforced by milestone escrow.
+  </text>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#6b8f7b">
+    <text x="180" y="300">saga · transactional outbox · append-only ledger · hash-chained audit</text>
+  </g>
+
+  <!-- side card -->
+  <g transform="translate(936 104)">
+    <rect width="296" height="200" rx="10" fill="#0b1410" stroke="#2b4d3b"/>
+    <circle cx="20" cy="24" r="4" fill="#4ade80"/>
+    <text x="34" y="29" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" font-weight="700" fill="#4ade80" letter-spacing="1.5">PROJECT CARD</text>
+    <line x1="16" y1="44" x2="280" y2="44" stroke="#1f3a2c"/>
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
+      <text x="20" y="72" fill="#6b8f7b">services</text>
+      <text x="276" y="72" fill="#e6efe9" text-anchor="end">12 + gateway</text>
+      <text x="20" y="100" fill="#6b8f7b">flows</text>
+      <text x="276" y="100" fill="#e6efe9" text-anchor="end">BF-01 .. BF-07</text>
+      <text x="20" y="128" fill="#6b8f7b">stack</text>
+      <text x="276" y="128" fill="#e6efe9" text-anchor="end">Java 21 · NestJS 11</text>
+      <text x="20" y="156" fill="#6b8f7b">messaging</text>
+      <text x="276" y="156" fill="#e6efe9" text-anchor="end">RabbitMQ</text>
+      <text x="20" y="184" fill="#6b8f7b">license</text>
+      <text x="276" y="184" fill="#e6efe9" text-anchor="end">Apache-2.0</text>
+    </g>
+  </g>
+</svg>

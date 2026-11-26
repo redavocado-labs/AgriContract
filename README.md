@@ -1,215 +1,182 @@
-# AgriContract
+<p align="center">
+  <img src="docs/assets/readme-banner.svg" alt="AgriContract: forward contracts for Vietnamese coffee, enforced by milestone escrow" width="100%">
+</p>
 
-> A B2B agricultural forward-contract platform with a self-enforcing escrow layer, built on a 13-service event-driven microservice architecture (Java 21 / Spring Boot 3.3).
+<p align="center">
+  <a href="#what-is-built">Status</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#getting-started">Getting started</a> ·
+  <a href="#testing">Testing</a> ·
+  <a href="#documentation">Docs</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a> ·
+  <a href="SECURITY.md">Security</a>
+</p>
 
-AgriContract digitizes the procurement contract lifecycle between Vietnamese cooperatives (HTX) and trading companies, and adds an escrow mechanism that aligns both parties' incentives **before** a transaction happens — not after a dispute lands in court.
+AgriContract is a B2B platform for seasonal forward contracts between Vietnamese coffee cooperatives (sellers) and purchasing organisations (buyers). Both parties sign one set of terms, money is locked in escrow per delivery batch, and every penalty or payout follows from a recorded decision, so the contract keeps both sides honest while the harvest happens rather than in court a year later.
 
-The interesting part isn't the domain. It's the engineering problem underneath it: **moving money and state consistently across independent services with no distributed transaction, no dual-write, and no way to lose or double-apply a payment instruction** — the same class of problem real fintech and escrow systems solve.
+It is a capstone project built by a team of five. The domain is real; the money is not: `bank-service` is a mock custodian with the same ledger rules a real one would need.
 
----
+## The problem
 
-## Why this project is worth a look (for engineers)
+Coffee forward contracts in Vietnam are signed three to six months before harvest, mostly on trust. When the market moves, breaking the deal (*bẻ kèo*) can pay better than honouring it: in 2024 Robusta went from about VND 60M to 135M per tonne. Courts take one to three years, which is longer than the goods last, and cooperatives rarely have the records to prove what was agreed.
 
-This is a graduation project, but it's built around production concerns, not "does it compile":
+AgriContract works at the contract layer only:
 
-- **Choreography Saga + Transactional Outbox** for cross-service consistency — no 2PC, no distributed lock. State transitions are driven by events, and every event is written atomically with the business change it describes.
-- **Idempotent money movement over at-least-once delivery** — RabbitMQ can redeliver the same instruction; the ledger is designed so a duplicated `lock`/`release`/`refund` can never double-apply.
-- **Append-only ledger with derived balances (FBO/omnibus model)** — balances are never stored and mutated in place; they're always computed from immutable ledger entries. This is how real escrow/marketplace custody works, and it sidesteps a whole family of dual-write and race-condition bugs.
-- **Tamper-evident audit trail via hash chaining** — each audit record links to the previous one; the DB user has `INSERT`/`SELECT` only. Chain integrity is verified on every EUDR export.
-- **Event-driven read models (CQRS)** for reputation and analytics — writes and reads are decoupled across services.
-- **Clean, enforced service boundaries** — `contract-service` owns delivery state, `escrow-service` owns money, `bank-service` is the only place funds physically sit. No service reaches across that line.
+- **Terms are fixed before signing.** Both signatures (OTP-bound) cover one hash of the same terms; the signed PDF is mailed to both parties.
+- **Money is locked before it is needed.** Deposits activate the contract; each delivery batch (milestone) locks its own payment before goods move.
+- **Accusations cost nothing; decisions do.** Only an attribution decision, by the system or by an arbitrator, can move penalty money or touch reputation, and it waits out a two-business-day contest window first.
+- **Evidence outlives the platform.** Ledger entries are append-only, audit records are hash-chained, and hashes are mailed out to the parties.
 
-The full design reasoning behind these decisions lives in [`/docs`](docs/) as complete design documents, including the trade-offs we considered and rejected.
+Out of scope: logistics, price discovery, accounting, real bank integration, CA-backed signatures.
 
----
+## What is built
 
-## Build status — what's actually built vs. designed
+The seven business flows from the requirements (Report 3) and where each one stands. Each flow has a Bruno end-to-end collection in [`backend/bruno/e2e`](backend/bruno/e2e).
 
-We're keeping this explicit on purpose.
-
-| Phase | Scope | Status |
+| Flow | What happens | Status |
 |---|---|---|
-| **Phase 1 — MVP** | 6 services, full contract → escrow → settlement flow | **Built & runnable** (`docker compose up`) |
-| **Phase 2 — Production** | +7 services (bank, inspection, reputation, file, pricing, audit, analytics) | **Designed in depth**, partial implementation — see [`/docs`](docs/) design specs |
+| BF-01 Onboarding & KYC | Register, verify email by OTP, Operator approves or rejects the organisation | Built |
+| BF-02 Plot & listing | Category and product, plot registry with geo check, coffee listings | Built |
+| BF-03 Offer, signing, activation | Offer, negotiate, withdraw, two OTP signatures on one terms hash, deposit lock, signed PDF by mail | Built |
+| BF-04 Milestone delivery & settlement | Fund, weigh, receive, confirm, dispute, Level 1.5 inspection, arbitration, pro-rata settlement, ledger and audit | Built |
+| BF-05 Breach & force majeure | Breach cases from BF-04 are built; funding failure, timeout breaches, termination for breach and force majeure are in progress ([#239](https://github.com/redavocado-labs/AgriContract/issues/239), [#240](https://github.com/redavocado-labs/AgriContract/issues/240), [#242](https://github.com/redavocado-labs/AgriContract/issues/242), [#244](https://github.com/redavocado-labs/AgriContract/issues/244)) | Partial |
+| BF-06 Mutual termination & replacement | Agreed termination and the supersede saga ([#242](https://github.com/redavocado-labs/AgriContract/issues/242), [#243](https://github.com/redavocado-labs/AgriContract/issues/243)) | Planned |
+| BF-07 Emergency security lock | Audit chain verification is built; the External Verifier kill switch is designed ([#252](https://github.com/redavocado-labs/AgriContract/issues/252)) | Partial |
 
-Phase 2 services are documented as detailed design specs (domain models, event contracts, idempotency strategy, failure handling) before coding — the design docs are part of the deliverable.
-
----
-
-## The problem it solves
-
-Vietnam's agricultural exports hit **$70.09B in 2025 (+12% YoY)**, yet B2B procurement still runs on verbal agreements with no enforcement:
-
-1. **Breaking a contract is often the rational move (*bẻ kèo*).** Contracts are signed 3–6 months before harvest. In 2024, Robusta coffee swung from VND 60M to 135M/ton — a 125% move that made breaking the contract more profitable than any penalty clause. Only ~30% of Vietnam's agricultural supply linkages reach a "stable" enforcement level.
-2. **Perishable goods can't wait for courts.** Vietnamese commercial disputes take 1–3 years; VIAC logged a record 475 disputes in 2024.
-3. **Cooperatives have no tools to protect themselves.** 90% of Mekong Delta rice moves through intermediaries; 57% of Vietnamese SMEs can't access formal financing for lack of verifiable transaction history.
-
-AgriContract adds escrow, milestone-based settlement, tiered dispute resolution, and an immutable audit trail at exactly the layer where these failures happen — **the contract layer**. It intentionally does *not* do logistics, marketplace, or accounting.
-
----
+Known gaps are tracked as issues rather than hidden; see [SECURITY.md](SECURITY.md#what-is-not-done-yet) for the security ones.
 
 ## Architecture
 
-![Architecture](docs/reports/figures/sds/fig01_architecture.svg)
+![Service architecture](docs/reports/figures/sds/fig01_architecture.svg)
 
-### Phase 1 — MVP (built, 6 services)
+Twelve services behind one gateway. Each service owns its MySQL schema; services talk through RabbitMQ events (choreography saga) and a few internal HTTP calls. Every event leaves through a transactional outbox, and every consumer de-duplicates on `eventId`.
 
-| Service | Port | Responsibility |
+| Service | Stack | Owns |
 |---|---|---|
-| api-gateway | 8080 | JWT validation (Keycloak), routing, `X-Internal-Secret` injection |
-| user-service | 8081 | User profiles, organization data, KYC status |
-| product-service | 8082 | Commodity listings |
-| contract-service | 8083 | Contract lifecycle state machine, Outbox Poller |
-| escrow-service | 8084 | Escrow lock/release/penalty (Phase 1: mock DB balance) |
-| notification-service | 8085 | Email notifications via MailHog (NestJS 11 / Node 22) |
+| `api-gateway` | Spring Cloud Gateway | JWT validation (Keycloak), routing, internal secret to downstream services |
+| `user-service` | Spring Boot | Profiles, organisations, KYC, email OTP |
+| `product-service` | Spring Boot | Categories, products, plots, listings |
+| `contract-service` | Spring Boot | Contract and milestone state machines, signatures, breach cases, attribution and remedy decisions |
+| `escrow-service` | Spring Boot | Escrow legs per contract and milestone; the only caller of the bank |
+| `bank-service` | Spring Boot | Mock custodian: append-only ledger, balances derived from entries |
+| `inspection-service` | Spring Boot | Inspector assignment, reports with content hash |
+| `reputation-service` | Spring Boot | Reputation facts and locks, from `remedy.finalized` only |
+| `audit-service` | Spring Boot | Hash-chained audit records, chain verification |
+| `notification-service` | NestJS | Every email, with a persisted send log keyed per event and recipient |
+| `file-service` | NestJS | Uploads to S3-compatible storage, ClamAV scan, inspection report intake by email |
+| `pricing-service` | NestJS | External reference prices, Redis cache |
+| `analytics-service` | NestJS | Platform statistics read model |
 
-### Phase 2 — Production (designed, +7 services)
+`pricing-service` and `analytics-service` are built and tested in CI but are not in the Compose stack yet.
 
-| Service | Port | New Capability |
-|---|---|---|
-| bank-service | 8086 | Legal fund custody (FBO/ledger model); idempotent instruction handling |
-| inspection-service | 8087 | INSPECTOR role; immutable evidence records with SHA-256 hash |
-| reputation-service | 8088 | Event-driven read model; cross-contract reputation aggregation |
-| file-service | 8089 | MinIO binary storage; inspection report files |
-| pricing-service | 8091 | Redis-cached external commodity price feeds |
-| audit-service | 8092 | Append-only event store; EUDR compliance export (PDF/CSV) |
-| analytics-service | 8093 | Time-series aggregation; platform analytics |
+Contract lifecycle: `OFFERED → NEGOTIATING → SIGNED → ACTIVE → SETTLED`, with terminal states `WITHDRAWN`, `TERMINATED`, `SUPERSEDED` and `ACTIVATION_FAILED`. Signing is not activation: a contract becomes `ACTIVE` only once the deposits are locked, and no contract reaches a terminal state while any money is still locked for it.
 
-> Listing discovery is handled directly by filter parameters inside `product-service`.
+Milestone lifecycle: `CREATED → IN_PROGRESS → SELLER_WEIGHED → BUYER_RECEIVED → SETTLED`, with the dispute branch `AWAITING_SELLER_RESPONSE → CONTESTED` and `FORCE_MAJEURE_PENDING_REVIEW`. A dispute is a state of the milestone, not a separate aggregate.
 
-### Infrastructure
+Roles: `BUYER`, `SELLER`, `INSPECTOR`, `OPERATOR` (daily operations), `ARBITRATOR` (decisions with money or reputation consequences), `ADMIN` (system administration only). There is no fallback: an admin cannot act as an operator or arbitrator.
 
-| Service | Purpose |
-|---|---|
-| Keycloak | Authentication & RBAC (`BUYER`, `SELLER`, `ADMIN`, `INSPECTOR`) |
-| RabbitMQ | Async events — Choreography Saga + Transactional Outbox |
-| MySQL × 5 | One isolated DB per Phase 1 service |
-| MailHog | Dev email catcher |
-| MinIO / Redis | Phase 2: file storage / cache, rate limiting, pub-sub |
+### Engineering decisions worth a look
 
----
-
-## Key engineering decisions
-
-Short version of the reasoning that recruiters and interviewers usually ask about. Full write-ups in [`/docs`](docs/).
-
-### 1. Append-only ledger, not account-per-contract
-
-**Naive approach:** one balance row per contract, updated on every lock/release. This has two problems — a provisioning race (the account must exist before you can lock into it, but the trigger to create it comes *after* the moment you need the lock), and it doesn't match how real custody works.
-
-**What's built instead:** a single pooled custody balance (FBO/omnibus — the same model PayPal, e-wallets, and real-estate escrow use) plus an **append-only `LedgerEntry`** table. Every lock/release/seize/refund is one immutable row. **Balances are never stored — they're always derived** from `SUM(amount)` filtered by contract/milestone/user/type. Nothing to keep in sync, nothing to corrupt in place.
-
-### 2. Idempotency key = source event ID, not a business key
-
-RabbitMQ is at-least-once, so the same "lock these funds" instruction can arrive twice (retry, consumer restart mid-processing). Without a guard, funds get locked twice.
-
-The tempting key is `(contractId, milestoneId, entryType)` — but that same pair passes through *different* entry types over its lifetime (`LOCK` then later `RELEASE`), so it isn't unique per message. The key used is the **outbox message's own `sourceEventId`** (`UNIQUE` in the DB). It answers the right question — "have I processed *this request*?" — not "has this *kind of action* happened?" On a duplicate, the entry isn't re-inserted, but the confirmation event **is** re-published, because the redelivery might mean the *original confirmation* was lost, not that the request was resent.
-
-### 3. Wait for confirmation, never fire-and-forget
-
-`escrow-service` is the only actor that talks to `bank-service`. It publishes `bank.lock_requested` and **waits** for `bank.lock_completed` before setting state to `LOCKED` — it never optimistically sets state and hopes the bank succeeds. Firing and setting state immediately is a dual-write: if the bank fails, the two services silently disagree until a human notices.
-
-### 4. External reference price only — never an internal average
-
-An obvious "market price" feature would average `agreedPrice` across settled contracts. Rejected: on a new platform with sparse data it's statistically meaningless, and worse, a large buyer could deliberately underprice a few early deals to manufacture a fake "reference price," then use that number to squeeze cooperatives — the exact power asymmetry the platform exists to fix. Pricing instead ingests **external** reference prices (government VNSAT feed for coffee/rice, admin entry for rubber/cashew), cached with cache-aside (MySQL = source of truth, Redis = self-healing cache, no hard TTL).
-
----
-
-## Security model
-
-Phase 2 layers tamper-evidence onto the audit trail:
-
-1. **Contract content hash** — SHA-256 of `ContractTerms` at signing; every later state transition re-verifies it. DB tampering ⇒ hash mismatch ⇒ operation rejected.
-2. **Audit hash chain** — each record carries `previousHash` + `recordHash`; the audit DB user has `INSERT`/`SELECT` only. Verified on every export.
-3. **Inspection report hash** — reports hashed (content + timestamp + inspectorId) at submission; immutable after.
-4. **Multi-location hash storage** — hashes stored independently in `contract-service`, `audit-service`, and the signed PDF held by both parties. An attacker must compromise all three at once.
-5. **Email timestamp anchor** — content hashes emailed to both parties, so evidence survives even a full DB compromise.
-
-> Hash chains detect tampering, digital signatures prevent repudiation, email timestamps provide an external anchor — covering the attack surface blockchain addresses, at a complexity appropriate for a trusted-operator deployment.
-
----
-
-## Tech stack
-
-- **Java 21** / Spring Boot 3.3
-- **NestJS 11 / Node 22** — notification-service (ported from Spring Boot, behaviour unchanged)
-- **Spring Cloud Gateway** — API gateway with JWT validation
-- **Spring Security** — Keycloak RS256 JWT
-- **Spring Data JPA** + **Flyway** — per-service MySQL schema migrations
-- **Spring AMQP / RabbitMQ** — Choreography Saga + Transactional Outbox
-- **OpenFeign** — synchronous inter-service calls
-- **Keycloak 24** — identity provider, RBAC
-- **Docker** + Docker Compose — local orchestration
-- **Phase 2:** Kubernetes (deploy & self-heal), MinIO (file storage), Redis (cache / rate limiting / pub-sub), Zipkin (distributed tracing across service hops)
-
----
+- **Append-only ledger, balances derived.** `bank-service` writes one immutable row per lock, release, refund or penalty; balances are always sums. The bank checks the shape of one row; rules across rows (never release more than is locked) belong to escrow.
+- **Idempotency key = the request's `eventId`.** RabbitMQ delivers at least once. The bank stores the request's `eventId` with a unique constraint; a duplicate writes nothing but re-sends the original confirmation, because the redelivery may mean the first confirmation was lost. Escrow retries with the *same* `eventId`, never a new one.
+- **Wait for confirmation.** Escrow never marks money as locked until the bank confirms; the contract never activates until escrow confirms.
+- **Terminal only after money is back.** Escrow publishes `escrow.contract_lock_cleared` once every payout of a decision is complete and the ledger shows zero locked; only then does the contract commit its terminal state.
+- **Clean layers, enforced in CI.** Domain code has no framework imports; transactions live in infrastructure, behind a port the use case calls. ArchUnit (Java) and dependency-cruiser (NestJS) fail the build on a violation.
+- **Reference prices from outside only.** No price is computed from the platform's own contracts, so a large buyer cannot manufacture a "market price" with a few underpriced deals.
 
 ## Getting started
 
-### Prerequisites
+Requirements: Docker with Compose v2, Node 22 (frontend) and `openssl`. Images build inside Docker, so Java and Maven are needed only to run the Java tests locally (JDK 21, Maven 3.9).
 
-- [Docker](https://docs.docker.com/get-docker/) + [Docker Compose](https://docs.docker.com/compose/install/) — no local Java or Maven needed.
-
-### 1. Clone and configure
+### 1. Configure
 
 ```bash
-git clone https://github.com/RedAvocado22/AgriContract.git
+git clone https://github.com/redavocado-labs/AgriContract.git
 cd AgriContract/backend
-cp .env.example .env   # defaults work out of the box for local dev
+cp .env.example .env
+# Every REPLACE_WITH_RANDOM_SECRET gets its own value (GNU sed):
+while grep -q REPLACE_WITH_RANDOM_SECRET .env; do
+  sed -i "0,/REPLACE_WITH_RANDOM_SECRET/s//$(openssl rand -hex 32)/" .env
+done
 ```
 
-### 2. Start all services
+Compose refuses to start while a required secret is missing. The Keycloak realm, its users and the login theme are imported on first start; after a realm change, re-import with `docker compose down -v`.
+
+### 2. Run the backend
+
+| Mode | Command | Host ports |
+|---|---|---|
+| Development | `docker compose up -d --build` | Gateway plus `user` 8081, `product` 8082, `contract` 8083, `escrow` 8084 and `notification` 8085 directly (from `docker-compose.override.yml`) |
+| Demo | `docker compose -f docker-compose.yml up -d --build` | Everything through the gateway on 8080; no per-service ports |
+
+The first build takes several minutes. Then load the seed data:
 
 ```bash
-docker compose up --build
+bash scripts/dev-seed.sh
 ```
 
-First build downloads dependencies and compiles all services (~5–10 min). Later builds are ~30s per service.
-
-### 3. Set up Keycloak
-
-Once Keycloak is healthy at http://localhost:8180:
-
-1. Log in with `admin` / `admin` (or your `.env` values).
-2. **Realm settings → Import realm**.
-3. Upload `backend/infra/keycloak/agricontract-realm.json` — creates the `agricontract` realm with pre-configured clients and roles.
-
-### 4. Access the services
-
-| URL | Service |
+| URL | What |
 |---|---|
-| http://localhost:8080 | API Gateway |
-| http://localhost:8180 | Keycloak admin console |
-| http://localhost:15672 | RabbitMQ management (`guest`/`guest`) |
-| http://localhost:8025 | MailHog — outgoing emails |
-| http://localhost:8083/swagger-ui.html | contract-service API docs |
-| http://localhost:8084/swagger-ui.html | escrow-service API docs |
+| http://localhost:8080 | API gateway |
+| http://localhost:8180 | Keycloak (admin console with `KEYCLOAK_ADMIN` from `.env`) |
+| http://localhost:8025 | MailHog: every email the platform sends, OTPs included |
+| http://localhost:15672 | RabbitMQ management |
 
----
+### 3. Run the frontend
 
-## Domain flow (Phase 1 — two-phase lock)
+```bash
+cd ../frontend
+cp .env.example .env
+npm ci
+npm run dev        # http://localhost:5173, talks to the gateway on 8080
+```
 
-| Step | Action | Contract State | Escrow State |
-|---|---|---|---|
-| 1 | Seller posts listing (after Admin KYC) | — | — |
-| 2 | Buyer submits offer | OFFERED | — |
-| 3 | Parties negotiate; all changes recorded | NEGOTIATING | — |
-| 4 | Both parties sign | SIGNED | — |
-| 5 | Buyer locks payment; Seller locks deposit | ACTIVE | LOCKED |
-| 6 | Seller delivers | ACTIVE | LOCKED |
-| 7 | Buyer confirms receipt | DELIVERED | LOCKED |
-| 8 | Escrow auto-releases to Seller | SETTLED | RELEASED |
+### Seed accounts
 
-> **Phase 2 replaces this single-delivery flow with milestone escrow:** the contract stays `ACTIVE` across N delivery batches (no single `DELIVERED` state), each milestone locking/releasing its own amount, with an INSPECTOR-backed tiered dispute path and force-majeure handling per batch. Seller deposit becomes optional (negotiated per contract). See [`/docs`](docs/) for the full milestone state machine.
+All passwords are `pass123` (local only).
 
-**Cancellation & penalty** are executed automatically from the signed `ContractTerms` (deposit forfeit, full refund, or dispute routing), grounded in Civil Code 2015 Art. 328 and Commercial Law 2005 Art. 300–302 — the platform *enforces an agreement*, it does not *issue a ruling*.
+| User | Role |
+|---|---|
+| `buyer1` | BUYER |
+| `seller1`, `seller2` | SELLER |
+| `inspector1` | INSPECTOR |
+| `operator1` | OPERATOR |
+| `arbitrator1` | ARBITRATOR |
+| `admin1` | ADMIN |
 
----
+## Testing
 
-## Business & legal context
+| Level | Where | Run |
+|---|---|---|
+| Unit and integration (Java) | `backend/*/src/test`, Testcontainers MySQL/RabbitMQ | `mvn -pl <service> -am verify` from `backend/` |
+| Unit, contract and integration (NestJS) | `backend/<node-service>` | `npm test`, `npm run test:int`, `npm run arch` |
+| Event and API contracts | `contracts/**` checked from both sides | part of each service's suite |
+| End to end, all seven flows | `backend/bruno/e2e` | `backend/scripts/run-e2e-full.sh --fresh --keep` |
+| Golden flow on a fresh stack | `backend/e2e` | GitHub Actions `E2E` workflow |
+| Frontend | `frontend/tests` | `npm test`, `npm run test:e2e` (Playwright) |
 
-The platform sells to **industry associations** (VICOFA, VRA, VINACAS) and large procurement companies — not to cooperatives directly — which solves both the sales problem (small HTX don't buy software) and the trust problem (HTX trust the association that deployed it, and in Phase 2, trust the bank holding the funds).
+CI runs only the jobs whose paths changed, and `ci-gate` must be green before a merge. Test reports and the defect log are in [`docs/reports`](docs/reports) (Report 5.x).
 
-It's positioned against the **EUDR 2026** compliance deadline (deforestation-free audit trail for EU coffee/rubber exports) and Vietnam's agricultural digitalization policy. The platform holds **no real money** — Phase 1 uses mock balances, and Phase 2's `bank-service` is designed around a real bank's custody model (FBO/ledger) but stays mock-backed within the capstone scope, behind a clean interface so the mock can later be swapped for a real bank API (Agribank/BIDV) without changing business logic. This keeps it outside payment-service licensing requirements (Decree 52/2024, Art. 8.7).
+## Documentation
 
-Full market analysis, competitive gap, and legal framework: [`/docs`](docs/).
+| What | Where |
+|---|---|
+| Requirements and design reports (Report 1–5) | [`docs/reports`](docs/reports) |
+| Design per service, source of truth | [`docs/design`](docs/design) |
+| Frozen REST and event contracts | [`contracts/openapi`](contracts/openapi), [`contracts/events`](contracts/events) |
+| State machines, error catalogue, integration map | [`docs/contracts`](docs/contracts) |
+| E2E case catalogue | [`backend/bruno/e2e/README.md`](backend/bruno/e2e/README.md) |
+
+## Team
+
+| Member | Area |
+|---|---|
+| [@RedAvocado22](https://github.com/RedAvocado22) | Lead; contract, escrow, bank and audit services; review and merge |
+| [@LetMeSoloSir](https://github.com/LetMeSoloSir) | User and product services, gateway |
+| [@Emperor294](https://github.com/Emperor294) | Inspection and reputation services |
+| [@viethung82nd](https://github.com/viethung82nd) | Notification service (NestJS) |
+| [@minhlphe171115](https://github.com/minhlphe171115) | Pricing and analytics services |
+
+## License
+
+[Apache License 2.0](LICENSE).
