@@ -12,9 +12,14 @@ on:
       - 'frontend-keycloak-theme/**'
       - '.github/workflows/e2e.yml'
   # A pull request runs it only when it touches what the flow logs in and starts through (#666: the Keycloakify
-  # theme of #665 broke the login helpers and was only seen on main). Ordinary service changes stay on push.
+  # theme of #665 broke the login helpers and was only seen on main), or how the images are built (#288: the
+  # shared module of #673 was missing from every Java Dockerfile and was only seen on main). Ordinary service
+  # changes stay on push.
   pull_request:
     paths:
+      - 'backend/pom.xml'
+      - 'backend/*/Dockerfile'
+      - 'backend/shared/**'
       - 'backend/infra/**'
       - 'backend/docker-compose.yml'
       - 'frontend-keycloak-theme/**'
