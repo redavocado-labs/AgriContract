@@ -1,6 +1,6 @@
 """Figure 6a. Contract signing — application layer (class diagram, UML / Visual Paradigm notation).
 
-Every class, method and parameter name is the one in backend/contract-service (main, 10/11/2026):
+Every class, method and parameter name is the one in backend/contract-service (main, 26/11/2026):
 infrastructure/web/ContractSigningController, application/usecase/{InitiateSign,VerifyOtpAndSign}UseCase,
 application/service/{SignerEligibility,SigningConsentRecorder,OtpChallengeIssuer}, application/port/*,
 domain/repository/*.
@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 from vpdiagram import Diagram  # noqa: E402
 
-d = Diagram("fig06a_class_signing_application", width=700, height=1020, allow_crossings=True)
+d = Diagram("fig06a_class_signing_application", width=700, height=1125, allow_crossings=True)
 L, R = 175, 525  # column centres; columns 20-330 and 370-680, channels at x=10, 350, 690
 W = 310
 
@@ -35,20 +35,26 @@ d.klass("verify", R, 210, "VerifyOtpAndSignUseCase", "control", ops=[
     "+ execute(command : VerifySignCommand) : void",
     "- verifyAndSign(command : VerifySignCommand,",
     "      role : SignerRole) : RuntimeException",
+    "- claimKey(command : VerifySignCommand,",
+    "      requestHash : String,",
+    "      signature : Signature) : void",
+    "- deliveryScheduleTooSoon(contract : Contract,",
+    "      role : SignerRole, now : Instant)",
+    "      : ContractConflictException",
 ], w=W)
-d.klass("elig", R, 375, "SignerEligibility", "control", ops=[
+d.klass("elig", R, 470, "SignerEligibility", "control", ops=[
     "+ requireFreshLogin(authTime : Instant) : void",
     "+ requireEligible(userId : String) : UserInfo",
     "+ requireCounterpartyEligible(",
     "      counterpartyId : String) : void",
 ], w=W)
-d.klass("issuer", L, 430, "OtpChallengeIssuer", "control", ops=[
+d.klass("issuer", L, 545, "OtpChallengeIssuer", "control", ops=[
     "+ issue(contract : Contract,",
     "      consent : ConsentEvidence,",
     "      authTime : Instant) : IssuedOtp",
     "+ expire(otpId : UUID) : void",
 ], w=W)
-d.klass("consent", L, 600, "SigningConsentRecorder", "control", ops=[
+d.klass("consent", L, 700, "SigningConsentRecorder", "control", ops=[
     "+ record(contract : Contract, actorId : String,",
     "      signerRole : SignerRole,",
     "      statementVersion : String,",
@@ -56,15 +62,21 @@ d.klass("consent", L, 600, "SigningConsentRecorder", "control", ops=[
     "      correlationId : String) : ConsentEvidence",
 ], w=W)
 
-PT = 548
-d.package("ports", 370, PT, W, 264, "application.port")
-for i, name in enumerate(("UserPort", "OtpEmailPort", "OtpCodes", "ContractEventPublisher", "IdempotencyStore")):
+PT = 640
+d.package("ports", 370, PT, W, 314, "application.port")
+for i, name in enumerate(("UserPort", "OtpEmailPort", "OtpCodes", "ContractEventPublisher", "IdempotencyStore",
+                          "TransactionRunner")):
     d.klass(f"p{i}", R, PT + 12 + i * 50, name, "interface", w=210, collapsed=True)
-RT = 780
+RT = 885
 d.package("repos", 20, RT, W, 214, "domain.repository")
 for i, name in enumerate(("ContractRepository", "OtpChallengeRepository", "SignatureRepository",
                           "ConsentEvidenceRepository")):
     d.klass(f"r{i}", L, RT + 12 + i * 50, name, "interface", w=230, collapsed=True)
+
+d.klass("cal", R, 1010, "VietnamBusinessDays", "shared library", ops=[
+    "+ businessDaysBefore(date : LocalDate,",
+    "      leadDays : int) : LocalDate",
+], w=W)
 
 n = d.nodes
 dep = "dependency"
@@ -86,7 +98,8 @@ for target, ty, side_x in (("elig", n["elig"].cy, 370), ("ports", y("ports", .25
 # VerifyOtpAndSignUseCase fans out through the channel at x = 690
 vy = n["verify"].cy
 d.edge("verify", "ports", (680, vy), (690, vy), (690, y("ports", .75)), (680, y("ports", .75)), dashed=True)
-d.edge("verify", "repos", (680, vy), (690, vy), (690, y("repos", .6)), (330, y("repos", .6)), dashed=True)
+d.edge("verify", "repos", (680, vy), (690, vy), (690, y("repos", .45)), (330, y("repos", .45)), dashed=True)
+d.edge("verify", "cal", (680, vy), (690, vy), (690, n["cal"].cy), (680, n["cal"].cy), dashed=True)
 d.edge("issuer", "ports", (330, y("issuer", .9)), (370, y("issuer", .9)), dashed=True)
 d.edge("issuer", "repos", (20, y("issuer", .5)), (10, y("issuer", .5)), (10, y("repos", .85)),
        (20, y("repos", .85)), dashed=True)
