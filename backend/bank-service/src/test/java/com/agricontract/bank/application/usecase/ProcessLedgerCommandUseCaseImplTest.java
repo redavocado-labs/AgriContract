@@ -90,6 +90,20 @@ class ProcessLedgerCommandUseCaseImplTest {
     }
 
     @Test
+    void losingAnInsertRaceWithDifferentContentDoesNotPublishAResult() {
+        LedgerCommand command = buyerDeposit("40000000.00");
+        ledger.raceWinner = LedgerEntry.reconstitute(id(), command.sourceEventId(), command.contractId(), null,
+                command.userId(), command.entryType(), command.fundType(), null, null,
+                new Money(new BigDecimal("50000000.00")), Instant.now());
+
+        useCase.execute(command);
+
+        assertThat(ledger.entries).containsEntry(command.sourceEventId(), ledger.raceWinner);
+        assertThat(results.completed).isEmpty();
+        assertThat(results.failed).isEmpty();
+    }
+
+    @Test
     void seizeRecordsOneEntryAndConfirmsIt() {
         LedgerCommand command = seize(EntryType.CONTRACTUAL_PENALTY, FundType.MILESTONE_PAYMENT, id(), id());
         useCase.execute(command);
