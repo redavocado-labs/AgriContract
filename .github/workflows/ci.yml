@@ -14,6 +14,7 @@ jobs:
       java: ${{ steps.modules.outputs.java }}
       notification: ${{ steps.modules.outputs.notification }}
       analytics: ${{ steps.modules.outputs.analytics }}
+      pricing: ${{ steps.modules.outputs.pricing }}
       file: ${{ steps.modules.outputs.file }}
       frontend: ${{ steps.modules.outputs.frontend }}
       contracts: ${{ steps.filter.outputs.contracts }}
@@ -52,14 +53,19 @@ jobs:
             audit-service: ['backend/audit-service/**', 'contracts/**']
             notification:
               - 'backend/shared/node-eventing/**'
+              - 'backend/shared/node-arch-rules/**'
               - 'backend/notification-service/**'
               # Read by test/contract/*.contract.spec.ts
               - 'contracts/**'
             analytics:
               - 'backend/shared/node-eventing/**'
+              - 'backend/shared/node-arch-rules/**'
               - 'backend/analytics-service/**'
               # Read by test/event-contracts.spec.ts and test/topology-contract.spec.ts
               - 'contracts/**'
+            pricing:
+              - 'backend/shared/node-arch-rules/**'
+              - 'backend/pricing-service/**'
             file:
               - 'backend/shared/node-eventing/**'
               - 'backend/file-service/**'
@@ -87,12 +93,14 @@ jobs:
             java="$all"
             notification=true
             analytics=true
+            pricing=true
             file=true
             frontend=true
           else
             java=$(jq -cn --argjson all "$all" --argjson changed "$CHANGES" '$all - ($all - $changed)')
             notification=$(echo "$CHANGES" | jq 'index("notification") != null')
             analytics=$(echo "$CHANGES" | jq 'index("analytics") != null')
+            pricing=$(echo "$CHANGES" | jq 'index("pricing") != null')
             file=$(echo "$CHANGES" | jq 'index("file") != null')
             frontend=$(echo "$CHANGES" | jq 'index("frontend") != null')
           fi
@@ -100,10 +108,11 @@ jobs:
             echo "java=$java"
             echo "notification=$notification"
             echo "analytics=$analytics"
+            echo "pricing=$pricing"
             echo "file=$file"
             echo "frontend=$frontend"
           } >> "$GITHUB_OUTPUT"
-          echo "Java modules: $java | notification: $notification | analytics: $analytics | file: $file | frontend: $frontend"
+          echo "Java modules: $java | notification: $notification | analytics: $analytics | pricing: $pricing | file: $file | frontend: $frontend"
 
   # Every PR closes exactly one issue (Definition of Done). Reads the current body through the API,
   # so fixing the description and re-running this job is enough; no new push needed.
@@ -331,6 +340,7 @@ jobs:
         working-directory: backend/notification-service
         run: |
           npm ci
+          npm run arch
           npm run lint:check
           npm test
           npm run build
@@ -381,9 +391,31 @@ jobs:
         working-directory: backend/analytics-service
         run: |
           npm ci
+          npm run arch
           npm run typecheck
           npm test
           npm run build
+
+  pricing-service:
+    needs: changes
+    if: needs.changes.outputs.pricing == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: backend/pricing-service/package-lock.json
+
+      - name: Check architecture
+        working-directory: backend/pricing-service
+        run: |
+          npm ci
+          npm run arch
 
   file-service:
     needs: changes
@@ -557,7 +589,7 @@ jobs:
   # The only required check on main. Jobs skipped by the path filter count as passed;
   # a failed or cancelled job fails the gate.
   ci-gate:
-    needs: [changes, pr-policy, contracts, maven-deps, java, notification-service, analytics-service, file-service, frontend]
+    needs: [changes, pr-policy, contracts, maven-deps, java, notification-service, analytics-service, pricing-service, file-service, frontend]
     if: always()
     runs-on: ubuntu-latest
     steps:
