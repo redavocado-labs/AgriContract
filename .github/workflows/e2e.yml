@@ -63,6 +63,8 @@ jobs:
           RABBITMQ_DEFAULT_PASS=guest
           GATEWAY_INTERNAL_SECRET=$(secret)
           SERVICE_INTERNAL_SECRET=$(secret)
+          OTP_PEPPER=$(secret)
+          EMAIL_VERIFICATION_PEPPER=$(secret)
           INTAKE_IMAP_USERNAME=intake
           INTAKE_IMAP_PASSWORD=$(secret)
           MAIL_HOST=mailhog
