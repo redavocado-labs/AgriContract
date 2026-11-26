@@ -19,7 +19,8 @@ import java.util.stream.Collectors;
 public final class LayerRules {
 
     private static final String VALUE_ANNOTATION = "org.springframework.beans.factory.annotation.Value";
-    private static final String SPRING_STEREOTYPE = "org.springframework.stereotype";
+    private static final Set<String> ALLOWED_SPRING_STEREOTYPES = Set.of(
+            "org.springframework.stereotype.Service", "org.springframework.stereotype.Component");
     private static final DescribedPredicate<JavaClass> SPRING_OR_TRANSACTION =
             resideInAnyPackage("org.springframework..", "jakarta.transaction..", "javax.transaction..");
 
@@ -51,13 +52,12 @@ public final class LayerRules {
     }
 
     private static ArchCondition<JavaClass> useSpringStereotypesOnly(Set<String> allowedValueUsers) {
-        return new ArchCondition<>("use only Spring stereotype annotations (D102) and leave transactions to infrastructure (D44)") {
+        return new ArchCondition<>("use only @Service/@Component (D102) and leave transactions to infrastructure (D44)") {
             @Override
             public void check(JavaClass source, ConditionEvents events) {
                 for (var dependency : source.getDirectDependenciesFromSelf()) {
                     JavaClass target = dependency.getTargetClass();
-                    String packageName = target.getPackageName();
-                    boolean stereotype = packageName.equals(SPRING_STEREOTYPE) && target.isAnnotation();
+                    boolean stereotype = ALLOWED_SPRING_STEREOTYPES.contains(target.getName());
                     boolean existingValueUsage = target.getName().equals(VALUE_ANNOTATION)
                             && allowedValueUsers.contains(source.getName());
                     if (SPRING_OR_TRANSACTION.test(target) && !stereotype && !existingValueUsage) {
