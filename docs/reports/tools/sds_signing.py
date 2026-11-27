@@ -4,7 +4,14 @@ Touches only content: II.1 text, Figures 6-8 (6 becomes 6a + 6b), the II.1 class
 the contract_db row of the schema overview, one change-log row. Run from the repo root; it edits the file in place.
 """
 from pathlib import Path
+# Superseded by Issue #518.
+# Retained for historical document migration reference.
 
+raise SystemExit(
+    "Legacy migration: superseded by Issue #518. "
+    "Use the updated Report-4_SDS.docx and "
+    "export_sds_518.py instead."
+)
 import docx
 
 from docxedit import (fill_change_log, find, insert_copy_after, next_table, replace_image, set_par_text,

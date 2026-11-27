@@ -1,7 +1,14 @@
 """SDS (Report-4) II.2-II.3: Figures 9-14 redrawn (figures/sds/fig09..fig14 *.py). The class tables name the classes
 that exist in bank-service and inspection-service as the code does. Runs once, after sds_fig03.py. Content only."""
 from pathlib import Path
+# Superseded by Issue #518.
+# Retained for historical document migration reference.
 
+raise SystemExit(
+    "Legacy migration: superseded by Issue #518. "
+    "Use the updated Report-4_SDS.docx and "
+    "export_sds_518.py instead."
+)
 import docx
 from docx.oxml.ns import qn
 
