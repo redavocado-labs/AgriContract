@@ -1,0 +1,1348 @@
+[
+  {
+    "iterationIndex": 0,
+    "results": [
+      {
+        "test": {
+          "filename": "e2e\\bf03-signing-activation\\happy\\010-create-offer.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/contracts",
+          "headers": {}
+        },
+        "response": {
+          "status": 201,
+          "statusText": "Created",
+          "headers": {},
+          "data": {
+            "contractId": "9ca81912-933c-4a80-b001-7408b27bb619",
+            "listingId": "f1bf3894-e115-48ce-8701-6005e02f0834",
+            "reservedQuantity": 1000,
+            "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "status": "OFFERED",
+            "terms": {
+              "agreedPrice": "95000.00",
+              "buyerConfirmWindowDays": 3,
+              "buyerDepositRate": 0.05,
+              "buyerPenaltyRate": 0.08,
+              "coffeeQualityProfileVersion": "1.0",
+              "contractTemplateCode": "VN_COFFEE_B2B",
+              "contractTemplateHash": "96876467dbe1535e2a7e9c646459924b7a4ac63ff17d82e79e8db39b7ceeaa18",
+              "contractTemplateVersion": "1.0",
+              "currency": "VND",
+              "deliveryTerms": {
+                "deliveryResponsibility": "SELLER_DELIVERS",
+                "riskTransferPoint": "BUYER_RECEIPT",
+                "titleTransferPoint": "FULL_PAYMENT",
+                "transportCostBearer": "SELLER",
+                "unloadingCostBearer": "BUYER"
+              },
+              "disputeFloorReleaseRate": 0.5,
+              "forceMajeureReportWindowDays": 7,
+              "fundingLeadBusinessDays": 3,
+              "goodsTerms": {
+                "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02",
+                "categoryName": "Cà phê",
+                "commodity": "COFFEE",
+                "cropYear": 2026,
+                "harvestSeason": "2026/27",
+                "listingId": "f1bf3894-e115-48ce-8701-6005e02f0834",
+                "originSnapshot": {
+                  "plotRefs": [
+                    {
+                      "geometryHash": "e1d88aa200411f98308f1939382175e1ff086651af12d330a7bb865186454075",
+                      "geometryType": "POINT",
+                      "householdLabel": "Bruno mwysbg0b-nyqeqq7",
+                      "registryEntryId": "66b0034b-5257-4d04-a1b8-6ad3943c4cf2",
+                      "verificationLevel": "SELF_DECLARED"
+                    }
+                  ],
+                  "regionText": "Buon Ma Thuot, Dak Lak"
+                },
+                "productId": "1af59abb-b231-4b3c-a0ff-3841a05f0819",
+                "productName": "Robusta Bruno mwysbg0b-nyqeqq7",
+                "traceabilitySnapshot": null,
+                "unitOfMeasure": "KG"
+              },
+              "inspectionTerms": {
+                "inspectionCostResponsibility": "LOSER_PAYS",
+                "reportDueBusinessDays": 5,
+                "requiredTier": "LEVEL_1_5",
+                "requirement": "NONE_UNLESS_DISPUTED"
+              },
+              "legalProfile": {
+                "contractType": "COFFEE_SALE",
+                "damagesPolicy": "COMMERCIAL_CUMULATIVE_IF_PROVEN",
+                "governingLaw": "VN_COMMERCIAL_LAW",
+                "maxContractualPenaltyRate": 0.08
+              },
+              "level2InspectorOrg": null,
+              "milestoneSchedule": [
+                {
+                  "committedQuantity": 1000,
+                  "expectedDeliveryDate": "2026-12-02",
+                  "graceDays": 2,
+                  "milestoneIndex": 1
+                }
+              ],
+              "priceAdjustmentRule": {
+                "acceptanceMode": "BOTH_ACCEPT",
+                "cutoff": "BEFORE_FUNDING_REQUEST",
+                "maximumAcceptedAdjustmentsPerMilestone": 1
+              },
+              "priceBand": {
+                "maximumUnitPrice": "100000.00",
+                "minimumUnitPrice": "90000.00"
+              },
+              "qualityTerms": {
+                "committedSpec": {
+                  "blackBrokenBeansPercent": 5,
+                  "commodity": "COFFEE",
+                  "foreignMatterPercent": 0.5,
+                  "moisturePercent": 12.5,
+                  "type": "ROBUSTA"
+                },
+                "commodity": "COFFEE",
+                "deviationPolicy": {
+                  "blackBrokenBeansPercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "foreignMatterPercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "moisturePercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "type": {
+                    "rejectOnMismatch": true
+                  }
+                }
+              },
+              "sellerDepositRate": 0.03,
+              "sellerPenaltyRate": 0.06,
+              "shortfallPenaltyThreshold": 0.05,
+              "toleranceRate": 0.05,
+              "totalContractValue": "95000000.00"
+            },
+            "signedContentHash": "ac0e62163f3762f36244cf50bc116347343e4cf3d6058572545e572901aff227",
+            "milestones": []
+          },
+          "url": "http://localhost/api/v1/contracts",
+          "responseTime": 1985,
+          "duration": 1985,
+          "size": 2973
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "MtleQEqoqKdYftAyk3qTF"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 2.7645856,
+        "name": "BF03-010 Create a coffee offer",
+        "path": "e2e\\bf03-signing-activation\\happy\\010-create-offer",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf03-signing-activation\\happy\\020-reservation.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/listings/f1bf3894-e115-48ce-8701-6005e02f0834",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "listingId": "f1bf3894-e115-48ce-8701-6005e02f0834",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "productId": "1af59abb-b231-4b3c-a0ff-3841a05f0819",
+            "productName": "Robusta Bruno mwysbg0b-nyqeqq7",
+            "unitOfMeasure": "KG",
+            "offeredQuantity": 5500,
+            "quantityAvailable": 4500,
+            "minOrderQuantity": 100,
+            "askingUnitPrice": "95000.00",
+            "status": "PARTIALLY_COMMITTED",
+            "listingVersionToken": "2026-11-27T09:34:22.971645Z",
+            "registryEntryIds": [
+              "66b0034b-5257-4d04-a1b8-6ad3943c4cf2"
+            ],
+            "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02",
+            "commodity": "COFFEE",
+            "regionText": "Buon Ma Thuot, Dak Lak",
+            "declaredQualitySpec": {
+              "commodity": "COFFEE",
+              "type": "ROBUSTA",
+              "moisturePercent": 12.5,
+              "foreignMatterPercent": 0.5,
+              "blackBrokenBeansPercent": 5
+            },
+            "legacyQualitySpecMissing": false,
+            "cropYear": 2026,
+            "harvestSeason": "2026/27",
+            "certifications": [],
+            "packagingDeclaration": "Bao day 60 kg",
+            "warehouseLocation": null,
+            "estimatedAvailabilityDate": null,
+            "traceabilityEvidencePackageId": null
+          },
+          "url": "http://localhost/api/v1/listings/f1bf3894-e115-48ce-8701-6005e02f0834",
+          "responseTime": 87,
+          "duration": 87,
+          "size": 961
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "TwMnrBn1m0lV02-eDPpAU"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0981343,
+        "name": "BF03-020 Confirm listing quantity is reserved",
+        "path": "e2e\\bf03-signing-activation\\happy\\020-reservation",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf03-signing-activation\\happy\\030-edit-terms.bru"
+        },
+        "request": {
+          "method": "PATCH",
+          "url": "http://localhost:8080/api/v1/contracts/9ca81912-933c-4a80-b001-7408b27bb619/terms",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "contractId": "9ca81912-933c-4a80-b001-7408b27bb619",
+            "listingId": "f1bf3894-e115-48ce-8701-6005e02f0834",
+            "reservedQuantity": 1000,
+            "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "status": "NEGOTIATING",
+            "terms": {
+              "agreedPrice": "96000.00",
+              "buyerConfirmWindowDays": 3,
+              "buyerDepositRate": 0.05,
+              "buyerPenaltyRate": 0.08,
+              "coffeeQualityProfileVersion": "1.0",
+              "contractTemplateCode": "VN_COFFEE_B2B",
+              "contractTemplateHash": "96876467dbe1535e2a7e9c646459924b7a4ac63ff17d82e79e8db39b7ceeaa18",
+              "contractTemplateVersion": "1.0",
+              "currency": "VND",
+              "deliveryTerms": {
+                "deliveryResponsibility": "SELLER_DELIVERS",
+                "riskTransferPoint": "BUYER_RECEIPT",
+                "titleTransferPoint": "FULL_PAYMENT",
+                "transportCostBearer": "SELLER",
+                "unloadingCostBearer": "BUYER"
+              },
+              "disputeFloorReleaseRate": 0.5,
+              "forceMajeureReportWindowDays": 7,
+              "fundingLeadBusinessDays": 3,
+              "goodsTerms": {
+                "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02",
+                "categoryName": "Cà phê",
+                "commodity": "COFFEE",
+                "cropYear": 2026,
+                "harvestSeason": "2026/27",
+                "listingId": "f1bf3894-e115-48ce-8701-6005e02f0834",
+                "originSnapshot": {
+                  "plotRefs": [
+                    {
+                      "geometryHash": "e1d88aa200411f98308f1939382175e1ff086651af12d330a7bb865186454075",
+                      "geometryType": "POINT",
+                      "householdLabel": "Bruno mwysbg0b-nyqeqq7",
+                      "registryEntryId": "66b0034b-5257-4d04-a1b8-6ad3943c4cf2",
+                      "verificationLevel": "SELF_DECLARED"
+                    }
+                  ],
+                  "regionText": "Buon Ma Thuot, Dak Lak"
+                },
+                "productId": "1af59abb-b231-4b3c-a0ff-3841a05f0819",
+                "productName": "Robusta Bruno mwysbg0b-nyqeqq7",
+                "traceabilitySnapshot": null,
+                "unitOfMeasure": "KG"
+              },
+              "inspectionTerms": {
+                "inspectionCostResponsibility": "LOSER_PAYS",
+                "reportDueBusinessDays": 5,
+                "requiredTier": "LEVEL_1_5",
+                "requirement": "NONE_UNLESS_DISPUTED"
+              },
+              "legalProfile": {
+                "contractType": "COFFEE_SALE",
+                "damagesPolicy": "COMMERCIAL_CUMULATIVE_IF_PROVEN",
+                "governingLaw": "VN_COMMERCIAL_LAW",
+                "maxContractualPenaltyRate": 0.08
+              },
+              "level2InspectorOrg": null,
+              "milestoneSchedule": [
+                {
+                  "committedQuantity": 1000,
+                  "expectedDeliveryDate": "2026-12-02",
+                  "graceDays": 2,
+                  "milestoneIndex": 1
+                }
+              ],
+              "priceAdjustmentRule": {
+                "acceptanceMode": "BOTH_ACCEPT",
+                "cutoff": "BEFORE_FUNDING_REQUEST",
+                "maximumAcceptedAdjustmentsPerMilestone": 1
+              },
+              "priceBand": {
+                "maximumUnitPrice": "100000.00",
+                "minimumUnitPrice": "90000.00"
+              },
+              "qualityTerms": {
+                "committedSpec": {
+                  "blackBrokenBeansPercent": 5,
+                  "commodity": "COFFEE",
+                  "foreignMatterPercent": 0.5,
+                  "moisturePercent": 12.5,
+                  "type": "ROBUSTA"
+                },
+                "commodity": "COFFEE",
+                "deviationPolicy": {
+                  "blackBrokenBeansPercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "foreignMatterPercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "moisturePercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "type": {
+                    "rejectOnMismatch": true
+                  }
+                }
+              },
+              "sellerDepositRate": 0.03,
+              "sellerPenaltyRate": 0.06,
+              "shortfallPenaltyThreshold": 0.05,
+              "toleranceRate": 0.05,
+              "totalContractValue": "96000000.00"
+            },
+            "signedContentHash": "4cc361d7a1332316d1f2907f17dd4153d52f36715843f2abbe843f6690ad2ebf",
+            "milestones": []
+          },
+          "url": "http://localhost/api/v1/contracts/9ca81912-933c-4a80-b001-7408b27bb619/terms",
+          "responseTime": 320,
+          "duration": 320,
+          "size": 2981
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "GC1VqcNp1bOavkgi1PlM9"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.339883,
+        "name": "BF03-030 Revise the offered unit price",
+        "path": "e2e\\bf03-signing-activation\\happy\\030-edit-terms",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf03-signing-activation\\happy\\040-initiate-buyer.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/contracts/9ca81912-933c-4a80-b001-7408b27bb619/sign/initiate",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "otpId": "11f00671-c84e-4796-8210-735948d384ea",
+            "expiresAt": "2026-11-27T09:39:34.415131Z"
+          },
+          "url": "http://localhost/api/v1/contracts/9ca81912-933c-4a80-b001-7408b27bb619/sign/initiate",
+          "responseTime": 249,
+          "duration": 249,
+          "size": 90
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "rPRbHX9BKu2_kAIF8uErC"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 1.0362532,
+        "name": "BF03-040 Request signing code as buyer",
+        "path": "e2e\\bf03-signing-activation\\happy\\040-initiate-buyer",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf03-signing-activation\\happy\\050-sign-buyer.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/contracts/9ca81912-933c-4a80-b001-7408b27bb619/sign/verify",
+          "headers": {}
+        },
+        "response": {
+          "status": 204,
+          "statusText": "No Content",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/contracts/9ca81912-933c-4a80-b001-7408b27bb619/sign/verify",
+          "responseTime": 232,
+          "duration": 232,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "RoZkjhtBu_PP99IoZwn2Y"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.2589792,
+        "name": "BF03-050 Sign offer as buyer",
+        "path": "e2e\\bf03-signing-activation\\happy\\050-sign-buyer",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf03-signing-activation\\happy\\060-initiate-seller.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/contracts/9ca81912-933c-4a80-b001-7408b27bb619/sign/initiate",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "otpId": "def9be07-4b0a-47cc-ad0d-fbb60ea9f1c4",
+            "expiresAt": "2026-11-27T09:39:35.841156Z"
+          },
+          "url": "http://localhost/api/v1/contracts/9ca81912-933c-4a80-b001-7408b27bb619/sign/initiate",
+          "responseTime": 223,
+          "duration": 223,
+          "size": 90
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "140LDNU-FsuJspZH42Ecx"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 1.1474088,
+        "name": "BF03-060 Request signing code as seller",
+        "path": "e2e\\bf03-signing-activation\\happy\\060-initiate-seller",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf03-signing-activation\\happy\\070-sign-seller.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/contracts/9ca81912-933c-4a80-b001-7408b27bb619/sign/verify",
+          "headers": {}
+        },
+        "response": {
+          "status": 204,
+          "statusText": "No Content",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/contracts/9ca81912-933c-4a80-b001-7408b27bb619/sign/verify",
+          "responseTime": 315,
+          "duration": 315,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "MemZvF4zP2bGXtdWEyPcq"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.3382263,
+        "name": "BF03-070 Sign offer as seller",
+        "path": "e2e\\bf03-signing-activation\\happy\\070-sign-seller",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf03-signing-activation\\happy\\080-active.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/contracts/9ca81912-933c-4a80-b001-7408b27bb619",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "contractId": "9ca81912-933c-4a80-b001-7408b27bb619",
+            "listingId": "f1bf3894-e115-48ce-8701-6005e02f0834",
+            "reservedQuantity": 1000,
+            "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "status": "ACTIVE",
+            "terms": {
+              "agreedPrice": "96000.00",
+              "buyerConfirmWindowDays": 3,
+              "buyerDepositRate": 0.05,
+              "buyerPenaltyRate": 0.08,
+              "coffeeQualityProfileVersion": "1.0",
+              "contractTemplateCode": "VN_COFFEE_B2B",
+              "contractTemplateHash": "96876467dbe1535e2a7e9c646459924b7a4ac63ff17d82e79e8db39b7ceeaa18",
+              "contractTemplateVersion": "1.0",
+              "currency": "VND",
+              "deliveryTerms": {
+                "deliveryResponsibility": "SELLER_DELIVERS",
+                "riskTransferPoint": "BUYER_RECEIPT",
+                "titleTransferPoint": "FULL_PAYMENT",
+                "transportCostBearer": "SELLER",
+                "unloadingCostBearer": "BUYER"
+              },
+              "disputeFloorReleaseRate": 0.5,
+              "forceMajeureReportWindowDays": 7,
+              "fundingLeadBusinessDays": 3,
+              "goodsTerms": {
+                "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02",
+                "categoryName": "Cà phê",
+                "commodity": "COFFEE",
+                "cropYear": 2026,
+                "harvestSeason": "2026/27",
+                "listingId": "f1bf3894-e115-48ce-8701-6005e02f0834",
+                "originSnapshot": {
+                  "plotRefs": [
+                    {
+                      "geometryHash": "e1d88aa200411f98308f1939382175e1ff086651af12d330a7bb865186454075",
+                      "geometryType": "POINT",
+                      "householdLabel": "Bruno mwysbg0b-nyqeqq7",
+                      "registryEntryId": "66b0034b-5257-4d04-a1b8-6ad3943c4cf2",
+                      "verificationLevel": "SELF_DECLARED"
+                    }
+                  ],
+                  "regionText": "Buon Ma Thuot, Dak Lak"
+                },
+                "productId": "1af59abb-b231-4b3c-a0ff-3841a05f0819",
+                "productName": "Robusta Bruno mwysbg0b-nyqeqq7",
+                "traceabilitySnapshot": null,
+                "unitOfMeasure": "KG"
+              },
+              "inspectionTerms": {
+                "inspectionCostResponsibility": "LOSER_PAYS",
+                "reportDueBusinessDays": 5,
+                "requiredTier": "LEVEL_1_5",
+                "requirement": "NONE_UNLESS_DISPUTED"
+              },
+              "legalProfile": {
+                "contractType": "COFFEE_SALE",
+                "damagesPolicy": "COMMERCIAL_CUMULATIVE_IF_PROVEN",
+                "governingLaw": "VN_COMMERCIAL_LAW",
+                "maxContractualPenaltyRate": 0.08
+              },
+              "level2InspectorOrg": null,
+              "milestoneSchedule": [
+                {
+                  "committedQuantity": 1000,
+                  "expectedDeliveryDate": "2026-12-02",
+                  "graceDays": 2,
+                  "milestoneIndex": 1
+                }
+              ],
+              "priceAdjustmentRule": {
+                "acceptanceMode": "BOTH_ACCEPT",
+                "cutoff": "BEFORE_FUNDING_REQUEST",
+                "maximumAcceptedAdjustmentsPerMilestone": 1
+              },
+              "priceBand": {
+                "maximumUnitPrice": "100000.00",
+                "minimumUnitPrice": "90000.00"
+              },
+              "qualityTerms": {
+                "committedSpec": {
+                  "blackBrokenBeansPercent": 5,
+                  "commodity": "COFFEE",
+                  "foreignMatterPercent": 0.5,
+                  "moisturePercent": 12.5,
+                  "type": "ROBUSTA"
+                },
+                "commodity": "COFFEE",
+                "deviationPolicy": {
+                  "blackBrokenBeansPercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "foreignMatterPercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "moisturePercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "type": {
+                    "rejectOnMismatch": true
+                  }
+                }
+              },
+              "sellerDepositRate": 0.03,
+              "sellerPenaltyRate": 0.06,
+              "shortfallPenaltyThreshold": 0.05,
+              "toleranceRate": 0.05,
+              "totalContractValue": "96000000.00"
+            },
+            "signedContentHash": "4cc361d7a1332316d1f2907f17dd4153d52f36715843f2abbe843f6690ad2ebf",
+            "milestones": [
+              {
+                "milestoneId": "e88eff6e-dd52-4037-8a57-e44ca0883381",
+                "milestoneIndex": 1,
+                "status": "IN_PROGRESS",
+                "fundingStatus": "LOCKED",
+                "fundingScheduledDate": "2026-11-27",
+                "committedQuantity": 1000,
+                "batchAmount": "96000000.00",
+                "effectiveUnitPrice": "96000.00",
+                "acceptedPriceAdjustment": null,
+                "expectedDeliveryDate": "2026-12-02",
+                "graceDays": 2,
+                "fundingDelayBusinessDays": 0,
+                "effectiveDeliveryDeadline": "2026-12-04"
+              }
+            ]
+          },
+          "url": "http://localhost/api/v1/contracts/9ca81912-933c-4a80-b001-7408b27bb619",
+          "responseTime": 122,
+          "duration": 122,
+          "size": 3369
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "jM4WnygFS5tLK91th3kV2"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 4.5231871,
+        "name": "BF03-080 Wait for ACTIVE",
+        "path": "e2e\\bf03-signing-activation\\happy\\080-active",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf03-signing-activation\\happy\\090-deposit-ledger.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8086/internal/v1/bank/ledger?contractId=9ca81912-933c-4a80-b001-7408b27bb619",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {},
+          "data": [
+            {
+              "entryId": "12596905-d580-447c-8b2a-6ec72ad016ab",
+              "sourceEventId": "04c953e0-f8e0-47ad-96b0-72eb3ca2b455",
+              "contractId": "9ca81912-933c-4a80-b001-7408b27bb619",
+              "milestoneId": null,
+              "userId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+              "entryType": "LOCK_BUYER_DEPOSIT",
+              "fundType": "BUYER_DEPOSIT",
+              "remedyDecisionId": null,
+              "remedyLegId": null,
+              "amount": "4800000.00",
+              "createdAt": "2026-11-27T09:34:37.617288Z"
+            },
+            {
+              "entryId": "6afbb826-2b60-4caa-8f7b-9fcc8df3cc50",
+              "sourceEventId": "c200f71f-bcf7-410a-8179-c14c35cd3d26",
+              "contractId": "9ca81912-933c-4a80-b001-7408b27bb619",
+              "milestoneId": null,
+              "userId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+              "entryType": "LOCK_SELLER_DEPOSIT",
+              "fundType": "SELLER_DEPOSIT",
+              "remedyDecisionId": null,
+              "remedyLegId": null,
+              "amount": "2880000.00",
+              "createdAt": "2026-11-27T09:34:37.802185Z"
+            },
+            {
+              "entryId": "cd50770c-24d6-44fd-b640-4d4d27bbbbe1",
+              "sourceEventId": "b4ac312e-9017-4cea-b797-f7ebad8ce71e",
+              "contractId": "9ca81912-933c-4a80-b001-7408b27bb619",
+              "milestoneId": "e88eff6e-dd52-4037-8a57-e44ca0883381",
+              "userId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+              "entryType": "LOCK_MILESTONE",
+              "fundType": "MILESTONE_PAYMENT",
+              "remedyDecisionId": null,
+              "remedyLegId": null,
+              "amount": "96000000.00",
+              "createdAt": "2026-11-27T09:34:39.484627Z"
+            }
+          ],
+          "url": "http://localhost/internal/v1/bank/ledger?contractId=9ca81912-933c-4a80-b001-7408b27bb619",
+          "responseTime": 358,
+          "duration": 358,
+          "size": 1214
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "hu6ATUHStsSLx3RPUNF8z"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.3722453,
+        "name": "BF03-090 Verify the two deposit locks",
+        "path": "e2e\\bf03-signing-activation\\happy\\090-deposit-ledger",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf03-signing-activation\\unhappy\\010-create-offer.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/contracts",
+          "headers": {}
+        },
+        "response": {
+          "status": 201,
+          "statusText": "Created",
+          "headers": {},
+          "data": {
+            "contractId": "d23afcad-241d-449e-b34c-fbed6bd195dd",
+            "listingId": "f1bf3894-e115-48ce-8701-6005e02f0834",
+            "reservedQuantity": 1000,
+            "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "status": "OFFERED",
+            "terms": {
+              "agreedPrice": "95000.00",
+              "buyerConfirmWindowDays": 3,
+              "buyerDepositRate": 0.05,
+              "buyerPenaltyRate": 0.08,
+              "coffeeQualityProfileVersion": "1.0",
+              "contractTemplateCode": "VN_COFFEE_B2B",
+              "contractTemplateHash": "96876467dbe1535e2a7e9c646459924b7a4ac63ff17d82e79e8db39b7ceeaa18",
+              "contractTemplateVersion": "1.0",
+              "currency": "VND",
+              "deliveryTerms": {
+                "deliveryResponsibility": "SELLER_DELIVERS",
+                "riskTransferPoint": "BUYER_RECEIPT",
+                "titleTransferPoint": "FULL_PAYMENT",
+                "transportCostBearer": "SELLER",
+                "unloadingCostBearer": "BUYER"
+              },
+              "disputeFloorReleaseRate": 0.5,
+              "forceMajeureReportWindowDays": 7,
+              "fundingLeadBusinessDays": 3,
+              "goodsTerms": {
+                "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02",
+                "categoryName": "Cà phê",
+                "commodity": "COFFEE",
+                "cropYear": 2026,
+                "harvestSeason": "2026/27",
+                "listingId": "f1bf3894-e115-48ce-8701-6005e02f0834",
+                "originSnapshot": {
+                  "plotRefs": [
+                    {
+                      "geometryHash": "e1d88aa200411f98308f1939382175e1ff086651af12d330a7bb865186454075",
+                      "geometryType": "POINT",
+                      "householdLabel": "Bruno mwysbg0b-nyqeqq7",
+                      "registryEntryId": "66b0034b-5257-4d04-a1b8-6ad3943c4cf2",
+                      "verificationLevel": "SELF_DECLARED"
+                    }
+                  ],
+                  "regionText": "Buon Ma Thuot, Dak Lak"
+                },
+                "productId": "1af59abb-b231-4b3c-a0ff-3841a05f0819",
+                "productName": "Robusta Bruno mwysbg0b-nyqeqq7",
+                "traceabilitySnapshot": null,
+                "unitOfMeasure": "KG"
+              },
+              "inspectionTerms": {
+                "inspectionCostResponsibility": "LOSER_PAYS",
+                "reportDueBusinessDays": 5,
+                "requiredTier": "LEVEL_1_5",
+                "requirement": "NONE_UNLESS_DISPUTED"
+              },
+              "legalProfile": {
+                "contractType": "COFFEE_SALE",
+                "damagesPolicy": "COMMERCIAL_CUMULATIVE_IF_PROVEN",
+                "governingLaw": "VN_COMMERCIAL_LAW",
+                "maxContractualPenaltyRate": 0.08
+              },
+              "level2InspectorOrg": null,
+              "milestoneSchedule": [
+                {
+                  "committedQuantity": 1000,
+                  "expectedDeliveryDate": "2026-12-02",
+                  "graceDays": 2,
+                  "milestoneIndex": 1
+                }
+              ],
+              "priceAdjustmentRule": {
+                "acceptanceMode": "BOTH_ACCEPT",
+                "cutoff": "BEFORE_FUNDING_REQUEST",
+                "maximumAcceptedAdjustmentsPerMilestone": 1
+              },
+              "priceBand": {
+                "maximumUnitPrice": "100000.00",
+                "minimumUnitPrice": "90000.00"
+              },
+              "qualityTerms": {
+                "committedSpec": {
+                  "blackBrokenBeansPercent": 5,
+                  "commodity": "COFFEE",
+                  "foreignMatterPercent": 0.5,
+                  "moisturePercent": 12.5,
+                  "type": "ROBUSTA"
+                },
+                "commodity": "COFFEE",
+                "deviationPolicy": {
+                  "blackBrokenBeansPercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "foreignMatterPercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "moisturePercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "type": {
+                    "rejectOnMismatch": true
+                  }
+                }
+              },
+              "sellerDepositRate": 0.03,
+              "sellerPenaltyRate": 0.06,
+              "shortfallPenaltyThreshold": 0.05,
+              "toleranceRate": 0.05,
+              "totalContractValue": "95000000.00"
+            },
+            "signedContentHash": "ac0e62163f3762f36244cf50bc116347343e4cf3d6058572545e572901aff227",
+            "milestones": []
+          },
+          "url": "http://localhost/api/v1/contracts",
+          "responseTime": 517,
+          "duration": 517,
+          "size": 2973
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "l_G-jpmxco7PX78gGhyqW"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 1.4525956,
+        "name": "BF03-110 Create a coffee offer",
+        "path": "e2e\\bf03-signing-activation\\unhappy\\010-create-offer",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf03-signing-activation\\unhappy\\020-reservation.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/listings/f1bf3894-e115-48ce-8701-6005e02f0834",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "listingId": "f1bf3894-e115-48ce-8701-6005e02f0834",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "productId": "1af59abb-b231-4b3c-a0ff-3841a05f0819",
+            "productName": "Robusta Bruno mwysbg0b-nyqeqq7",
+            "unitOfMeasure": "KG",
+            "offeredQuantity": 5500,
+            "quantityAvailable": 3500,
+            "minOrderQuantity": 100,
+            "askingUnitPrice": "95000.00",
+            "status": "PARTIALLY_COMMITTED",
+            "listingVersionToken": "2026-11-27T09:34:22.971645Z",
+            "registryEntryIds": [
+              "66b0034b-5257-4d04-a1b8-6ad3943c4cf2"
+            ],
+            "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02",
+            "commodity": "COFFEE",
+            "regionText": "Buon Ma Thuot, Dak Lak",
+            "declaredQualitySpec": {
+              "commodity": "COFFEE",
+              "type": "ROBUSTA",
+              "moisturePercent": 12.5,
+              "foreignMatterPercent": 0.5,
+              "blackBrokenBeansPercent": 5
+            },
+            "legacyQualitySpecMissing": false,
+            "cropYear": 2026,
+            "harvestSeason": "2026/27",
+            "certifications": [],
+            "packagingDeclaration": "Bao day 60 kg",
+            "warehouseLocation": null,
+            "estimatedAvailabilityDate": null,
+            "traceabilityEvidencePackageId": null
+          },
+          "url": "http://localhost/api/v1/listings/f1bf3894-e115-48ce-8701-6005e02f0834",
+          "responseTime": 199,
+          "duration": 199,
+          "size": 961
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "kTL8DoRRmq5yG3QmaKmdm"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.2107196,
+        "name": "BF03-120 Confirm listing quantity is reserved",
+        "path": "e2e\\bf03-signing-activation\\unhappy\\020-reservation",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf03-signing-activation\\unhappy\\030-withdraw.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/contracts/d23afcad-241d-449e-b34c-fbed6bd195dd/withdraw",
+          "headers": {}
+        },
+        "response": {
+          "status": 204,
+          "statusText": "No Content",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/contracts/d23afcad-241d-449e-b34c-fbed6bd195dd/withdraw",
+          "responseTime": 251,
+          "duration": 251,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "LZV7o4Q34OHaG_VvsdTRd"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.2661691,
+        "name": "BF03-130 Withdraw the unsigned offer",
+        "path": "e2e\\bf03-signing-activation\\unhappy\\030-withdraw",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf03-signing-activation\\unhappy\\040-withdrawn.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/contracts/d23afcad-241d-449e-b34c-fbed6bd195dd",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "contractId": "d23afcad-241d-449e-b34c-fbed6bd195dd",
+            "listingId": "f1bf3894-e115-48ce-8701-6005e02f0834",
+            "reservedQuantity": 1000,
+            "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "status": "WITHDRAWN",
+            "terms": {
+              "agreedPrice": "95000.00",
+              "buyerConfirmWindowDays": 3,
+              "buyerDepositRate": 0.05,
+              "buyerPenaltyRate": 0.08,
+              "coffeeQualityProfileVersion": "1.0",
+              "contractTemplateCode": "VN_COFFEE_B2B",
+              "contractTemplateHash": "96876467dbe1535e2a7e9c646459924b7a4ac63ff17d82e79e8db39b7ceeaa18",
+              "contractTemplateVersion": "1.0",
+              "currency": "VND",
+              "deliveryTerms": {
+                "deliveryResponsibility": "SELLER_DELIVERS",
+                "riskTransferPoint": "BUYER_RECEIPT",
+                "titleTransferPoint": "FULL_PAYMENT",
+                "transportCostBearer": "SELLER",
+                "unloadingCostBearer": "BUYER"
+              },
+              "disputeFloorReleaseRate": 0.5,
+              "forceMajeureReportWindowDays": 7,
+              "fundingLeadBusinessDays": 3,
+              "goodsTerms": {
+                "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02",
+                "categoryName": "Cà phê",
+                "commodity": "COFFEE",
+                "cropYear": 2026,
+                "harvestSeason": "2026/27",
+                "listingId": "f1bf3894-e115-48ce-8701-6005e02f0834",
+                "originSnapshot": {
+                  "plotRefs": [
+                    {
+                      "geometryHash": "e1d88aa200411f98308f1939382175e1ff086651af12d330a7bb865186454075",
+                      "geometryType": "POINT",
+                      "householdLabel": "Bruno mwysbg0b-nyqeqq7",
+                      "registryEntryId": "66b0034b-5257-4d04-a1b8-6ad3943c4cf2",
+                      "verificationLevel": "SELF_DECLARED"
+                    }
+                  ],
+                  "regionText": "Buon Ma Thuot, Dak Lak"
+                },
+                "productId": "1af59abb-b231-4b3c-a0ff-3841a05f0819",
+                "productName": "Robusta Bruno mwysbg0b-nyqeqq7",
+                "traceabilitySnapshot": null,
+                "unitOfMeasure": "KG"
+              },
+              "inspectionTerms": {
+                "inspectionCostResponsibility": "LOSER_PAYS",
+                "reportDueBusinessDays": 5,
+                "requiredTier": "LEVEL_1_5",
+                "requirement": "NONE_UNLESS_DISPUTED"
+              },
+              "legalProfile": {
+                "contractType": "COFFEE_SALE",
+                "damagesPolicy": "COMMERCIAL_CUMULATIVE_IF_PROVEN",
+                "governingLaw": "VN_COMMERCIAL_LAW",
+                "maxContractualPenaltyRate": 0.08
+              },
+              "level2InspectorOrg": null,
+              "milestoneSchedule": [
+                {
+                  "committedQuantity": 1000,
+                  "expectedDeliveryDate": "2026-12-02",
+                  "graceDays": 2,
+                  "milestoneIndex": 1
+                }
+              ],
+              "priceAdjustmentRule": {
+                "acceptanceMode": "BOTH_ACCEPT",
+                "cutoff": "BEFORE_FUNDING_REQUEST",
+                "maximumAcceptedAdjustmentsPerMilestone": 1
+              },
+              "priceBand": {
+                "maximumUnitPrice": "100000.00",
+                "minimumUnitPrice": "90000.00"
+              },
+              "qualityTerms": {
+                "committedSpec": {
+                  "blackBrokenBeansPercent": 5,
+                  "commodity": "COFFEE",
+                  "foreignMatterPercent": 0.5,
+                  "moisturePercent": 12.5,
+                  "type": "ROBUSTA"
+                },
+                "commodity": "COFFEE",
+                "deviationPolicy": {
+                  "blackBrokenBeansPercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "foreignMatterPercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "moisturePercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "type": {
+                    "rejectOnMismatch": true
+                  }
+                }
+              },
+              "sellerDepositRate": 0.03,
+              "sellerPenaltyRate": 0.06,
+              "shortfallPenaltyThreshold": 0.05,
+              "toleranceRate": 0.05,
+              "totalContractValue": "95000000.00"
+            },
+            "signedContentHash": "ac0e62163f3762f36244cf50bc116347343e4cf3d6058572545e572901aff227",
+            "milestones": []
+          },
+          "url": "http://localhost/api/v1/contracts/d23afcad-241d-449e-b34c-fbed6bd195dd",
+          "responseTime": 162,
+          "duration": 162,
+          "size": 2979
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "x_70DjVNldHnl7VXIqNlA"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.3712614,
+        "name": "BF03-140 Confirm WITHDRAWN",
+        "path": "e2e\\bf03-signing-activation\\unhappy\\040-withdrawn",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf03-signing-activation\\unhappy\\050-release-reservation.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/listings/f1bf3894-e115-48ce-8701-6005e02f0834",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "listingId": "f1bf3894-e115-48ce-8701-6005e02f0834",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "productId": "1af59abb-b231-4b3c-a0ff-3841a05f0819",
+            "productName": "Robusta Bruno mwysbg0b-nyqeqq7",
+            "unitOfMeasure": "KG",
+            "offeredQuantity": 5500,
+            "quantityAvailable": 4500,
+            "minOrderQuantity": 100,
+            "askingUnitPrice": "95000.00",
+            "status": "PARTIALLY_COMMITTED",
+            "listingVersionToken": "2026-11-27T09:34:22.971645Z",
+            "registryEntryIds": [
+              "66b0034b-5257-4d04-a1b8-6ad3943c4cf2"
+            ],
+            "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02",
+            "commodity": "COFFEE",
+            "regionText": "Buon Ma Thuot, Dak Lak",
+            "declaredQualitySpec": {
+              "commodity": "COFFEE",
+              "type": "ROBUSTA",
+              "moisturePercent": 12.5,
+              "foreignMatterPercent": 0.5,
+              "blackBrokenBeansPercent": 5
+            },
+            "legacyQualitySpecMissing": false,
+            "cropYear": 2026,
+            "harvestSeason": "2026/27",
+            "certifications": [],
+            "packagingDeclaration": "Bao day 60 kg",
+            "warehouseLocation": null,
+            "estimatedAvailabilityDate": null,
+            "traceabilityEvidencePackageId": null
+          },
+          "url": "http://localhost/api/v1/listings/f1bf3894-e115-48ce-8701-6005e02f0834",
+          "responseTime": 129,
+          "duration": 129,
+          "size": 961
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "ZRTGtCJn9hycKKMZc2oVu"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.4309342,
+        "name": "BF03-150 Verify the reservation is released",
+        "path": "e2e\\bf03-signing-activation\\unhappy\\050-release-reservation",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf03-signing-activation\\unhappy\\060-withdrawal-ledger.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8086/internal/v1/bank/ledger?contractId=d23afcad-241d-449e-b34c-fbed6bd195dd",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {},
+          "data": [],
+          "url": "http://localhost/internal/v1/bank/ledger?contractId=d23afcad-241d-449e-b34c-fbed6bd195dd",
+          "responseTime": 80,
+          "duration": 80,
+          "size": 2
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "Gz5JDhOWNhMMj10fVld6x"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.091533,
+        "name": "BF03-160 Confirm withdrawal left no locked money",
+        "path": "e2e\\bf03-signing-activation\\unhappy\\060-withdrawal-ledger",
+        "iterationIndex": 0
+      }
+    ]
+  }
+]

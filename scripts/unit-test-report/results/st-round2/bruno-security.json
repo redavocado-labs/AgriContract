@@ -1,0 +1,1764 @@
+[
+  {
+    "iterationIndex": 0,
+    "results": [
+      {
+        "test": {
+          "filename": "security\\audit-evidence-log\\100-verify-global-as-admin.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/audit/verification",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "scope": "GLOBAL",
+            "contractId": null,
+            "status": "INTACT",
+            "checkedRecords": 23,
+            "brokenRecordId": null,
+            "brokenReason": null,
+            "checkedAt": "2026-11-27T09:37:15.182781805Z",
+            "anchorStatus": "NOT_ANCHORED"
+          },
+          "url": "http://localhost/api/v1/admin/audit/verification",
+          "responseTime": 109,
+          "duration": 109,
+          "size": 191
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "_8fqzOteoOZk1FQXCch79"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.8002946,
+        "name": "SEC-100 Admin verifies the global audit chain",
+        "path": "security\\audit-evidence-log\\100-verify-global-as-admin",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\audit-evidence-log\\110-verify-global-as-operator.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/audit/verification",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/admin/audit/verification",
+          "responseTime": 31,
+          "duration": 31,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <repo>/backend\\bruno\\security\\audit-evidence-log\\110-verify-global-as-operator.bru:6:31\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\security\\audit-evidence-log\\110-verify-global-as-operator.bru:4:1\n    at <repo>/backend\\bruno\\security\\audit-evidence-log\\110-verify-global-as-operator.bru:10:3\n    at <repo>/backend\\bruno\\security\\audit-evidence-log\\110-verify-global-as-operator.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "ggMfkOyI7YCCvrm_Nzaai"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.5292006,
+        "name": "SEC-110 Operator role is denied global verification",
+        "path": "security\\audit-evidence-log\\110-verify-global-as-operator",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\audit-evidence-log\\120-party-view.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8092/api/v1/audit/contracts/8888ffcf-e3e2-448e-af63-5c3cceec2542/records",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {},
+          "data": {
+            "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+            "currentRecordHash": "d3a5672f75dd003c48d4fe78a205a7d12cc79461fd3c8a4a52d0a227c037b80e",
+            "anchorStatus": "NOT_ANCHORED",
+            "records": [
+              {
+                "recordId": "08edf171-56b3-47a9-9961-ded6447a7af8",
+                "sourceType": "CONTRACT_SIGNED",
+                "sourceEventType": "contract.signed",
+                "content": {
+                  "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+                  "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                  "signedAt": "2026-11-27T09:37:23.010431Z",
+                  "commodity": "COFFEE",
+                  "listingId": "c40d250a-b6a6-4c50-87c8-8e93d0407e06",
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "totalAmount": "96000000.00",
+                  "reservedQuantity": "1000.0",
+                  "signedContentHash": "5cdd56a392e70b98be29d97f6072fa700f4be3fc2dc5ea725216ffbf6ce8fd36",
+                  "buyerDepositAmount": "4800000.00",
+                  "sellerDepositAmount": "2880000.00"
+                },
+                "recordHash": "de2401a39bf3d714fa89ae219676cc283bc43ea99c371aed5175619ad96bdbe9",
+                "createdAt": "2026-11-27T09:37:23.515Z"
+              },
+              {
+                "recordId": "f73c9ce6-cd73-4c5f-aeeb-c7db40ae3ea4",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.seller_weighed",
+                "content": {
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "milestoneId": "9fa87086-aab7-4539-a594-4724093cca94",
+                  "declarationNumber": "1",
+                  "sellerDeclaredWeight": "1000",
+                  "sellerEvidenceFileId": "d4c54b7f-7518-4a7a-9619-337eea7ca5ff"
+                },
+                "recordHash": "c52db2e7a09bc1896a9e61f2f0ff091b91549962afe520348b0b7262ed17636f",
+                "createdAt": "2026-11-27T09:37:30.656Z"
+              },
+              {
+                "recordId": "4d80e772-ba29-49c7-a44f-4ab97019464f",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.buyer_received",
+                "content": {
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "receivedAt": "2026-11-27T09:37:32.587648Z",
+                  "milestoneId": "9fa87086-aab7-4539-a594-4724093cca94",
+                  "buyerEvidenceFileId": "ff1320b9-8fe4-4df5-b55f-62bba8d4dee1",
+                  "buyerReceivedWeight": "1000"
+                },
+                "recordHash": "48634893ccf3c8342f83627aabc24bccaf5b4e7f90081ee60cd83dc9515c0c91",
+                "createdAt": "2026-11-27T09:37:32.698Z"
+              },
+              {
+                "recordId": "d9100ba1-8a43-41ef-9678-f391a7cf0e87",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.settled",
+                "content": {
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "milestoneId": "9fa87086-aab7-4539-a594-4724093cca94",
+                  "actualAmount": "96000000.00",
+                  "lockedAmount": "96000000.00"
+                },
+                "recordHash": "e9b3a4f4ee50fb8667d9e1278201ce21ce1a0f70c7b8f738403d4a818fb4e748",
+                "createdAt": "2026-11-27T09:37:33.727Z"
+              },
+              {
+                "recordId": "bdba6330-40a7-4e45-b5ef-0d2a30e46306",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.buyer_confirmed",
+                "content": {
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "confirmedBy": "BUYER",
+                  "milestoneId": "9fa87086-aab7-4539-a594-4724093cca94"
+                },
+                "recordHash": "61a079f945d88def41b0be072b007e99a5a8cdb7e618acbda6f4e0fe4da33090",
+                "createdAt": "2026-11-27T09:37:33.762Z"
+              },
+              {
+                "recordId": "f7a22c6b-d17c-4f12-8a26-82eebffbc80e",
+                "sourceType": "REMEDY_FINALIZED",
+                "sourceEventType": "remedy.finalized",
+                "content": {
+                  "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+                  "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "remedyLegs": [
+                    {
+                      "role": "BUYER",
+                      "amount": "4800000.00",
+                      "fundType": "BUYER_DEPOSIT",
+                      "remedyType": "PAYMENT_REFUND",
+                      "remedyLegId": "10cb18ae-232c-4d04-861d-2503ff35e5fb"
+                    },
+                    {
+                      "role": "SELLER",
+                      "amount": "2880000.00",
+                      "fundType": "SELLER_DEPOSIT",
+                      "remedyType": "PAYMENT_SETTLEMENT",
+                      "remedyLegId": "f4c44135-d48c-42b3-9048-a2e2c07553d3"
+                    }
+                  ],
+                  "breachCaseId": null,
+                  "decisionSource": "SYSTEM",
+                  "penaltyEligible": "false",
+                  "breachReasonCode": null,
+                  "remedyDecisionId": "e8abecc9-2d8a-4902-b09f-c54dd42c386b",
+                  "finalBreachingRole": null,
+                  "qualityDisposition": null,
+                  "reputationEligible": "false",
+                  "affectedMilestoneIds": [],
+                  "attributionDecisionId": "e8abecc9-2d8a-4902-b09f-c54dd42c386b",
+                  "settledMilestoneCount": "1"
+                },
+                "recordHash": "ea83dce3cac115bce6a0012537c4ae1da0bcfe7fe206c898bc296190e63d9484",
+                "createdAt": "2026-11-27T09:37:33.804Z"
+              },
+              {
+                "recordId": "e0111c9a-baec-4d42-afc3-783630afe07a",
+                "sourceType": "CONTRACT_SETTLED",
+                "sourceEventType": "contract.settled",
+                "content": {
+                  "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+                  "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542"
+                },
+                "recordHash": "d3a5672f75dd003c48d4fe78a205a7d12cc79461fd3c8a4a52d0a227c037b80e",
+                "createdAt": "2026-11-27T09:37:48.915Z"
+              }
+            ]
+          },
+          "url": "http://localhost/api/v1/audit/contracts/8888ffcf-e3e2-448e-af63-5c3cceec2542/records",
+          "responseTime": 24,
+          "duration": 24,
+          "size": 4164
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "sTTYeoGFQUb18AqvsyGyn"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 34.8430319,
+        "name": "SEC-130 Party reads the minimized trail",
+        "path": "security\\audit-evidence-log\\120-party-view",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\audit-evidence-log\\130-admin-view.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/audit/contracts/8888ffcf-e3e2-448e-af63-5c3cceec2542/records",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+            "currentRecordHash": "d3a5672f75dd003c48d4fe78a205a7d12cc79461fd3c8a4a52d0a227c037b80e",
+            "anchorStatus": "NOT_ANCHORED",
+            "records": [
+              {
+                "recordId": "08edf171-56b3-47a9-9961-ded6447a7af8",
+                "globalSeq": 24,
+                "subjectType": "CONTRACT",
+                "subjectId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                "sourceType": "CONTRACT_SIGNED",
+                "sourceEventType": "contract.signed",
+                "sourceEventId": "205cd23a-d4f4-487a-b232-bacddaddfd33",
+                "content": {
+                  "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+                  "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                  "signedAt": "2026-11-27T09:37:23.010431Z",
+                  "commodity": "COFFEE",
+                  "listingId": "c40d250a-b6a6-4c50-87c8-8e93d0407e06",
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "totalAmount": "96000000.00",
+                  "reservedQuantity": "1000.0",
+                  "signedContentHash": "5cdd56a392e70b98be29d97f6072fa700f4be3fc2dc5ea725216ffbf6ce8fd36",
+                  "buyerDepositAmount": "4800000.00",
+                  "sellerDepositAmount": "2880000.00"
+                },
+                "recordHash": "de2401a39bf3d714fa89ae219676cc283bc43ea99c371aed5175619ad96bdbe9",
+                "prevHashSubject": null,
+                "prevHashGlobal": "fe494e1a88d47c26aaa70de699c910666da4f7ad3722481f6cf73acb8fa3e603",
+                "createdAt": "2026-11-27T09:37:23.515Z"
+              },
+              {
+                "recordId": "f73c9ce6-cd73-4c5f-aeeb-c7db40ae3ea4",
+                "globalSeq": 25,
+                "subjectType": "CONTRACT",
+                "subjectId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.seller_weighed",
+                "sourceEventId": "8de76387-07db-4083-8c75-fa1073bb22ea",
+                "content": {
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "milestoneId": "9fa87086-aab7-4539-a594-4724093cca94",
+                  "declarationNumber": "1",
+                  "sellerDeclaredWeight": "1000",
+                  "sellerEvidenceFileId": "d4c54b7f-7518-4a7a-9619-337eea7ca5ff"
+                },
+                "recordHash": "c52db2e7a09bc1896a9e61f2f0ff091b91549962afe520348b0b7262ed17636f",
+                "prevHashSubject": "de2401a39bf3d714fa89ae219676cc283bc43ea99c371aed5175619ad96bdbe9",
+                "prevHashGlobal": "de2401a39bf3d714fa89ae219676cc283bc43ea99c371aed5175619ad96bdbe9",
+                "createdAt": "2026-11-27T09:37:30.656Z"
+              },
+              {
+                "recordId": "4d80e772-ba29-49c7-a44f-4ab97019464f",
+                "globalSeq": 26,
+                "subjectType": "CONTRACT",
+                "subjectId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.buyer_received",
+                "sourceEventId": "c37409c4-74b0-4626-b972-964dc141a35d",
+                "content": {
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "receivedAt": "2026-11-27T09:37:32.587648Z",
+                  "milestoneId": "9fa87086-aab7-4539-a594-4724093cca94",
+                  "buyerEvidenceFileId": "ff1320b9-8fe4-4df5-b55f-62bba8d4dee1",
+                  "buyerReceivedWeight": "1000"
+                },
+                "recordHash": "48634893ccf3c8342f83627aabc24bccaf5b4e7f90081ee60cd83dc9515c0c91",
+                "prevHashSubject": "c52db2e7a09bc1896a9e61f2f0ff091b91549962afe520348b0b7262ed17636f",
+                "prevHashGlobal": "c52db2e7a09bc1896a9e61f2f0ff091b91549962afe520348b0b7262ed17636f",
+                "createdAt": "2026-11-27T09:37:32.698Z"
+              },
+              {
+                "recordId": "d9100ba1-8a43-41ef-9678-f391a7cf0e87",
+                "globalSeq": 27,
+                "subjectType": "CONTRACT",
+                "subjectId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.settled",
+                "sourceEventId": "551829cc-3b9b-48da-9be3-0895609e3660",
+                "content": {
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "milestoneId": "9fa87086-aab7-4539-a594-4724093cca94",
+                  "actualAmount": "96000000.00",
+                  "lockedAmount": "96000000.00"
+                },
+                "recordHash": "e9b3a4f4ee50fb8667d9e1278201ce21ce1a0f70c7b8f738403d4a818fb4e748",
+                "prevHashSubject": "48634893ccf3c8342f83627aabc24bccaf5b4e7f90081ee60cd83dc9515c0c91",
+                "prevHashGlobal": "48634893ccf3c8342f83627aabc24bccaf5b4e7f90081ee60cd83dc9515c0c91",
+                "createdAt": "2026-11-27T09:37:33.727Z"
+              },
+              {
+                "recordId": "bdba6330-40a7-4e45-b5ef-0d2a30e46306",
+                "globalSeq": 28,
+                "subjectType": "CONTRACT",
+                "subjectId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.buyer_confirmed",
+                "sourceEventId": "fb37e9e7-b23c-4599-b5fc-9dc45d939b8c",
+                "content": {
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "confirmedBy": "BUYER",
+                  "milestoneId": "9fa87086-aab7-4539-a594-4724093cca94"
+                },
+                "recordHash": "61a079f945d88def41b0be072b007e99a5a8cdb7e618acbda6f4e0fe4da33090",
+                "prevHashSubject": "e9b3a4f4ee50fb8667d9e1278201ce21ce1a0f70c7b8f738403d4a818fb4e748",
+                "prevHashGlobal": "e9b3a4f4ee50fb8667d9e1278201ce21ce1a0f70c7b8f738403d4a818fb4e748",
+                "createdAt": "2026-11-27T09:37:33.762Z"
+              },
+              {
+                "recordId": "f7a22c6b-d17c-4f12-8a26-82eebffbc80e",
+                "globalSeq": 29,
+                "subjectType": "CONTRACT",
+                "subjectId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                "sourceType": "REMEDY_FINALIZED",
+                "sourceEventType": "remedy.finalized",
+                "sourceEventId": "f70208e9-e759-420f-8daf-94ac790f624e",
+                "content": {
+                  "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+                  "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "remedyLegs": [
+                    {
+                      "role": "BUYER",
+                      "amount": "4800000.00",
+                      "fundType": "BUYER_DEPOSIT",
+                      "remedyType": "PAYMENT_REFUND",
+                      "remedyLegId": "10cb18ae-232c-4d04-861d-2503ff35e5fb"
+                    },
+                    {
+                      "role": "SELLER",
+                      "amount": "2880000.00",
+                      "fundType": "SELLER_DEPOSIT",
+                      "remedyType": "PAYMENT_SETTLEMENT",
+                      "remedyLegId": "f4c44135-d48c-42b3-9048-a2e2c07553d3"
+                    }
+                  ],
+                  "breachCaseId": null,
+                  "decisionSource": "SYSTEM",
+                  "penaltyEligible": "false",
+                  "breachReasonCode": null,
+                  "remedyDecisionId": "e8abecc9-2d8a-4902-b09f-c54dd42c386b",
+                  "finalBreachingRole": null,
+                  "qualityDisposition": null,
+                  "reputationEligible": "false",
+                  "affectedMilestoneIds": [],
+                  "attributionDecisionId": "e8abecc9-2d8a-4902-b09f-c54dd42c386b",
+                  "settledMilestoneCount": "1"
+                },
+                "recordHash": "ea83dce3cac115bce6a0012537c4ae1da0bcfe7fe206c898bc296190e63d9484",
+                "prevHashSubject": "61a079f945d88def41b0be072b007e99a5a8cdb7e618acbda6f4e0fe4da33090",
+                "prevHashGlobal": "61a079f945d88def41b0be072b007e99a5a8cdb7e618acbda6f4e0fe4da33090",
+                "createdAt": "2026-11-27T09:37:33.804Z"
+              },
+              {
+                "recordId": "e0111c9a-baec-4d42-afc3-783630afe07a",
+                "globalSeq": 30,
+                "subjectType": "CONTRACT",
+                "subjectId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                "sourceType": "CONTRACT_SETTLED",
+                "sourceEventType": "contract.settled",
+                "sourceEventId": "1338d058-e12a-4d1c-a5e2-c0dd68183e3d",
+                "content": {
+                  "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+                  "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542"
+                },
+                "recordHash": "d3a5672f75dd003c48d4fe78a205a7d12cc79461fd3c8a4a52d0a227c037b80e",
+                "prevHashSubject": "ea83dce3cac115bce6a0012537c4ae1da0bcfe7fe206c898bc296190e63d9484",
+                "prevHashGlobal": "ea83dce3cac115bce6a0012537c4ae1da0bcfe7fe206c898bc296190e63d9484",
+                "createdAt": "2026-11-27T09:37:48.915Z"
+              }
+            ]
+          },
+          "url": "http://localhost/api/v1/admin/audit/contracts/8888ffcf-e3e2-448e-af63-5c3cceec2542/records",
+          "responseTime": 86,
+          "duration": 86,
+          "size": 6307
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "dhB5k-pEsCDr5kGytImxP"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.1006471,
+        "name": "SEC-140 Admin reads the same contract trail",
+        "path": "security\\audit-evidence-log\\130-admin-view",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\audit-evidence-log\\140-global-view.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/audit/records?subjectType=SYSTEM&size=2",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "content": [
+              {
+                "recordId": "24208934-d373-4afa-b588-a1063b346663",
+                "globalSeq": 32,
+                "subjectType": "SYSTEM",
+                "subjectId": "SYSTEM",
+                "sourceType": "AUDIT_VIEWED",
+                "sourceEventType": "audit.viewed",
+                "sourceEventId": "8fecd2d9-bebf-484c-a15a-bcd29f49b2a0",
+                "content": {
+                  "page": "0",
+                  "scope": "GLOBAL",
+                  "adminUserId": "0e66c774-e2dd-42fb-9d4c-d8e4a2d20250",
+                  "subjectTypeFilter": "SYSTEM"
+                },
+                "recordHash": "3a71f50cfa3a52be245148c4c7100e72cd0668a36200969a6d79f53ce1f48e47",
+                "prevHashSubject": "4b375acf2417e8166c1dcaad508135fe8980a5545a27b530f85c6831bbddc813",
+                "prevHashGlobal": "4b375acf2417e8166c1dcaad508135fe8980a5545a27b530f85c6831bbddc813",
+                "createdAt": "2026-11-27T09:37:50.755Z"
+              },
+              {
+                "recordId": "20813503-6df0-4575-a317-83f1e6629f4f",
+                "globalSeq": 31,
+                "subjectType": "SYSTEM",
+                "subjectId": "SYSTEM",
+                "sourceType": "AUDIT_VIEWED",
+                "sourceEventType": "audit.viewed",
+                "sourceEventId": "838e0a0b-85f8-43dd-a1e3-773a6db6f795",
+                "content": {
+                  "scope": "CONTRACT",
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "adminUserId": "0e66c774-e2dd-42fb-9d4c-d8e4a2d20250"
+                },
+                "recordHash": "4b375acf2417e8166c1dcaad508135fe8980a5545a27b530f85c6831bbddc813",
+                "prevHashSubject": null,
+                "prevHashGlobal": "d3a5672f75dd003c48d4fe78a205a7d12cc79461fd3c8a4a52d0a227c037b80e",
+                "createdAt": "2026-11-27T09:37:50.650Z"
+              }
+            ],
+            "page": 0,
+            "size": 2,
+            "totalElements": 2,
+            "totalPages": 1
+          },
+          "url": "http://localhost/api/v1/admin/audit/records?subjectType=SYSTEM&size=2",
+          "responseTime": 77,
+          "duration": 77,
+          "size": 1290
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "W4vYeZrX9XITay1kMtihL"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0899702,
+        "name": "SEC-150 Admin read logging records one system event per read",
+        "path": "security\\audit-evidence-log\\140-global-view",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\audit-evidence-log\\150-party-view-unchanged.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8092/api/v1/audit/contracts/8888ffcf-e3e2-448e-af63-5c3cceec2542/records",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {},
+          "data": {
+            "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+            "currentRecordHash": "d3a5672f75dd003c48d4fe78a205a7d12cc79461fd3c8a4a52d0a227c037b80e",
+            "anchorStatus": "NOT_ANCHORED",
+            "records": [
+              {
+                "recordId": "08edf171-56b3-47a9-9961-ded6447a7af8",
+                "sourceType": "CONTRACT_SIGNED",
+                "sourceEventType": "contract.signed",
+                "content": {
+                  "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+                  "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                  "signedAt": "2026-11-27T09:37:23.010431Z",
+                  "commodity": "COFFEE",
+                  "listingId": "c40d250a-b6a6-4c50-87c8-8e93d0407e06",
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "totalAmount": "96000000.00",
+                  "reservedQuantity": "1000.0",
+                  "signedContentHash": "5cdd56a392e70b98be29d97f6072fa700f4be3fc2dc5ea725216ffbf6ce8fd36",
+                  "buyerDepositAmount": "4800000.00",
+                  "sellerDepositAmount": "2880000.00"
+                },
+                "recordHash": "de2401a39bf3d714fa89ae219676cc283bc43ea99c371aed5175619ad96bdbe9",
+                "createdAt": "2026-11-27T09:37:23.515Z"
+              },
+              {
+                "recordId": "f73c9ce6-cd73-4c5f-aeeb-c7db40ae3ea4",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.seller_weighed",
+                "content": {
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "milestoneId": "9fa87086-aab7-4539-a594-4724093cca94",
+                  "declarationNumber": "1",
+                  "sellerDeclaredWeight": "1000",
+                  "sellerEvidenceFileId": "d4c54b7f-7518-4a7a-9619-337eea7ca5ff"
+                },
+                "recordHash": "c52db2e7a09bc1896a9e61f2f0ff091b91549962afe520348b0b7262ed17636f",
+                "createdAt": "2026-11-27T09:37:30.656Z"
+              },
+              {
+                "recordId": "4d80e772-ba29-49c7-a44f-4ab97019464f",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.buyer_received",
+                "content": {
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "receivedAt": "2026-11-27T09:37:32.587648Z",
+                  "milestoneId": "9fa87086-aab7-4539-a594-4724093cca94",
+                  "buyerEvidenceFileId": "ff1320b9-8fe4-4df5-b55f-62bba8d4dee1",
+                  "buyerReceivedWeight": "1000"
+                },
+                "recordHash": "48634893ccf3c8342f83627aabc24bccaf5b4e7f90081ee60cd83dc9515c0c91",
+                "createdAt": "2026-11-27T09:37:32.698Z"
+              },
+              {
+                "recordId": "d9100ba1-8a43-41ef-9678-f391a7cf0e87",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.settled",
+                "content": {
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "milestoneId": "9fa87086-aab7-4539-a594-4724093cca94",
+                  "actualAmount": "96000000.00",
+                  "lockedAmount": "96000000.00"
+                },
+                "recordHash": "e9b3a4f4ee50fb8667d9e1278201ce21ce1a0f70c7b8f738403d4a818fb4e748",
+                "createdAt": "2026-11-27T09:37:33.727Z"
+              },
+              {
+                "recordId": "bdba6330-40a7-4e45-b5ef-0d2a30e46306",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.buyer_confirmed",
+                "content": {
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "confirmedBy": "BUYER",
+                  "milestoneId": "9fa87086-aab7-4539-a594-4724093cca94"
+                },
+                "recordHash": "61a079f945d88def41b0be072b007e99a5a8cdb7e618acbda6f4e0fe4da33090",
+                "createdAt": "2026-11-27T09:37:33.762Z"
+              },
+              {
+                "recordId": "f7a22c6b-d17c-4f12-8a26-82eebffbc80e",
+                "sourceType": "REMEDY_FINALIZED",
+                "sourceEventType": "remedy.finalized",
+                "content": {
+                  "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+                  "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542",
+                  "remedyLegs": [
+                    {
+                      "role": "BUYER",
+                      "amount": "4800000.00",
+                      "fundType": "BUYER_DEPOSIT",
+                      "remedyType": "PAYMENT_REFUND",
+                      "remedyLegId": "10cb18ae-232c-4d04-861d-2503ff35e5fb"
+                    },
+                    {
+                      "role": "SELLER",
+                      "amount": "2880000.00",
+                      "fundType": "SELLER_DEPOSIT",
+                      "remedyType": "PAYMENT_SETTLEMENT",
+                      "remedyLegId": "f4c44135-d48c-42b3-9048-a2e2c07553d3"
+                    }
+                  ],
+                  "breachCaseId": null,
+                  "decisionSource": "SYSTEM",
+                  "penaltyEligible": "false",
+                  "breachReasonCode": null,
+                  "remedyDecisionId": "e8abecc9-2d8a-4902-b09f-c54dd42c386b",
+                  "finalBreachingRole": null,
+                  "qualityDisposition": null,
+                  "reputationEligible": "false",
+                  "affectedMilestoneIds": [],
+                  "attributionDecisionId": "e8abecc9-2d8a-4902-b09f-c54dd42c386b",
+                  "settledMilestoneCount": "1"
+                },
+                "recordHash": "ea83dce3cac115bce6a0012537c4ae1da0bcfe7fe206c898bc296190e63d9484",
+                "createdAt": "2026-11-27T09:37:33.804Z"
+              },
+              {
+                "recordId": "e0111c9a-baec-4d42-afc3-783630afe07a",
+                "sourceType": "CONTRACT_SETTLED",
+                "sourceEventType": "contract.settled",
+                "content": {
+                  "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+                  "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                  "contractId": "8888ffcf-e3e2-448e-af63-5c3cceec2542"
+                },
+                "recordHash": "d3a5672f75dd003c48d4fe78a205a7d12cc79461fd3c8a4a52d0a227c037b80e",
+                "createdAt": "2026-11-27T09:37:48.915Z"
+              }
+            ]
+          },
+          "url": "http://localhost/api/v1/audit/contracts/8888ffcf-e3e2-448e-af63-5c3cceec2542/records",
+          "responseTime": 20,
+          "duration": 20,
+          "size": 4164
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "DkPg5nL6-Kof5xokSFYy2"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0312853,
+        "name": "SEC-160 Admin reads preserve the party trail",
+        "path": "security\\audit-evidence-log\\150-party-view-unchanged",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\audit-evidence-log\\160-global-view-count.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/audit/verification",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "scope": "GLOBAL",
+            "contractId": null,
+            "status": "INTACT",
+            "checkedRecords": 32,
+            "brokenRecordId": null,
+            "brokenReason": null,
+            "checkedAt": "2026-11-27T09:37:50.883374Z",
+            "anchorStatus": "NOT_ANCHORED"
+          },
+          "url": "http://localhost/api/v1/admin/audit/verification",
+          "responseTime": 49,
+          "duration": 49,
+          "size": 188
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "gxH43XFTZnZHpYFLsaECo"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.059476,
+        "name": "SEC-170 Verify exactly two audit records were appended",
+        "path": "security\\audit-evidence-log\\160-global-view-count",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\authn\\010-authenticated-profile.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/users/me",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "userId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+            "organizationName": "Công ty TNHH Mua Nông Sản Tám",
+            "role": "BUYER",
+            "email": "buyer1@test.com",
+            "emailVerified": true,
+            "phone": "0901234567",
+            "address": "123 Lê Lợi, Q1, TP.HCM",
+            "verificationStatus": "VERIFIED",
+            "authorizationExpiresAt": null
+          },
+          "url": "http://localhost/api/v1/users/me",
+          "responseTime": 80,
+          "duration": 80,
+          "size": 288
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "LjUIgWDN7Wj7iFvowFrwq"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.5323911,
+        "name": "SEC-010 A legitimate Buyer session gets its own profile",
+        "path": "security\\authn\\010-authenticated-profile",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\authn\\020-anonymous-profile.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/users/me",
+          "headers": {}
+        },
+        "response": {
+          "status": 401,
+          "statusText": "Unauthorized",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/users/me",
+          "responseTime": 19,
+          "duration": 19,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <repo>/backend\\bruno\\security\\authn\\020-anonymous-profile.bru:6:31\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\security\\authn\\020-anonymous-profile.bru:4:1\n    at <repo>/backend\\bruno\\security\\authn\\020-anonymous-profile.bru:10:3\n    at <repo>/backend\\bruno\\security\\authn\\020-anonymous-profile.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "mxYQKstDRsM5t9fiKmrMZ"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0293199,
+        "name": "SEC-020 A protected profile requires an authenticated session",
+        "path": "security\\authn\\020-anonymous-profile",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\authn\\120-keycloak-temporary-lockout.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8180/realms/agricontract/protocol/openid-connect/token",
+          "headers": {}
+        },
+        "response": {
+          "status": 401,
+          "statusText": "Unauthorized",
+          "headers": {},
+          "data": {
+            "error": "invalid_grant",
+            "error_description": "Invalid user credentials"
+          },
+          "url": "http://localhost/realms/agricontract/protocol/openid-connect/token",
+          "responseTime": 23,
+          "duration": 23,
+          "size": 72
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "the correct password is denied after five incorrect passwords",
+            "status": "pass",
+            "uid": "tqYHW8D8JGOgFUAOqkqfs"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 10.0734846,
+        "name": "SEC-120 Repeated incorrect passwords temporarily lock a new Keycloak account",
+        "path": "security\\authn\\120-keycloak-temporary-lockout",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\authz-role-matrix\\040-kyc-queue-buyer.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/users?verificationStatus=PENDING",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/admin/users?verificationStatus=PENDING",
+          "responseTime": 25,
+          "duration": 25,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\040-kyc-queue-buyer.bru:6:31\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\040-kyc-queue-buyer.bru:4:1\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\040-kyc-queue-buyer.bru:10:3\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\040-kyc-queue-buyer.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "gcNDyIAO6OBs03iuZrwjc"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.516967,
+        "name": "SEC-040 BUYER reads kyc queue",
+        "path": "security\\authz-role-matrix\\040-kyc-queue-buyer",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\authz-role-matrix\\041-kyc-queue-seller.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/users?verificationStatus=PENDING",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/admin/users?verificationStatus=PENDING",
+          "responseTime": 32,
+          "duration": 32,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\041-kyc-queue-seller.bru:6:31\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\041-kyc-queue-seller.bru:4:1\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\041-kyc-queue-seller.bru:10:3\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\041-kyc-queue-seller.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "cuqSLCSBSFMpDGgs8dm0L"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.5754823,
+        "name": "SEC-041 SELLER reads kyc queue",
+        "path": "security\\authz-role-matrix\\041-kyc-queue-seller",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\authz-role-matrix\\042-kyc-queue-inspector.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/users?verificationStatus=PENDING",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/admin/users?verificationStatus=PENDING",
+          "responseTime": 47,
+          "duration": 47,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\042-kyc-queue-inspector.bru:6:31\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\042-kyc-queue-inspector.bru:4:1\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\042-kyc-queue-inspector.bru:10:3\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\042-kyc-queue-inspector.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "P_xKoJtkMTWcfI54-QqhK"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.5678532,
+        "name": "SEC-042 INSPECTOR reads kyc queue",
+        "path": "security\\authz-role-matrix\\042-kyc-queue-inspector",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\authz-role-matrix\\043-kyc-queue-operator.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/users?verificationStatus=PENDING",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "content": [],
+            "page": 0,
+            "size": 20,
+            "totalElements": 0,
+            "totalPages": 0,
+            "first": true,
+            "last": true,
+            "empty": true
+          },
+          "url": "http://localhost/api/v1/admin/users?verificationStatus=PENDING",
+          "responseTime": 283,
+          "duration": 283,
+          "size": 104
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "DNnirhTrvcC4SHUZlXy8l"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.8956719,
+        "name": "SEC-043 OPERATOR reads kyc queue",
+        "path": "security\\authz-role-matrix\\043-kyc-queue-operator",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\authz-role-matrix\\044-kyc-queue-arbitrator.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/users?verificationStatus=PENDING",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/admin/users?verificationStatus=PENDING",
+          "responseTime": 62,
+          "duration": 62,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\044-kyc-queue-arbitrator.bru:6:31\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\044-kyc-queue-arbitrator.bru:4:1\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\044-kyc-queue-arbitrator.bru:10:3\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\044-kyc-queue-arbitrator.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "hqB7Rl1eDqSONc3s-x20p"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.5522883,
+        "name": "SEC-044 ARBITRATOR reads kyc queue",
+        "path": "security\\authz-role-matrix\\044-kyc-queue-arbitrator",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\authz-role-matrix\\045-kyc-queue-admin.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/users?verificationStatus=PENDING",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/admin/users?verificationStatus=PENDING",
+          "responseTime": 25,
+          "duration": 25,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\045-kyc-queue-admin.bru:6:31\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\045-kyc-queue-admin.bru:4:1\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\045-kyc-queue-admin.bru:10:3\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\045-kyc-queue-admin.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "v6feqoIR0FAuMVHjL9uvi"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.5214215,
+        "name": "SEC-045 ADMIN reads kyc queue",
+        "path": "security\\authz-role-matrix\\045-kyc-queue-admin",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\authz-role-matrix\\060-arbitration-queue-buyer.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/arbitration/breach-cases?size=10",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/arbitration/breach-cases?size=10",
+          "responseTime": 30,
+          "duration": 30,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\060-arbitration-queue-buyer.bru:6:31\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\060-arbitration-queue-buyer.bru:4:1\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\060-arbitration-queue-buyer.bru:10:3\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\060-arbitration-queue-buyer.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "XPg1waGLJBMJyrgcOKwgv"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.5342707,
+        "name": "SEC-060 BUYER reads arbitration queue",
+        "path": "security\\authz-role-matrix\\060-arbitration-queue-buyer",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\authz-role-matrix\\061-arbitration-queue-seller.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/arbitration/breach-cases?size=10",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/arbitration/breach-cases?size=10",
+          "responseTime": 38,
+          "duration": 38,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\061-arbitration-queue-seller.bru:6:31\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\061-arbitration-queue-seller.bru:4:1\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\061-arbitration-queue-seller.bru:10:3\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\061-arbitration-queue-seller.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "hTmEp6SrMmloIKTgIc51W"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.5310146,
+        "name": "SEC-061 SELLER reads arbitration queue",
+        "path": "security\\authz-role-matrix\\061-arbitration-queue-seller",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\authz-role-matrix\\062-arbitration-queue-inspector.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/arbitration/breach-cases?size=10",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/arbitration/breach-cases?size=10",
+          "responseTime": 28,
+          "duration": 28,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\062-arbitration-queue-inspector.bru:6:31\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\062-arbitration-queue-inspector.bru:4:1\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\062-arbitration-queue-inspector.bru:10:3\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\062-arbitration-queue-inspector.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "UmNxv1Yf1TwDTmsnKKNr8"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.5476996,
+        "name": "SEC-062 INSPECTOR reads arbitration queue",
+        "path": "security\\authz-role-matrix\\062-arbitration-queue-inspector",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\authz-role-matrix\\063-arbitration-queue-operator.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/arbitration/breach-cases?size=10",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/arbitration/breach-cases?size=10",
+          "responseTime": 31,
+          "duration": 31,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\063-arbitration-queue-operator.bru:6:31\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\063-arbitration-queue-operator.bru:4:1\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\063-arbitration-queue-operator.bru:10:3\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\063-arbitration-queue-operator.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "DGkjLm9yw8c9FQ2w0jdOr"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.5237285,
+        "name": "SEC-063 OPERATOR reads arbitration queue",
+        "path": "security\\authz-role-matrix\\063-arbitration-queue-operator",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\authz-role-matrix\\064-arbitration-queue-arbitrator.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/arbitration/breach-cases?size=10",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "content": [
+              {
+                "breachCaseId": "3f67baab-69a2-416c-a736-75d62a5fe9c7",
+                "contractId": "7d2b2063-961d-4a5e-89be-1d9afd89593f",
+                "milestoneId": "0e66015b-cea3-467a-a1b5-1ad92420965f",
+                "requestedBy": "BUYER",
+                "allegedBreachingRole": "SELLER",
+                "breachReasonCode": "QUALITY_BELOW_COMMITTED",
+                "severity": "MINOR",
+                "evidenceFileIds": [
+                  "66ac8619-3fba-4ca0-b0ec-f9c62383aa98",
+                  "236f94e2-c11f-4e83-9132-596bd985804b"
+                ],
+                "finalBreachingRole": null,
+                "decisionSource": "INSPECTOR_L1_5",
+                "status": "RESOLVED",
+                "contestStatus": "NOT_APPLICABLE",
+                "contestDeadline": null,
+                "computedResolution": {
+                  "inspectionReportId": "3603123d-dffe-48ba-b514-c8e7c1fcb0f3",
+                  "issueType": "QUALITY",
+                  "acceptedQuantityKg": 1000,
+                  "qualityDisposition": "PARTIALLY_CONFORMING",
+                  "finalBreachingRole": null,
+                  "decisionSource": "INSPECTOR_L1_5",
+                  "sellerEntitlementAmount": "94080000.00",
+                  "buyerRefundAmount": "1920000.00",
+                  "prevailingRole": "BUYER"
+                },
+                "reportedAt": "2026-11-27T09:36:23.887404Z",
+                "resolvedAt": "2026-11-27T09:36:33.736971Z"
+              }
+            ],
+            "page": 0,
+            "size": 10,
+            "totalElements": 1,
+            "totalPages": 1
+          },
+          "url": "http://localhost/api/v1/arbitration/breach-cases?size=10",
+          "responseTime": 46,
+          "duration": 46,
+          "size": 997
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "lBjS_JS0i0tjSjIzJdcK5"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.5236994,
+        "name": "SEC-064 ARBITRATOR reads arbitration queue",
+        "path": "security\\authz-role-matrix\\064-arbitration-queue-arbitrator",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\authz-role-matrix\\065-arbitration-queue-admin.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/arbitration/breach-cases?size=10",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/arbitration/breach-cases?size=10",
+          "responseTime": 44,
+          "duration": 44,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\065-arbitration-queue-admin.bru:6:31\n    at <home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\test.js:3:11\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\065-arbitration-queue-admin.bru:4:1\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\065-arbitration-queue-admin.bru:10:3\n    at <repo>/backend\\bruno\\security\\authz-role-matrix\\065-arbitration-queue-admin.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\sandbox\\node-vm\\index.js:112:28)\n    at TestRuntime.runTests (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\node_modules\\@usebruno\\js\\src\\runtime\\test-runtime.js:113:15)\n    at runSingleRequest (<home>\\AppData\\Roaming\\npm\\node_modules\\@usebruno\\cli\\src\\runner\\run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+            "errorName": "AssertionError",
+            "uid": "50nPs_A5g6L4zQWV1ixhK"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.4803398,
+        "name": "SEC-065 ADMIN reads arbitration queue",
+        "path": "security\\authz-role-matrix\\065-arbitration-queue-admin",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\idempotency-replay\\080-repeat-valid-offer.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/contracts",
+          "headers": {}
+        },
+        "response": {
+          "status": 201,
+          "statusText": "Created",
+          "headers": {},
+          "data": {
+            "contractId": "dd758e77-aaae-410a-a9c2-f4565e08a004",
+            "listingId": "4ad8d4e9-6f70-4d04-9062-464b9ca50798",
+            "reservedQuantity": 1000,
+            "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "status": "OFFERED",
+            "terms": {
+              "agreedPrice": "95000.00",
+              "buyerConfirmWindowDays": 3,
+              "buyerDepositRate": 0.05,
+              "buyerPenaltyRate": 0.08,
+              "coffeeQualityProfileVersion": "1.0",
+              "contractTemplateCode": "VN_COFFEE_B2B",
+              "contractTemplateHash": "96876467dbe1535e2a7e9c646459924b7a4ac63ff17d82e79e8db39b7ceeaa18",
+              "contractTemplateVersion": "1.0",
+              "currency": "VND",
+              "deliveryTerms": {
+                "deliveryResponsibility": "SELLER_DELIVERS",
+                "riskTransferPoint": "BUYER_RECEIPT",
+                "titleTransferPoint": "FULL_PAYMENT",
+                "transportCostBearer": "SELLER",
+                "unloadingCostBearer": "BUYER"
+              },
+              "disputeFloorReleaseRate": 0.5,
+              "forceMajeureReportWindowDays": 7,
+              "fundingLeadBusinessDays": 3,
+              "goodsTerms": {
+                "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02",
+                "categoryName": "Cà phê",
+                "commodity": "COFFEE",
+                "cropYear": 2026,
+                "harvestSeason": "2026/27",
+                "listingId": "4ad8d4e9-6f70-4d04-9062-464b9ca50798",
+                "originSnapshot": {
+                  "plotRefs": [
+                    {
+                      "geometryHash": "e1d88aa200411f98308f1939382175e1ff086651af12d330a7bb865186454075",
+                      "geometryType": "POINT",
+                      "householdLabel": "Bruno mwysge3g-h3alk16",
+                      "registryEntryId": "2dbcbd3d-b401-4483-8b5a-796aa485cd76",
+                      "verificationLevel": "SELF_DECLARED"
+                    }
+                  ],
+                  "regionText": "Buon Ma Thuot, Dak Lak"
+                },
+                "productId": "c4f09077-27f1-4e78-bbab-6bd891a6e4db",
+                "productName": "Robusta Bruno mwysge3g-h3alk16",
+                "traceabilitySnapshot": null,
+                "unitOfMeasure": "KG"
+              },
+              "inspectionTerms": {
+                "inspectionCostResponsibility": "LOSER_PAYS",
+                "reportDueBusinessDays": 5,
+                "requiredTier": "LEVEL_1_5",
+                "requirement": "NONE_UNLESS_DISPUTED"
+              },
+              "legalProfile": {
+                "contractType": "COFFEE_SALE",
+                "damagesPolicy": "COMMERCIAL_CUMULATIVE_IF_PROVEN",
+                "governingLaw": "VN_COMMERCIAL_LAW",
+                "maxContractualPenaltyRate": 0.08
+              },
+              "level2InspectorOrg": null,
+              "milestoneSchedule": [
+                {
+                  "committedQuantity": 1000,
+                  "expectedDeliveryDate": "2026-12-02",
+                  "graceDays": 2,
+                  "milestoneIndex": 1
+                }
+              ],
+              "priceAdjustmentRule": {
+                "acceptanceMode": "BOTH_ACCEPT",
+                "cutoff": "BEFORE_FUNDING_REQUEST",
+                "maximumAcceptedAdjustmentsPerMilestone": 1
+              },
+              "priceBand": {
+                "maximumUnitPrice": "100000.00",
+                "minimumUnitPrice": "90000.00"
+              },
+              "qualityTerms": {
+                "committedSpec": {
+                  "blackBrokenBeansPercent": 5,
+                  "commodity": "COFFEE",
+                  "foreignMatterPercent": 0.5,
+                  "moisturePercent": 12.5,
+                  "type": "ROBUSTA"
+                },
+                "commodity": "COFFEE",
+                "deviationPolicy": {
+                  "blackBrokenBeansPercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "foreignMatterPercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "moisturePercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "type": {
+                    "rejectOnMismatch": true
+                  }
+                }
+              },
+              "sellerDepositRate": 0.03,
+              "sellerPenaltyRate": 0.06,
+              "shortfallPenaltyThreshold": 0.05,
+              "toleranceRate": 0.05,
+              "totalContractValue": "95000000.00"
+            },
+            "signedContentHash": "91688d7135eee06138e74b674cddcab78d04b4b1b64e4634dcade50d867fdb13",
+            "milestones": []
+          },
+          "url": "http://localhost/api/v1/contracts",
+          "responseTime": 138,
+          "duration": 138,
+          "size": 2977
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "0YxDfUr9Qf_AXJ_t8Av5U"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 4.4015208,
+        "name": "SEC-080 Retry the same valid offer with the original key",
+        "path": "security\\idempotency-replay\\080-repeat-valid-offer",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\idempotency-replay\\090-replayed-reservation.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/listings/4ad8d4e9-6f70-4d04-9062-464b9ca50798",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "listingId": "4ad8d4e9-6f70-4d04-9062-464b9ca50798",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "productId": "c4f09077-27f1-4e78-bbab-6bd891a6e4db",
+            "productName": "Robusta Bruno mwysge3g-h3alk16",
+            "unitOfMeasure": "KG",
+            "offeredQuantity": 5500,
+            "quantityAvailable": 4500,
+            "minOrderQuantity": 100,
+            "askingUnitPrice": "95000.00",
+            "status": "PARTIALLY_COMMITTED",
+            "listingVersionToken": "2026-11-27T09:38:11.574854Z",
+            "registryEntryIds": [
+              "2dbcbd3d-b401-4483-8b5a-796aa485cd76"
+            ],
+            "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02",
+            "commodity": "COFFEE",
+            "regionText": "Buon Ma Thuot, Dak Lak",
+            "declaredQualitySpec": {
+              "commodity": "COFFEE",
+              "type": "ROBUSTA",
+              "moisturePercent": 12.5,
+              "foreignMatterPercent": 0.5,
+              "blackBrokenBeansPercent": 5
+            },
+            "legacyQualitySpecMissing": false,
+            "cropYear": 2026,
+            "harvestSeason": "2026/27",
+            "certifications": [],
+            "packagingDeclaration": "Bao day 60 kg",
+            "warehouseLocation": null,
+            "estimatedAvailabilityDate": null,
+            "traceabilityEvidencePackageId": null
+          },
+          "url": "http://localhost/api/v1/listings/4ad8d4e9-6f70-4d04-9062-464b9ca50798",
+          "responseTime": 48,
+          "duration": 48,
+          "size": 961
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "PA0vOKkdyHXZ9NrPlEbX6"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0575215,
+        "name": "SEC-090 Read inventory after the retried offer",
+        "path": "security\\idempotency-replay\\090-replayed-reservation",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\info-leak\\010-validation-envelope.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/contracts?page=-1",
+          "headers": {}
+        },
+        "response": {
+          "status": 400,
+          "statusText": "Bad Request",
+          "headers": {},
+          "data": {
+            "timestamp": "2026-11-27T09:38:13.806630623Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "page: must be greater than or equal to 0",
+            "path": "/api/v1/contracts",
+            "traceId": "709c9f9d-efaa-475f-94d0-d3e8519c2090"
+          },
+          "url": "http://localhost/api/v1/contracts?page=-1",
+          "responseTime": 588,
+          "duration": 588,
+          "size": 237
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "76xsy4qCJRf2ZBhofjsE_"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 1.0713158,
+        "name": "SEC-190 Validation errors omit system internals",
+        "path": "security\\info-leak\\010-validation-envelope",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security\\input-validation\\010-negative-page.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/contracts?page=-1",
+          "headers": {}
+        },
+        "response": {
+          "status": 400,
+          "statusText": "Bad Request",
+          "headers": {},
+          "data": {
+            "timestamp": "2026-11-27T09:38:14.367538192Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "page: must be greater than or equal to 0",
+            "path": "/api/v1/contracts",
+            "traceId": "00e02883-1407-4557-9fda-d602a3cf4d0d"
+          },
+          "url": "http://localhost/api/v1/contracts?page=-1",
+          "responseTime": 45,
+          "duration": 45,
+          "size": 237
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "T-KQRIvIsiRgplPSxN0C_"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.5466208,
+        "name": "SEC-180 Reject a negative contract page index",
+        "path": "security\\input-validation\\010-negative-page",
+        "iterationIndex": 0
+      }
+    ],
+    "summary": {
+      "totalRequests": 26,
+      "passedRequests": 14,
+      "failedRequests": 12,
+      "errorRequests": 0,
+      "skippedRequests": 0,
+      "totalAssertions": 0,
+      "passedAssertions": 0,
+      "failedAssertions": 0,
+      "totalTests": 26,
+      "passedTests": 14,
+      "failedTests": 12,
+      "totalPreRequestTests": 0,
+      "passedPreRequestTests": 0,
+      "failedPreRequestTests": 0,
+      "totalPostResponseTests": 0,
+      "passedPostResponseTests": 0,
+      "failedPostResponseTests": 0
+    }
+  }
+]

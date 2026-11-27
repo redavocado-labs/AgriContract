@@ -1,0 +1,8 @@
+{
+  "round": "st-round1",
+  "date": "27/11/2026",
+  "tester": "Nguyen Hai Long",
+  "commit": "94d46500",
+  "run": "run-20261127-1603",
+  "source": "backend/scripts/run-e2e-full.sh (Bruno CLI 3.4.2, Docker Compose, Windows 11 + Docker Desktop); service logs: ~/agricontract-e2e/run-20261127-1603/logs/"
+}
