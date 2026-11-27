@@ -46,10 +46,43 @@ def classes_of(sheet_names):
 
 SHEETS = list(trace.TESTS) + list(getattr(trace, "REMOVED", {}))
 CLASS = classes_of(SHEETS)
-# every method named in the trace must have run; a typo would silently become an empty Round 3
-unknown = [(s, t) for s, rows in trace.TESTS.items() for row in rows for t in row
-           if t not in CASES.get(f"{SVC}/{CLASS[s]}", {})]
-assert not unknown, f"methods not in the run: {unknown}"
+
+
+def where(sheet, test):
+    """(test class or spec file, test name) of one test of a row; "spec.ts::name" points into a folded spec file"""
+    if "::" in test:
+        source, name = test.split("::", 1)
+        return source, name
+    return CLASS[sheet], test
+
+
+def expand(sheet, test):
+    """the (source, name) pairs one trace entry stands for; "prefix*" matches every test whose name starts with
+    prefix (a whole describe block or it.each table), anything else exactly one test"""
+    source, name = where(sheet, test)
+    ran = CASES.get(f"{SVC}/{source}", {})
+    if name.endswith("*"):
+        return [(source, n) for n in ran if n.startswith(name[:-1])]
+    return [(source, name)] if name in ran else []
+
+
+def row_result(sheet, tests):
+    pairs = [p for t in tests for p in expand(sheet, t)]
+    statuses = [CASES[f"{SVC}/{source}"][name] for source, name in pairs]
+    if "failed" in statuses:
+        return "Failed"
+    return "Passed" if pairs and all(s == "passed" for s in statuses) else ""
+
+
+def tests_of(row):
+    """the tests of one trace row: a list, {"tests": [...], "note": ...}, or a string (row has no test: none)"""
+    return [] if isinstance(row, str) else row["tests"] if isinstance(row, dict) else row
+
+
+# every test named in the trace must have run (a pattern must match at least one); a typo would silently become an
+# empty Round 3
+unknown = [(s, t) for s, rows in trace.TESTS.items() for row in rows for t in tests_of(row) if not expand(s, t)]
+assert not unknown, f"tests not in the run: {unknown}"
 
 
 def busy(fn):
@@ -104,13 +137,25 @@ for sheet in SHEETS:
         tests = trace.TESTS[sheet]
         assert len(tests) == len(rows), f"{sheet}: {len(rows)} rows in the workbook, {len(tests)} in the trace"
         for r, methods in zip(rows, tests):
-            result = surefire_cases.row_result(CASES, SVC, CLASS[sheet], methods)
+            if isinstance(methods, str):  # this row's test is gone: N/A with the reason, like a REMOVED sheet
+                counts["N/A"] += 1
+                put(sh, r, COL["round3"], "N/A")
+                put(sh, r, COL["date3"], "")
+                put(sh, r, COL["tester3"], "")
+                put(sh, r, COL["note"], methods)
+                continue
+            # {"tests": [...], "note": "..."}: the row still has its tests, but something about it needs saying
+            # (e.g. its expected status is older than the test's)
+            extra = ""
+            if isinstance(methods, dict):
+                methods, extra = methods["tests"], "\n" + methods["note"]
+            result = row_result(sheet, methods)
             assert result in ("Passed", "Failed"), f"{sheet} row {r}: {methods} did not run"
             counts[result] += 1
             put(sh, r, COL["round3"], result)
             put(sh, r, COL["date3"], "'" + RUN["date"])
             put(sh, r, COL["tester3"], TESTER)
-            put(sh, r, COL["note"], "Test: " + ", ".join(methods))
+            put(sh, r, COL["note"], "Test: " + ", ".join(methods) + extra)
     else:
         for r in rows:
             counts["N/A"] += 1
@@ -131,12 +176,14 @@ while busy(lambda: st.Cells(r, 2).Value) not in (None, "Sub total"):
             busy(lambda: setattr(st.Cells(r, col), "Formula", f"='{name}'!{ref}"))
     r += 1
 
-covered = {(CLASS[s], t) for s, rows in trace.TESTS.items() for row in rows for t in row}
+covered = {p for s, rows in trace.TESTS.items() for row in rows for t in tests_of(row) for p in expand(s, t)}
+sources = {CLASS[s] for s in SHEETS} | {source for source, _ in covered}
 uncovered = {}
-for s in SHEETS:
-    for t in CASES.get(f"{SVC}/{CLASS[s]}", {}):
-        if (CLASS[s], t) not in covered:
-            uncovered[CLASS[s]] = uncovered.get(CLASS[s], 0) + 1
+for source in sources:
+    for t in CASES.get(f"{SVC}/{source}", {}):
+        if (source, t) not in covered:
+            label = os.path.basename(source)
+            uncovered[label] = uncovered.get(label, 0) + 1
 sentence = (f" {SVC}: mỗi dòng ghi test method trong Note; Round 3 chạy ngày {RUN['date']} trên commit "
             f"{RUN['commit']} ({RUN.get('command', '')}), kết quả từng test đọc từ "
             f"scripts/unit-test-report/results/{os.path.basename(ROUND_DIR)}/cases.json; bảng này lấy Round 3 cho "
