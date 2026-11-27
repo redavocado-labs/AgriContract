@@ -98,7 +98,11 @@ function ageBuyerReceipt(bru) {
   const helper = resolve(__dirname, '../../scripts/e2e/time-travel.sh');
   const sql = "UPDATE milestone SET buyer_received_at = UTC_TIMESTAMP(6) - INTERVAL 14 DAY" +
     ` WHERE contract_id = '${contract}' AND milestone_id = '${milestone}'`;
-  const output = execFileSync(helper, ['contract-db', sql], {
+  // Windows cannot execute a shell script directly (spawn EFTYPE), so run it through Git Bash there
+  const [command, args] = process.platform === 'win32'
+    ? ['bash', [helper.replace(/\\/g, '/'), 'contract-db', sql]]
+    : [helper, ['contract-db', sql]];
+  const output = execFileSync(command, args, {
     env: { ...process.env, E2E_OWNED_CONTRACT_ID: contract },
     encoding: 'utf8',
   });
