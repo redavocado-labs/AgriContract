@@ -1,0 +1,11 @@
+{
+  "date": "27/11/2026",
+  "tester": "Nguyen Hai Long",
+  "commit": "94d46500",
+  "command": "mvn -pl shared/java-eventing,shared/java-web-error,shared/java-business-calendar -am test",
+  "services": [
+    "shared/java-eventing",
+    "shared/java-web-error",
+    "shared/java-business-calendar"
+  ]
+}
