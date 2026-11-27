@@ -94,8 +94,9 @@ services:
     networks:
       - agricontract-net
     healthcheck:
-      # No wget/curl in the image: wait for the IMAP greeting.
-      test: [ "CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/3143 && head -c 4 <&3 | grep -q OK" ]
+      # No wget/curl in the image: wait for the IMAP greeting, then LOGOUT. A probe that just closes the socket
+      # leaves GreenMail 2.1.5's session thread spinning at 100% CPU for good: one more thread every interval.
+      test: [ "CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/3143 && head -c 4 <&3 | grep -q OK && printf 'a1 LOGOUT\\r\\n' >&3 && head -c 64 <&3 >/dev/null" ]
       interval: 10s
       timeout: 5s
       retries: 10
