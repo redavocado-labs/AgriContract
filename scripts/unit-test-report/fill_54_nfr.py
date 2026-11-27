@@ -83,7 +83,7 @@ def ut(*keys):
         found += len(tests)
         bad += [f"{source.split('/')[-1]}.{n}" for n, s in tests.items() if s != "passed"]
     names = ", ".join(k.split("/", 1)[1].replace("#", ".") for k in keys)
-    return ("Fail" if bad else "Pass"), f"UT {UT_RUN['date']}: {names} ({found} test, {len(bad)} không pass)"
+    return ("Fail" if bad else "Pass"), f"UT {UT_RUN['date']}: {names} ({found} tests, {len(bad)} not passed)"
 
 
 def st(*case_ids, defect=None):
@@ -104,7 +104,7 @@ def dlq(*flows):
                   if q["name"].endswith(".dlq")]
         dirty = [q["name"] for q in queues if q.get("messages") != 0]
         ok = ok and bool(queues) and not dirty
-        parts.append(f"{flow} {len(queues)} .dlq" + (f", có message: {', '.join(dirty)}" if dirty else " rỗng"))
+        parts.append(f"{flow} {len(queues)} .dlq" + (f", with messages: {', '.join(dirty)}" if dirty else " empty"))
     return ("Pass" if ok else "Fail"), f"IT Bruno {ST_RUN['run']}: " + "; ".join(parts)
 
 
@@ -119,8 +119,8 @@ def pw(*prefixes):
     tests = [(t, s) for t, s in PW.items() if t.startswith(prefixes)]
     assert tests, prefixes
     bad = [t for t, s in tests if s != "passed"]
-    return ("Fail" if bad else "Pass"), (f"Playwright {PW_RUN['date']}: {len(tests)} test "
-                                         + "/".join(prefixes) + f", {len(bad)} không pass")
+    return ("Fail" if bad else "Pass"), (f"Playwright {PW_RUN['date']}: {len(tests)} tests "
+                                         + "/".join(prefixes) + f", {len(bad)} not passed")
 
 
 def ui(*ids, browsers=("chromium",)):
@@ -129,9 +129,10 @@ def ui(*ids, browsers=("chromium",)):
     missing = [f"{b}/{i}" for b, i, st_ in got if st_ is None]
     assert not missing, missing
     bad = [f"{i} ({b})" for b, i, st_ in got if st_ != "passed"]
-    names = ", ".join(ids) if len(ids) <= 3 else f"{ids[0]}..{ids[-1]} ({len(ids)} test)"
-    return ("Fail" if bad else "Pass"), (f"ST qua UI 28/11/2026 ({', '.join(b.capitalize() for b in browsers)}): {names}"
-                                         + (f"; không pass: {', '.join(bad)}" if bad else ", pass"))
+    names = ", ".join(ids) if len(ids) <= 3 else f"{ids[0]}..{ids[-1]} ({len(ids)} tests)"
+    return ("Fail" if bad else "Pass"), (f"ST through the web client 28/11/2026 "
+                                         f"({', '.join(b.capitalize() for b in browsers)}): {names}"
+                                         + (f"; not passed: {', '.join(bad)}" if bad else ", passed"))
 
 
 def combine(*evidence):
@@ -145,142 +146,154 @@ NOT_RUN = (None, "")
 
 # ── Security (SRS IV.2.3) ─────────────────────────────────────────────────────────────────────────────────────
 SECURITY = [
-    ("Màn hình được bảo vệ cần phiên đăng nhập", "Guest (không token)", "Stack vừa dựng, không đăng nhập",
-     "GET /api/v1/users/me qua gateway", "HTTP 401, không có dữ liệu hồ sơ", "Critical",
+    ("A protected screen needs a signed-in session", "Guest (no token)", "Fresh stack, not signed in",
+     "GET /api/v1/users/me through the gateway", "HTTP 401, no profile data", "Critical",
      combine(st_code({"SEC-020": 401}), ut("api-gateway/GatewayBoundaryTest")), "",
-     "Chặn đúng. Body của 401 rỗng, không theo ErrorEnvelope: xem TC-SEC-005 (DEF-15)"),
-    ("Route công khai đọc được không cần đăng nhập", "Guest", "Listing AVAILABLE của BF-02",
-     "GET listing công khai, giá tham chiếu qua gateway", "HTTP 200 với dữ liệu công khai, không gắn danh tính",
+     "Blocked correctly. The 401 body is empty, not an ErrorEnvelope: see TC-SEC-005 (DEF-15)"),
+    ("Public routes are readable without signing in", "Guest", "AVAILABLE listing of BF-02",
+     "GET a public listing and the reference price through the gateway", "HTTP 200 with public data, no identity",
      "High", combine(st("BF02-070"), ut("api-gateway/GatewayBoundaryTest#public")), "",
-     "Giá tham chiếu trả 500 trên stack Compose vì thiếu pricing-service (DEF-20, xem Performance)"),
-    ("Hàng chờ KYC chỉ Operator đọc được", "BUYER, SELLER, INSPECTOR, OPERATOR, ARBITRATOR, ADMIN",
-     "6 tài khoản seed, mỗi vai trò 1 token", "GET /api/v1/admin/users?verificationStatus=PENDING bằng từng token",
-     "OPERATOR 200; 5 vai trò còn lại 403 (không fallback, ADMIN cũng 403)", "Critical",
+     "The reference price returns 500 on the Compose stack, which has no pricing-service (DEF-20, see Performance)"),
+    ("Only the Operator reads the KYC queue", "BUYER, SELLER, INSPECTOR, OPERATOR, ARBITRATOR, ADMIN",
+     "6 seeded accounts, one token per role", "GET /api/v1/admin/users?verificationStatus=PENDING with each token",
+     "OPERATOR 200; the other 5 roles 403 (no fallback, ADMIN 403 too)", "Critical",
      st_code({"SEC-040": 403, "SEC-041": 403, "SEC-042": 403, "SEC-043": 200, "SEC-044": 403, "SEC-045": 403}),
-     "", "Ma trận quyền data-governance §5.4; quyết định truy cập đúng, body 403 xem TC-SEC-005"),
-    ("Hàng chờ phán xử chỉ Arbitrator đọc được", "6 vai trò", "6 tài khoản seed",
-     "GET /api/v1/arbitration/breach-cases bằng từng token", "ARBITRATOR 200; 5 vai trò còn lại 403", "Critical",
+     "", "Permission matrix of data-governance §5.4; access decisions right, for the 403 body see TC-SEC-005"),
+    ("Only the Arbitrator reads the arbitration queue", "6 roles", "6 seeded accounts",
+     "GET /api/v1/arbitration/breach-cases with each token", "ARBITRATOR 200; the other 5 roles 403", "Critical",
      combine(st_code({"SEC-060": 403, "SEC-061": 403, "SEC-062": 403, "SEC-063": 403, "SEC-064": 200,
                       "SEC-065": 403}), ui("ST-SEC-010")),
-     "", "OPERATOR và ADMIN không làm thay ARBITRATOR; trên giao diện ADMIN và BUYER mở route sai vai trò đều bị chặn"),
-    ("Từ chối 401/403 trả ErrorEnvelope", "Guest, vai trò không đủ quyền", "Như TC-SEC-001, 003, 004",
-     "Đọc body của các phản hồi 401/403 từ gateway", "Body JSON có code và traceId theo OpenAPI ErrorEnvelope",
+     "", "OPERATOR and ADMIN do not stand in for ARBITRATOR; on the screens ADMIN and BUYER are refused every route "
+         "of another role"),
+    ("401/403 refusals return an ErrorEnvelope", "Guest, roles without permission", "As TC-SEC-001, 003, 004",
+     "Read the body of the gateway's 401/403 responses", "JSON body with code and traceId as the OpenAPI ErrorEnvelope",
      "Medium",
      st("SEC-020", "SEC-040", "SEC-041", "SEC-042", "SEC-044", "SEC-045", "SEC-060", "SEC-061", "SEC-062",
         "SEC-063", "SEC-065", "SEC-110"),
-     "DEF-15", "Gateway trả body rỗng; issue #663 còn mở"),
-    ("Header danh tính giả bị gateway thay/xoá", "Client tự gửi header", "Request có X-User-Id, X-User-Role, "
-     "X-Gateway-Secret giả", "Gọi qua gateway có và không có JWT", "Header danh tính lấy từ JWT; header giả và "
-     "X-Internal-Secret bị xoá", "Critical", ut("api-gateway/UserContextInjectionFilterTest"), "", ""),
-    ("Ký hợp đồng cần đăng nhập lại trong 300 giây", "Buyer / Seller", "Phiên đăng nhập cũ, thiếu hoặc auth_time "
-     "ở tương lai", "Xác nhận OTP để ký", "Từ chối, yêu cầu nhập lại mật khẩu", "High",
+     "DEF-15", "The gateway returns an empty body; issue #663 still open"),
+    ("Forged identity headers are replaced or removed by the gateway", "A client sending its own headers",
+     "Request with forged X-User-Id, X-User-Role, X-Gateway-Secret", "Call through the gateway with and without a JWT",
+     "Identity headers come from the JWT; forged headers and X-Internal-Secret are removed", "Critical",
+     ut("api-gateway/UserContextInjectionFilterTest"), "", ""),
+    ("Signing a contract needs a sign-in within 300 seconds", "Buyer / Seller", "Old session, missing or future "
+     "auth_time", "Confirm the OTP to sign", "Refused, asked to enter the password again", "High",
      ut("contract-service/SignerEligibilityTest"), "", "MSG05"),
-    ("Luật OTP ký: 6 số, hết hạn 300 giây, tối đa 5 lần sai, cooldown 60 giây", "Buyer / Seller",
-     "Hợp đồng chờ ký", "Nhập sai, gửi lại trong cooldown, gửi song song", "Hết lượt sau 5 lần sai; gửi lại trong "
-     "cooldown bị từ chối; mã chỉ dùng cho đúng điều khoản đã cấp", "High",
+    ("Signing OTP rules: 6 digits, expires in 300 seconds, at most 5 wrong tries, 60-second cooldown",
+     "Buyer / Seller", "Contract waiting for signatures", "Wrong code, resend within the cooldown, parallel requests",
+     "No tries left after 5 wrong codes; a resend within the cooldown is refused; a code only works for the terms it "
+     "was issued for", "High",
      ut("contract-service/OtpPolicyTest", "contract-service/OtpChallengeTest",
         "contract-service/OtpChallengeIntegrationTest"), "", ""),
-    ("Khoá tạm tài khoản khi sai mật khẩu nhiều lần", "Tài khoản mới", "Tài khoản Keycloak vừa tạo",
-     "Đăng nhập sai mật khẩu 5 lần liên tiếp", "Lần tiếp theo bị từ chối (khoá tạm)", "High", st("SEC-120"), "",
-     "Brute-force detection của realm agricontract"),
-    ("Tài khoản chưa VERIFIED không đăng được listing", "Seller chưa xác minh KYC", "Seller PENDING",
-     "POST /api/v1/listings", "HTTP 403; hệ thống chặn, không chỉ ẩn nút", "High",
+    ("Temporary lock after repeated wrong passwords", "New account", "Keycloak account just created",
+     "Sign in with a wrong password 5 times in a row", "The next attempt is refused (temporary lock)", "High",
+     st("SEC-120"), "", "Brute-force detection of the agricontract realm"),
+    ("An account that is not VERIFIED cannot publish a listing", "Seller without verified KYC", "Seller PENDING",
+     "POST /api/v1/listings", "HTTP 403; the system refuses, not only a hidden button", "High",
      ut("product-service/CreateListingUseCaseImplTest#execute_sellerNotVerified",
         "product-service/CreateListingControllerTest#ineligibleSeller"), "", ""),
-    ("Hồ sơ công khai không lộ thông tin liên hệ", "Người dùng đã đăng nhập", "Hồ sơ của đối tác",
-     "GET /api/v1/users/{id}", "Chỉ tên tổ chức, vai trò, trạng thái xác minh, uy tín; không email, điện thoại, "
-     "địa chỉ", "High", ut("user-service/UserControllerTest#getPublicUser"), "", ""),
-    ("Người không phải bên của đợt không xem được dữ liệu đợt", "Buyer đóng vai Seller; người dùng khác",
-     "Milestone của hợp đồng khác", "Mở chi tiết milestone, đổi danh tính trong phiên",
-     "403 ẩn dữ liệu; không hiện dữ liệu cache của người trước", "High", pw("FE-011"), "", "UI (frontend/tests/qa)"),
-    ("File chỉ dùng được sau khi quét malware", "Seller", "File bằng chứng vừa upload",
-     "Upload file sạch và file bị từ chối khi quét", "File bị từ chối không gắn vào hồ sơ, có nút thay thế; file "
-     "sạch READY mới dùng được", "Critical",
+    ("A public profile shows no contact data", "Signed-in user", "A counterparty's profile",
+     "GET /api/v1/users/{id}", "Only organization name, role, verification status, reputation; no e-mail, phone or "
+     "address", "High", ut("user-service/UserControllerTest#getPublicUser"), "", ""),
+    ("Someone who is not a party of the milestone cannot see its data", "Buyer acting as Seller; another user",
+     "Milestone of another contract", "Open the milestone details, switch identity in the session",
+     "403 hides the data; nothing cached from the previous user is shown", "High", pw("FE-011"), "",
+     "UI (frontend/tests/qa)"),
+    ("A file can only be used after the malware scan", "Seller", "Evidence file just uploaded",
+     "Upload a clean file and one rejected by the scan", "The rejected file is not attached and can be replaced; "
+     "only a clean READY file can be used", "Critical",
      combine(ut("file-service/src/infrastructure/scan/clamd-scanner.spec.ts"),
              pw("FE-015 a rejected scan", "FE-015 blocks evidence")), "", ""),
-    ("Chuỗi audit chống sửa, kiểm tra toàn cục", "Admin", "Audit chain sau các flow",
-     "GET /api/v1/admin/audit/verification", "HTTP 200, status INTACT; màn Nhật ký bằng chứng báo toàn chuỗi nguyên vẹn", "High",
+    ("Tamper-evident audit chain, global check", "Admin", "Audit chain after the flows",
+     "GET /api/v1/admin/audit/verification", "HTTP 200, status INTACT; the evidence log screen reports the whole "
+     "chain intact", "High",
      combine(st("SEC-100"), ui("ST-ADM-010")), "", ""),
-    ("Ghi vết khi người vận hành đọc dữ liệu hạn chế", "Admin", "Hợp đồng đã quyết toán của BF-04",
-     "Admin đọc trail của hợp đồng, rồi đọc bản ghi SYSTEM", "Mỗi lần đọc thêm đúng 1 bản ghi audit.viewed",
+    ("Operators reading restricted data leave a trace", "Admin", "A contract settled by BF-04",
+     "Admin reads the contract trail, then the SYSTEM records", "Each read adds exactly one audit.viewed record",
      "Medium", st("SEC-140", "SEC-150", "SEC-160", "SEC-170", defect="DEF-19"), "DEF-19",
-     "Round 3 chạy thứ Bảy: không có hợp đồng quyết toán (DEF-19) nên chưa kiểm được; Report 5.2 (Bruno e2e) Round 1-2 Passed; trên giao diện ST-ADM-020 (trail hợp đồng đã rút) có audit.viewed (Report 5.3)"),
-    ("Lỗi validation không lộ chi tiết hệ thống", "Buyer", "N/A", "GET /api/v1/contracts?page=-1",
-     "HTTP 400 VALIDATION_FAILED, không stack trace, không tên class", "Medium", st("SEC-180", "SEC-190"), "", ""),
-    ("Khoá khẩn cấp chỉ nhận yêu cầu ký ES256, timestamp ±300 giây, nonce chưa dùng", "External Verifier",
-     "Khoá Verifier đã đăng ký", "POST lock/unlock có chữ ký hợp lệ, sai, nonce lặp", "Chỉ yêu cầu hợp lệ được "
-     "nhận; không Admin nào thay được", "Critical", NOT_RUN, "",
-     "Chưa có controller cho đường lock/unlock (Report 5.2 BF07_SecurityLockApi BF07-020 N/A)"),
-    ("Xoá / ẩn danh dữ liệu cá nhân hết hạn lưu trữ", "Hệ thống (JOB-19)", "Dữ liệu quá hạn, có và không có "
-     "legal hold", "Chạy job lưu trữ", "Dữ liệu hết hạn bị xoá hoặc ẩn danh; dữ liệu legal hold giữ nguyên",
-     "Medium", NOT_RUN, "", "Chưa có test tự động cho JOB-19"),
+     "Round 3 ran on a Saturday: no settled contract (DEF-19), so not checked; Report 5.2 (Bruno e2e) Rounds 1-2 "
+     "Passed; through the web client ST-ADM-020 (trail of a withdrawn contract) records audit.viewed (Report 5.3)"),
+    ("Validation errors reveal no system details", "Buyer", "N/A", "GET /api/v1/contracts?page=-1",
+     "HTTP 400 VALIDATION_FAILED, no stack trace, no class names", "Medium", st("SEC-180", "SEC-190"), "", ""),
+    ("The emergency lock only accepts ES256-signed requests, timestamp ±300 seconds, unused nonce",
+     "External Verifier", "Verifier key registered", "POST lock/unlock with a valid signature, a wrong one, a reused "
+     "nonce", "Only valid requests are accepted; no Admin can stand in", "Critical", NOT_RUN, "",
+     "No controller for the lock/unlock path yet (Report 5.2 BF07_SecurityLockApi BF07-020 N/A)"),
+    ("Personal data past its retention period is deleted or anonymized", "System (JOB-19)", "Expired data with and "
+     "without a legal hold", "Run the retention job", "Expired data deleted or anonymized; data under legal hold kept",
+     "Medium", NOT_RUN, "", "No automated test for JOB-19 yet"),
 ]
 
 # ── Reliability (SRS IV.2.4) ──────────────────────────────────────────────────────────────────────────────────
 RELIABILITY = [
-    ("Lặp lại offer cùng Idempotency-Key không giữ hàng 2 lần", "Buyer", "Listing AVAILABLE",
-     "POST /api/v1/contracts 2 lần cùng key, đọc lại listing", "Lần 2 trả kết quả cũ; số lượng giữ chỉ trừ 1 lần",
-     "Critical", st("SEC-080", "SEC-090"), "", ""),
-    ("Lệnh ngân hàng thực hiện tối đa 1 lần", "Hệ thống (bank-service)", "Lệnh lock/release lặp cùng "
-     "sourceEventId", "Gửi lại lệnh và kết quả", "Ledger chỉ ghi 1 lần, lệnh lặp bị bỏ qua", "Critical",
+    ("Repeating an offer with the same Idempotency-Key does not reserve twice", "Buyer", "AVAILABLE listing",
+     "POST /api/v1/contracts twice with the same key, read the listing again",
+     "The second call returns the first result; the reserved quantity is taken once", "Critical",
+     st("SEC-080", "SEC-090"), "", ""),
+    ("A bank command is carried out at most once", "System (bank-service)", "Lock/release command repeated with the "
+     "same sourceEventId", "Send the command and its result again", "The ledger records it once, the repeat is "
+     "ignored", "Critical",
      ut("bank-service/LedgerCommandConsumerTest", "bank-service/ProcessLedgerCommandUseCaseImplTest"), "", ""),
-    ("Khoá cọc thất bại được thử lại theo lịch", "Hệ thống (JOB-04)", "Kết quả khoá cọc FAILED",
-     "Nhận kết quả thất bại, chạy job retry", "Thử lại theo lịch 5 phút / 30 phút / 2 giờ, hết lượt thì "
-     "ACTIVATION_FAILED, không treo", "High",
+    ("A failed deposit lock is retried on schedule", "System (JOB-04)", "Deposit lock result FAILED",
+     "Receive the failure, run the retry job", "Retried after 5 minutes / 30 minutes / 2 hours; when the tries run "
+     "out the contract is ACTIVATION_FAILED, never stuck", "High",
      ut("escrow-service/DepositLockResultFlowIntegrationTest", "contract-service/ActivationRecoveryIntegrationTest"),
      "", ""),
-    ("Payload hỏng vào DLQ, không retry", "Hệ thống (consumer)", "Message sai schema",
-     "Đưa message hỏng vào queue", "Từ chối ngay (1 lần), message vào .dlq", "High",
+    ("A broken payload goes to the DLQ without retries", "System (consumer)", "Message with a wrong schema",
+     "Put the broken message on the queue", "Refused at once (one try), the message goes to .dlq", "High",
      ut("product-service/ListenerRetryTest", "user-service/ReputationLockFlowIntegrationTest#schemaViolation"), "",
      ""),
-    ("Không còn message trong DLQ sau mỗi flow", "Hệ thống", "Stack sau từng flow BF-01..BF-07 và Security",
-     "GET /api/queues của RabbitMQ", "Mọi queue .dlq có mặt và rỗng", "High",
+    ("No message left in any DLQ after each flow", "System", "Stack after each flow BF-01..BF-07 and Security",
+     "GET /api/queues of RabbitMQ", "Every .dlq queue exists and is empty", "High",
      dlq("bf01", "bf02", "bf03", "bf04", "bf05", "bf06", "bf07", "security"), "",
-     "Sau BF-04 chỉ kiểm được phần đã chạy (DEF-19)"),
-    ("Web client không gửi lại lệnh rút offer khi mất phản hồi", "Buyer", "Rút offer, mất response, reload / 2 tab",
-     "Reload, mở tab thứ 2, hết thời gian khôi phục", "Tối đa 1 lần gửi; key cũ được dùng lại sau khi đọc trạng "
-     "thái thật; không gửi với key mới", "High", pw("FE-003"), "", "UI (frontend/tests/qa)"),
-    ("Web client chờ kích hoạt có giới hạn", "Buyer", "Hợp đồng SIGNED chờ khoá cọc",
-     "Mở chi tiết hợp đồng, lỗi đọc tạm thời, đổi hợp đồng", "Poll 5 giây trong ngân sách 120 giây, dừng khi ACTIVE, "
-     "có nút làm mới thủ công", "Medium", pw("FE-004"), "", "UI (frontend/tests/qa)"),
-    ("Upload lỗi 503 được thử lại an toàn", "Seller", "Upload bằng chứng trả 503", "Bấm thử lại",
-     "Giữ nguyên key và bytes; file đang quét dừng tự đọc sau 60 giây", "Medium",
+     "After BF-04 only the part that ran could be checked (DEF-19)"),
+    ("The web client does not resend an offer withdrawal when the response is lost", "Buyer",
+     "Withdraw an offer, lose the response, reload / 2 tabs", "Reload, open a second tab, let the recovery time pass",
+     "Sent at most once; the old key is reused after reading the real state; never sent with a new key", "High",
+     pw("FE-003"), "", "UI (frontend/tests/qa)"),
+    ("The web client waits for activation within a limit", "Buyer", "SIGNED contract waiting for the deposit lock",
+     "Open the contract details, a temporary read error, switch contracts", "Polls every 5 seconds within a "
+     "120-second budget, stops when ACTIVE, offers a manual refresh", "Medium", pw("FE-004"), "",
+     "UI (frontend/tests/qa)"),
+    ("A 503 upload error is retried safely", "Seller", "Evidence upload returns 503", "Click retry",
+     "Same key and bytes; a file still being scanned stops polling after 60 seconds", "Medium",
      pw("FE-015 an explicit retry", "FE-015 a projected"), "", "UI (frontend/tests/qa)"),
-    ("Thông báo lỗi được gửi lại, không gửi trùng", "Hệ thống (notification-service)", "Gửi email thất bại",
-     "Retry và nhận lại cùng event", "Thử lại có giới hạn; cùng event + người nhận + loại không gửi 2 email",
-     "Medium", ut("notification-service/src/application/notification-sender.spec.ts"), "", ""),
+    ("A failed notification is sent again, never twice", "System (notification-service)", "E-mail sending fails",
+     "Retry and receive the same event again", "Limited retries; the same event + recipient + type never sends two "
+     "e-mails", "Medium", ut("notification-service/src/application/notification-sender.spec.ts"), "", ""),
 ]
 
 # ── Usability (SRS IV.2.1) ────────────────────────────────────────────────────────────────────────────────────
 USABILITY = [
-    ("Trang chủ reflow ở 320 CSS px", "Guest", "Viewport 320 px", "Mở trang chủ", "Không cuộn ngang",
+    ("The home page reflows at 320 CSS px", "Guest", "Viewport 320 px", "Open the home page", "No horizontal scroll",
      "Medium", pw("FE-016 the public home page reflows"), "", "WCAG 2.2 AA 1.4.10"),
-    ("Dialog dùng được bằng bàn phím, không lỗi axe nghiêm trọng", "Buyer, Guest", "Chi tiết hợp đồng, bảng giá",
-     "Mở / duyệt / đóng dialog rút offer bằng bàn phím; quét axe", "Focus đúng, không lỗi serious/critical",
+    ("Dialogs work with the keyboard, no serious axe findings", "Buyer, Guest", "Contract details, price board",
+     "Open / confirm / close the offer withdrawal dialog with the keyboard; axe scan", "Focus right, no "
+     "serious/critical findings",
      "Medium", pw("FE-016 an offer withdrawal", "FE-016 contract detail", "FE-016 public prices"), "", ""),
-    ("Hạn sửa cân của seller đếm theo giờ server", "Seller", "Milestone SELLER_WEIGHED", "Chờ quá hạn sửa",
-     "Đếm ngược theo hạn server trả, quá hạn thì ẩn nút sửa", "Medium", pw("FE-010"), "", ""),
-    ("Validation hiện cạnh field và giữ giá trị đã nhập", "Buyer", "Form tạo offer",
-     "Nhập độ ẩm 11.5, đơn giá 95000 (thiếu 2 số lẻ) → Gửi đề nghị",
-     "Thông báo cạnh field đơn giá, độ ẩm giữ 11.5, vẫn ở form", "Medium", ui("ST-USA-010"), "", ""),
-    ("Tiền hiển thị VND, phân cách nghìn, 2 số lẻ", "Buyer", "Đề nghị 1.000 kg giá 96000.00",
-     "Xem trang hợp đồng và trang listing", "96.000,00 ₫/kg và tổng 96.000.000,00 ₫ (SRS IV.2.1)", "Low",
-     ui("ST-USA-020"), "DEF-23",
-     "Màn hình hiện 96.000 ₫: formatDecimalVnd (frontend/src/shared/lib/decimal-display.ts) bỏ phần lẻ ,00"),
-    ("Ngày dd/MM/yyyy, giờ Asia/Ho_Chi_Minh", "Buyer", "Hợp đồng vừa tạo",
-     "Xem ngày giao; gửi mã OTP ký", "Ngày giao dạng dd/MM/yyyy; hạn mã OTP ghi giờ Việt Nam", "Low",
-     ui("ST-USA-030"), "", ""),
-    ("Hành động bị chặn nói rõ lý do", "Buyer chưa VERIFIED", "KYC PENDING",
-     "Mở form tạo offer", "Màn hình ghi lý do (chỉ bên mua đã xác minh mới gửi được), nút gửi bị khoá",
-     "Medium", ui("ST-USA-040"), "", "Khoá uy tín / khoá khẩn cấp chưa có màn hình (BF-07)"),
-    ("Chạy được trên Chrome, Edge, Firefox (2 bản mới nhất), ≥ 1366 px", "Guest", "Chromium và Firefox của "
-     "Playwright, 1366x900", "Mở 7 màn công khai (trang chủ, sàn, bảng giá, cách hoạt động, ký quỹ, đăng nhập, "
-     "chi tiết listing)", "Hiện đủ nội dung chính, không lỗi JavaScript, không cuộn ngang", "Medium",
+    ("The seller's weight-correction window counts down on server time", "Seller", "Milestone SELLER_WEIGHED",
+     "Wait past the correction deadline", "Countdown to the deadline the server returns; past it the edit button is "
+     "hidden", "Medium", pw("FE-010"), "", ""),
+    ("Validation shows beside the field and keeps the values entered", "Buyer", "Offer form",
+     "Enter moisture 11.5, unit price 95000 (two decimals missing) → 'Gửi đề nghị' (Make an offer)",
+     "Message beside the unit price, moisture still 11.5, still on the form", "Medium", ui("ST-USA-010"), "", ""),
+    ("Money in VND with thousands separators and two decimals", "Buyer", "Offer of 1,000 kg at 96000.00",
+     "Look at the contract page and the listing page", "96.000,00 ₫/kg and a total of 96.000.000,00 ₫ (SRS IV.2.1)",
+     "Low", ui("ST-USA-020"), "DEF-23",
+     "The screens show 96.000 ₫: formatDecimalVnd (frontend/src/shared/lib/decimal-display.ts) drops the ,00"),
+    ("Dates as dd/MM/yyyy, times in Asia/Ho_Chi_Minh", "Buyer", "Contract just created",
+     "Look at the delivery date; request a signing OTP", "Delivery date as dd/MM/yyyy; the OTP expiry is given in "
+     "Vietnam time", "Low", ui("ST-USA-030"), "", ""),
+    ("A blocked action states its reason", "Buyer not VERIFIED", "KYC PENDING",
+     "Open the offer form", "The screen gives the reason (only a verified buyer can make an offer), the submit button "
+     "is disabled", "Medium", ui("ST-USA-040"), "", "Reputation lock / emergency lock have no screen yet (BF-07)"),
+    ("Works on Chrome, Edge, Firefox (two latest versions), ≥ 1366 px", "Guest", "Playwright Chromium and Firefox, "
+     "1366x900", "Open 7 public screens (home, marketplace, price board, how it works, escrow, sign-in, listing "
+     "details)", "Main content shown, no JavaScript error, no horizontal scroll", "Medium",
      ui(*(f"ST-BRW-0{i}0" for i in range(1, 8)), browsers=("chromium", "firefox")), "",
-     "Edge dùng cùng engine Chromium; màn sau đăng nhập mới chạy trên Chromium (Report 5.3)"),
-    ("Seller VERIFIED đăng listing đầu tiên trong 15 phút không cần hướng dẫn", "Seller mới", "Seller VERIFIED "
-     "chưa dùng hệ thống", "Tự đăng lô đất, sản phẩm, listing", "Xong trong 15 phút", "Low", NOT_RUN, "",
-     "Cần người dùng thật: thuộc Report 5.5 (UAT)"),
+     "Edge uses the Chromium engine; the signed-in screens ran on Chromium only (Report 5.3)"),
+    ("A VERIFIED seller publishes a first listing within 15 minutes without help", "New seller", "VERIFIED seller "
+     "who has not used the system", "Add a plot, a product and a listing alone", "Done within 15 minutes", "Low",
+     NOT_RUN, "", "Needs real users: part of Report 5.5 (UAT)"),
 ]
 
 # ── Performance (SRS IV.2.2) ──────────────────────────────────────────────────────────────────────────────────
@@ -292,45 +305,48 @@ def page_row(path, label):
     load, idle = max(t["load"] for t in times), max(t["idle"] for t in times)
     # network idle is reported 500 ms after the last request ends
     rendered = idle - 500
-    return (f"Tải trang {label} khi có {c['users']} user đồng thời", "Playwright (Chromium) + perf_nfr.py",
-            "≤ 3 giây (toàn màn hình hiển thị xong)",
-            f"{len(times)} lần: load event ≤ {load} ms, hết request ≤ {rendered} ms",
+    return (f"Loading the {label} with {c['users']} concurrent users", "Playwright (Chromium) + perf_nfr.py",
+            "≤ 3 seconds (whole screen rendered)",
+            f"{len(times)} loads: load event ≤ {load} ms, last request done ≤ {rendered} ms",
             "Pass" if rendered <= 3000 else "Fail")
 
 
 PERFORMANCE = [
-    (*page_row("/", "trang chủ"), "", "vite build trỏ gateway localhost:8080, vite preview; đo trong lúc load test"),
-    (*page_row("/listing", "chợ listing"), "", f"{PERF['listings']} listing trong product_db"),
-    (*page_row("/prices", "giá tham chiếu")[:4], "Fail", "DEF-20",
-     "API giá trả 500 sau ~3,9 s: stack Compose không có pricing-service"),
-    ("Gửi form (không tính upload, không tính bước chờ dịch vụ ngoài)", "Bruno CLI 3.4.2 (responseTime)", "≤ 2 giây",
-     f"{form['count']} request ghi của ST Round 3 + IT Round 3: p95 {form['p95']} ms, max {form['max']} ms",
+    (*page_row("/", "home page"), "", "vite build pointing at the gateway localhost:8080, vite preview; measured "
+                                      "during the load test"),
+    (*page_row("/listing", "listing marketplace"), "", f"{PERF['listings']} listings in product_db"),
+    (*page_row("/prices", "reference prices")[:4], "Fail", "DEF-20",
+     "The price API returns 500 after ~3.9 s: the Compose stack has no pricing-service"),
+    ("Form submission (without uploads and waits on external services)", "Bruno CLI 3.4.2 (responseTime)",
+     "≤ 2 seconds",
+     f"{form['count']} write requests of Bruno Round 3 (e2e + IT): p95 {form['p95']} ms, max {form['max']} ms",
      "Pass" if form["max"] <= 2000 else "Fail", "", "results/st-round3, results/round3"),
-    ("Duyệt / lọc listing, 1 user, trang đầu 20 dòng", "perf_nfr.py", "≤ 3 giây với tới 10.000 listing",
-     f"{PERF['listings']} listing; duyệt p95 {single['browse']['p95']} ms, lọc theo uy tín p95 "
-     f"{single['filtered']['p95']} ms (30 lần mỗi loại)",
+    ("Browse / filter listings, 1 user, first page of 20", "perf_nfr.py", "≤ 3 seconds with up to 10,000 listings",
+     f"{PERF['listings']} listings; browse p95 {single['browse']['p95']} ms, filter by reputation p95 "
+     f"{single['filtered']['p95']} ms (30 times each)",
      "Pass" if max(single["browse"]["max"], single["filtered"]["max"]) <= 3000 else "Fail", "",
-     "Lọc = minSellerScore, người xem đã đăng nhập"),
-    (f"Duyệt / lọc listing khi {c['users']} user đồng thời", "perf_nfr.py", "≤ 4,5 giây (3 giây + 50%)",
-     f"duyệt p95 {c['per_request']['browse']['p95']} ms, max {c['per_request']['browse']['max']} ms; lọc p95 "
+     "Filter = minSellerScore, viewer signed in"),
+    (f"Browse / filter listings with {c['users']} concurrent users", "perf_nfr.py", "≤ 4.5 seconds (3 seconds + 50%)",
+     f"browse p95 {c['per_request']['browse']['p95']} ms, max {c['per_request']['browse']['max']} ms; filter p95 "
      f"{c['per_request']['filtered']['p95']} ms, max {c['per_request']['filtered']['max']} ms",
      "Pass" if max(c["per_request"]["browse"]["max"], c["per_request"]["filtered"]["max"]) <= 4500 else "Fail", "",
      ""),
-    (f"{c['users']} user đồng thời không lỗi", "perf_nfr.py (thread, urllib)",
-     "0 lỗi; không vượt mục tiêu quá 50%",
-     f"{c['requests']} request trong {c['seconds']} s ({c['throughput']} req/s); lỗi: "
+    (f"{c['users']} concurrent users without errors", "perf_nfr.py (threads, urllib)",
+     "0 errors; no target exceeded by more than 50%",
+     f"{c['requests']} requests in {c['seconds']} s ({c['throughput']} req/s); errors: "
      + (", ".join(f"{k}: {v}" for k, v in c["errors"].items()) or "0") + f" ({c['error_rate']}%)",
      "Pass" if not c["errors"] else "Fail", "DEF-20" if c["errors"] else "",
-     "Mỗi user lặp: duyệt, lọc, giá tham chiếu, hồ sơ của mình, hợp đồng của mình. Lỗi chỉ ở giá tham chiếu; "
-     "4 loại còn lại 0 lỗi"),
-    ("Email OTP ký tới nhà cung cấp mail", "MailHog", "≤ 10 giây sau yêu cầu; mã sống 300 giây", "", "Not Run", "",
-     "Chưa đo riêng; ST Round 3 (thứ Bảy) dừng ở chữ ký thứ 2, DEF-19"),
-    ("Kết quả lệnh ngân hàng cập nhật hợp đồng / đợt", "Bruno BF-04", "≤ 10 giây", "", "Not Run", "DEF-19",
-     "BF-04 không chạy ở Round 3 (DEF-19); chạy lại vào ngày làm việc"),
-    ("Outbox publish event", "UT outbox poller", "≤ 5 giây sau khi ghi", "", "Not Run", "",
-     "Chưa có phép đo end-to-end"),
-    ("File ≤ 10 MB dùng được sau upload", "Bruno BF-04 (upload bằng chứng)", "≤ 60 giây", "", "Not Run", "DEF-19",
-     "BF-04 không chạy ở Round 3 (DEF-19)"),
+     "Each user loops: browse, filter, reference price, own profile, own contracts. Errors only on the reference "
+     "price; the other 4 kinds 0 errors"),
+    ("Signing OTP e-mail reaches the mail provider", "MailHog", "≤ 10 seconds after the request; the code lives 300 "
+     "seconds", "", "Not Run", "",
+     "Not measured on its own; Bruno Round 3 (Saturday) stopped at the second signature, DEF-19"),
+    ("Bank command results update the contract / milestone", "Bruno BF-04", "≤ 10 seconds", "", "Not Run", "DEF-19",
+     "BF-04 did not run in Round 3 (DEF-19); runs again on a business day"),
+    ("Outbox publishes the event", "UT outbox poller", "≤ 5 seconds after the write", "", "Not Run", "",
+     "No end-to-end measurement yet"),
+    ("A file ≤ 10 MB is usable after upload", "Bruno BF-04 (evidence upload)", "≤ 60 seconds", "", "Not Run",
+     "DEF-19", "BF-04 did not run in Round 3 (DEF-19)"),
 ]
 
 # ── write ─────────────────────────────────────────────────────────────────────────────────────────────────────
