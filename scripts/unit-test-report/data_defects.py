@@ -177,7 +177,7 @@ DEFECTS = [
                "ngày làm việc) đúng bằng hôm nay: D67 từ chối chữ ký thứ 2 khi ngày đó đã qua, D63 chỉ cấp tiền lúc "
                "kích hoạt khi ngày đó đã tới. Thứ Bảy không có ngày cấp tiền nào thoả cả hai; golden flow kiểm điều "
                "này và skip, bộ Bruno thì không",
-         fix=("Chưa có issue", None, "N/A"), status="Open", retest=None),
+         fix=("#713", None, "N/A"), status="Open", retest=None),
     dict(id="DEF-20", test="5.4 Performance TC-PERF-003, TC-PERF-007 (/api/v1/prices/COFFEE/dak-lak)",
          level="ST", module="docker-compose (pricing-service)",
          title="Stack Docker Compose không có pricing-service: màn giá tham chiếu trả 500",
@@ -188,5 +188,5 @@ DEFECTS = [
                                    "scripts/unit-test-report/results/perf-20261128/perf.json"),
          cause="backend/docker-compose.yml chỉ khai báo pricing-db và analytics-db, không có service pricing-service "
                "và analytics-service; gateway chuyển /api/v1/prices/** tới PRICING_SERVICE_URL không có ai nghe",
-         fix=("Chưa có issue", None, "N/A"), status="Open", retest=None),
+         fix=("#714", None, "N/A"), status="Open", retest=None),
 ]
