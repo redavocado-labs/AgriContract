@@ -1,4 +1,4 @@
-# Defects of Report 5.5 (#670): every real test failure Cuong or Long ran into, with its fix and re-test.
+# Defects of Report 5.6 (#670): every real test failure Cuong or Long ran into, with its fix and re-test.
 # Sources, nothing typed from memory:
 #   CI   GitHub Actions runs with status failure, triggering actor RedAvocado22 (Cuong) or LetMeSoloSir (Long);
 #        failing test read from the job log; re-test = first green CI run on that branch after the fix commit;

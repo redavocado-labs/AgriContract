@@ -1,7 +1,7 @@
 # Report 5.1 (#521): say what each round is, in place through Excel (COM).
 #   Round 1  first run: 31/10/2026 for the modules merged by then, the merge date for later ones; the history the
 #            10/11 report recorded, with no run log kept (except AnalyticsTopology UTC004, whose CI runs are DEF-01
-#            of Report 5.5)
+#            of Report 5.6)
 #   Round 2  confirmation: the 31/10 modules run again on 07/11/2026; history, no run log kept
 #   Round 3  regression: every unit test of each service run again on today's code, each row read per test from
 #            results/unit-round3*/ (update_51_traced.py and, for api-gateway/product/user, update_51_nhl.py)
@@ -59,7 +59,7 @@ for svc in sorted(runs):
                    f"{len(files) - tests} file khác")
 
 text = (MARKER + " Round 1 = lần chạy đầu (31/10/2026 với module cũ, ngày merge với module mới), lịch sử của báo cáo "
-        "10/11, không lưu log chạy, trừ AnalyticsTopology UTC004 có CI run trong Report 5.5 DEF-01. Round 2 = "
+        "10/11, không lưu log chạy, trừ AnalyticsTopology UTC004 có CI run trong Report 5.6 DEF-01. Round 2 = "
         "confirmation: chạy lại ngày 07/11/2026 các module của 31/10, cũng là lịch sử, không lưu log. Round 3 = "
         "regression: chạy lại toàn bộ unit test của từng service trên code hiện tại, kết quả từng test lưu trong "
         "scripts/unit-test-report/results/unit-round3*/; dòng nào test đã bị xoá thì N/A. Thay đổi từ Round 2 (main "
@@ -111,7 +111,7 @@ for col, value in enumerate(["'" + CHANGE_DATE, version, "Test Statistics, Round
                              "Phân loại round: Round 1 lần chạy đầu, Round 2 confirmation, Round 3 regression; mỗi "
                              "dòng ghi test và đọc Round 3 từ lần chạy thật (không còn Passed mặc định); UTC004 "
                              "Failed → Passed theo DEF-01; thay đổi giữa Round 2 và Round 3 đếm bằng git",
-                             "#521, Report 5.5"], start=1):
+                             "#521, Report 5.6"], start=1):
     busy(lambda: setattr(cover.Cells(row, col), "Value", value))
 
 busy(lambda: xl.CalculateFull())

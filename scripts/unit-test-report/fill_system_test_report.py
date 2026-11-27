@@ -11,10 +11,10 @@
 #   results   each round is a run of backend/scripts/run-e2e-full.sh imported by import_e2e_round.py into
 #             results/st-round<N>/; Passed/Failed/Pending are decided by backend/scripts/e2e/report.py, the same code
 #             that wrote the runner's TESTING-ROUNDS.md
-#   defects   a Failed row must map to a defect of Report 5.5 (DEFECTS below), else the script stops
+#   defects   a Failed row must map to a defect of Report 5.6 (DEFECTS below), else the script stops
 #
 #   python fill_system_test_report.py template/Report-5.1_Unit_Test_template.xlsx \
-#       ../../docs/reports/Report-5.3_System_Test.xlsx
+#       ../../docs/reports/Report-5.3_System_Test_FRs.xlsx
 import atexit
 import importlib.util
 import json
@@ -70,7 +70,7 @@ BOUNDARY = {  # the input sits on a limit (Report 5.0 §I.2.1)
     "SEC-120": "khoá tạm sau đúng 5 lần sai mật khẩu",
     "SEC-180": "page = -1 (min - 1)",
 }
-# Failed row -> defect of Report 5.5 (data_defects.py)
+# Failed row -> defect of Report 5.6 (data_defects.py)
 DEFECTS = {"gateway-empty-denial": "DEF-15 (#663)",
            # Round 1 on Windows: the time-travel helper could not start (spawn EFTYPE), fixed in PR #686
            "BF04-250": "DEF-18 (#685)"}
@@ -253,7 +253,7 @@ for flow, sheet, folder, desc, pre in FLOWS:
         note=f"queues-{flow.lower()}.json" + "".join(
             f"\nRound {i + 1}: {why}" for i, (_, _, why) in enumerate(dlq) if why))]))
     MODULES.append(dict(flow=flow, sheet=sheet, desc=desc, pre=pre, groups=groups))
-assert not unmapped, "Failed rows without a Report 5.5 defect:\n  " + "\n  ".join(unmapped)
+assert not unmapped, "Failed rows without a Report 5.6 defect:\n  " + "\n  ".join(unmapped)
 
 # ── Excel ────────────────────────────────────────────────────────────────────────────────────────────────────
 xl = win32com.client.DispatchEx("Excel.Application")
@@ -401,7 +401,7 @@ for ref, text in zip(["A11", "B11", "C11", "D11", "E11", "F11"],
                       "của luồng (request Bruno trong backend/bruno/e2e, backend/bruno/security), cộng các bước chưa "
                       "chạy được của status.tsv và kiểm tra DLQ sau mỗi flow; kết quả từ run-e2e-full.sh, "
                       + ", ".join(f"Round {i + 1} {r['run']}" for i, r in enumerate(ROUNDS)),
-                      "SRS v1.7 §I.2, Report 5.0, Report 5.5"]):
+                      "SRS v1.7 §I.2, Report 5.0, Report 5.6"]):
     put(cover.Range(ref), text)
 
 # ── Test Cases ───────────────────────────────────────────────────────────────
@@ -419,7 +419,7 @@ put(tc.Range("D5"), (
     "4. Kết quả: report.py của runner quyết định Passed/Failed/Pending từ JSON của Bruno; nhập vào "
     "scripts/unit-test-report/results/st-round<N>/ bằng import_e2e_round.py\n"
     "5. 1 dòng = 1 bước của luồng; Pre-conditions ghi case phải chạy trước; Note ghi request Bruno và nguồn đặc tả; "
-    "Defect IDs ghi defect của Report 5.5; dòng Pending/N/A ghi lý do theo status.tsv\n"
+    "Defect IDs ghi defect của Report 5.6; dòng Pending/N/A ghi lý do theo status.tsv\n"
     "6. Actual Results (cột Q, thêm theo góp ý mentor 27/11): HTTP status và body (code, message của ErrorEnvelope) "
     "hoặc lỗi assertion mà hệ thống trả ở từng round, đọc từ JSON của Bruno; dòng DLQ ghi số message của queue .dlq"))
 for i, m in enumerate(MODULES):
