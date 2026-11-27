@@ -80,6 +80,9 @@ CHANGES = [
      "từ chối (Report 5.3 Round 3, chạy thứ Bảy)", "Report 5.3 Round 3"),
     ("28/11/2026", "Defect List", "A", "Thêm DEF-20: stack Docker Compose không có pricing-service, giá tham chiếu "
      "trả 500 (Report 5.4 load test)", "Report 5.4 Performance"),
+    ("28/11/2026", "Defect List", "A", "Thêm DEF-21 (Keycloak webOrigins thừa dấu /, web client mất phiên), DEF-22 "
+     "(GreenMail quay CPU sau healthcheck), DEF-23 (tiền thiếu 2 số lẻ) từ ST qua giao diện; DEF-18, DEF-19 trỏ sang "
+     "sheet Bruno e2e ở Report 5.2", "Report 5.3, Report 5.4"),
 ]
 for row, (date, item, kind, text, ref) in enumerate(CHANGES, start=12):
     for col, value in zip("ABCDEF", (date, "v1.0", item, kind, text, ref)):
@@ -139,7 +142,7 @@ st["A2"] = "DEFECT STATISTICS"
 st["F4"], st["F6"] = CREATOR, ISSUE_DATE
 st["B6"] = '=Cover!B6'
 st["B7"] = ("Defect tìm thấy khi chạy test từ 15/11 đến 28/11/2026: CI GitHub Actions (UT, IT, Playwright, golden flow), "
-            "Report 5.2 Round 1 (Bruno), các vòng E2E (Report 5.3) và đo hiệu năng (Report 5.4). Chỉ tính lỗi do code, config, contract "
+            "Report 5.2 (Bruno, gồm các vòng e2e chuyển từ Report 5.3), system test qua giao diện (Report 5.3) và Report 5.4. Chỉ tính lỗi do code, config, contract "
             "hoặc dữ liệu seed; không tính lần CI không chạy (khoá billing), lỗi tải Maven và lỗi đỏ lúc đang code. "
             "Tester = người kích hoạt lần chạy. Re-test = lần CI/vòng test xanh đầu tiên sau commit sửa.")
 col_of = {name: openpyxl.utils.get_column_letter(i) for i, (name, _, _) in enumerate(COLUMNS, start=1)}

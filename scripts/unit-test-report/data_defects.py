@@ -154,7 +154,8 @@ DEFECTS = [
          cause="#673 thêm module shared vào pom cha nhưng 9 Dockerfile copy từng module bằng tay, không có module mới; E2E trên PR không chạy nên chỉ lộ trên main",
          fix=("#288, PR #678", "7e708dab", CUONG), status="Closed",
          retest=("27/11/2026", "e1d33257", "Passed", RUN + "45888671217")),
-    dict(id="DEF-18", test="5.3 BF04_Milestone BF04-250 (clean/095-auto-confirm.bru)", level="ST", module="e2e (helper Bruno)",
+    dict(id="DEF-18", test="5.2 BF04_MilestoneApi BF04-250 (clean/095-auto-confirm.bru; tới 28/11 ở Report 5.3)", level="IT",
+         module="e2e (helper Bruno)",
          title="Helper lùi thời gian của BF04-250 không chạy được trên máy Windows",
          expected="Lùi buyer_received_at của fixture 14 ngày, job D78 tự xác nhận milestone",
          actual="spawnSync <repo>\\backend\\scripts\\e2e\\time-travel.sh EFTYPE, fixture không được lùi",
@@ -163,8 +164,9 @@ DEFECTS = [
          fix=("#685, PR #686", "4d0eff24", LONG), status="Closed",
          # Round 2 ran on the PR head 43c48666, merged unchanged as 4d0eff24
          retest=("27/11/2026", "4d0eff24", "Passed", "scripts/unit-test-report/results/st-round2/")),
-    dict(id="DEF-19", test="5.3 BF03_Signing BF03-070; BF04-010, BF04-110, BF04-310; Security SEC-130..SEC-170",
-         level="ST", module="e2e (fixture Bruno)",
+    dict(id="DEF-19", test="5.2 BF03_SigningApi BF03-070; BF04_MilestoneApi BF04-010, BF04-110, BF04-310; SecurityApi "
+                            "SEC-130..SEC-170 (tới 28/11 ở Report 5.3)",
+         level="IT", module="e2e (fixture Bruno)",
          title="Bộ Bruno BF-03/BF-04 chạy vào ngày nghỉ: chữ ký thứ 2 bị từ chối, cả chuỗi BF-04 không chạy",
          expected="Ngày không phải ngày làm việc ở Việt Nam thì fixture ký → kích hoạt → BF-04 tự bỏ qua (Pending), "
                   "như golden-flow.test.mjs; ngày làm việc thì chạy hết",
@@ -189,4 +191,35 @@ DEFECTS = [
          cause="backend/docker-compose.yml chỉ khai báo pricing-db và analytics-db, không có service pricing-service "
                "và analytics-service; gateway chuyển /api/v1/prices/** tới PRICING_SERVICE_URL không có ai nghe",
          fix=("#714", None, "N/A"), status="Open", retest=None),
+    dict(id="DEF-21", test="5.3 mọi case đăng nhập qua giao diện (BF01_Onboarding, BF03_Signing, RolePortals)",
+         level="ST", module="infra (Keycloak realm agricontract)",
+         title="Web client mất phiên sau khi đăng nhập: Keycloak trả 403 cho login-status iframe",
+         expected="Đăng nhập trên trang Keycloak xong, web client ở http://localhost:5173 nhận phiên và gọi API",
+         actual="login-status-iframe.html/init trả 403 vì origin http://localhost:5173 không khớp webOrigins "
+                "http://localhost:5173/ (thừa dấu /); web client coi như chưa đăng nhập",
+         severity="High", found=("28/11/2026", "c6ae8858", CUONG, "frontend/tests/st (chạy ST qua giao diện lần đầu)"),
+         cause="webOrigins của client agricontract-frontend trong agricontract-realm.json có dấu / cuối; Keycloak so "
+               "origin nguyên chuỗi, origin trình duyệt gửi không có /",
+         fix=("commit d226e39e", "d226e39e", CUONG), status="Closed",
+         retest=("28/11/2026", "d226e39e", "Passed", "scripts/unit-test-report/results/st-ui/results-chromium.json")),
+    dict(id="DEF-22", test="5.4 Performance (stack chạy load test 28/11)", level="ST",
+         module="docker-compose (greenmail)",
+         title="GreenMail chiếm hàng chục core CPU sau vài giờ chạy stack",
+         expected="Mail server gần như không dùng CPU khi không có thư",
+         actual="docker stats: agricontract-bruno-greenmail khoảng 2900% CPU; mỗi lần healthcheck để lại 1 thread IMAP "
+                "quay 100% CPU",
+         severity="Medium", found=("28/11/2026", "42a48dd5", CUONG, "docker stats trên stack agricontract-bruno"),
+         cause="Healthcheck mở cổng IMAP 3143 rồi đóng socket không LOGOUT; GreenMail 2.1.5 giữ session đó quay "
+               "vòng mãi",
+         fix=("commit 8d91c62a", "8d91c62a", CUONG), status="Closed",
+         retest=("28/11/2026", "8d91c62a", "Passed", "docker stats sau 40 phút: greenmail không còn trong top CPU")),
+    dict(id="DEF-23", test="5.4 Usability TC-USA-005 (ST-USA-020)", level="ST", module="frontend",
+         title="Tiền hiển thị thiếu 2 số lẻ: 96.000 ₫ thay vì 96.000,00 ₫",
+         expected="SRS IV.2.1 Money presentation: mọi số tiền hiện VND, phân cách nghìn và 2 số lẻ "
+                  "(96.000,00 ₫/kg, tổng 96.000.000,00 ₫)",
+         actual="Trang listing và hợp đồng hiện 96.000 ₫/kg và 96.000.000 ₫",
+         severity="Low", found=("28/11/2026", "1a12c1c0", CUONG,
+                                "scripts/unit-test-report/results/st-ui/results-chromium.json"),
+         cause="formatDecimalVnd (frontend/src/shared/lib/decimal-display.ts) bỏ phần lẻ khi phần lẻ bằng 0",
+         fix=("Chưa mở issue", None, "N/A"), status="Open", retest=None),
 ]
