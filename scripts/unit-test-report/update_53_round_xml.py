@@ -1,3 +1,5 @@
+# Since 28/11/2026 these Bruno e2e sheets live in Report 5.2 (move_bruno_st_to_52.py, D95) as <Sheet>Api with ITC IDs,
+# and Report 5.3 holds the system tests through the web client (fill_53_ui.py). The text below describes the old place.
 # Report 5.3: write the newest run-e2e-full.sh round (results/st-round<N>/, imported by import_e2e_round.py) into
 # the existing workbook, on any OS (sheet XML through xlsx_cells.py, no Excel). The rows, their results and their
 # Actual Results text are decided by the same code as fill_system_test_report.py: its row-building part (everything

@@ -1,3 +1,5 @@
+# Since 28/11/2026 these Bruno e2e sheets live in Report 5.2 (move_bruno_st_to_52.py, D95) as <Sheet>Api with ITC IDs,
+# and Report 5.3 holds the system tests through the web client (fill_53_ui.py). The text below describes the old place.
 # Fill the Report 5.1 template (template/Report-5.1_Unit_Test_template.xlsx) with the system test cases (STC) of
 # the business flows BF-01..BF-07 and the security suite, and write Report 5.3 (#676). Same steps as
 # fill_bruno_report.py (one copy of ModuleName1 per sheet, Test Cases list, Test Statistics), driven through Excel
