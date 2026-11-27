@@ -29,13 +29,13 @@ services:
 
   keycloak:
     # Keycloak 24 + the registration-role provider (infra/keycloak/role-spi) and the login theme
-    # (frontend-keycloak-theme/), D47.
+    # (frontend/keycloak-theme/), D47.
     # The realm file is imported on first start only (an existing realm is kept): after a realm change, drop the
     # old data once: `docker compose rm -sf keycloak && docker volume rm backend_keycloak_data` (project "backend").
     build:
       context: ./infra/keycloak
       additional_contexts:
-        theme-src: ../frontend-keycloak-theme
+        theme-src: ../frontend/keycloak-theme
     image: agricontract/keycloak:24.0.4
     container_name: keycloak
     environment:

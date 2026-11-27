@@ -9,7 +9,8 @@ on:
     paths:
       - 'backend/**'
       - 'contracts/**'
-      - 'frontend-keycloak-theme/**'
+      - 'tests/e2e/**'
+      - 'frontend/keycloak-theme/**'
       - '.github/workflows/e2e.yml'
   # A pull request runs it only when it touches what the flow logs in and starts through (#666: the Keycloakify
   # theme of #665 broke the login helpers and was only seen on main), or how the images are built (#288: the
@@ -22,9 +23,9 @@ on:
       - 'backend/shared/**'
       - 'backend/infra/**'
       - 'backend/docker-compose.yml'
-      - 'frontend-keycloak-theme/**'
-      - 'backend/e2e/**'
-      - 'backend/bruno/e2e/**'
+      - 'frontend/keycloak-theme/**'
+      - 'tests/e2e/**'
+      - 'tests/api/e2e/**'
       - '.github/workflows/e2e.yml'
   schedule:
     # 01:00 UTC = 08:00 in Vietnam, Monday to Friday: a scenario that activates a contract needs a Vietnam
@@ -80,11 +81,11 @@ jobs:
 
       # The services the golden flow calls, their dependencies, and reputation-service: it is the only consumer of
       # milestone.dispute_resolved, and without its queue the mandatory publish stalls contract-service's outbox, so
-      # the contract never settles. Analytics and pricing are not on the path. e2e/compose.e2e.yml only shortens the
+      # the contract never settles. Analytics and pricing are not on the path. tests/e2e/compose.e2e.yml only shortens the
       # plot geo-check timeout.
       - name: Build and start the stack
         run: >-
-          docker compose -f docker-compose.yml -f e2e/compose.e2e.yml up -d --build
+          docker compose -f docker-compose.yml -f ../tests/e2e/compose.e2e.yml up -d --build
           api-gateway user-service product-service contract-service escrow-service bank-service
           inspection-service audit-service notification-service file-service reputation-service mailhog
 
@@ -101,19 +102,19 @@ jobs:
             < scripts/seed/02-user-db.sql
 
       - name: Golden flow
-        working-directory: backend/e2e
+        working-directory: tests/e2e
         run: npm test
 
       - name: Collect service logs
         if: failure()
         run: |
-          mkdir -p e2e/out/logs
-          for c in $(docker compose ps -a --format '{{.Name}}'); do docker logs "$c" > "e2e/out/logs/$c.log" 2>&1 || true; done
+          mkdir -p ../tests/e2e/out/logs
+          for c in $(docker compose ps -a --format '{{.Name}}'); do docker logs "$c" > "../tests/e2e/out/logs/$c.log" 2>&1 || true; done
 
       - name: Upload evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-evidence
-          path: backend/e2e/out/
+          path: tests/e2e/out/
           if-no-files-found: ignore

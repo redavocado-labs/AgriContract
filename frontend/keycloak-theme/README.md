@@ -23,7 +23,7 @@ Chỉ tùy biến `login.ftl`, `register.ftl`, `login-reset-password.ftl`, `logi
 Yêu cầu Node.js 22+, Java và Maven trên PATH; Docker đang chạy khi kiểm thử Keycloak.
 
 ```sh
-cd frontend-keycloak-theme
+cd frontend/keycloak-theme
 npm ci
 npm run lint
 npm run build
@@ -109,7 +109,7 @@ Các tài khoản trên chỉ tồn tại trong realm kiểm thử `myrealm`; kh
 
 ## File bàn giao
 
-Tất cả file mới thuộc `frontend-keycloak-theme/`:
+Tất cả file mới thuộc `frontend/keycloak-theme/`:
 
 - Cấu hình: `.gitignore`, `LICENSE`, `README.md`, `package.json`, `package-lock.json`, `index.html`, `vite.config.ts`, `tsconfig.json`, `tsconfig.node.json`.
 - Khởi chạy: `src/main.tsx`, `src/kc.gen.tsx` (Keycloakify sinh), `src/vite-env.d.ts`, `src/preview.ts`, `scripts/prepare-local-realm.mjs`.
