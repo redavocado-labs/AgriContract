@@ -1,0 +1,2200 @@
+{
+  "config": {
+    "argv": [
+      "/home/cuong/.nvm/versions/node/v24.16.0/bin/node",
+      "/home/cuong/projects/AgriContract/frontend/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "tests/st/playwright.st.config.ts",
+      "--project=chromium"
+    ],
+    "configFile": "/home/cuong/projects/AgriContract/frontend/tests/st/playwright.st.config.ts",
+    "rootDir": "/home/cuong/projects/AgriContract/frontend/tests/st",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/tmp/agricontract-st-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/cuong/projects/AgriContract/frontend/tests/st",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.st.ts"
+        ],
+        "timeout": 240000
+      },
+      {
+        "outputDir": "/tmp/agricontract-st-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "/home/cuong/projects/AgriContract/frontend/tests/st",
+        "testIgnore": [],
+        "testMatch": [
+          "**/browsers.st.ts"
+        ],
+        "timeout": 240000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/tmp/agricontract-st-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "chromium",
+        "testDir": "/home/cuong/projects/AgriContract/frontend/tests/st",
+        "snapshotDir": "/home/cuong/projects/AgriContract/frontend/tests/st",
+        "testIgnore": [],
+        "testMatch": "**/*.st.ts",
+        "timeout": 240000,
+        "use": {
+          "baseURL": "http://localhost:5173",
+          "actionTimeout": 20000,
+          "navigationTimeout": 30000,
+          "trace": "retain-on-failure",
+          "screenshot": "only-on-failure",
+          "locale": "vi-VN",
+          "timezoneId": "Asia/Ho_Chi_Minh",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1366,
+            "height": 900
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../../../scripts/unit-test-report/results/st-ui/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "arbitrator-admin.st.ts",
+      "file": "arbitrator-admin.st.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "ST-ADM-010 Admin checks global audit log and verifies chain integrity",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2937,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T23:07:24.548Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fad7d1854159297126a9-66c156879083a186cc6a",
+          "file": "arbitrator-admin.st.ts",
+          "line": 59,
+          "column": 1
+        },
+        {
+          "title": "ST-ADM-020 Admin inspects a contract audit trail and creates an audit.viewed trace",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9453,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T23:07:27.543Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fad7d1854159297126a9-571537ca0bb5da28b087",
+          "file": "arbitrator-admin.st.ts",
+          "line": 69,
+          "column": 1
+        },
+        {
+          "title": "ST-OPR-010 Operator opens remedy retry portal, validates UUID, and submits safely",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2982,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T23:07:37.006Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fad7d1854159297126a9-650bd0d69e209c2d6135",
+          "file": "arbitrator-admin.st.ts",
+          "line": 91,
+          "column": 1
+        },
+        {
+          "title": "ST-ARB-010 Arbitrator opens dispute queue from real backend",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2937,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T23:07:39.999Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fad7d1854159297126a9-df792bfff240f10a07b4",
+          "file": "arbitrator-admin.st.ts",
+          "line": 106,
+          "column": 1
+        },
+        {
+          "title": "ST-SEC-010 Role isolation (no fallback): Admin cannot access Arbitrator/Operator routes; Buyer cannot access Admin/Operator/Arbitrator routes",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4637,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T23:07:42.947Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fad7d1854159297126a9-9f1ff48cd5b18f4da803",
+          "file": "arbitrator-admin.st.ts",
+          "line": 116,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "bf01-onboarding.st.ts",
+      "file": "bf01-onboarding.st.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "BF-01 buyer onboarding approved",
+          "file": "bf01-onboarding.st.ts",
+          "line": 8,
+          "column": 15,
+          "specs": [
+            {
+              "title": "ST-BF01-010 Guest registers as a buyer on the sign-up page",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
+                        "line": 8,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 789,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:07:47.603Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
+                            "line": 8,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b44d19da793a00c6b462-0e8d6d7ffd5eedc74dd1",
+              "file": "bf01-onboarding.st.ts",
+              "line": 17,
+              "column": 3
+            },
+            {
+              "title": "ST-BF01-020 Buyer submits the organization profile and waits for KYC",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
+                        "line": 8,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 159,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:07:48.616Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
+                            "line": 8,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b44d19da793a00c6b462-f79d887a2e05dd674886",
+              "file": "bf01-onboarding.st.ts",
+              "line": 24,
+              "column": 3
+            },
+            {
+              "title": "ST-BF01-030 Buyer verifies the OTP e-mail with the code from the mail",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
+                        "line": 8,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 192,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:07:48.791Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
+                            "line": 8,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b44d19da793a00c6b462-d369d88ccdcba5e070b2",
+              "file": "bf01-onboarding.st.ts",
+              "line": 30,
+              "column": 3
+            },
+            {
+              "title": "ST-BF01-040 Operator verifies the KYC (API: no review screen yet); the buyer sees VERIFIED",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
+                        "line": 8,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 878,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:07:48.996Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
+                            "line": 8,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b44d19da793a00c6b462-5334a275f24b01d43e02",
+              "file": "bf01-onboarding.st.ts",
+              "line": 36,
+              "column": 3
+            },
+            {
+              "title": "ST-BF01-050 The KYC result reaches the buyer by e-mail",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
+                        "line": 8,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:07:49.887Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
+                            "line": 8,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b44d19da793a00c6b462-6ae1314fe927dc67040d",
+              "file": "bf01-onboarding.st.ts",
+              "line": 46,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "BF-01 seller onboarding rejected",
+          "file": "bf01-onboarding.st.ts",
+          "line": 56,
+          "column": 15,
+          "specs": [
+            {
+              "title": "ST-BF01-060 Guest registers as a seller and submits the profile",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
+                        "line": 56,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1013,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:07:49.909Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
+                            "line": 56,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b44d19da793a00c6b462-09f7b300910aae4ea13c",
+              "file": "bf01-onboarding.st.ts",
+              "line": 65,
+              "column": 3
+            },
+            {
+              "title": "ST-BF01-070 Operator rejects the KYC with a reason (API); the seller sees REJECTED, the reason comes by e-mail",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
+                        "line": 56,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 885,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:07:51.129Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
+                            "line": 56,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b44d19da793a00c6b462-eeaa9faa47c88528e187",
+              "file": "bf01-onboarding.st.ts",
+              "line": 74,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "bf02-marketplace.st.ts",
+      "file": "bf02-marketplace.st.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "BF-02 a published listing on the marketplace",
+          "file": "bf02-marketplace.st.ts",
+          "line": 6,
+          "column": 15,
+          "specs": [
+            {
+              "title": "ST-BF02-010 Seller publishes a coffee listing from a checked plot (API: no seller screen yet)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf02-marketplace.st.ts",
+                        "line": 6,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3186,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:07:52.035Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf02-marketplace.st.ts",
+                            "line": 6,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "21caa3db601586169147-6a7c80835691eb431b96",
+              "file": "bf02-marketplace.st.ts",
+              "line": 14,
+              "column": 3
+            },
+            {
+              "title": "ST-BF02-020 Guest opens the marketplace without signing in",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf02-marketplace.st.ts",
+                        "line": 6,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1035,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:07:55.440Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf02-marketplace.st.ts",
+                            "line": 6,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "21caa3db601586169147-07279ed04c9e93b7e3f5",
+              "file": "bf02-marketplace.st.ts",
+              "line": 19,
+              "column": 3
+            },
+            {
+              "title": "ST-BF02-030 Guest reads the listing: price, quantities, declared quality, no seller contact data",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf02-marketplace.st.ts",
+                        "line": 6,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 898,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:07:56.493Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf02-marketplace.st.ts",
+                            "line": 6,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "21caa3db601586169147-b54ded060d7917032134",
+              "file": "bf02-marketplace.st.ts",
+              "line": 25,
+              "column": 3
+            },
+            {
+              "title": "ST-BF02-040 Guest who wants to offer is sent to sign in",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf02-marketplace.st.ts",
+                        "line": 6,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 59,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:07:57.412Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf02-marketplace.st.ts",
+                            "line": 6,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "21caa3db601586169147-15c79f4ebf1ac308c432",
+              "file": "bf02-marketplace.st.ts",
+              "line": 37,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "bf03-signing.st.ts",
+      "file": "bf03-signing.st.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Golden flow: BF-03 signing and activation, then BF-04 delivery and settlement",
+          "file": "bf03-signing.st.ts",
+          "line": 68,
+          "column": 15,
+          "specs": [
+            {
+              "title": "ST-BF03-010 Buyer sends an offer from the listing page",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 68,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1168,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:07:57.494Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 68,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8333bf93429e98e01d75-722cb817789df8b4de4b",
+              "file": "bf03-signing.st.ts",
+              "line": 83,
+              "column": 3
+            },
+            {
+              "title": "ST-BF03-020 The offered quantity is reserved on the listing",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 68,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 862,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:08:04.993Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 68,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8333bf93429e98e01d75-69c560b51dbd0e5228f0",
+              "file": "bf03-signing.st.ts",
+              "line": 88,
+              "column": 3
+            },
+            {
+              "title": "ST-BF03-030 Seller revises the unit price; the terms fingerprint changes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 68,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1080,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:08:05.874Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 68,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8333bf93429e98e01d75-c21e975b6b3e9c1fc4b8",
+              "file": "bf03-signing.st.ts",
+              "line": 92,
+              "column": 3
+            },
+            {
+              "title": "ST-BF03-040 Buyer signs with the OTP from the mail",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 68,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3097,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:08:06.975Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 68,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8333bf93429e98e01d75-656ad69acdf8d4188ea0",
+              "file": "bf03-signing.st.ts",
+              "line": 105,
+              "column": 3
+            },
+            {
+              "title": "ST-BF03-050 Seller signs with the OTP; the contract is SIGNED",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 68,
+                        "column": 15
+                      }
+                    },
+                    {
+                      "type": "skip",
+                      "description": "2026-11-28 is not a Vietnam business day: no milestone can be funded at activation today (D63, D67)",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 112,
+                        "column": 10
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 2,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:08:10.095Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 68,
+                            "column": 15
+                          }
+                        },
+                        {
+                          "type": "skip",
+                          "description": "2026-11-28 is not a Vietnam business day: no milestone can be funded at activation today (D63, D67)",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 112,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "8333bf93429e98e01d75-620ee5d2099da7128f63",
+              "file": "bf03-signing.st.ts",
+              "line": 111,
+              "column": 3
+            },
+            {
+              "title": "ST-BF03-060 Escrow locks both deposits; both parties see the contract ACTIVE",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 68,
+                        "column": 15
+                      }
+                    },
+                    {
+                      "type": "skip",
+                      "description": "2026-11-28 is not a Vietnam business day: no milestone can be funded at activation today (D63, D67)",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 119,
+                        "column": 10
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 1,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:08:10.122Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 68,
+                            "column": 15
+                          }
+                        },
+                        {
+                          "type": "skip",
+                          "description": "2026-11-28 is not a Vietnam business day: no milestone can be funded at activation today (D63, D67)",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 119,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "8333bf93429e98e01d75-e935a4514b7eb694c6cb",
+              "file": "bf03-signing.st.ts",
+              "line": 118,
+              "column": 3
+            },
+            {
+              "title": "ST-BF04-010 Both parties see the funded milestone of the ACTIVE contract",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 68,
+                        "column": 15
+                      }
+                    },
+                    {
+                      "type": "skip",
+                      "description": "2026-11-28 is not a Vietnam business day: no milestone can be funded at activation today (D63, D67)",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 126,
+                        "column": 10
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 1,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:08:10.142Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 68,
+                            "column": 15
+                          }
+                        },
+                        {
+                          "type": "skip",
+                          "description": "2026-11-28 is not a Vietnam business day: no milestone can be funded at activation today (D63, D67)",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 126,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "8333bf93429e98e01d75-ddf6abe038d9f6aff0e4",
+              "file": "bf03-signing.st.ts",
+              "line": 125,
+              "column": 3
+            },
+            {
+              "title": "ST-BF04-020 Seller weighs before dispatch with a photo; the milestone is SELLER_WEIGHED",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 68,
+                        "column": 15
+                      }
+                    },
+                    {
+                      "type": "skip",
+                      "description": "2026-11-28 is not a Vietnam business day: no milestone can be funded at activation today (D63, D67)",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 136,
+                        "column": 10
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 1,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:08:10.162Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 68,
+                            "column": 15
+                          }
+                        },
+                        {
+                          "type": "skip",
+                          "description": "2026-11-28 is not a Vietnam business day: no milestone can be funded at activation today (D63, D67)",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 136,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "8333bf93429e98e01d75-7a63c1ac60fa76f95c81",
+              "file": "bf03-signing.st.ts",
+              "line": 135,
+              "column": 3
+            },
+            {
+              "title": "ST-BF04-030 Buyer sees the seller's weight and records the received weight",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 68,
+                        "column": 15
+                      }
+                    },
+                    {
+                      "type": "skip",
+                      "description": "2026-11-28 is not a Vietnam business day: no milestone can be funded at activation today (D63, D67)",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 144,
+                        "column": 10
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 1,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:08:10.181Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 68,
+                            "column": 15
+                          }
+                        },
+                        {
+                          "type": "skip",
+                          "description": "2026-11-28 is not a Vietnam business day: no milestone can be funded at activation today (D63, D67)",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 144,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "8333bf93429e98e01d75-b95af716f98cc0c1941a",
+              "file": "bf03-signing.st.ts",
+              "line": 143,
+              "column": 3
+            },
+            {
+              "title": "ST-BF04-040 Buyer confirms a clean receipt; the milestone settles",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 68,
+                        "column": 15
+                      }
+                    },
+                    {
+                      "type": "skip",
+                      "description": "2026-11-28 is not a Vietnam business day: no milestone can be funded at activation today (D63, D67)",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 153,
+                        "column": 10
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 1,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:08:10.201Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 68,
+                            "column": 15
+                          }
+                        },
+                        {
+                          "type": "skip",
+                          "description": "2026-11-28 is not a Vietnam business day: no milestone can be funded at activation today (D63, D67)",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 153,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "8333bf93429e98e01d75-6815dd5fc2d5235b3add",
+              "file": "bf03-signing.st.ts",
+              "line": 152,
+              "column": 3
+            },
+            {
+              "title": "ST-BF04-050 With its only milestone settled, the contract is SETTLED once escrow clears the locks",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 68,
+                        "column": 15
+                      }
+                    },
+                    {
+                      "type": "skip",
+                      "description": "2026-11-28 is not a Vietnam business day: no milestone can be funded at activation today (D63, D67)",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 162,
+                        "column": 10
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 1,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:08:10.221Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 68,
+                            "column": 15
+                          }
+                        },
+                        {
+                          "type": "skip",
+                          "description": "2026-11-28 is not a Vietnam business day: no milestone can be funded at activation today (D63, D67)",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 162,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "8333bf93429e98e01d75-de0f4b9d2d7df79b3c53",
+              "file": "bf03-signing.st.ts",
+              "line": 161,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "BF-03 offer withdrawn before the second signature",
+          "file": "bf03-signing.st.ts",
+          "line": 170,
+          "column": 15,
+          "specs": [
+            {
+              "title": "ST-BF03-110 Buyer sends an offer",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 170,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1983,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:08:10.240Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 170,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8333bf93429e98e01d75-084f31477c755426f7a9",
+              "file": "bf03-signing.st.ts",
+              "line": 180,
+              "column": 3
+            },
+            {
+              "title": "ST-BF03-120 Buyer withdraws the offer after confirming",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 170,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 968,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:08:17.849Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 170,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8333bf93429e98e01d75-5c5672fca625c3a48336",
+              "file": "bf03-signing.st.ts",
+              "line": 185,
+              "column": 3
+            },
+            {
+              "title": "ST-BF03-130 The reserved quantity returns to the listing and no money stays locked",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                        "line": 170,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 6142,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-27T23:08:18.846Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf03-signing.st.ts",
+                            "line": 170,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8333bf93429e98e01d75-945c877315a53d7bc18e",
+              "file": "bf03-signing.st.ts",
+              "line": 193,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "browsers.st.ts",
+      "file": "browsers.st.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "ST-BRW-010 Public screen / renders without JS error or horizontal overflow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1212,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T23:08:25.016Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "705b68e78acf6fa48edd-0b24827b40eec3b21a98",
+          "file": "browsers.st.ts",
+          "line": 22,
+          "column": 3
+        },
+        {
+          "title": "ST-BRW-020 Public screen /listing renders without JS error or horizontal overflow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1753,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T23:08:29.663Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "705b68e78acf6fa48edd-4e1a4ba244fc85ebab7f",
+          "file": "browsers.st.ts",
+          "line": 22,
+          "column": 3
+        },
+        {
+          "title": "ST-BRW-030 Public screen /prices renders without JS error or horizontal overflow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 584,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T23:08:31.443Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "705b68e78acf6fa48edd-c27066997687184d5a33",
+          "file": "browsers.st.ts",
+          "line": 22,
+          "column": 3
+        },
+        {
+          "title": "ST-BRW-040 Public screen /how-it-works renders without JS error or horizontal overflow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1532,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T23:08:32.055Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "705b68e78acf6fa48edd-39c1f139e703703e0998",
+          "file": "browsers.st.ts",
+          "line": 22,
+          "column": 3
+        },
+        {
+          "title": "ST-BRW-050 Public screen /escrow renders without JS error or horizontal overflow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1915,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T23:08:33.607Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "705b68e78acf6fa48edd-2badb3ee9a251ad99b90",
+          "file": "browsers.st.ts",
+          "line": 22,
+          "column": 3
+        },
+        {
+          "title": "ST-BRW-060 Public screen /login renders without JS error or horizontal overflow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 270,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T23:08:35.542Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "705b68e78acf6fa48edd-6c674425b8de6cceb558",
+          "file": "browsers.st.ts",
+          "line": 22,
+          "column": 3
+        },
+        {
+          "title": "ST-BRW-070 Public listing detail renders without JS error or horizontal overflow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1046,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T23:08:35.831Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "705b68e78acf6fa48edd-40b9f7abbd771c59a76a",
+          "file": "browsers.st.ts",
+          "line": 41,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "usability.st.ts",
+      "file": "usability.st.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "ST-USA-010 Inline field validation shows beside the field and preserves other entered values",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6380,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T23:08:36.902Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e4658f1a75bdbb3ffc92-1c4fab6b9faac0d51112",
+          "file": "usability.st.ts",
+          "line": 23,
+          "column": 1
+        },
+        {
+          "title": "ST-USA-020 Money values display in VND with thousand separators",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7221,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T23:08:43.302Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e4658f1a75bdbb3ffc92-11348c3b0d545442682e",
+          "file": "usability.st.ts",
+          "line": 37,
+          "column": 1
+        },
+        {
+          "title": "ST-USA-030 Dates display as dd/MM/yyyy and server timestamps use Asia/Ho_Chi_Minh",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4310,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T23:08:50.554Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e4658f1a75bdbb3ffc92-cac60c4321f14f7c6922",
+          "file": "usability.st.ts",
+          "line": 48,
+          "column": 1
+        },
+        {
+          "title": "ST-USA-040 Blocked actions explain the exact reason (unverified KYC buyer)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5057,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T23:08:54.907Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e4658f1a75bdbb3ffc92-14497c5d9e8f01b46e2d",
+          "file": "usability.st.ts",
+          "line": 62,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-27T23:07:24.145Z",
+    "duration": 96001.788,
+    "expected": 34,
+    "skipped": 7,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
