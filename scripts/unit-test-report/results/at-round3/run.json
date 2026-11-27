@@ -1,0 +1,9 @@
+{
+  "round": "at-round3",
+  "date": "27/11/2026",
+  "tester": "Nguyen Hai Long",
+  "commit": "94d46500",
+  "source": "Local run: cd frontend && npm ci && PLAYWRIGHT_JSON_OUTPUT_NAME=... npx playwright test --config tests/qa/playwright.config.ts --reporter=list,json; Playwright 1.64.1, Node 22.16.0, Chromium headless shell, Windows 11; started 2026-11-27T07:33:23Z",
+  "evidence": "playwright.json",
+  "log": "playwright.json"
+}
