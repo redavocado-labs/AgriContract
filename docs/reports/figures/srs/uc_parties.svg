@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="790" height="830" viewBox="0 0 790 830" font-family="Arial" font-size="12">
+<svg xmlns="http://www.w3.org/2000/svg" width="790" height="890" viewBox="0 0 790 890" font-family="Arial" font-size="12">
 <defs><marker id="open" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="black" stroke-width="1.2"/></marker><marker id="tri" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L13,7 L1,13 Z" fill="white" stroke="black"/></marker></defs>
-<rect width="790" height="830" fill="white"/>
-<rect x="165" y="15" width="485" height="800" fill="white" stroke="black" stroke-width="1.3"/>
+<rect width="790" height="890" fill="white"/>
+<rect x="165" y="15" width="485" height="860" fill="white" stroke="black" stroke-width="1.3"/>
 <text text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="407.5" y="31.0">AgriContract</tspan></text>
 <line x1="60.0" y1="256.5" x2="60.0" y2="383.0" stroke="black" stroke-width="1.1" marker-end="url(#tri)"/>
 <line x1="60.0" y1="590.5" x2="60.0" y2="459.0" stroke="black" stroke-width="1.1" marker-end="url(#tri)"/>
@@ -14,6 +14,7 @@
 <line x1="74.0" y1="408.0" x2="215.0" y2="634.5" stroke="black" stroke-width="1.1"/>
 <line x1="74.0" y1="408.0" x2="215.0" y2="700.5" stroke="black" stroke-width="1.1"/>
 <line x1="74.0" y1="408.0" x2="215.0" y2="766.5" stroke="black" stroke-width="1.1"/>
+<line x1="74.0" y1="408.0" x2="215.0" y2="832.5" stroke="black" stroke-width="1.1"/>
 <line x1="465.0" y1="195.5" x2="365.7" y2="129.5" stroke="black" stroke-width="1.1" stroke-dasharray="5,4" marker-end="url(#open)"/>
 <rect x="390.744140625" y="155.5" width="49.2578125" height="14.0" fill="white"/>
 <text x="415.373046875" y="162.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-style="italic">«extend»</text>
@@ -68,6 +69,8 @@
 <text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="303.05078125" y="693.0">UC57 Propose or Accept</tspan><tspan x="303.05078125" y="708.0">Dispute Settlement</tspan></text>
 <ellipse cx="306.7109375" cy="766.5" rx="91.7109375" ry="26.0" fill="white" stroke="black" stroke-width="1.2"/>
 <text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="306.7109375" y="759.0">UC58 Withdraw or Refuse</tspan><tspan x="306.7109375" y="774.0">Settlement Proposal</tspan></text>
+<ellipse cx="280.255859375" cy="832.5" rx="65.255859375" ry="26.0" fill="white" stroke="black" stroke-width="1.2"/>
+<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="280.255859375" y="825.0">UC54 Terminate</tspan><tspan x="280.255859375" y="840.0">Contract</tspan></text>
 <ellipse cx="523.03125" cy="576.0" rx="58.03125" ry="26.0" fill="white" stroke="black" stroke-width="1.2"/>
 <text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="523.03125" y="568.5">UC38 Upload</tspan><tspan x="523.03125" y="583.5">Evidence File</tspan></text>
 <rect x="683.3203125" y="71.0" width="69.359375" height="57" fill="white" stroke="black" stroke-width="1.2"/>
