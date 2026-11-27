@@ -31,7 +31,7 @@ Out of scope: logistics, price discovery, accounting, real bank integration, CA-
 
 ## What is built
 
-The seven business flows from the requirements (Report 3) and where each one stands. Each flow has a Bruno end-to-end collection in [`backend/bruno/e2e`](backend/bruno/e2e).
+The seven business flows from the requirements (Report 3) and where each one stands. Each flow has a Bruno end-to-end collection in [`tests/api/e2e`](tests/api/e2e).
 
 | Flow | What happens | Status |
 |---|---|---|
@@ -151,9 +151,10 @@ All passwords are `pass123` (local only).
 | Unit and integration (Java) | `backend/*/src/test`, Testcontainers MySQL/RabbitMQ | `mvn -pl <service> -am verify` from `backend/` |
 | Unit, contract and integration (NestJS) | `backend/<node-service>` | `npm test`, `npm run test:int`, `npm run arch` |
 | Event and API contracts | `contracts/**` checked from both sides | part of each service's suite |
-| End to end, all seven flows | `backend/bruno/e2e` | `backend/scripts/run-e2e-full.sh --fresh --keep` |
-| Golden flow on a fresh stack | `backend/e2e` | GitHub Actions `E2E` workflow |
-| Frontend | `frontend/tests` | `npm test`, `npm run test:e2e` (Playwright) |
+| End to end, all seven flows | `tests/api/e2e` | `tests/scripts/run-e2e-full.sh --fresh --keep` |
+| Golden flow on a fresh stack | `tests/e2e` | GitHub Actions `E2E` workflow |
+| Frontend | `frontend/tests` | `npm test`, `npm run test:e2e` (Playwright, mocked API) |
+| System test through the web client | `tests/st` | `cd tests/st && npm ci && npx playwright test` (real stack, frontend on 5173) |
 
 CI runs only the jobs whose paths changed, and `ci-gate` must be green before a merge. Test reports and the defect log are in [`docs/reports`](docs/reports) (Report 5.x).
 
@@ -165,7 +166,7 @@ CI runs only the jobs whose paths changed, and `ci-gate` must be green before a 
 | Design per service, source of truth | [`docs/design`](docs/design) |
 | Frozen REST and event contracts | [`contracts/openapi`](contracts/openapi), [`contracts/events`](contracts/events) |
 | State machines, error catalogue, integration map | [`docs/contracts`](docs/contracts) |
-| E2E case catalogue | [`backend/bruno/e2e/README.md`](backend/bruno/e2e/README.md) |
+| E2E case catalogue | [`tests/api/e2e/README.md`](tests/api/e2e/README.md) |
 
 ## Team
 

@@ -1,4 +1,4 @@
-# Test cases of the Bruno collection (backend/bruno) for api-gateway, user-service and product-service.
+# Test cases of the Bruno collection (tests/api) for api-gateway, user-service and product-service.
 # Same row shape as the data_*.py files: (pre-conditions, input, return, exception, type, note).
 # Rows whose note is empty have no Bruno request yet; they come from boundary values and equivalence classes
 # of the request validation.

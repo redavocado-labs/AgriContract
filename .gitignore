@@ -22,15 +22,12 @@ GEMINI.md
 .claude/
 backend/scripts/*
 !backend/scripts/dev-seed.sh
-!backend/scripts/run-e2e.sh
-!backend/scripts/run-e2e-full.sh
-!backend/scripts/e2e/
-!backend/scripts/e2e/**
 !backend/scripts/seed/
 !backend/scripts/seed/**
 
 # E2E evidence of a local run (#149); CI uploads it as an artifact
-backend/e2e/out/
+tests/e2e/out/
+tests/st/test-results/
 
 # Maven wrapper
 !.mvn/wrapper/maven-wrapper.jar

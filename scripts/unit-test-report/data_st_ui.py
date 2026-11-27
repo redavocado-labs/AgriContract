@@ -1,5 +1,5 @@
 # System test cases through the web client (Report 5.3 from 28/11/2026): one entry per Playwright test of
-# frontend/tests/st/*.st.ts. The key is the test-title prefix; results come from results/st-ui/results-chromium.json.
+# tests/st/*.st.ts. The key is the test-title prefix; results come from results/st-ui/results-chromium.json.
 # Steps the web client has no screen for yet (Operator KYC decision, seller catalogue) go through the API and say so.
 
 SHEETS = [

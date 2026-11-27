@@ -17,7 +17,7 @@ for path in glob.glob(os.path.join(folder, "*.json")):
         text = f.read()
     masked = JWT.sub("<redacted:jwt>", text)
     # stack traces and file names carry the tester's machine paths (JSON escapes each backslash)
-    masked = re.sub(r"[A-Za-z]:(?:\\\\|/)(?:[^\"\\\\/]+(?:\\\\|/))*?(?=backend(?:\\\\|/)bruno)", "<repo>/", masked)
+    masked = re.sub(r"[A-Za-z]:(?:\\\\|/)(?:[^\"\\\\/]+(?:\\\\|/))*?(?=(?:backend(?:\\\\|/)bruno|tests(?:\\\\|/)api))", "<repo>/", masked)
     masked = re.sub(r"[A-Za-z]:(?:\\\\|/)Users(?:\\\\|/)[^\"\\\\/]+", "<home>", masked)
     if secret:
         masked = masked.replace(secret, "<redacted:GATEWAY_INTERNAL_SECRET>")

@@ -1,4 +1,4 @@
-# Rebuild Report 5.3 as system tests through the web client (Playwright on a real stack, frontend/tests/st/), after
+# Rebuild Report 5.3 as system tests through the web client (Playwright on a real stack, tests/st/), after
 # move_bruno_st_to_52.py moved the Bruno e2e sheets to Report 5.2. LibreOffice UNO keeps the charts and validation.
 # Round 1 = the run of results/st-ui/results-chromium.json.
 #
@@ -114,7 +114,7 @@ for name, *_ in SHEETS:
             "D": f"Return: {expected}\nException: N/A\nLog message: N/A", "E": kind,
             "F": status, "G": ROUND_DATE, "H": TESTER,
             "I": "", "J": "", "K": "", "L": "", "M": "", "N": "", "O": "",
-            "P": f"Playwright: frontend/tests/st/{where}", "Q": actual,
+            "P": f"Playwright: tests/st/{where}", "Q": actual,
         }
         for col, value in values.items():
             put(sh, f"{col}{row}", value)
@@ -143,7 +143,7 @@ put(tc, "D5", "\n".join([
     "+ overlay rút ngắn kiểm tra geo), gateway 8080, Keycloak 8180, MailHog 8025; không mock gì",
     "2. Web client: bản build production của frontend/ (VITE_API_BASE_URL=http://localhost:8080 VITE_USE_MOCKS=false "
     "vite build) chạy bằng vite preview cổng 5173 (dev server tự tải lại trang khi Playwright ghi file)",
-    "3. Playwright: cd frontend && npx playwright test --config tests/st/playwright.st.config.ts --project=chromium "
+    "3. Playwright: cd tests/st && npm ci && npx playwright test --project=chromium "
     "(Chromium 1366x900, vi-VN, Asia/Ho_Chi_Minh, 1 worker); các case của 1 luồng chạy nối tiếp và dùng chung trạng thái",
     "4. Tài khoản Keycloak (Report 5.0 §II.1.1): buyer1, seller1, operator1, arbitrator1, admin1; BF-01 đăng ký "
     "tài khoản mới mỗi lần chạy; mã xác minh email và OTP ký đọc từ MailHog",
@@ -170,7 +170,7 @@ pending = sum(1 for k, *_ in CASES if results[k][0] == "skipped")
 failed = total - passed - pending
 put(st, "B7", (
     f"System test qua giao diện web (STC) của 5 sheet: BF-01..BF-04 và màn hình theo vai trò, {total} case, mỗi case 1 "
-    f"test Playwright trong frontend/tests/st/ chạy trên stack thật (không mock). Round 1 ngày {ROUND_DATE}, tester "
+    f"test Playwright trong tests/st/ chạy trên stack thật (không mock). Round 1 ngày {ROUND_DATE}, tester "
     f"{TESTER}, Chromium: {passed} Passed, {failed} Failed, {pending} Pending. 7 case Pending là phần ký thứ 2 → "
     "ACTIVE → BF-04 của chuỗi chính: 28/11/2026 là thứ Bảy nên không có ngày khoá tiền đợt hợp lệ (D63, D67), test tự "
     "skip; chạy lại ngày 30/11/2026 thành Round 2. BF-05..BF-07 chưa có màn hình nên chưa có ST qua giao diện, phần "
@@ -189,7 +189,7 @@ for ref, value in {
     f"E{last + 1}": (f"ST làm lại qua giao diện web: {total} case Playwright trên stack thật (BF-01..BF-04, màn hình "
                      f"theo vai trò), Round 1 {passed} Passed, {pending} Pending (thứ Bảy). 8 sheet Bruno e2e (gọi API) "
                      "chuyển sang Report 5.2 vì là integration test (D95)"),
-    f"F{last + 1}": "D95, Report 5.2, frontend/tests/st/",
+    f"F{last + 1}": "D95, Report 5.2, tests/st/",
 }.items():
     put(cv, ref, value)
 cv.Rows.getByIndex(last).OptimalHeight = True

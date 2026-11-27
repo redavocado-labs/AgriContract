@@ -67,7 +67,7 @@ for ref, value in {
     "A13": "ITC001",
     "B13": "IT qua gateway (token Keycloak)",
     "C13": "Commit cần kiểm (Round 1: main 44202a49, Round 2: PR #678 e1d33257); docker compose -f docker-compose.yml "
-           "-f e2e/compose.e2e.yml up -d --build; npm test trong backend/e2e",
+           "-f e2e/compose.e2e.yml up -d --build; npm test trong tests/e2e",
     "D13": "Return: mọi image build được, stack healthy, golden flow pass (offer → ký 2 bên → ACTIVE → giao nhận → SETTLED)\n"
            "Exception: N/A\nLog message: N/A",
     "E13": "Normal",
@@ -75,7 +75,7 @@ for ref, value in {
     "I13": "Passed", "J13": ROUND2_DATE, "K13": TESTER,
     "L13": "", "M13": "", "N13": "",
     "O13": "#288",
-    "P13": "e2e: backend/e2e/golden-flow.test.mjs; Round 1 run 45887466927 (Child module shared/java-arch-rules "
+    "P13": "e2e: tests/e2e/golden-flow.test.mjs; Round 1 run 45887466927 (Child module shared/java-arch-rules "
            "does not exist, DEF-17), Round 2 run 45888671217",
 }.items():
     put(gf, ref, value)
@@ -96,7 +96,7 @@ for ref, value in {
 link(tc, "D14", "GoldenFlow")
 d5 = tc.getCellRangeByName("D5")
 d5.String = d5.String + ("\n8. GoldenFlow: .github/workflows/e2e.yml build cả stack từ commit rồi chạy npm test trong "
-                         "backend/e2e; Round 1/2 của module này là 2 lần chạy E2E của #288 (trước và sau sửa Dockerfile)")
+                         "tests/e2e; Round 1/2 của module này là 2 lần chạy E2E của #288 (trước và sau sửa Dockerfile)")
 
 # 3. Test Statistics: GoldenFlow row before Sub total, totals and the gateway kind row include it
 st = sheets.getByName("Test Statistics")

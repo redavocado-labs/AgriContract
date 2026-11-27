@@ -3,7 +3,7 @@
 # Report 5.3: write the newest run-e2e-full.sh round (results/st-round<N>/, imported by import_e2e_round.py) into
 # the existing workbook, on any OS (sheet XML through xlsx_cells.py, no Excel). The rows, their results and their
 # Actual Results text are decided by the same code as fill_system_test_report.py: its row-building part (everything
-# before the Excel section) is run here as it is, so Passed/Failed/Pending still come from backend/scripts/e2e/report.py
+# before the Excel section) is run here as it is, so Passed/Failed/Pending still come from tests/scripts/report.py
 # and a Failed row without a Report 5.6 defect still stops the script.
 #
 # Per row it writes Round <N> (result, date, tester), Defect IDs, Note and Actual Results; rows are found by the case

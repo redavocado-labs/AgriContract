@@ -9,7 +9,7 @@
 #              result as report.py decides it, or st_code(...) its HTTP status only (the access decision, apart from
 #              the error body of DEF-15)
 #   pw(...)    a Playwright test of frontend/tests/qa (results/pw-<date>/playwright.json)
-#   ui(...)    a system test through the web client on a real stack (frontend/tests/st, Report 5.3;
+#   ui(...)    a system test through the web client on a real stack (tests/st, Report 5.3;
 #              results/st-ui/results-<browser>.json)
 #   perf       results/perf-<date>/perf.json and pageload.json (perf_nfr.py)
 # A row without evidence is Not Run, with the reason in Notes.
@@ -27,7 +27,7 @@ import openpyxl
 
 HERE = Path(__file__).resolve().parent
 UT_DIR, ST_DIR, PW_DIR, PERF_DIR, BOOK, UI_DIR = (Path(p).resolve() for p in sys.argv[1:7])
-spec = importlib.util.spec_from_file_location("e2e_report", HERE.parents[1] / "backend/scripts/e2e/report.py")
+spec = importlib.util.spec_from_file_location("e2e_report", HERE.parents[1] / "tests/scripts/report.py")
 e2e = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(e2e)
 

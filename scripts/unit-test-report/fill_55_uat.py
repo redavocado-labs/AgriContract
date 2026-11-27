@@ -1,6 +1,6 @@
 # Report 5.5 (acceptance test scripts) on the school template: one UAT script per business scenario of SRS I.2
 # (BF-01..BF-07), written in business language. Each script is executed by the Playwright system tests through the
-# web client on a real stack (frontend/tests/st, Report 5.3): Result comes from their run, nothing typed.
+# web client on a real stack (tests/st, Report 5.3): Result comes from their run, nothing typed.
 #   Pass         every step of the script ran through the screens and passed
 #   Partial      what ran passed, but some steps have no screen yet (done through the API) or did not run today
 #   Fail         a test of the script failed

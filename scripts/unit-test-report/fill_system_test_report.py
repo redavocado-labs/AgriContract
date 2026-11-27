@@ -7,11 +7,11 @@
 # pywin32.
 #
 # Nothing is typed by hand:
-#   cases     one row per Bruno request of backend/bruno/e2e and backend/bruno/security (name, docs, request and
+#   cases     one row per Bruno request of tests/api/e2e and tests/api/security (name, docs, request and
 #             expected status read from the .bru file), in the order run-e2e-full.sh runs them; plus the
-#             not-yet-runnable steps of backend/scripts/e2e/status.tsv and one dead-letter-queue check per flow
-#   results   each round is a run of backend/scripts/run-e2e-full.sh imported by import_e2e_round.py into
-#             results/st-round<N>/; Passed/Failed/Pending are decided by backend/scripts/e2e/report.py, the same code
+#             not-yet-runnable steps of tests/scripts/status.tsv and one dead-letter-queue check per flow
+#   results   each round is a run of tests/scripts/run-e2e-full.sh imported by import_e2e_round.py into
+#             results/st-round<N>/; Passed/Failed/Pending are decided by tests/scripts/report.py, the same code
 #             that wrote the runner's TESTING-ROUNDS.md
 #   defects   a Failed row must map to a defect of Report 5.6 (DEFECTS below), else the script stops
 #
@@ -33,8 +33,8 @@ import win32com.client
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
-BRUNO = REPO / "backend" / "bruno"
-spec = importlib.util.spec_from_file_location("e2e_report", REPO / "backend" / "scripts" / "e2e" / "report.py")
+BRUNO = REPO / "tests" / "api"
+spec = importlib.util.spec_from_file_location("e2e_report", REPO / "tests" / "scripts" / "report.py")
 e2e = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(e2e)
 
@@ -202,7 +202,7 @@ def busy(fn):
 
 # ── build the rows first, so a missing defect stops the script before Excel starts ─────────────────────────
 MODULES = []
-STATUS_ROWS = [line.split("\t") for line in (REPO / "backend/scripts/e2e/status.tsv").read_text(
+STATUS_ROWS = [line.split("\t") for line in (REPO / "tests/scripts/status.tsv").read_text(
     encoding="utf-8").splitlines() if line]
 unmapped = []
 for flow, sheet, folder, desc, pre in FLOWS:
@@ -242,7 +242,7 @@ for flow, sheet, folder, desc, pre in FLOWS:
         groups.append((f"{folder}/{group}".rstrip("/") + f" ({label.get(group, group)})", rows))
     pending = [r for r in STATUS_ROWS if r[0] == flow]
     if pending:
-        groups.append(("Chưa chạy được (backend/scripts/e2e/status.tsv)", [dict(
+        groups.append(("Chưa chạy được (tests/scripts/status.tsv)", [dict(
             pre=KIND_LABEL[kind] + "\nN/A", inp=f"{case_id}: {title}", ret=title, typ="Normal",
             rounds=[status] * len(ROUNDS), defect="",
             actual=actual_text(["không chạy: " + reason] * len(ROUNDS)),
@@ -404,7 +404,7 @@ put(cover.Range("F6"), "v1.0")
 for ref, text in zip(["A11", "B11", "C11", "D11", "E11", "F11"],
                      ["'" + ISSUE_DATE, "v1.0", "Toàn bộ tài liệu", "A",
                       f"Bản đầu: {total} system test case (STC) của BF-01..BF-07 và bộ phòng thủ, 1 dòng = 1 bước "
-                      "của luồng (request Bruno trong backend/bruno/e2e, backend/bruno/security), cộng các bước chưa "
+                      "của luồng (request Bruno trong tests/api/e2e, tests/api/security), cộng các bước chưa "
                       "chạy được của status.tsv và kiểm tra DLQ sau mỗi flow; kết quả từ run-e2e-full.sh, "
                       + ", ".join(f"Round {i + 1} {r['run']}" for i, r in enumerate(ROUNDS)),
                       "SRS v1.7 §I.2, Report 5.0, Report 5.6"]):
@@ -415,7 +415,7 @@ tc = wb.Worksheets("Test Cases")
 busy(lambda: setattr(tc.Range("D3"), "Formula", "=Cover!B4"))
 busy(lambda: setattr(tc.Range("D4"), "Formula", "=Cover!B5"))
 put(tc.Range("D5"), (
-    "1. Stack: cd backend && ./scripts/run-e2e-full.sh --fresh --keep (Docker Compose project agricontract-bruno, "
+    "1. Stack: ./tests/scripts/run-e2e-full.sh --fresh --keep (Docker Compose project agricontract-bruno, "
     "xoá volume của project test, build mọi image từ commit, chờ service sẵn sàng, nạp seed 01-product-db.sql và "
     "02-user-db.sql; product-service rút ngắn kiểm tra geo; bank 8086 và audit 8092 mở trên loopback)\n"
     "2. Bruno CLI 3.4.2 --env local --sandbox developer --bail (Security: --no-bail); BF-02 truyền listing cho "

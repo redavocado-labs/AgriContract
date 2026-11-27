@@ -1,6 +1,6 @@
 // Set-up through the API for the steps the web client has no screen for yet (category approval, product, plot and
 // listing of the seller, KYC decision of the Operator). The system tests themselves act through the UI; these calls
-// only prepare their pre-conditions, as backend/bruno/e2e/bf02-plot-listing does.
+// only prepare their pre-conditions, as tests/api/e2e/bf02-plot-listing does.
 import { randomUUID } from "node:crypto"
 
 export const GATEWAY = process.env.ST_GATEWAY_URL ?? "http://localhost:8080"

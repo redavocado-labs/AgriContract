@@ -1,0 +1,19 @@
+{
+  "name": "agricontract-st",
+  "private": true,
+  "description": "System tests through the web client on a real stack (Report 5.3, 5.4, 5.5).",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:chromium": "playwright test --project=chromium",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/node": "^24.13.2",
+    "typescript": "~6.0.2"
+  }
+}

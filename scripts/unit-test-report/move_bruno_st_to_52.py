@@ -104,7 +104,7 @@ for i, (name, new, module) in enumerate(MOVED):
 d5 = tc.getCellRangeByName("D5")
 d5.String = d5.String + (
     "\n9. Bộ Bruno e2e BF-01..BF-07 và Security (chuyển từ Report 5.3 ngày 28/11/2026, D95: gọi API qua gateway là "
-    "integration test): cd backend && ./scripts/run-e2e-full.sh --fresh --keep, Bruno CLI 3.4.2 --env local; Round 1..3 "
+    "integration test): ./tests/scripts/run-e2e-full.sh --fresh --keep, Bruno CLI 3.4.2 --env local; Round 1..3 "
     "giữ nguyên như khi còn ở 5.3 (run-20261127-1603, run-20261127-1630, run-20261128-0350); log ở "
     "scripts/unit-test-report/results/st-round<N>/")
 

@@ -1,4 +1,4 @@
-# Copy the evidence of one backend/scripts/run-e2e-full.sh round into results/<round>/ for Report 5.3 (#676):
+# Copy the evidence of one tests/scripts/run-e2e-full.sh round into results/<round>/ for Report 5.3 (#676):
 # the Bruno JSON reports, the RabbitMQ queue snapshots and the runner's TESTING-ROUNDS.md / FINDINGS.md.
 # Service logs stay in the run directory (named in run.json). Every JWT is masked, as redact_reports.py does for
 # Report 5.2; the local dev secrets of the runner are its documented defaults, not real credentials.
@@ -42,7 +42,7 @@ meta = {
     "tester": tester,
     "commit": commit,
     "run": os.path.basename(run_dir),
-    "source": "backend/scripts/run-e2e-full.sh (Bruno CLI 3.4.2, Docker Compose, Windows 11 + Docker Desktop); "
+    "source": "tests/scripts/run-e2e-full.sh (Bruno CLI 3.4.2, Docker Compose, Windows 11 + Docker Desktop); "
               "service logs: ~/agricontract-e2e/" + os.path.basename(run_dir) + "/logs/",
 }
 with open(os.path.join(out, "run.json"), "w", encoding="utf-8", newline="\n") as f:
