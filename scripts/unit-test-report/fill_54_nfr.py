@@ -5,14 +5,17 @@
 # Each row names its evidence and its Status is decided from it, nothing typed:
 #   ut(...)    unit / integration tests of the regression run (results/<ut round>/cases.json): Pass when every
 #              named test ran and passed
-#   st(...)    a Bruno case of the system test round (results/st-round<N>/): its result as report.py decides it, or
-#              st_code(...) its HTTP status only (the access decision, apart from the error body of DEF-15)
+#   st(...)    a Bruno e2e case (results/st-round<N>/, Report 5.2 since 28/11: API through the gateway is IT, D95): its
+#              result as report.py decides it, or st_code(...) its HTTP status only (the access decision, apart from
+#              the error body of DEF-15)
 #   pw(...)    a Playwright test of frontend/tests/qa (results/pw-<date>/playwright.json)
+#   ui(...)    a system test through the web client on a real stack (frontend/tests/st, Report 5.3;
+#              results/st-ui/results-<browser>.json)
 #   perf       results/perf-<date>/perf.json and pageload.json (perf_nfr.py)
 # A row without evidence is Not Run, with the reason in Notes.
 #
 #   python fill_54_nfr.py results/ut-round3-20261128 results/st-round3 results/pw-20261128 results/perf-20261128 \
-#       ../../docs/reports/Report-5.4_System_Test_NFRs.xlsx
+#       ../../docs/reports/Report-5.4_System_Test_NFRs.xlsx results/st-ui
 import importlib.util
 import json
 import os
@@ -23,7 +26,7 @@ from pathlib import Path
 import openpyxl
 
 HERE = Path(__file__).resolve().parent
-UT_DIR, ST_DIR, PW_DIR, PERF_DIR, BOOK = (Path(p).resolve() for p in sys.argv[1:6])
+UT_DIR, ST_DIR, PW_DIR, PERF_DIR, BOOK, UI_DIR = (Path(p).resolve() for p in sys.argv[1:7])
 spec = importlib.util.spec_from_file_location("e2e_report", HERE.parents[1] / "backend/scripts/e2e/report.py")
 e2e = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(e2e)
@@ -52,6 +55,22 @@ def _walk(suite):
 for s in json.loads((PW_DIR / "playwright.json").read_text(encoding="utf-8"))["suites"]:
     _walk(s)
 
+UI = {}  # (browser, test-id) -> status
+UI_DATE = {}
+for browser in ("chromium", "firefox"):
+    report = json.loads((UI_DIR / f"results-{browser}.json").read_text(encoding="utf-8"))
+    UI_DATE[browser] = report["stats"]["startTime"]
+
+    def _walk_ui(suite, browser=browser):
+        for s in suite.get("specs", []):
+            for t in s["tests"]:
+                UI[(browser, s["title"].split(" ")[0])] = t["results"][-1]["status"]
+        for c in suite.get("suites", []):
+            _walk_ui(c)
+
+    for s in report["suites"]:
+        _walk_ui(s)
+
 
 # ── evidence: each returns (verdict, text); verdict Pass | Fail | Blocked | None (not run) ────────────────────
 def ut(*keys):
@@ -69,7 +88,7 @@ def ut(*keys):
 
 def st(*case_ids, defect=None):
     results = [(c, e2e.outcome(ST.get(c))) for c in case_ids]
-    text = f"ST {ST_RUN['run']}: " + ", ".join(f"{c} {r}" for c, r in results)
+    text = f"IT Bruno {ST_RUN['run']}: " + ", ".join(f"{c} {r}" for c, r in results)
     if any(r == "Failed" for _, r in results):
         return ("Blocked" if defect == "DEF-19" else "Fail"), text
     if all(r == "Passed" for _, r in results):
@@ -86,14 +105,14 @@ def dlq(*flows):
         dirty = [q["name"] for q in queues if q.get("messages") != 0]
         ok = ok and bool(queues) and not dirty
         parts.append(f"{flow} {len(queues)} .dlq" + (f", có message: {', '.join(dirty)}" if dirty else " rỗng"))
-    return ("Pass" if ok else "Fail"), f"ST {ST_RUN['run']}: " + "; ".join(parts)
+    return ("Pass" if ok else "Fail"), f"IT Bruno {ST_RUN['run']}: " + "; ".join(parts)
 
 
 def st_code(expected):
     """{case: HTTP status}: the access decision only"""
     got = {c: (ST.get(c) or {}).get("response", {}).get("status") for c in expected}
     ok = all(got[c] == s for c, s in expected.items())
-    return ("Pass" if ok else "Fail"), f"ST {ST_RUN['run']}: " + ", ".join(f"{c} HTTP {got[c]}" for c in expected)
+    return ("Pass" if ok else "Fail"), f"IT Bruno {ST_RUN['run']}: " + ", ".join(f"{c} HTTP {got[c]}" for c in expected)
 
 
 def pw(*prefixes):
@@ -102,6 +121,17 @@ def pw(*prefixes):
     bad = [t for t, s in tests if s != "passed"]
     return ("Fail" if bad else "Pass"), (f"Playwright {PW_RUN['date']}: {len(tests)} test "
                                          + "/".join(prefixes) + f", {len(bad)} không pass")
+
+
+def ui(*ids, browsers=("chromium",)):
+    """system tests through the web client: every named test passed on every named browser"""
+    got = [(b, i, UI.get((b, i))) for b in browsers for i in ids]
+    missing = [f"{b}/{i}" for b, i, st_ in got if st_ is None]
+    assert not missing, missing
+    bad = [f"{i} ({b})" for b, i, st_ in got if st_ != "passed"]
+    names = ", ".join(ids) if len(ids) <= 3 else f"{ids[0]}..{ids[-1]} ({len(ids)} test)"
+    return ("Fail" if bad else "Pass"), (f"ST qua UI 28/11/2026 ({', '.join(b.capitalize() for b in browsers)}): {names}"
+                                         + (f"; không pass: {', '.join(bad)}" if bad else ", pass"))
 
 
 def combine(*evidence):
@@ -130,8 +160,9 @@ SECURITY = [
      "", "Ma trận quyền data-governance §5.4; quyết định truy cập đúng, body 403 xem TC-SEC-005"),
     ("Hàng chờ phán xử chỉ Arbitrator đọc được", "6 vai trò", "6 tài khoản seed",
      "GET /api/v1/arbitration/breach-cases bằng từng token", "ARBITRATOR 200; 5 vai trò còn lại 403", "Critical",
-     st_code({"SEC-060": 403, "SEC-061": 403, "SEC-062": 403, "SEC-063": 403, "SEC-064": 200, "SEC-065": 403}),
-     "", "OPERATOR và ADMIN không làm thay ARBITRATOR"),
+     combine(st_code({"SEC-060": 403, "SEC-061": 403, "SEC-062": 403, "SEC-063": 403, "SEC-064": 200,
+                      "SEC-065": 403}), ui("ST-SEC-010")),
+     "", "OPERATOR và ADMIN không làm thay ARBITRATOR; trên giao diện ADMIN và BUYER mở route sai vai trò đều bị chặn"),
     ("Từ chối 401/403 trả ErrorEnvelope", "Guest, vai trò không đủ quyền", "Như TC-SEC-001, 003, 004",
      "Đọc body của các phản hồi 401/403 từ gateway", "Body JSON có code và traceId theo OpenAPI ErrorEnvelope",
      "Medium",
@@ -168,17 +199,18 @@ SECURITY = [
      combine(ut("file-service/src/infrastructure/scan/clamd-scanner.spec.ts"),
              pw("FE-015 a rejected scan", "FE-015 blocks evidence")), "", ""),
     ("Chuỗi audit chống sửa, kiểm tra toàn cục", "Admin", "Audit chain sau các flow",
-     "GET /api/v1/admin/audit/verification", "HTTP 200, status INTACT", "High", st("SEC-100"), "", ""),
+     "GET /api/v1/admin/audit/verification", "HTTP 200, status INTACT; màn Nhật ký bằng chứng báo toàn chuỗi nguyên vẹn", "High",
+     combine(st("SEC-100"), ui("ST-ADM-010")), "", ""),
     ("Ghi vết khi người vận hành đọc dữ liệu hạn chế", "Admin", "Hợp đồng đã quyết toán của BF-04",
      "Admin đọc trail của hợp đồng, rồi đọc bản ghi SYSTEM", "Mỗi lần đọc thêm đúng 1 bản ghi audit.viewed",
      "Medium", st("SEC-140", "SEC-150", "SEC-160", "SEC-170", defect="DEF-19"), "DEF-19",
-     "Round 3 chạy thứ Bảy: không có hợp đồng quyết toán (DEF-19) nên chưa kiểm được; Report 5.3 Round 1-2 Passed"),
+     "Round 3 chạy thứ Bảy: không có hợp đồng quyết toán (DEF-19) nên chưa kiểm được; Report 5.2 (Bruno e2e) Round 1-2 Passed; trên giao diện ST-ADM-020 (trail hợp đồng đã rút) có audit.viewed (Report 5.3)"),
     ("Lỗi validation không lộ chi tiết hệ thống", "Buyer", "N/A", "GET /api/v1/contracts?page=-1",
      "HTTP 400 VALIDATION_FAILED, không stack trace, không tên class", "Medium", st("SEC-180", "SEC-190"), "", ""),
     ("Khoá khẩn cấp chỉ nhận yêu cầu ký ES256, timestamp ±300 giây, nonce chưa dùng", "External Verifier",
      "Khoá Verifier đã đăng ký", "POST lock/unlock có chữ ký hợp lệ, sai, nonce lặp", "Chỉ yêu cầu hợp lệ được "
      "nhận; không Admin nào thay được", "Critical", NOT_RUN, "",
-     "Chưa có controller cho đường lock/unlock (Report 5.3 BF07-020 N/A)"),
+     "Chưa có controller cho đường lock/unlock (Report 5.2 BF07_SecurityLockApi BF07-020 N/A)"),
     ("Xoá / ẩn danh dữ liệu cá nhân hết hạn lưu trữ", "Hệ thống (JOB-19)", "Dữ liệu quá hạn, có và không có "
      "legal hold", "Chạy job lưu trữ", "Dữ liệu hết hạn bị xoá hoặc ẩn danh; dữ liệu legal hold giữ nguyên",
      "Medium", NOT_RUN, "", "Chưa có test tự động cho JOB-19"),
@@ -228,19 +260,24 @@ USABILITY = [
      "Medium", pw("FE-016 an offer withdrawal", "FE-016 contract detail", "FE-016 public prices"), "", ""),
     ("Hạn sửa cân của seller đếm theo giờ server", "Seller", "Milestone SELLER_WEIGHED", "Chờ quá hạn sửa",
      "Đếm ngược theo hạn server trả, quá hạn thì ẩn nút sửa", "Medium", pw("FE-010"), "", ""),
-    ("Validation hiện cạnh field và giữ giá trị đã nhập", "Mọi vai trò", "Form tạo listing / offer",
-     "Gửi form có field sai", "Thông báo cạnh field lỗi, các field khác giữ nguyên", "Medium", NOT_RUN, "",
-     "Kiểm tay trên stack demo, chưa có test tự động"),
-    ("Tiền hiển thị VND, phân cách nghìn, 2 số lẻ", "Mọi vai trò", "Màn có số tiền", "Xem các màn tiền",
-     "Định dạng thống nhất, ghi rõ VND", "Low", NOT_RUN, "", "Kiểm tay"),
-    ("Ngày dd/MM/yyyy, giờ Asia/Ho_Chi_Minh", "Mọi vai trò", "Màn có hạn chót", "Xem hạn chót, thời điểm",
-     "Định dạng và múi giờ thống nhất", "Low", NOT_RUN, "", "Kiểm tay"),
-    ("Hành động bị chặn nói rõ lý do", "Seller chưa VERIFIED, tài khoản bị khoá", "KYC PENDING / khoá uy tín",
-     "Thử đăng listing, tạo offer, ký", "Màn hình ghi lý do (KYC, khoá, khoá khẩn cấp), không chỉ disable",
-     "Medium", NOT_RUN, "", "Kiểm tay"),
-    ("Chạy được trên Chrome, Edge, Firefox (2 bản mới nhất), ≥ 1366 px", "Mọi vai trò", "3 trình duyệt",
-     "Đi hết các màn chính", "Không vỡ bố cục, không lỗi", "Medium", NOT_RUN, "",
-     "Playwright chỉ chạy Chromium; Edge, Firefox kiểm tay"),
+    ("Validation hiện cạnh field và giữ giá trị đã nhập", "Buyer", "Form tạo offer",
+     "Nhập độ ẩm 11.5, đơn giá 95000 (thiếu 2 số lẻ) → Gửi đề nghị",
+     "Thông báo cạnh field đơn giá, độ ẩm giữ 11.5, vẫn ở form", "Medium", ui("ST-USA-010"), "", ""),
+    ("Tiền hiển thị VND, phân cách nghìn, 2 số lẻ", "Buyer", "Đề nghị 1.000 kg giá 96000.00",
+     "Xem trang hợp đồng và trang listing", "96.000,00 ₫/kg và tổng 96.000.000,00 ₫ (SRS IV.2.1)", "Low",
+     ui("ST-USA-020"), "DEF-23",
+     "Màn hình hiện 96.000 ₫: formatDecimalVnd (frontend/src/shared/lib/decimal-display.ts) bỏ phần lẻ ,00"),
+    ("Ngày dd/MM/yyyy, giờ Asia/Ho_Chi_Minh", "Buyer", "Hợp đồng vừa tạo",
+     "Xem ngày giao; gửi mã OTP ký", "Ngày giao dạng dd/MM/yyyy; hạn mã OTP ghi giờ Việt Nam", "Low",
+     ui("ST-USA-030"), "", ""),
+    ("Hành động bị chặn nói rõ lý do", "Buyer chưa VERIFIED", "KYC PENDING",
+     "Mở form tạo offer", "Màn hình ghi lý do (chỉ bên mua đã xác minh mới gửi được), nút gửi bị khoá",
+     "Medium", ui("ST-USA-040"), "", "Khoá uy tín / khoá khẩn cấp chưa có màn hình (BF-07)"),
+    ("Chạy được trên Chrome, Edge, Firefox (2 bản mới nhất), ≥ 1366 px", "Guest", "Chromium và Firefox của "
+     "Playwright, 1366x900", "Mở 7 màn công khai (trang chủ, sàn, bảng giá, cách hoạt động, ký quỹ, đăng nhập, "
+     "chi tiết listing)", "Hiện đủ nội dung chính, không lỗi JavaScript, không cuộn ngang", "Medium",
+     ui(*(f"ST-BRW-0{i}0" for i in range(1, 8)), browsers=("chromium", "firefox")), "",
+     "Edge dùng cùng engine Chromium; màn sau đăng nhập mới chạy trên Chromium (Report 5.3)"),
     ("Seller VERIFIED đăng listing đầu tiên trong 15 phút không cần hướng dẫn", "Seller mới", "Seller VERIFIED "
      "chưa dùng hệ thống", "Tự đăng lô đất, sản phẩm, listing", "Xong trong 15 phút", "Low", NOT_RUN, "",
      "Cần người dùng thật: thuộc Report 5.5 (UAT)"),
