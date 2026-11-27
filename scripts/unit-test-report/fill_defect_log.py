@@ -76,6 +76,10 @@ CHANGES = [
      "#288, PR #678"),
     ("27/11/2026", "Defect List", "A", "Thêm DEF-18: helper lùi thời gian của BF04-250 không chạy trên Windows "
      "(Report 5.3 Round 1), sửa và chạy lại ở Round 2", "#685, PR #686, #676"),
+    ("28/11/2026", "Defect List", "A", "Thêm DEF-19: bộ Bruno BF-03/BF-04 không skip vào ngày nghỉ, chữ ký thứ 2 bị "
+     "từ chối (Report 5.3 Round 3, chạy thứ Bảy)", "Report 5.3 Round 3"),
+    ("28/11/2026", "Defect List", "A", "Thêm DEF-20: stack Docker Compose không có pricing-service, giá tham chiếu "
+     "trả 500 (Report 5.4 load test)", "Report 5.4 Performance"),
 ]
 for row, (date, item, kind, text, ref) in enumerate(CHANGES, start=12):
     for col, value in zip("ABCDEF", (date, "v1.0", item, kind, text, ref)):
@@ -134,8 +138,8 @@ st.title = "Defect Statistics"
 st["A2"] = "DEFECT STATISTICS"
 st["F4"], st["F6"] = CREATOR, ISSUE_DATE
 st["B6"] = '=Cover!B6'
-st["B7"] = ("Defect tìm thấy khi chạy test từ 15/11 đến 26/11/2026: CI GitHub Actions (UT, IT, Playwright, golden flow), "
-            "Report 5.2 Round 1 (Bruno) và các vòng E2E ~/agricontract-e2e/. Chỉ tính lỗi do code, config, contract "
+st["B7"] = ("Defect tìm thấy khi chạy test từ 15/11 đến 28/11/2026: CI GitHub Actions (UT, IT, Playwright, golden flow), "
+            "Report 5.2 Round 1 (Bruno), các vòng E2E (Report 5.3) và đo hiệu năng (Report 5.4). Chỉ tính lỗi do code, config, contract "
             "hoặc dữ liệu seed; không tính lần CI không chạy (khoá billing), lỗi tải Maven và lỗi đỏ lúc đang code. "
             "Tester = người kích hoạt lần chạy. Re-test = lần CI/vòng test xanh đầu tiên sau commit sửa.")
 col_of = {name: openpyxl.utils.get_column_letter(i) for i, (name, _, _) in enumerate(COLUMNS, start=1)}

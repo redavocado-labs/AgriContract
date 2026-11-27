@@ -163,4 +163,30 @@ DEFECTS = [
          fix=("#685, PR #686", "4d0eff24", LONG), status="Closed",
          # Round 2 ran on the PR head 43c48666, merged unchanged as 4d0eff24
          retest=("27/11/2026", "4d0eff24", "Passed", "scripts/unit-test-report/results/st-round2/")),
+    dict(id="DEF-19", test="5.3 BF03_Signing BF03-070; BF04-010, BF04-110, BF04-310; Security SEC-130..SEC-170",
+         level="ST", module="e2e (fixture Bruno)",
+         title="Bộ Bruno BF-03/BF-04 chạy vào ngày nghỉ: chữ ký thứ 2 bị từ chối, cả chuỗi BF-04 không chạy",
+         expected="Ngày không phải ngày làm việc ở Việt Nam thì fixture ký → kích hoạt → BF-04 tự bỏ qua (Pending), "
+                  "như golden-flow.test.mjs; ngày làm việc thì chạy hết",
+         actual="BF03-070 409 DELIVERY_SCHEDULE_TOO_SOON (đợt 1 giao 02/12, ngày cấp tiền 27/11 trước hôm nay "
+                "28/11); BF04-010/110/310 và SEC-130..170 Failed vì không có hợp đồng ACTIVE / đã quyết toán, "
+                "44 case BF-04 Pending",
+         severity="Medium", found=("28/11/2026", "42a48dd5", CUONG,
+                                   "scripts/unit-test-report/results/st-round3/FINDINGS.md"),
+         cause="coffee-terms.js đặt ngày giao = hôm nay + 3 ngày làm việc. Server cần ngày cấp tiền (ngày giao trừ 3 "
+               "ngày làm việc) đúng bằng hôm nay: D67 từ chối chữ ký thứ 2 khi ngày đó đã qua, D63 chỉ cấp tiền lúc "
+               "kích hoạt khi ngày đó đã tới. Thứ Bảy không có ngày cấp tiền nào thoả cả hai; golden flow kiểm điều "
+               "này và skip, bộ Bruno thì không",
+         fix=("Chưa có issue", None, "N/A"), status="Open", retest=None),
+    dict(id="DEF-20", test="5.4 Performance TC-PERF-003, TC-PERF-007 (/api/v1/prices/COFFEE/dak-lak)",
+         level="ST", module="docker-compose (pricing-service)",
+         title="Stack Docker Compose không có pricing-service: màn giá tham chiếu trả 500",
+         expected="GET /api/v1/prices/{commodity}/{province} qua gateway trả 200 (bảng giá công khai, SRS III.4.1)",
+         actual="HTTP 500 sau khoảng 3,9 s ở mọi lần gọi (1389/1389 request của load test 100 user); trang /prices "
+                "không có dữ liệu",
+         severity="Medium", found=("28/11/2026", "90f7b9f1", CUONG,
+                                   "scripts/unit-test-report/results/perf-20261128/perf.json"),
+         cause="backend/docker-compose.yml chỉ khai báo pricing-db và analytics-db, không có service pricing-service "
+               "và analytics-service; gateway chuyển /api/v1/prices/** tới PRICING_SERVICE_URL không có ai nghe",
+         fix=("Chưa có issue", None, "N/A"), status="Open", retest=None),
 ]
