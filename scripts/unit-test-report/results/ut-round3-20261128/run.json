@@ -1,0 +1,22 @@
+{
+  "date": "28/11/2026",
+  "tester": "Nguyen Minh Cuong",
+  "commit": "42a48dd5",
+  "command": "cd backend && mvn -B -fae test; cd backend/<svc> && npx jest --json (notification, pricing, analytics, file)",
+  "services": [
+    "shared",
+    "api-gateway",
+    "user-service",
+    "product-service",
+    "contract-service",
+    "escrow-service",
+    "reputation-service",
+    "inspection-service",
+    "bank-service",
+    "audit-service",
+    "notification-service",
+    "pricing-service",
+    "analytics-service",
+    "file-service"
+  ]
+}
