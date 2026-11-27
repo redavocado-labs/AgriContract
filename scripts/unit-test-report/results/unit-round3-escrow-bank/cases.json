@@ -1,0 +1,324 @@
+{
+ "bank-service/ArchitectureTest": {
+  "layers": "passed"
+ },
+ "bank-service/LedgerCommandConsumerTest": {
+  "aQueueRefusesAnotherOperationsEventOrEntryType": "passed",
+  "readsAValidRequest": "passed",
+  "readsReleaseAndRefundRequests": "passed",
+  "readsSeizeRequests": "passed",
+  "rejectsWhatTheContractDoesNotAllow": "passed",
+  "seizeAmountMustBePositiveMoney": "passed",
+  "seizeWithANullRemedyReferenceIsInvalid": "passed",
+  "theSeizeQueueRefusesOtherEventsAndEntryTypes": "passed"
+ },
+ "bank-service/LedgerCommandFlowIntegrationTest": {
+  "ledgerRuleViolationIsAnsweredWithLockFailed": "passed",
+  "outboxFailureRollsTheLedgerEntryBack": "passed",
+  "refundBreakingALedgerRuleIsAnsweredWithRefundFailed": "passed",
+  "refundRequestWritesOneEntryAndConfirmsAsRefundCompleted": "passed",
+  "releaseRequestWritesOneEntryAndConfirmsAsReleaseCompleted": "passed",
+  "repeatedRequestLocksOnceAndConfirmsEveryTime": "passed",
+  "resultsReachTheQueuesDeclaredAheadForEscrow": "passed",
+  "seizeBreakingAFundRuleIsAnsweredWithSeizeFailed": "passed",
+  "seizeRequestWritesOneEntryAndAppliesTheLegOnce": "passed",
+  "unreadableRequestGoesToTheDlqWithoutAnyResult": "passed"
+ },
+ "bank-service/LedgerDuplicateCommandMySqlTest": {
+  "simultaneousDeliveriesRecordOneEntryAndConfirmItTwice": "passed"
+ },
+ "bank-service/LedgerEntryTest": {
+  "createGeneratesIdentityAndKeepsTheGivenTime": "passed",
+  "forfeiturePenaltyAndDamagesNeedADecision": "passed",
+  "locksAreNeverRemedyLegs": "passed",
+  "milestoneIdOnlyWithMilestonePayment": "passed",
+  "rejectsAWrongFund": "passed",
+  "rejectsMissingOrMalformedIds": "passed",
+  "releaseAndRefundMayOrMayNotBeRemedyLegs": "passed",
+  "remedyIdsComeTogether": "passed"
+ },
+ "bank-service/LedgerReadControllerTest": {
+  "fromAfterToIsAValidationError": "passed",
+  "fromWithoutToIsAValidationError": "passed",
+  "malformedUuidOrDateTimeIsAValidationError": "passed",
+  "missingSecretIsUnauthorized": "passed",
+  "neitherContractNorParticipantIsAValidationError": "passed",
+  "passesAllFiltersAndTheHalfOpenWindowToTheRepository": "passed",
+  "returnsEveryKeyWithNullsAndMoneyAsTwoDecimalString": "passed",
+  "wrongSecretIsUnauthorized": "passed"
+ },
+ "bank-service/LedgerSchemaMySqlTest": {
+  "acceptsAValidDepositLock": "passed",
+  "allowsManyLegsOfOneDecision": "passed",
+  "deniesSchemaChangesToTheRuntimeAccount": "passed",
+  "deniesUpdateAndDeleteToTheRuntimeAccount": "passed",
+  "rejectsADuplicateRemedyLegId": "passed",
+  "rejectsADuplicateSourceEventId": "passed",
+  "rejectsARemedyDecisionWithoutALegAndViceVersa": "passed",
+  "rejectsUnknownEntryAndFundTypes": "passed",
+  "rejectsZeroAndNegativeAmounts": "passed",
+  "repositoryAppendsAnEntryAsTheRuntimeAccount": "passed",
+  "repositoryTurnsARepeatedSourceEventIntoDuplicateLedgerEntry": "passed",
+  "runsAsTheRestrictedRuntimeAccount": "passed",
+  "schemaAcceptsExactlyWhatTheDomainAccepts": "passed"
+ },
+ "bank-service/LedgerSearchMySqlTest": {
+  "byContractIsOrderedByCreatedAtThenEntryId": "passed",
+  "byParticipantSpansContracts": "passed",
+  "filtersAreAnded": "passed",
+  "fromIsInclusiveAndToIsExclusive": "passed"
+ },
+ "bank-service/MoneyTest": {
+  "fitsDecimal18Comma2": "passed",
+  "normalizesToTwoDecimalsWithoutRounding": "passed",
+  "rejectsAnAmountThatWouldNeedRounding": "passed",
+  "rejectsNull": "passed",
+  "rejectsZeroAndNegative": "passed",
+  "sameAmountIsEqualWhateverTheInputScale": "passed"
+ },
+ "bank-service/ProcessLedgerCommandUseCaseImplTest": {
+  "firstRequestRecordsOneEntryAndConfirmsIt": "passed",
+  "ledgerRuleViolationIsAnsweredWithLockFailed": "passed",
+  "losingAnInsertRaceReconfirmsTheWinnersEntry": "passed",
+  "losingAnInsertRaceWithDifferentContentDoesNotPublishAResult": "passed",
+  "losingTheRemedyLegRaceSendsNothing": "passed",
+  "repeatedRequestWritesNothingAndReconfirmsTheSameEntry": "passed",
+  "sameRemedyLegUnderAnotherSourceEventWritesAndSendsNothing": "passed",
+  "sameSourceEventWithDifferentContentIsNotConfirmed": "passed",
+  "seizeBreakingAFundOrScopeRuleIsAnsweredWithFailed": "passed",
+  "seizeRecordsOneEntryAndConfirmsIt": "passed",
+  "seizeReplayWithTheSameSourceEventReconfirms": "passed"
+ },
+ "escrow-service/ActivationDepositsTest": {
+  "bothExhausted_isBoth_andABuyerOnlyContractCanFail": "passed",
+  "exhaustedWhileTheOtherIsStillInProgress_isNotFailedYet": "passed",
+  "lockedAndExhausted_isAFailedSeller": "passed",
+  "restartingAFailedLeg_givesItAFreshCycle_andLeavesOtherLegsAlone": "passed"
+ },
+ "escrow-service/ArchitectureTest": {
+  "layers": "passed"
+ },
+ "escrow-service/BankLockResultConsumerTest": {
+  "completedResult_becomesALockedCommand": "passed",
+  "depositResult_isNotAMilestoneFunding": "passed",
+  "failedResult_carriesTheReason": "passed",
+  "milestoneIdIsOptional": "passed",
+  "milestoneResultWithoutItsMilestone_isRefused": "passed",
+  "milestoneResult_carriesItsMilestoneAndTheBankTime": "passed",
+  "payloadOutsideTheSchema_isRefused": "passed",
+  "wrongTypeOrProducer_isRefused": "passed"
+ },
+ "escrow-service/CheckContractClearanceUseCaseTest": {
+  "noAcceptedDecision_marksChecked_withoutReadingTheBank": "passed",
+  "onePoolNegative_evenWhenTheSumIsZero_publishesNothing_andMarksChecked": "passed",
+  "requestedAgainDuringTheCheck_isLeftForTheNextTick": "passed"
+ },
+ "escrow-service/ContractLockClearedFlowIntegrationTest": {
+  "allLegsCompleted_ledgerAtZero_publishesOnce_withEveryAcceptedDecision": "passed",
+  "exhaustedLeg_alertsOperatorOnce_andRetryResendsTheSameCommand": "passed",
+  "failedLeg_publishesNothing_untilItCompletes": "passed",
+  "ledgerUnavailable_leavesTheRowUnchecked_andTheNextTickPublishes": "passed",
+  "malformedRetry_isDeadLetteredWithoutRetry": "passed",
+  "milestoneMoneyStillLocked_publishesNothing_untilTheSettlementLegCompletes": "passed",
+  "rejectedDecision_alertsOperatorOnce_andAReplayWritesNothing": "passed",
+  "retryForAContractWithoutLegs_isAcked_andSendsNothing": "passed"
+ },
+ "escrow-service/ContractSignedConsumerTest": {
+  "acceptsAContractWithoutASellerDeposit": "passed",
+  "readsAValidEvent": "passed",
+  "rejectsWhatTheContractDoesNotAllow": "passed",
+  "startsTheChainFromTheSignedEventWithoutACorrelationId": "passed"
+ },
+ "escrow-service/ContractSignedFlowIntegrationTest": {
+  "contractWithoutASellerDepositRequestsOnlyTheBuyerLeg": "passed",
+  "depositRuleViolationGoesToTheDlqWithoutWritingAnything": "passed",
+  "failureRollsBackTheDedupRowLegsAndCommands": "passed",
+  "redeliveredEventRequestsEachDepositOnce": "passed",
+  "unreadableEventGoesToTheDlqWithoutWritingAnything": "passed"
+ },
+ "escrow-service/DepositLegResultTest": {
+  "completedResultLocksTheLeg_onceOnly": "passed",
+  "failuresFollowTheBackoff_thenNoRetryIsLeft": "passed",
+  "lateFailureForALockedLeg_isIgnored": "passed",
+  "retryIsDueOnlyAtItsTime_andOnlyForAFailedLeg": "passed",
+  "retrySucceedingAfterAFailure_locksTheLeg": "passed",
+  "scheduleNeedsPositiveDurations": "passed"
+ },
+ "escrow-service/DepositLegReturnTest": {
+  "aReturnResultForALegWithNoReturn_isRefused": "passed",
+  "failedLeg_isCancelled_andNeverRetriedAgain": "passed",
+  "lockInFlight_waits_thenItsResultDecides": "passed",
+  "lockedLeg_requestsItsReturn_withAFreshCommandId": "passed",
+  "refundIsSettledOnlyWhenEveryLegIsCancelledOrReturned": "passed",
+  "refusedReturn_isResentPerTheSchedule_thenStaysFailed": "passed",
+  "returnConfirmed_once": "passed"
+ },
+ "escrow-service/DepositLegTest": {
+  "moneyRejectsZeroAndExtraDecimals": "passed",
+  "rejectsAContractIdThatIsNotAUuid": "passed",
+  "rejectsAMissingUserId": "passed",
+  "rejectsMissingPartyAmountOrTime": "passed",
+  "requestCreatesARequestedLegStampedWithTheGivenTime": "passed",
+  "requestGivesEachLegItsOwnIdAndRequestEventId": "passed"
+ },
+ "escrow-service/DepositLockResultFlowIntegrationTest": {
+  "bothLegsLockedAtOnce_publishExactlyOnce": "passed",
+  "bothLegsLocked_publishOneDepositLocked": "passed",
+  "cancelAfterAPartialLock_refundsTheLockedBuyerDeposit_thenReportsCompletionOnce": "passed",
+  "cancelWhileALockIsInFlight_waitsForItsResult_andReturnsALateLock": "passed",
+  "cancelWithNothingLocked_completesAtOnce": "passed",
+  "contractWithoutASellerDeposit_publishesANullSellerState": "passed",
+  "contractWithoutASellerDeposit_reportsTheSellerLegAsNotRequired": "passed",
+  "duplicateResults_doNotPublishASecondEvent": "passed",
+  "failedLeg_isResentWithTheSameEventId_onlyThatLeg_thenLocks": "passed",
+  "failureAfterTheLastRetry_staysFailed_withNoFurtherResend": "passed",
+  "lateFailureForALockedLeg_isIgnored": "passed",
+  "lockFailureWaitsUntilNoLegIsInProgress_thenReportsBoth": "passed",
+  "operatorRetry_resendsTheFailedLegOnly_thenTheContractLocks": "passed",
+  "refusedReturn_isResentWithTheSameEventId": "passed",
+  "resultForARequestEscrowNeverSent_goesToTheDlq": "passed",
+  "retryCycleThatFailsAgain_isReportedAgain": "passed",
+  "retryWithNothingFailed_sendsNothing": "passed",
+  "sellerOutOfRetries_whileBuyerLocked_reportsOneLockFailure": "passed"
+ },
+ "escrow-service/DispatchRemedyLegsUseCaseTest": {
+  "bankUnavailable_throws_andWritesNothing": "passed",
+  "invalidMapping_rejectsWithoutReadingTheBank": "passed",
+  "knownDecision_sendsNothing": "passed",
+  "locksComeBeforeTheLedgerRead_depositsFirst_thenTheDecision_thenTheMilestoneAndItsSettlementLegs": "passed",
+  "milestoneBatchMovedWhole_isAccepted_andOtherwiseRejected": "passed",
+  "milestoneBatchNotMovedWhole_isRejected": "passed",
+  "milestoneUnknownToEscrow_isRejected_withoutReadingTheBank": "passed",
+  "normalCompletion_acceptsAndSendsOneRefundAndOneRelease": "passed",
+  "oneCentOverTheLock_rejectsAndWritesNothingElse": "passed",
+  "settlementLegInFlight_reducesAvailable": "passed",
+  "zeroAndNoneLegs_acceptWithoutReadingTheBank": "passed"
+ },
+ "escrow-service/ErrorDispatchSecurityTest": {
+  "anOrdinaryRequestToErrorIsStillNotOpen": "passed",
+  "errorDispatchRendersTheRealStatusInsteadOfAnEmpty403": "passed",
+  "theErrorDispatchRuleDoesNotOpenBusinessRoutes": "passed"
+ },
+ "escrow-service/EscrowMilestoneSettlementTest": {
+  "actualAboveTheLock_isRefused_andNothingChanges": "passed",
+  "fullDelivery_omitsTheZeroRefund": "passed",
+  "lateLockResult_afterSettlementStarted_neverReopensTheLock": "passed",
+  "lockedAmountOtherThanTheBatch_isRefused": "passed",
+  "negativeActual_orOtherContract_orNoSellerToPay_isRefused": "passed",
+  "nothingDelivered_omitsTheZeroRelease_andNeedsNoSeller": "passed",
+  "partialDelivery_releasesActualAndRefundsTheRest_addingUpToTheLock": "passed",
+  "repeat_isTheSameSettlementOnlyWithTheSameAmountsAndSeller": "passed",
+  "settled_onlyWhenTheBankConfirmedEveryLeg": "passed",
+  "unlockedMilestone_cannotSettle": "passed"
+ },
+ "escrow-service/EscrowMilestoneTest": {
+  "failureAfterTheLastRetry_failsTheFunding_withTheLastReason": "passed",
+  "failure_schedulesTheResend_perTheBackoff": "passed",
+  "lateFailureForALockedFunding_isIgnored": "passed",
+  "lockAfterTheFundingFailed_stillFundsTheMilestone": "passed",
+  "lock_neverBeforeTheRequest_whenTheBankClockIsBehind": "passed",
+  "lock_takesTheBankTime": "passed",
+  "repeatedFailureOfTheSameAttempt_isNotCountedTwice": "passed",
+  "request_isPendingAndInFlight_withItsOwnBankRequestId": "passed",
+  "request_refusesAnIndexOutOfRange": "passed",
+  "retry_refusedWhenNotDue": "passed",
+  "sameRequest_comparesContractBuyerAndAmount": "passed",
+  "secondLock_isADuplicate_andKeepsTheFirstEntry": "passed"
+ },
+ "escrow-service/FundConservationTest": {
+  "completedEntriesInTheLedger_reduceWhatIsAvailable": "passed",
+  "depositLeg_overTheLock_isRejected": "passed",
+  "depositLeg_underTheLock_isAccepted": "passed",
+  "depositsAndMilestonesAreSeparatePools": "passed",
+  "milestoneBatch_movedWhole_isAccepted": "passed",
+  "milestoneBatch_notMovedWhole_isRejected": "passed",
+  "normalCompletion_returnsEveryDeposit_accepted": "passed",
+  "settlementLegStillInFlight_reducesWhatIsAvailable": "passed"
+ },
+ "escrow-service/MilestoneFundingFlowIntegrationTest": {
+  "failedLock_isResentWithTheSameEventId_thenFailsAfterTheLastRetry": "passed",
+  "lockAfterTheFundingFailed_stillReportsFunded": "passed",
+  "request_locksTheBatchFromTheBuyer_thenReportsFundedOnce": "passed",
+  "resultThatDoesNotMatchTheRequest_goesToTheDlq": "passed",
+  "secondRequestForTheSameMilestone_sendsNoSecondLock_whateverTheAmount": "passed"
+ },
+ "escrow-service/MilestoneFundingRequestedConsumerTest": {
+  "missingCorrelation_startsTheChainAtThisEvent": "passed",
+  "payloadOutsideTheSchema_isRefused": "passed",
+  "validEvent_becomesACommand": "passed",
+  "wrongProducer_isRefused": "passed"
+ },
+ "escrow-service/MilestoneSettledConsumerTest": {
+  "missingCorrelation_startsTheChainAtThisEvent": "passed",
+  "payloadOutsideTheSchema_isRefused": "passed",
+  "validEvent_becomesACommand_withThePayeesFromRecipients": "passed",
+  "wrongProducer_isRefused": "passed",
+  "zeroActual_andNoRecipients_areValid": "passed"
+ },
+ "escrow-service/MilestoneSettlementFlowIntegrationTest": {
+  "actualAboveTheLock_goesToTheDlq_andSendsNothing": "passed",
+  "buyerOtherThanTheOneLockedFrom_goesToTheDlq": "passed",
+  "fullDelivery_sendsNoZeroRefund": "passed",
+  "outboxFailure_rollsBackTheLegs_andTheProcessedEvent": "passed",
+  "partialDelivery_releasesActual_refundsTheRest_settledOnlyOnBankResults": "passed",
+  "refusedRelease_isResentWithTheSameEventId_thenSettles": "passed",
+  "resultThatDoesNotMatchTheLeg_goesToTheDlq": "passed",
+  "unknownMilestone_goesToTheDlq": "passed",
+  "unlockedMilestone_goesToTheDlq": "passed"
+ },
+ "escrow-service/Phase1CleanupMigrationTest": {
+  "existingPhase1DatabaseWithRowsIsCleanedUp": "passed",
+  "freshDatabaseEndsWithNoPhase1Tables": "passed"
+ },
+ "escrow-service/RemedyFinalizedConsumerTest": {
+  "legWithAnUnknownKeyEnumOrBadAmount_isInvalid": "passed",
+  "unknownOrMissingKey_isInvalid": "passed",
+  "validEvent_becomesACommand": "passed",
+  "wrongProducerOrNotUniqueMilestones_isInvalid": "passed"
+ },
+ "escrow-service/RemedyFinalizedFlowIntegrationTest": {
+  "bankDown_sendsNothing_isRetried_thenDeadLettered": "passed",
+  "forfeitureAndMilestoneLegs_goOutAsSeizeAndRelease": "passed",
+  "milestoneWithoutEscrowFunding_rejectsTheDecision": "passed",
+  "normalCompletion_sendsOneRefundAndOneRelease_withTheExactPayloads": "passed",
+  "oneCentOverTheLock_rejectsTheDecision_andSendsNothing": "passed",
+  "resultForAnUnknownRemedyLeg_isAcked": "passed",
+  "seizeResults_completeTheLeg_orFailAndResendTheSameCommand": "passed",
+  "twoDecisionsRacingForOnePool_exactlyOneDispatches_theOtherIsRejected": "passed"
+ },
+ "escrow-service/RemedyLegPlannerTest": {
+  "depositLegs_doNotNeedAMilestone_andCarryNone": "passed",
+  "invalidCombination_invalidatesTheWholeDecision": "passed",
+  "invalidCombination_isInvalidEvenWithAZeroAmount": "passed",
+  "milestonePaymentLegs_needExactlyOneAffectedMilestone": "passed",
+  "noneAndZeroLegs_areSkipped": "passed",
+  "repeatedRemedyLegId_invalidatesTheDecision": "passed",
+  "validRow_mapsToItsCommand_paidToTheRecipient": "passed"
+ },
+ "escrow-service/RemedyLegTest": {
+  "exhaustedLeg_restartsAsSent_withAttemptsReset_reasonKept_sameCommand": "passed",
+  "legWithARetryStillScheduled_restartsToo": "passed",
+  "payeeParty_isTheStoredRole_orDerivedForAnOldRow_whenOnlyOnePayeeIsPossible": "passed",
+  "sentAndCompletedLegs_areNotRestarted": "passed"
+ },
+ "escrow-service/RequestActivationDepositsUseCaseImplTest": {
+  "aNegativeSellerDepositIsRejectedNotTreatedAsNoDeposit": "passed",
+  "anInvalidBuyerAmountFailsBeforeAnythingIsStoredOrSent": "passed",
+  "anInvalidSellerAmountFailsBeforeTheBuyerLegIsStored": "passed",
+  "buyerAndSellerDepositsGiveTwoLegsAndTwoCommands": "passed",
+  "noSellerDepositGivesOnlyTheBuyerLeg": "passed"
+ },
+ "escrow-service/SettleMilestoneUseCaseTest": {
+  "conflictingRepeat_otherAmountOrSeller_isRefusedToTheDlq": "passed",
+  "exactRepeat_isAcked_andSendsNothing": "passed",
+  "sellerMatchingTheSellerDeposit_settles": "passed",
+  "sellerOtherThanTheSellerDepositOwner_isRefused": "passed"
+ },
+ "escrow-service/SettlementLegTest": {
+  "completionAfterTheRetriesRanOut_stillCounts": "passed",
+  "completion_isFinal_andADuplicateChangesNothing": "passed",
+  "refusal_schedulesAResendOfTheSameCommand_thenGivesUp": "passed",
+  "result_mustNameTheCommandExactly": "passed",
+  "retryNotDue_isRefused": "passed"
+ }
+}
