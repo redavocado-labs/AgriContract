@@ -81,7 +81,7 @@ CHANGES = [
     ("28/11/2026", "Defect List", "A", "Thêm DEF-20: stack Docker Compose không có pricing-service, giá tham chiếu "
      "trả 500 (Report 5.4 load test)", "Report 5.4 Performance"),
     ("28/11/2026", "Defect List", "A", "Thêm DEF-21 (Keycloak webOrigins thừa dấu /, web client mất phiên), DEF-22 "
-     "(GreenMail quay CPU sau healthcheck), DEF-23 (tiền thiếu 2 số lẻ) từ ST qua giao diện; DEF-18, DEF-19 trỏ sang "
+     "(GreenMail quay CPU sau healthcheck), DEF-23 (tiền thiếu 2 số lẻ, #717) từ ST qua giao diện; DEF-18, DEF-19 trỏ sang "
      "sheet Bruno e2e ở Report 5.2", "Report 5.3, Report 5.4"),
 ]
 for row, (date, item, kind, text, ref) in enumerate(CHANGES, start=12):

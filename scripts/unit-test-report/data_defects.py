@@ -221,5 +221,5 @@ DEFECTS = [
          severity="Low", found=("28/11/2026", "1a12c1c0", CUONG,
                                 "scripts/unit-test-report/results/st-ui/results-chromium.json"),
          cause="formatDecimalVnd (frontend/src/shared/lib/decimal-display.ts) bỏ phần lẻ khi phần lẻ bằng 0",
-         fix=("Chưa mở issue", None, "N/A"), status="Open", retest=None),
+         fix=("#717", None, "N/A"), status="Open", retest=None),
 ]
