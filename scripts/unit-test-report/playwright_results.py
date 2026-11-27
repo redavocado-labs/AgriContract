@@ -1,4 +1,4 @@
-# Read the result of each Playwright test (frontend/tests/qa) for one Report 5.4 round.
+# Read the result of each Playwright test (frontend/tests/qa) for one Report 5.5 round.
 # A round folder under results/ holds run.json (date, tester, commit, source) and either
 #   playwright.json     the JSON reporter of a local run (--reporter=list,json), or
 #   playwright-ci.log   the Playwright part of a GitHub Actions job log (list reporter: ✓ / ✘ / - per test, then one

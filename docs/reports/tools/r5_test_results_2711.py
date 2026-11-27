@@ -3,9 +3,9 @@
 Numbers are read from the workbooks, not typed:
 * UT  Report-5.1_Unit_Test.xlsx      Rounds 1-3 (Round 3 = per-test regression run of every service, #521)
 * IT  Report-5.2_Test_Report.xlsx    Rounds 1-2 (Bruno, api-gateway / user / product, GoldenFlow)
-* ST  Report-5.3_System_Test.xlsx    Rounds 1-2 (run-e2e-full.sh, BF-01..BF-07 and security, #676)
-* AT  Report-5.4_Acceptance_Test.xlsx Rounds 1-3 (Playwright, manual rows Pending, #677)
-* defects  Report-5.5_Defect_Log.xlsx (level, severity, status of each DEF)
+* ST  Report-5.3_System_Test_FRs.xlsx    Rounds 1-2 (run-e2e-full.sh, BF-01..BF-07 and security, #676)
+* AT  Report-5.5_Acceptance_Test.xlsx Rounds 1-3 (Playwright, manual rows Pending, #677)
+* defects  Report-5.6_Defect_Log.xlsx (level, severity, status of each DEF)
 A round's Total counts its Passed, Failed and Pending cases; N/A cases (not part of that round, or not implemented
 yet) are left out of Total and named in the Note.
 
@@ -25,8 +25,8 @@ from docxedit import fill_change_log, find, insert_copy_after, next_table, set_c
 
 REPORTS = Path(__file__).resolve().parents[1]
 DOC = REPORTS / "Report-5.0_Test Documentation.docx"
-BOOKS = {"5.1": "Report-5.1_Unit_Test.xlsx", "5.2": "Report-5.2_Test_Report.xlsx", "5.3": "Report-5.3_System_Test.xlsx",
-         "5.4": "Report-5.4_Acceptance_Test.xlsx", "5.5": "Report-5.5_Defect_Log.xlsx"}
+BOOKS = {"5.1": "Report-5.1_Unit_Test.xlsx", "5.2": "Report-5.2_Test_Report.xlsx", "5.3": "Report-5.3_System_Test_FRs.xlsx",
+         "5.5": "Report-5.5_Acceptance_Test.xlsx", "5.6": "Report-5.6_Defect_Log.xlsx"}
 parser = argparse.ArgumentParser()
 parser.add_argument("--book", action="append", default=[], help="5.x=path to read that workbook from elsewhere")
 args = parser.parse_args()
@@ -48,7 +48,7 @@ def rounds(book, prefix):
 
 
 def defects():
-    wb = openpyxl.load_workbook(paths["5.5"], read_only=True)
+    wb = openpyxl.load_workbook(paths["5.6"], read_only=True)
     header, out = None, []
     for row in wb.worksheets[-1].iter_rows(values_only=True):
         if row and row[0] == "Defect ID":
@@ -59,7 +59,7 @@ def defects():
 
 
 LEVELS = {"UT": rounds("5.1", "UTC"), "IT": rounds("5.2", "ITC"), "ST": rounds("5.3", "STC"),
-          "AT": rounds("5.4", "ATC")}
+          "AT": rounds("5.5", "ATC")}
 DEFECTS = defects()
 
 
@@ -106,13 +106,13 @@ set_par_text(other, "Integration Test Cases (IT): Report-5.2_Test_Report.xlsx, f
                     "whole stack built from a commit). Each round is a real Bruno run kept in "
                     "scripts/unit-test-report/results/.")
 anchor = other
-for text in ("System Test Cases (ST): Report-5.3_System_Test.xlsx, one sheet per business flow BF-01..BF-07 plus "
+for text in ("System Test Cases (ST): Report-5.3_System_Test_FRs.xlsx, one sheet per business flow BF-01..BF-07 plus "
              "security, one row per Bruno step of backend/bruno/e2e and backend/bruno/security; rounds are runs of "
              "backend/scripts/run-e2e-full.sh on a fresh Docker Compose stack, with an Actual Results column.",
-             "UI and Acceptance Test Cases (AT): Report-5.4_Acceptance_Test.xlsx, one sheet per role; the automated "
+             "UI and Acceptance Test Cases (AT): Report-5.5_Acceptance_Test.xlsx, one sheet per role; the automated "
              "rows read their rounds from Playwright runs (frontend/tests/qa), the manual rows are checked on the "
              "demo stack.",
-             "Defect Log: Report-5.5_Defect_Log.xlsx, every real test failure with its run, cause, fix and re-test; "
+             "Defect Log: Report-5.6_Defect_Log.xlsx, every real test failure with its run, cause, fix and re-test; "
              "the Defect IDs columns of 5.1-5.4 point at it."):
     anchor = insert_copy_after(anchor, other)
     set_par_text(anchor, text)

@@ -1,7 +1,7 @@
 # Report 5.1 (#521): the Jest tests behind each row of the analytics-service sheets, in sheet order (see
 # trace_notification.py for the notation). The real-MySQL tests (ANALYTICS_TEST_MYSQL_URL) are skipped in a unit
 # run; no row points at them.
-# AnalyticsTopology UTC004 carries the history of defect DEF-01 (Report 5.5, #449): Round 1 is the CI run that found
+# AnalyticsTopology UTC004 carries the history of defect DEF-01 (Report 5.6, #449): Round 1 is the CI run that found
 # it, Round 2 the CI re-run after the fix, both on main; Round 3 is the Jest run of this part.
 SERVICE = "analytics-service"
 
@@ -104,7 +104,7 @@ TESTS = {
          "defect": "DEF-01 (#449)",
          "note": "Round 1: CI " + RUN + "43699113645 (main 36bf2fcd), test bắt chữ 'analytics' trong comment của "
                  "contract-service; sửa ở #449, PR #468 (e62bc34c): test bỏ qua comment. Round 2: chạy lại "
-                 "CI " + RUN + "43725489719 (main e62bc34c), Passed. Report 5.5 DEF-01"},
+                 "CI " + RUN + "43725489719 (main e62bc34c), Passed. Report 5.6 DEF-01"},
         ["persistence and config › *", "NestJS wiring › *"],
     ],
 }

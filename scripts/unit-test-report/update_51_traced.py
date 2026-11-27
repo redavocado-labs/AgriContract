@@ -147,7 +147,7 @@ for sheet in SHEETS:
                 continue
             # {"tests": [...], "note": "..."}: the row still has its tests, but something about it needs saying
             # (e.g. its expected status is older than the test's)
-            # it may also correct the history of Rounds 1-2 and the defect from the defect log (Report 5.5), e.g. a
+            # it may also correct the history of Rounds 1-2 and the defect from the defect log (Report 5.6), e.g. a
             # row whose failure, fix and re-run are recorded there: {"round1": (result, date, tester), ...}
             extra = ""
             if isinstance(methods, dict):

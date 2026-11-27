@@ -1,4 +1,4 @@
-# Acceptance test cases (ATC) of Report 5.4 (#677): one sheet per role, one row = one user-visible check on a screen.
+# Acceptance test cases (ATC) of Report 5.5 (#677): one sheet per role, one row = one user-visible check on a screen.
 # Screen numbers and names are those of SRS §I.5.1 b (Screen List); only screens that have a route in
 # frontend/src/App.tsx are listed.
 #
@@ -183,7 +183,7 @@ MODULES = [
          desc="Admin: kiểm chuỗi audit và xem bằng chứng hợp đồng", pre="admin1; có hợp đồng đã quyết toán"),
 ]
 
-# Failed automated rows -> defect of Report 5.5 (#670)
+# Failed automated rows -> defect of Report 5.6 (#670)
 DEFECTS = {
     "FE-016 the public home page reflows at 320 CSS pixels": "DEF-09",
     "FE-003 an uncertain withdrawal survives reload and reuses its key after the authoritative read": "DEF-09",

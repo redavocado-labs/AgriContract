@@ -1,5 +1,5 @@
 # Fill the Report 5.1 template (template/Report-5.1_Unit_Test_template.xlsx) with the UI and acceptance test cases
-# of data_acceptance.py and write Report 5.4 (#677). Same steps as fill_bruno_report.py (one copy of ModuleName1 per
+# of data_acceptance.py and write Report 5.5 (#677). Same steps as fill_bruno_report.py (one copy of ModuleName1 per
 # role sheet, Test Cases list, Test Statistics), driven through Excel (COM) so charts, comments and validation
 # survive; it needs Windows with Excel and pywin32. Every Excel call goes through busy(), as in
 # fill_system_test_report.py, so a busy Excel ("call was rejected by callee") is waited for, not fatal.
@@ -15,7 +15,7 @@
 # has not been checked yet.
 #
 #   python fill_acceptance_report.py template/Report-5.1_Unit_Test_template.xlsx \
-#       ../../docs/reports/Report-5.4_Acceptance_Test.xlsx
+#       ../../docs/reports/Report-5.5_Acceptance_Test.xlsx
 import atexit
 import os
 import shutil
@@ -212,7 +212,7 @@ for m in MODULES:
             rounds = [c for i in range(len(ROUNDS)) for c in round_cells(kind, title, i)]
             failed = any(r["results"].get(title) == "Failed" for r in ROUNDS) if kind == AUTO else False
             defect = DEFECTS.get(title, "") if failed else ""
-            assert not failed or defect, f"failed row without a Report 5.5 defect: {title}"
+            assert not failed or defect, f"failed row without a Report 5.6 defect: {title}"
             if kind == AUTO:
                 history = " → ".join(r["results"][title] for r in ROUNDS)
                 note = f"Playwright: {title}" + (f"\nRound 1 → 3: {history}" if failed else "")
@@ -258,9 +258,9 @@ for ref, text in zip(["A11", "B11", "C11", "D11", "E11", "F11"],
                       f"Bản đầu: {cases} test case UI và nghiệm thu (ATC) theo vai trò, 1 dòng = 1 kiểm tra nhìn thấy "
                       f"trên 1 màn hình; {n_auto} dòng tự động lấy kết quả từ Playwright (frontend/tests/qa), "
                       f"{n_manual} dòng kiểm tay trên demo stack. Round 1-2 là 2 lần chạy CI (DEF-09, DEF-10 của "
-                      "Report 5.5), Round 3 chạy lại toàn bộ sau khi sửa; cột Actual Results (Q) ghi kết quả "
+                      "Report 5.6), Round 3 chạy lại toàn bộ sau khi sửa; cột Actual Results (Q) ghi kết quả "
                       "thực tế từng round",
-                      "SRS v1.7 §I.5.1, Report 5.0, Report 5.5"]):
+                      "SRS v1.7 §I.5.1, Report 5.0, Report 5.6"]):
     put(cell(cover, ref), text)
 
 # ── Test Cases ───────────────────────────────────────────────────────────────
@@ -279,7 +279,7 @@ put(cell(tc, "D5"), (
     "seed backend/scripts/seed/\n"
     "5. 1 dòng = 1 kiểm tra nhìn thấy trên 1 màn hình (số màn hình theo SRS §I.5.1 b); chỉ liệt kê màn hình đã có "
     "route trong frontend/src/App.tsx; Inspector chưa có màn hình nên chưa có sheet\n"
-    "6. Defect IDs ghi defect của Report 5.5 gây ra case Failed; Note ghi tên test Playwright\n"
+    "6. Defect IDs ghi defect của Report 5.6 gây ra case Failed; Note ghi tên test Playwright\n"
     "7. Actual Results (cột Q, thêm theo góp ý mentor 27/11): lỗi Playwright in ra khi test Failed, kết quả mong đợi "
     "khi test Passed (mọi assertion đều đạt), dòng kiểm tay ghi chưa kiểm"))
 for i, m in enumerate(MODULES):
