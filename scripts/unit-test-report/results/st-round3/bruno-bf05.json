@@ -1,0 +1,69 @@
+[
+  {
+    "iterationIndex": 0,
+    "results": [
+      {
+        "test": {
+          "filename": "e2e/bf05-breach-force-majeure/010-arbitration-queue.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/arbitration/breach-cases?size=10",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "content": [],
+            "page": 0,
+            "size": 10,
+            "totalElements": 0,
+            "totalPages": 0
+          },
+          "url": "http://localhost/api/v1/arbitration/breach-cases?size=10",
+          "responseTime": 22,
+          "duration": 22,
+          "size": 66
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "3xSG_4LLv-AvHy4c5fbvI"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.33217102,
+        "name": "BF05-010 Read the Arbitrator breach queue",
+        "path": "e2e/bf05-breach-force-majeure/010-arbitration-queue",
+        "iterationIndex": 0
+      }
+    ],
+    "summary": {
+      "totalRequests": 1,
+      "passedRequests": 1,
+      "failedRequests": 0,
+      "errorRequests": 0,
+      "skippedRequests": 0,
+      "totalAssertions": 0,
+      "passedAssertions": 0,
+      "failedAssertions": 0,
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "totalPreRequestTests": 0,
+      "passedPreRequestTests": 0,
+      "failedPreRequestTests": 0,
+      "totalPostResponseTests": 0,
+      "passedPostResponseTests": 0,
+      "failedPostResponseTests": 0
+    }
+  }
+]

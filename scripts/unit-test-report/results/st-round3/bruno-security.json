@@ -1,0 +1,1310 @@
+[
+  {
+    "iterationIndex": 0,
+    "results": [
+      {
+        "test": {
+          "filename": "security/audit-evidence-log/100-verify-global-as-admin.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/audit/verification",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "scope": "GLOBAL",
+            "contractId": null,
+            "status": "INTACT",
+            "checkedRecords": 1,
+            "brokenRecordId": null,
+            "brokenReason": null,
+            "checkedAt": "2026-11-27T20:51:44.887518857Z",
+            "anchorStatus": "NOT_ANCHORED"
+          },
+          "url": "http://localhost/api/v1/admin/audit/verification",
+          "responseTime": 125,
+          "duration": 125,
+          "size": 190
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "YbheKulrX-grfxR1RpmgA"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.423016769,
+        "name": "SEC-100 Admin verifies the global audit chain",
+        "path": "security/audit-evidence-log/100-verify-global-as-admin",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/audit-evidence-log/110-verify-global-as-operator.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/audit/verification",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/admin/audit/verification",
+          "responseTime": 19,
+          "duration": 19,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/110-verify-global-as-operator.bru:6:31\n    at <home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/test.js:3:11\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/110-verify-global-as-operator.bru:4:1\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/110-verify-global-as-operator.bru:10:3\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/110-verify-global-as-operator.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/sandbox/node-vm/index.js:112:28)\n    at TestRuntime.runTests (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/runtime/test-runtime.js:113:15)\n    at runSingleRequest (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/src/runner/run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+            "errorName": "AssertionError",
+            "uid": "dxODJRat-nvyERRdJ9fSP"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.268530079,
+        "name": "SEC-110 Operator role is denied global verification",
+        "path": "security/audit-evidence-log/110-verify-global-as-operator",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/audit-evidence-log/120-party-view.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "{{audit_service_url}}/api/v1/audit/contracts/{{contract_id}}/records",
+          "headers": {}
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": {},
+          "data": null,
+          "url": null,
+          "responseTime": 0,
+          "duration": 0,
+          "size": 0
+        },
+        "error": "Fixture 010-settled-contract returned error ",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 3.885139299,
+        "name": "SEC-130 Party reads the minimized trail",
+        "path": "security/audit-evidence-log/120-party-view",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/audit-evidence-log/130-admin-view.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/audit/contracts/38f9cae6-6599-4493-91ae-f7eaa93de22d/records",
+          "headers": {}
+        },
+        "response": {
+          "status": 404,
+          "statusText": "Not Found",
+          "headers": {},
+          "data": {
+            "timestamp": "2026-11-27T20:51:49.102688459Z",
+            "status": 404,
+            "error": "Not Found",
+            "code": "AUDIT_TRAIL_NOT_FOUND",
+            "message": "No evidence log for this contract",
+            "path": "/api/v1/admin/audit/contracts/38f9cae6-6599-4493-91ae-f7eaa93de22d/records",
+            "traceId": "be3e2cde-62a9-4e3d-9491-78e8f2df3c16"
+          },
+          "url": "http://localhost/api/v1/admin/audit/contracts/38f9cae6-6599-4493-91ae-f7eaa93de22d/records",
+          "responseTime": 38,
+          "duration": 38,
+          "size": 289
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected 404 to equal 200",
+            "actual": 404,
+            "expected": 200,
+            "stack": "AssertionError: expected 404 to equal 200\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/130-admin-view.bru:5:30\n    at <home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/test.js:3:11\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/130-admin-view.bru:4:1\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/130-admin-view.bru:11:3\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/130-admin-view.bru:12:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/sandbox/node-vm/index.js:112:28)\n    at TestRuntime.runTests (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/runtime/test-runtime.js:113:15)\n    at runSingleRequest (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/src/runner/run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+            "errorName": "AssertionError",
+            "uid": "W7oE4j3skhkBgsA9ESz_m"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.042937837,
+        "name": "SEC-140 Admin reads the same contract trail",
+        "path": "security/audit-evidence-log/130-admin-view",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/audit-evidence-log/140-global-view.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/audit/records?subjectType=SYSTEM&size=2",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "content": [
+              {
+                "recordId": "b49078c2-e0c4-4c83-a17e-1da61d70200d",
+                "globalSeq": 3,
+                "subjectType": "SYSTEM",
+                "subjectId": "SYSTEM",
+                "sourceType": "AUDIT_VIEWED",
+                "sourceEventType": "audit.viewed",
+                "sourceEventId": "3a049d8d-6425-402a-b019-15fac484c35f",
+                "content": {
+                  "page": "0",
+                  "scope": "GLOBAL",
+                  "adminUserId": "0e66c774-e2dd-42fb-9d4c-d8e4a2d20250",
+                  "subjectTypeFilter": "SYSTEM"
+                },
+                "recordHash": "fcea9447c589015be86cf5552e4e6985999e67262d6512dc385d5efb0ffaca63",
+                "prevHashSubject": null,
+                "prevHashGlobal": "db7100b5254c93ef8e8fa5087381d9a2558068a9f3fdf3ad7620a5edd60555b6",
+                "createdAt": "2026-11-27T20:51:49.131Z"
+              }
+            ],
+            "page": 0,
+            "size": 2,
+            "totalElements": 1,
+            "totalPages": 1
+          },
+          "url": "http://localhost/api/v1/admin/audit/records?subjectType=SYSTEM&size=2",
+          "responseTime": 52,
+          "duration": 52,
+          "size": 638
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "Target cannot be null or undefined.",
+            "stack": "AssertionError: Target cannot be null or undefined.\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/140-global-view.bru:9:21\n    at <home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/test.js:3:11\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/140-global-view.bru:4:1\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/140-global-view.bru:13:3\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/140-global-view.bru:14:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/sandbox/node-vm/index.js:112:28)\n    at TestRuntime.runTests (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/runtime/test-runtime.js:113:15)\n    at runSingleRequest (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/src/runner/run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+            "errorName": "AssertionError",
+            "uid": "0uvs3J5_yJH-iXBvyKr9x"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.05648978,
+        "name": "SEC-150 Admin read logging records one system event per read",
+        "path": "security/audit-evidence-log/140-global-view",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/audit-evidence-log/150-party-view-unchanged.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8092/api/v1/audit/contracts/38f9cae6-6599-4493-91ae-f7eaa93de22d/records",
+          "headers": {}
+        },
+        "response": {
+          "status": 404,
+          "statusText": "",
+          "headers": {},
+          "data": {
+            "timestamp": "2026-11-27T20:51:49.180242285Z",
+            "status": 404,
+            "error": "Not Found",
+            "code": "AUDIT_TRAIL_NOT_FOUND",
+            "message": "No evidence log for this contract",
+            "path": "/api/v1/audit/contracts/38f9cae6-6599-4493-91ae-f7eaa93de22d/records",
+            "traceId": "a12935bf-1fb6-492c-b42b-12c07e8a7a35"
+          },
+          "url": "http://localhost/api/v1/audit/contracts/38f9cae6-6599-4493-91ae-f7eaa93de22d/records",
+          "responseTime": 9,
+          "duration": 9,
+          "size": 283
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected 404 to equal 200",
+            "actual": 404,
+            "expected": 200,
+            "stack": "AssertionError: expected 404 to equal 200\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/150-party-view-unchanged.bru:5:30\n    at <home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/test.js:3:11\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/150-party-view-unchanged.bru:4:1\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/150-party-view-unchanged.bru:8:3\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/150-party-view-unchanged.bru:9:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/sandbox/node-vm/index.js:112:28)\n    at TestRuntime.runTests (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/runtime/test-runtime.js:113:15)\n    at runSingleRequest (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/src/runner/run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+            "errorName": "AssertionError",
+            "uid": "1A10BBjitvfKU1kqDKD_p"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.013659988,
+        "name": "SEC-160 Admin reads preserve the party trail",
+        "path": "security/audit-evidence-log/150-party-view-unchanged",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/audit-evidence-log/160-global-view-count.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/audit/verification",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "scope": "GLOBAL",
+            "contractId": null,
+            "status": "INTACT",
+            "checkedRecords": 2,
+            "brokenRecordId": null,
+            "brokenReason": null,
+            "checkedAt": "2026-11-27T20:51:49.200842093Z",
+            "anchorStatus": "NOT_ANCHORED"
+          },
+          "url": "http://localhost/api/v1/admin/audit/verification",
+          "responseTime": 16,
+          "duration": 16,
+          "size": 190
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected 2 to equal NaN",
+            "actual": 2,
+            "expected": null,
+            "stack": "AssertionError: expected 2 to equal NaN\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/160-global-view-count.bru:7:43\n    at <home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/test.js:3:11\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/160-global-view-count.bru:4:1\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/160-global-view-count.bru:9:3\n    at <home>/projects/AgriContract/backend/bruno/security/audit-evidence-log/160-global-view-count.bru:10:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/sandbox/node-vm/index.js:112:28)\n    at TestRuntime.runTests (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/runtime/test-runtime.js:113:15)\n    at runSingleRequest (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/src/runner/run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+            "errorName": "AssertionError",
+            "uid": "ePk2dn-dQoJzbw_wSH8wU"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.021514036,
+        "name": "SEC-170 Verify exactly two audit records were appended",
+        "path": "security/audit-evidence-log/160-global-view-count",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/authn/010-authenticated-profile.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/users/me",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "userId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+            "organizationName": "Công ty TNHH Mua Nông Sản Tám",
+            "role": "BUYER",
+            "email": "buyer1@test.com",
+            "emailVerified": true,
+            "phone": "0901234567",
+            "address": "123 Lê Lợi, Q1, TP.HCM",
+            "verificationStatus": "VERIFIED",
+            "authorizationExpiresAt": null
+          },
+          "url": "http://localhost/api/v1/users/me",
+          "responseTime": 23,
+          "duration": 23,
+          "size": 288
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "vZ1HuOx0AHlXyD1QceQiA"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.281508552,
+        "name": "SEC-010 A legitimate Buyer session gets its own profile",
+        "path": "security/authn/010-authenticated-profile",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/authn/020-anonymous-profile.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/users/me",
+          "headers": {}
+        },
+        "response": {
+          "status": 401,
+          "statusText": "Unauthorized",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/users/me",
+          "responseTime": 5,
+          "duration": 5,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <home>/projects/AgriContract/backend/bruno/security/authn/020-anonymous-profile.bru:6:31\n    at <home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/test.js:3:11\n    at <home>/projects/AgriContract/backend/bruno/security/authn/020-anonymous-profile.bru:4:1\n    at <home>/projects/AgriContract/backend/bruno/security/authn/020-anonymous-profile.bru:10:3\n    at <home>/projects/AgriContract/backend/bruno/security/authn/020-anonymous-profile.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/sandbox/node-vm/index.js:112:28)\n    at TestRuntime.runTests (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/runtime/test-runtime.js:113:15)\n    at runSingleRequest (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/src/runner/run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+            "errorName": "AssertionError",
+            "uid": "B1ln46i1YFdyvbDXrHdst"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.012412126,
+        "name": "SEC-020 A protected profile requires an authenticated session",
+        "path": "security/authn/020-anonymous-profile",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/authn/120-keycloak-temporary-lockout.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8180/realms/agricontract/protocol/openid-connect/token",
+          "headers": {}
+        },
+        "response": {
+          "status": 401,
+          "statusText": "Unauthorized",
+          "headers": {},
+          "data": {
+            "error": "invalid_grant",
+            "error_description": "Invalid user credentials"
+          },
+          "url": "http://localhost/realms/agricontract/protocol/openid-connect/token",
+          "responseTime": 5,
+          "duration": 5,
+          "size": 72
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "the correct password is denied after five incorrect passwords",
+            "status": "pass",
+            "uid": "eyX9GGpaqEv0ctp93LELp"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 7.964192253,
+        "name": "SEC-120 Repeated incorrect passwords temporarily lock a new Keycloak account",
+        "path": "security/authn/120-keycloak-temporary-lockout",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/authz-role-matrix/040-kyc-queue-buyer.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/users?verificationStatus=PENDING",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/admin/users?verificationStatus=PENDING",
+          "responseTime": 7,
+          "duration": 7,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/040-kyc-queue-buyer.bru:6:31\n    at <home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/test.js:3:11\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/040-kyc-queue-buyer.bru:4:1\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/040-kyc-queue-buyer.bru:10:3\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/040-kyc-queue-buyer.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/sandbox/node-vm/index.js:112:28)\n    at TestRuntime.runTests (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/runtime/test-runtime.js:113:15)\n    at runSingleRequest (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/src/runner/run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+            "errorName": "AssertionError",
+            "uid": "AC0OP2oEkMI6iLNkLo4jq"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.249698173,
+        "name": "SEC-040 BUYER reads kyc queue",
+        "path": "security/authz-role-matrix/040-kyc-queue-buyer",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/authz-role-matrix/041-kyc-queue-seller.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/users?verificationStatus=PENDING",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/admin/users?verificationStatus=PENDING",
+          "responseTime": 6,
+          "duration": 6,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/041-kyc-queue-seller.bru:6:31\n    at <home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/test.js:3:11\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/041-kyc-queue-seller.bru:4:1\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/041-kyc-queue-seller.bru:10:3\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/041-kyc-queue-seller.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/sandbox/node-vm/index.js:112:28)\n    at TestRuntime.runTests (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/runtime/test-runtime.js:113:15)\n    at runSingleRequest (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/src/runner/run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+            "errorName": "AssertionError",
+            "uid": "M2w9yUDzMfn3CcQMuk-ae"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.275215815,
+        "name": "SEC-041 SELLER reads kyc queue",
+        "path": "security/authz-role-matrix/041-kyc-queue-seller",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/authz-role-matrix/042-kyc-queue-inspector.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/users?verificationStatus=PENDING",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/admin/users?verificationStatus=PENDING",
+          "responseTime": 7,
+          "duration": 7,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/042-kyc-queue-inspector.bru:6:31\n    at <home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/test.js:3:11\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/042-kyc-queue-inspector.bru:4:1\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/042-kyc-queue-inspector.bru:10:3\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/042-kyc-queue-inspector.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/sandbox/node-vm/index.js:112:28)\n    at TestRuntime.runTests (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/runtime/test-runtime.js:113:15)\n    at runSingleRequest (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/src/runner/run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+            "errorName": "AssertionError",
+            "uid": "Q1MeHdmclnYKhj3x_1yIj"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.284006649,
+        "name": "SEC-042 INSPECTOR reads kyc queue",
+        "path": "security/authz-role-matrix/042-kyc-queue-inspector",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/authz-role-matrix/043-kyc-queue-operator.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/users?verificationStatus=PENDING",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "content": [],
+            "page": 0,
+            "size": 20,
+            "totalElements": 0,
+            "totalPages": 0,
+            "first": true,
+            "last": true,
+            "empty": true
+          },
+          "url": "http://localhost/api/v1/admin/users?verificationStatus=PENDING",
+          "responseTime": 50,
+          "duration": 50,
+          "size": 104
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "TP0kZuttef-Qf2Tt2X3pi"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.308335795,
+        "name": "SEC-043 OPERATOR reads kyc queue",
+        "path": "security/authz-role-matrix/043-kyc-queue-operator",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/authz-role-matrix/044-kyc-queue-arbitrator.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/users?verificationStatus=PENDING",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/admin/users?verificationStatus=PENDING",
+          "responseTime": 7,
+          "duration": 7,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/044-kyc-queue-arbitrator.bru:6:31\n    at <home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/test.js:3:11\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/044-kyc-queue-arbitrator.bru:4:1\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/044-kyc-queue-arbitrator.bru:10:3\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/044-kyc-queue-arbitrator.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/sandbox/node-vm/index.js:112:28)\n    at TestRuntime.runTests (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/runtime/test-runtime.js:113:15)\n    at runSingleRequest (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/src/runner/run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+            "errorName": "AssertionError",
+            "uid": "yzjZCP4Dy9VSQ5pdO540G"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.250642083,
+        "name": "SEC-044 ARBITRATOR reads kyc queue",
+        "path": "security/authz-role-matrix/044-kyc-queue-arbitrator",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/authz-role-matrix/045-kyc-queue-admin.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/users?verificationStatus=PENDING",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/admin/users?verificationStatus=PENDING",
+          "responseTime": 6,
+          "duration": 6,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/045-kyc-queue-admin.bru:6:31\n    at <home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/test.js:3:11\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/045-kyc-queue-admin.bru:4:1\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/045-kyc-queue-admin.bru:10:3\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/045-kyc-queue-admin.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/sandbox/node-vm/index.js:112:28)\n    at TestRuntime.runTests (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/runtime/test-runtime.js:113:15)\n    at runSingleRequest (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/src/runner/run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+            "errorName": "AssertionError",
+            "uid": "v1dSh2QJnM3Fj8aG11QVO"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.251604992,
+        "name": "SEC-045 ADMIN reads kyc queue",
+        "path": "security/authz-role-matrix/045-kyc-queue-admin",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/authz-role-matrix/060-arbitration-queue-buyer.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/arbitration/breach-cases?size=10",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/arbitration/breach-cases?size=10",
+          "responseTime": 7,
+          "duration": 7,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/060-arbitration-queue-buyer.bru:6:31\n    at <home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/test.js:3:11\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/060-arbitration-queue-buyer.bru:4:1\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/060-arbitration-queue-buyer.bru:10:3\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/060-arbitration-queue-buyer.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/sandbox/node-vm/index.js:112:28)\n    at TestRuntime.runTests (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/runtime/test-runtime.js:113:15)\n    at runSingleRequest (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/src/runner/run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+            "errorName": "AssertionError",
+            "uid": "NMG7H7br7YKy5t1x4eFFa"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.249930886,
+        "name": "SEC-060 BUYER reads arbitration queue",
+        "path": "security/authz-role-matrix/060-arbitration-queue-buyer",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/authz-role-matrix/061-arbitration-queue-seller.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/arbitration/breach-cases?size=10",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/arbitration/breach-cases?size=10",
+          "responseTime": 7,
+          "duration": 7,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/061-arbitration-queue-seller.bru:6:31\n    at <home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/test.js:3:11\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/061-arbitration-queue-seller.bru:4:1\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/061-arbitration-queue-seller.bru:10:3\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/061-arbitration-queue-seller.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/sandbox/node-vm/index.js:112:28)\n    at TestRuntime.runTests (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/runtime/test-runtime.js:113:15)\n    at runSingleRequest (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/src/runner/run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+            "errorName": "AssertionError",
+            "uid": "MurLenrYozivUVr7kxLZw"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.269421748,
+        "name": "SEC-061 SELLER reads arbitration queue",
+        "path": "security/authz-role-matrix/061-arbitration-queue-seller",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/authz-role-matrix/062-arbitration-queue-inspector.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/arbitration/breach-cases?size=10",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/arbitration/breach-cases?size=10",
+          "responseTime": 6,
+          "duration": 6,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/062-arbitration-queue-inspector.bru:6:31\n    at <home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/test.js:3:11\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/062-arbitration-queue-inspector.bru:4:1\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/062-arbitration-queue-inspector.bru:10:3\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/062-arbitration-queue-inspector.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/sandbox/node-vm/index.js:112:28)\n    at TestRuntime.runTests (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/runtime/test-runtime.js:113:15)\n    at runSingleRequest (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/src/runner/run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+            "errorName": "AssertionError",
+            "uid": "TFmpzsR3vJydbAGbnjwvy"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.266389361,
+        "name": "SEC-062 INSPECTOR reads arbitration queue",
+        "path": "security/authz-role-matrix/062-arbitration-queue-inspector",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/authz-role-matrix/063-arbitration-queue-operator.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/arbitration/breach-cases?size=10",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/arbitration/breach-cases?size=10",
+          "responseTime": 6,
+          "duration": 6,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/063-arbitration-queue-operator.bru:6:31\n    at <home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/test.js:3:11\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/063-arbitration-queue-operator.bru:4:1\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/063-arbitration-queue-operator.bru:10:3\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/063-arbitration-queue-operator.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/sandbox/node-vm/index.js:112:28)\n    at TestRuntime.runTests (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/runtime/test-runtime.js:113:15)\n    at runSingleRequest (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/src/runner/run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+            "errorName": "AssertionError",
+            "uid": "a0mq1ZfDV2DxujVTTuaUA"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.246283473,
+        "name": "SEC-063 OPERATOR reads arbitration queue",
+        "path": "security/authz-role-matrix/063-arbitration-queue-operator",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/authz-role-matrix/064-arbitration-queue-arbitrator.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/arbitration/breach-cases?size=10",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "content": [],
+            "page": 0,
+            "size": 10,
+            "totalElements": 0,
+            "totalPages": 0
+          },
+          "url": "http://localhost/api/v1/arbitration/breach-cases?size=10",
+          "responseTime": 15,
+          "duration": 15,
+          "size": 66
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "fnzPt7mjC_65G4p_uJjWY"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.2687058,
+        "name": "SEC-064 ARBITRATOR reads arbitration queue",
+        "path": "security/authz-role-matrix/064-arbitration-queue-arbitrator",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/authz-role-matrix/065-arbitration-queue-admin.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/arbitration/breach-cases?size=10",
+          "headers": {}
+        },
+        "response": {
+          "status": 403,
+          "statusText": "Forbidden",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/arbitration/breach-cases?size=10",
+          "responseTime": 7,
+          "duration": 7,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "fail",
+            "error": "expected '' to be an object",
+            "actual": "",
+            "stack": "AssertionError: expected '' to be an object\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/065-arbitration-queue-admin.bru:6:31\n    at <home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/test.js:3:11\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/065-arbitration-queue-admin.bru:4:1\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/065-arbitration-queue-admin.bru:10:3\n    at <home>/projects/AgriContract/backend/bruno/security/authz-role-matrix/065-arbitration-queue-admin.bru:11:11\n    at Script.runInContext (node:vm:149:12)\n    at runScriptInNodeVm (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/sandbox/node-vm/index.js:112:28)\n    at TestRuntime.runTests (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/node_modules/@usebruno/js/src/runtime/test-runtime.js:113:15)\n    at runSingleRequest (<home>/.nvm/versions/node/v24.16.0/lib/node_modules/@usebruno/cli/src/runner/run-single-request.js:849:42)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+            "errorName": "AssertionError",
+            "uid": "3hSc9dukJBTZrm6IWNQWS"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.266921275,
+        "name": "SEC-065 ADMIN reads arbitration queue",
+        "path": "security/authz-role-matrix/065-arbitration-queue-admin",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/idempotency-replay/080-repeat-valid-offer.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/contracts",
+          "headers": {}
+        },
+        "response": {
+          "status": 201,
+          "statusText": "Created",
+          "headers": {},
+          "data": {
+            "contractId": "f7b69e11-aabd-4fed-9ea8-0ed91ee0e956",
+            "listingId": "c4faa42b-c9d4-4312-9eeb-3426686433cd",
+            "reservedQuantity": 1000,
+            "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "status": "OFFERED",
+            "terms": {
+              "agreedPrice": "95000.00",
+              "buyerConfirmWindowDays": 3,
+              "buyerDepositRate": 0.05,
+              "buyerPenaltyRate": 0.08,
+              "coffeeQualityProfileVersion": "1.0",
+              "contractTemplateCode": "VN_COFFEE_B2B",
+              "contractTemplateHash": "96876467dbe1535e2a7e9c646459924b7a4ac63ff17d82e79e8db39b7ceeaa18",
+              "contractTemplateVersion": "1.0",
+              "currency": "VND",
+              "deliveryTerms": {
+                "deliveryResponsibility": "SELLER_DELIVERS",
+                "riskTransferPoint": "BUYER_RECEIPT",
+                "titleTransferPoint": "FULL_PAYMENT",
+                "transportCostBearer": "SELLER",
+                "unloadingCostBearer": "BUYER"
+              },
+              "disputeFloorReleaseRate": 0.5,
+              "forceMajeureReportWindowDays": 7,
+              "fundingLeadBusinessDays": 3,
+              "goodsTerms": {
+                "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02",
+                "categoryName": "Cà phê",
+                "commodity": "COFFEE",
+                "cropYear": 2026,
+                "harvestSeason": "2026/27",
+                "listingId": "c4faa42b-c9d4-4312-9eeb-3426686433cd",
+                "originSnapshot": {
+                  "plotRefs": [
+                    {
+                      "geometryHash": "e1d88aa200411f98308f1939382175e1ff086651af12d330a7bb865186454075",
+                      "geometryType": "POINT",
+                      "householdLabel": "Bruno mwzgizo7-ajo0yv0",
+                      "registryEntryId": "77e42282-bb23-4713-a7d0-c520a2a46bc2",
+                      "verificationLevel": "SELF_DECLARED"
+                    }
+                  ],
+                  "regionText": "Buon Ma Thuot, Dak Lak"
+                },
+                "productId": "57aac521-af12-4781-9e3f-4fe58ebf7a43",
+                "productName": "Robusta Bruno mwzgizo7-ajo0yv0",
+                "traceabilitySnapshot": null,
+                "unitOfMeasure": "KG"
+              },
+              "inspectionTerms": {
+                "inspectionCostResponsibility": "LOSER_PAYS",
+                "reportDueBusinessDays": 5,
+                "requiredTier": "LEVEL_1_5",
+                "requirement": "NONE_UNLESS_DISPUTED"
+              },
+              "legalProfile": {
+                "contractType": "COFFEE_SALE",
+                "damagesPolicy": "COMMERCIAL_CUMULATIVE_IF_PROVEN",
+                "governingLaw": "VN_COMMERCIAL_LAW",
+                "maxContractualPenaltyRate": 0.08
+              },
+              "level2InspectorOrg": null,
+              "milestoneSchedule": [
+                {
+                  "committedQuantity": 1000,
+                  "expectedDeliveryDate": "2026-12-02",
+                  "graceDays": 2,
+                  "milestoneIndex": 1
+                }
+              ],
+              "priceAdjustmentRule": {
+                "acceptanceMode": "BOTH_ACCEPT",
+                "cutoff": "BEFORE_FUNDING_REQUEST",
+                "maximumAcceptedAdjustmentsPerMilestone": 1
+              },
+              "priceBand": {
+                "maximumUnitPrice": "100000.00",
+                "minimumUnitPrice": "90000.00"
+              },
+              "qualityTerms": {
+                "committedSpec": {
+                  "blackBrokenBeansPercent": 5,
+                  "commodity": "COFFEE",
+                  "foreignMatterPercent": 0.5,
+                  "moisturePercent": 12.5,
+                  "type": "ROBUSTA"
+                },
+                "commodity": "COFFEE",
+                "deviationPolicy": {
+                  "blackBrokenBeansPercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "foreignMatterPercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "moisturePercent": {
+                    "direction": "MAXIMUM",
+                    "discountRate": 0.02,
+                    "penalty": 1,
+                    "reject": 2,
+                    "tolerance": 0.5
+                  },
+                  "type": {
+                    "rejectOnMismatch": true
+                  }
+                }
+              },
+              "sellerDepositRate": 0.03,
+              "sellerPenaltyRate": 0.06,
+              "shortfallPenaltyThreshold": 0.05,
+              "toleranceRate": 0.05,
+              "totalContractValue": "95000000.00"
+            },
+            "signedContentHash": "1dcc0adcfeb1d8976a1dfd79fa8855fca630f936432a262392d2984c1b3d4e8e",
+            "milestones": []
+          },
+          "url": "http://localhost/api/v1/contracts",
+          "responseTime": 30,
+          "duration": 30,
+          "size": 2977
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "cmzXirc8_9Vse4udLvnaJ"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.93644473,
+        "name": "SEC-080 Retry the same valid offer with the original key",
+        "path": "security/idempotency-replay/080-repeat-valid-offer",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/idempotency-replay/090-replayed-reservation.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/listings/c4faa42b-c9d4-4312-9eeb-3426686433cd",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "listingId": "c4faa42b-c9d4-4312-9eeb-3426686433cd",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "productId": "57aac521-af12-4781-9e3f-4fe58ebf7a43",
+            "productName": "Robusta Bruno mwzgizo7-ajo0yv0",
+            "unitOfMeasure": "KG",
+            "offeredQuantity": 5500,
+            "quantityAvailable": 4500,
+            "minOrderQuantity": 100,
+            "askingUnitPrice": "95000.00",
+            "status": "PARTIALLY_COMMITTED",
+            "listingVersionToken": "2026-11-27T20:52:01.119829Z",
+            "registryEntryIds": [
+              "77e42282-bb23-4713-a7d0-c520a2a46bc2"
+            ],
+            "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02",
+            "commodity": "COFFEE",
+            "regionText": "Buon Ma Thuot, Dak Lak",
+            "declaredQualitySpec": {
+              "commodity": "COFFEE",
+              "type": "ROBUSTA",
+              "moisturePercent": 12.5,
+              "foreignMatterPercent": 0.5,
+              "blackBrokenBeansPercent": 5
+            },
+            "legacyQualitySpecMissing": false,
+            "cropYear": 2026,
+            "harvestSeason": "2026/27",
+            "certifications": [],
+            "packagingDeclaration": "Bao day 60 kg",
+            "warehouseLocation": null,
+            "estimatedAvailabilityDate": null,
+            "traceabilityEvidencePackageId": null
+          },
+          "url": "http://localhost/api/v1/listings/c4faa42b-c9d4-4312-9eeb-3426686433cd",
+          "responseTime": 16,
+          "duration": 16,
+          "size": 961
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "I0rQFn7j6eLeHnfVKJ9qc"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.020204434,
+        "name": "SEC-090 Read inventory after the retried offer",
+        "path": "security/idempotency-replay/090-replayed-reservation",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/info-leak/010-validation-envelope.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/contracts?page=-1",
+          "headers": {}
+        },
+        "response": {
+          "status": 400,
+          "statusText": "Bad Request",
+          "headers": {},
+          "data": {
+            "timestamp": "2026-11-27T20:52:01.971742584Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "page: must be greater than or equal to 0",
+            "path": "/api/v1/contracts",
+            "traceId": "756fbdd4-7269-45d6-9723-d47bc897dc8d"
+          },
+          "url": "http://localhost/api/v1/contracts?page=-1",
+          "responseTime": 108,
+          "duration": 108,
+          "size": 237
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "9da1c9IaoE-ghlCsf23Xx"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.368506232,
+        "name": "SEC-190 Validation errors omit system internals",
+        "path": "security/info-leak/010-validation-envelope",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "security/input-validation/010-negative-page.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/contracts?page=-1",
+          "headers": {}
+        },
+        "response": {
+          "status": 400,
+          "statusText": "Bad Request",
+          "headers": {},
+          "data": {
+            "timestamp": "2026-11-27T20:52:02.251347879Z",
+            "status": 400,
+            "error": "Bad Request",
+            "code": "VALIDATION_FAILED",
+            "message": "page: must be greater than or equal to 0",
+            "path": "/api/v1/contracts",
+            "traceId": "23cc8e52-1c48-4944-8273-25ba22daf879"
+          },
+          "url": "http://localhost/api/v1/contracts?page=-1",
+          "responseTime": 16,
+          "duration": 16,
+          "size": 237
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "z5SYJNOjGHFwItnB-pNzZ"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.278609144,
+        "name": "SEC-180 Reject a negative contract page index",
+        "path": "security/input-validation/010-negative-page",
+        "iterationIndex": 0
+      }
+    ],
+    "summary": {
+      "totalRequests": 26,
+      "passedRequests": 9,
+      "failedRequests": 16,
+      "errorRequests": 1,
+      "skippedRequests": 0,
+      "totalAssertions": 0,
+      "passedAssertions": 0,
+      "failedAssertions": 0,
+      "totalTests": 25,
+      "passedTests": 9,
+      "failedTests": 16,
+      "totalPreRequestTests": 0,
+      "passedPreRequestTests": 0,
+      "failedPreRequestTests": 0,
+      "totalPostResponseTests": 0,
+      "passedPostResponseTests": 0,
+      "failedPostResponseTests": 0
+    }
+  }
+]

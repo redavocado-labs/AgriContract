@@ -73,7 +73,11 @@ BOUNDARY = {  # the input sits on a limit (Report 5.0 §I.2.1)
 # Failed row -> defect of Report 5.6 (data_defects.py)
 DEFECTS = {"gateway-empty-denial": "DEF-15 (#663)",
            # Round 1 on Windows: the time-travel helper could not start (spawn EFTYPE), fixed in PR #686
-           "BF04-250": "DEF-18 (#685)"}
+           "BF04-250": "DEF-18 (#685)",
+           # Round 3 ran on a Saturday: the second signature is refused by D67 (funding date before today), so no
+           # contract reaches ACTIVE and the BF04 fixtures and the audit cases that read their settled contract fail
+           **{c: "DEF-19" for c in ("BF03-070", "BF04-010", "BF04-110", "BF04-310", "SEC-130", "SEC-140",
+                                    "SEC-150", "SEC-160", "SEC-170")}}
 
 ROUND_DIRS = sorted((p for p in (HERE / "results").glob("st-round*") if (p / "run.json").exists()),
                     key=lambda p: int(re.sub(r"\D", "", p.name)))
