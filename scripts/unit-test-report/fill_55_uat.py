@@ -18,91 +18,94 @@ import openpyxl
 UI_RESULTS, IT_BOOK, BOOK = sys.argv[1:4]
 
 SCRIPTS = [  # id, BF, title, actor, steps, outcome, priority, UI tests, steps without a screen, 5.2 sheet
-    ("SC-01", "BF-01", "Người mua đăng ký và được duyệt KYC", "Guest → Buyer, Operator",
-     "1. Khách mở trang Đăng ký, chọn vai trò Người mua, nhập email và mật khẩu.\n"
-     "2. Điền hồ sơ doanh nghiệp (tên, số điện thoại, địa chỉ) và gửi.\n"
-     "3. Nhập mã 6 số trong email xác minh.\n"
-     "4. Trước khi được duyệt, thử tạo offer.\n"
-     "5. Operator xác minh hồ sơ.\n"
-     "6. Người mua tải lại trang tài khoản và xem email kết quả.",
-     "Tài khoản ở trạng thái Đã xác minh, người mua nhận email kết quả; trước khi được duyệt thì không tạo được "
-     "offer và màn hình nói rõ lý do.", "Critical",
+    ("SC-01", "BF-01", "A buyer signs up and passes KYC", "Guest → Buyer, Operator",
+     "1. The guest opens the sign-up page, chooses the Buyer role, enters an e-mail and a password.\n"
+     "2. Fills in the organization profile (name, phone, address) and submits it.\n"
+     "3. Enters the 6-digit code from the verification e-mail.\n"
+     "4. Before approval, tries to make an offer.\n"
+     "5. The Operator verifies the profile.\n"
+     "6. The buyer reloads the account page and reads the result e-mail.",
+     "The account is Verified and the buyer receives the result by e-mail; before approval no offer can be made and "
+     "the screen says why.", "Critical",
      ["ST-BF01-010", "ST-BF01-020", "ST-BF01-030", "ST-USA-040", "ST-BF01-040", "ST-BF01-050"],
-     "bước 5 Operator xác minh gọi API (chưa có màn hình duyệt KYC)", "BF01_OnboardingApi"),
-    ("SC-02", "BF-01", "Người bán bị từ chối KYC", "Guest → Seller, Operator",
-     "1. Khách đăng ký vai trò Người bán, gửi hồ sơ doanh nghiệp và xác minh email.\n"
-     "2. Operator từ chối hồ sơ và ghi lý do.\n"
-     "3. Người bán tải lại trang tài khoản và đọc email.",
-     "Màn hình báo hồ sơ chưa được chấp thuận; email từ chối ghi đúng lý do.", "High",
-     ["ST-BF01-060", "ST-BF01-070"], "bước 2 Operator từ chối gọi API (chưa có màn hình duyệt KYC)",
+     "step 5, the Operator's verification, calls the API (no KYC review screen yet)", "BF01_OnboardingApi"),
+    ("SC-02", "BF-01", "A seller's KYC is rejected", "Guest → Seller, Operator",
+     "1. The guest signs up as a Seller, submits the organization profile and verifies the e-mail.\n"
+     "2. The Operator rejects the profile with a reason.\n"
+     "3. The seller reloads the account page and reads the e-mail.",
+     "The screen says the profile was not accepted; the rejection e-mail gives the exact reason.", "High",
+     ["ST-BF01-060", "ST-BF01-070"], "step 2, the Operator's rejection, calls the API (no KYC review screen yet)",
      "BF01_OnboardingApi"),
-    ("SC-03", "BF-02", "Người bán đăng listing cà phê, khách xem trên sàn", "Seller (đã xác minh), Guest",
-     "1. Người bán thêm lô đất, chờ hệ thống kiểm tra rủi ro phá rừng.\n"
-     "2. Tạo sản phẩm Robusta và listing 5.000 kg, giá 96.000 ₫/kg.\n"
-     "3. Khách (chưa đăng nhập) mở sàn nguồn hàng, mở listing.\n"
-     "4. Khách bấm Gửi đề nghị.",
-     "Listing Đang mở bán, khách xem được giá, số lượng, chất lượng khai báo, không thấy thông tin liên hệ của "
-     "người bán; muốn gửi đề nghị thì phải đăng nhập.", "Critical",
+    ("SC-03", "BF-02", "A seller publishes a coffee listing, a guest views it on the marketplace",
+     "Seller (verified), Guest",
+     "1. The seller adds a plot and waits for the deforestation risk check.\n"
+     "2. Creates a Robusta product and a listing of 5,000 kg at 96,000 VND/kg.\n"
+     "3. A guest (not signed in) opens the marketplace and the listing.\n"
+     "4. The guest clicks Make an offer.",
+     "The listing is Open for sale; the guest sees the price, quantities and declared quality but no contact data of "
+     "the seller; making an offer needs signing in.", "Critical",
      ["ST-BF02-010", "ST-BF02-020", "ST-BF02-030", "ST-BF02-040"],
-     "bước 1-2 của người bán gọi API (chưa có màn hình người bán)", "BF02_PlotListingApi"),
-    ("SC-04", "BF-03", "Đàm phán, ký và kích hoạt hợp đồng", "Buyer, Seller",
-     "1. Người mua mở listing, gửi đề nghị 1.000 kg với ngày giao.\n"
-     "2. Kiểm tra listing giữ đúng phần đã đề nghị.\n"
-     "3. Người bán sửa đơn giá.\n"
-     "4. Người mua nhận mã OTP qua email và ký.\n"
-     "5. Người bán nhận OTP và ký.\n"
-     "6. Hai bên mở hợp đồng chờ khoá cọc.",
-     "Hợp đồng chỉ Đang hiệu lực sau khi cọc hai bên được khoá (ký ≠ kích hoạt); số lượng của listing bị giữ đúng "
-     "phần đã đề nghị.", "Critical",
+     "the seller's steps 1-2 call the API (no seller screens yet)", "BF02_PlotListingApi"),
+    ("SC-04", "BF-03", "Negotiate, sign and activate a contract", "Buyer, Seller",
+     "1. The buyer opens a listing and offers 1,000 kg with a delivery date.\n"
+     "2. Check that the listing reserves exactly the offered quantity.\n"
+     "3. The seller revises the unit price.\n"
+     "4. The buyer receives the OTP by e-mail and signs.\n"
+     "5. The seller receives the OTP and signs.\n"
+     "6. Both open the contract and wait for the deposit lock.",
+     "The contract is Active only after both deposits are locked (signing ≠ activation); the listing reserves exactly "
+     "the offered quantity.", "Critical",
      ["ST-BF03-010", "ST-BF03-020", "ST-BF03-030", "ST-BF03-040", "ST-BF03-050", "ST-BF03-060"], "",
      "BF03_SigningApi"),
-    ("SC-05", "BF-03", "Người mua rút đề nghị trước chữ ký thứ hai", "Buyer",
-     "1. Người mua gửi đề nghị trên listing.\n"
-     "2. Trước khi người bán ký, người mua bấm Rút đề nghị và xác nhận.\n"
-     "3. Kiểm tra lại listing và hợp đồng.",
-     "Hợp đồng Đã rút; số lượng giữ được trả lại listing; không có khoản tiền nào bị khoá hay phạt.", "High",
+    ("SC-05", "BF-03", "The buyer withdraws an offer before the second signature", "Buyer",
+     "1. The buyer makes an offer on a listing.\n"
+     "2. Before the seller signs, the buyer clicks Withdraw offer and confirms.\n"
+     "3. Check the listing and the contract again.",
+     "The contract is Withdrawn; the reserved quantity returns to the listing; no money is locked or charged.", "High",
      ["ST-BF03-110", "ST-BF03-120", "ST-BF03-130"], "", "BF03_SigningApi"),
-    ("SC-06", "BF-04", "Giao nhận đợt hàng sạch và quyết toán", "Seller, Buyer",
-     "1. Đợt hàng được cấp tiền khi hợp đồng kích hoạt.\n"
-     "2. Người bán cân hàng, tải ảnh phiếu cân, ghi khối lượng.\n"
-     "3. Người mua nhận hàng, tải ảnh, ghi khối lượng nhận.\n"
-     "4. Người mua xác nhận hàng đạt.\n"
-     "5. Hai bên xem trạng thái đợt và hợp đồng.",
-     "Đợt hàng Đã tất toán; khi mọi đợt xong, hợp đồng Đã tất toán và tổng tiền còn khoá bằng 0.", "Critical",
+    ("SC-06", "BF-04", "Clean delivery of a milestone and settlement", "Seller, Buyer",
+     "1. The milestone is funded when the contract activates.\n"
+     "2. The seller weighs the goods, uploads the weighing photo and records the weight.\n"
+     "3. The buyer receives the goods, uploads a photo and records the received weight.\n"
+     "4. The buyer confirms the goods conform.\n"
+     "5. Both look at the milestone and contract status.",
+     "The milestone is Settled; when every milestone is done the contract is Settled and nothing stays locked.",
+     "Critical",
      ["ST-BF04-010", "ST-BF04-020", "ST-BF04-030", "ST-BF04-040", "ST-BF04-050"], "", "BF04_MilestoneApi"),
-    ("SC-07", "BF-04", "Tranh chấp chất lượng và giám định Level 1.5", "Buyer, Seller, Inspector, Operator",
-     "1. Người mua báo hàng không đạt (độ ẩm vượt mức).\n"
-     "2. Người bán phản hồi không đồng ý.\n"
-     "3. Operator phân công giám định viên.\n"
-     "4. Giám định viên đăng nhập lại và nộp kết quả.\n"
-     "5. Hai bên xem quyết định và chờ hết 2 ngày làm việc khiếu nại.",
-     "Đợt hàng chuyển Đang tranh chấp rồi quyết toán theo kết quả giám định; khoản bồi thường chỉ thực hiện sau "
-     "khi hết hạn khiếu nại.", "High", [], "chưa có test qua giao diện cho nhánh tranh chấp", "BF04_MilestoneApi"),
-    ("SC-08", "BF-05", "Báo vi phạm và phán quyết", "Buyer, Arbitrator",
-     "1. Người mua báo người bán vi phạm hợp đồng, kèm bằng chứng.\n"
-     "2. Arbitrator mở hồ sơ vi phạm, yêu cầu giám định nếu cần.\n"
-     "3. Arbitrator ra quyết định quy lỗi.\n"
-     "4. Hết hạn khiếu nại, hai bên xem tiền phạt và điểm uy tín.",
-     "Chỉ quyết định quy lỗi mới gây phạt tiền và khoá uy tín; một lời cáo buộc chưa được xử không ảnh hưởng gì.",
-     "High", [], "chưa có màn hình báo vi phạm; hàng đợi của Arbitrator mở được (ST-ARB-010)", "BF05_BreachApi"),
-    ("SC-09", "BF-05", "Xin miễn trách nhiệm do bất khả kháng", "Seller, Arbitrator",
-     "1. Người bán báo bất khả kháng cho một đợt (lũ lụt), trong 7 ngày.\n"
-     "2. Arbitrator xem bằng chứng và chấp nhận hoặc từ chối.",
-     "Chấp nhận: đợt được xử lý không phạt; từ chối: đợt tiếp tục như cũ.", "Medium", [],
-     "chưa có màn hình bất khả kháng", "BF05_BreachApi"),
-    ("SC-10", "BF-06", "Chấm dứt theo thoả thuận hoặc thay hợp đồng", "Buyer, Seller",
-     "1. Một bên đề xuất chấm dứt theo thoả thuận (hoặc đề xuất hợp đồng thay thế).\n"
-     "2. Bên kia chấp nhận.\n"
-     "3. Hai bên xem trạng thái hợp đồng và tiền còn khoá.",
-     "Hợp đồng Đã chấm dứt (hoặc Đã thay thế); mọi khoản còn khoá được trả về chủ, không bên nào bị phạt.",
-     "Medium", [], "chưa có controller và màn hình (#242, #243)", "BF06_TerminationApi"),
-    ("SC-11", "BF-07", "Khoá khẩn cấp mọi giao dịch tiền", "External Verifier, Buyer, Admin",
-     "1. External Verifier gửi yêu cầu khoá có chữ ký.\n"
-     "2. Người mua thử cấp tiền cho một đợt.\n"
-     "3. Admin thử mở khoá.\n"
-     "4. External Verifier gửi yêu cầu mở khoá.",
-     "Trong lúc khoá mọi chuyển động tiền bị từ chối và màn hình nói rõ lý do; Admin không mở được; sau khi mở "
-     "khoá giao dịch chạy lại bình thường.", "High", [], "chưa có màn hình khoá khẩn cấp", "BF07_SecurityLockApi"),
+    ("SC-07", "BF-04", "Quality dispute and Level 1.5 inspection", "Buyer, Seller, Inspector, Operator",
+     "1. The buyer reports the goods do not conform (moisture too high).\n"
+     "2. The seller answers that they disagree.\n"
+     "3. The Operator assigns an inspector.\n"
+     "4. The inspector signs in again and submits the result.\n"
+     "5. Both see the decision and wait for the 2-business-day contest window to pass.",
+     "The milestone goes Disputed and then settles by the inspection result; compensation is paid only after the "
+     "contest window.", "High", [], "no test through the screens for the dispute branch yet", "BF04_MilestoneApi"),
+    ("SC-08", "BF-05", "Report a breach and get a ruling", "Buyer, Arbitrator",
+     "1. The buyer reports that the seller breached the contract, with evidence.\n"
+     "2. The Arbitrator opens the breach case and asks for an inspection if needed.\n"
+     "3. The Arbitrator decides who is at fault.\n"
+     "4. After the contest window, both see the penalty and the reputation score.",
+     "Only an attribution decision triggers a money penalty and a reputation lock; an allegation not yet ruled on has "
+     "no effect.", "High", [], "no breach report screen yet; the Arbitrator's queue opens (ST-ARB-010)",
+     "BF05_BreachApi"),
+    ("SC-09", "BF-05", "Ask for relief by force majeure", "Seller, Arbitrator",
+     "1. The seller reports force majeure (a flood) for a milestone within 7 days.\n"
+     "2. The Arbitrator reviews the evidence and accepts or rejects it.",
+     "Accepted: the milestone is handled without penalty; rejected: the milestone goes on as before.", "Medium", [],
+     "no force majeure screen yet", "BF05_BreachApi"),
+    ("SC-10", "BF-06", "Mutual termination or contract replacement", "Buyer, Seller",
+     "1. One party proposes a mutual termination (or a replacement contract).\n"
+     "2. The other party accepts.\n"
+     "3. Both look at the contract status and the money still locked.",
+     "The contract is Terminated (or Superseded); every locked amount returns to its owner, nobody is penalized.",
+     "Medium", [], "no controller or screen yet (#242, #243)", "BF06_TerminationApi"),
+    ("SC-11", "BF-07", "Emergency lock of every money movement", "External Verifier, Buyer, Admin",
+     "1. The External Verifier sends a signed lock request.\n"
+     "2. The buyer tries to fund a milestone.\n"
+     "3. The Admin tries to unlock.\n"
+     "4. The External Verifier sends an unlock request.",
+     "While locked every money movement is refused and the screen says why; the Admin cannot unlock; after the unlock "
+     "transactions run normally again.", "High", [], "no emergency lock screen yet", "BF07_SecurityLockApi"),
 ]
 
 UI = {}
@@ -137,26 +140,26 @@ def it_round3(book):
 
 
 IT = it_round3(IT_BOOK)
-WEEKEND = ("28/11/2026 là thứ Bảy: không có ngày khoá tiền đợt hợp lệ (D63, D67) nên chữ ký thứ 2 → kích hoạt → "
-           "giao nhận tự skip, chạy lại ngày làm việc")
+WEEKEND = ("28/11/2026 is a Saturday: no milestone funding date is valid (D63, D67), so the second signature → "
+           "activation → delivery skip themselves and run again on a business day")
 
 
 def result(tests, gap, it_sheet):
-    it = f"API cùng luồng (Report 5.2, {it_sheet}, Round 3): {IT[it_sheet]}."
+    it = f"API side of the same flow (Report 5.2, {it_sheet}, Round 3): {IT[it_sheet]}."
     if not tests:
-        return "Not Executed", f"Chưa chạy được qua giao diện: {gap}. {it}"
+        return "Not Executed", f"Cannot run through the screens yet: {gap}. {it}"
     got = {t: UI[t] for t in tests}
     passed = [t for t, s in got.items() if s == "passed"]
     failed = [t for t, s in got.items() if s in ("failed", "timedOut")]
     skipped = [t for t, s in got.items() if s == "skipped"]
-    text = (f"Chạy tự động bằng Playwright qua giao diện trên stack thật, 28/11/2026 (Chromium; Report 5.3): "
-            f"{len(passed)}/{len(tests)} bước pass ({', '.join(passed) or 'không có'}).")
+    text = (f"Run automatically by Playwright through the screens on a real stack, 28/11/2026 (Chromium; Report 5.3): "
+            f"{len(passed)}/{len(tests)} steps passed ({', '.join(passed) or 'none'}).")
     if failed:
         text += f" Fail: {', '.join(failed)}."
     if skipped:
-        text += f" Chưa chạy: {', '.join(skipped)} ({WEEKEND})."
+        text += f" Not run: {', '.join(skipped)} ({WEEKEND})."
     if gap:
-        text += f" Lưu ý: {gap}."
+        text += f" Note: {gap}."
     verdict = "Fail" if failed else "Partial" if (skipped or gap) else "Pass"
     if not passed and not failed:
         verdict = "Not Executed"
