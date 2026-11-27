@@ -1,0 +1,795 @@
+{
+ "contract-service/ActivateContractIntegrationTest": {
+  "activation_createsOneWaitingMilestonePerTerm_withItsFundingDate": "passed",
+  "activation_requestsAtOnce_aMilestoneWhoseFundingDateHasPassed": "passed",
+  "contractThatIsNotSigned_isRefused_andNothingIsRecorded": "passed",
+  "payloadOutsideTheSchema_isRefusedBeforeAnything": "passed",
+  "sameSignalTwice_orANewSignalForAnActiveContract_isANoOp": "passed",
+  "sellerDepositAgreedButNotLocked_isRefused": "passed",
+  "signedContract_becomesActive_andContractActivatedIsWrittenOnce": "passed",
+  "unknownContract_isRefused": "passed"
+ },
+ "contract-service/ActivateContractUseCaseTest": {
+  "execute_alreadyActive_skipsSilently": "passed",
+  "execute_contractNotFound_throws": "passed",
+  "execute_happyPath_statusActiveAndSaves": "passed"
+ },
+ "contract-service/ActivationCancelIntegrationTest": {
+  "aSigningCodeNeverCancels_andACancelCodeNeverSigns": "passed",
+  "afterTheRefundStarted_nothingCanBeWithdrawnOrRetried": "passed",
+  "bothPartiesRequest_refundStartsAtOnce": "passed",
+  "cancelIsRefusedBeforeALockFailure_andTwiceForTheSameParty": "passed",
+  "onePartyAfterTheWindow_startsTheRefundOnVerify": "passed",
+  "onePartyBeforeTheWindow_waits_thenTheJobStartsTheRefundWhenItPasses": "passed",
+  "refundCompletedForAContractNotWaitingForIt_isRefused": "passed",
+  "refundCompleted_endsTheContractAsActivationFailed_once": "passed",
+  "startingARefundOutsideATransactionIsRefused": "passed",
+  "withdrawnRequest_isNotCounted_andCanBeMadeAgain": "passed",
+  "wrongCode_isCounted_andNoRequestIsRecorded": "passed"
+ },
+ "contract-service/ActivationRecoveryControllerTest": {
+  "operatorRetry_is204_withTheOperatorAsActor": "passed",
+  "partiesAndAdminCannotRetry_andTheKeyIsRequired": "passed"
+ },
+ "contract-service/ActivationRecoveryIntegrationTest": {
+  "activeContract_ignoresTheStaleReport_otherStatusesAreRefused": "passed",
+  "firstFailure_storesTheWindow_andNotifiesBothParties": "passed",
+  "getContract_showsActivationRecoveryOnlyAfterAFailure": "passed",
+  "laterFailure_keepsTheFirstFailureAndItsWindow_andNotifiesAgain": "passed",
+  "operatorRetry_writesOneRetryRequest_andAReplayWritesNothing": "passed",
+  "payloadOutsideTheSchema_isRefused": "passed",
+  "retry_isRefusedWhenTheLockHasNotFailed_orTheContractIsNotSigned": "passed",
+  "sameReportTwice_isRecordedOnce": "passed"
+ },
+ "contract-service/ActivationRecoveryTest": {
+  "laterFailuresUpdateTheLatestReportOnly": "passed",
+  "oneSidedCancelIsAllowedFromTheWindowInstantOn": "passed",
+  "theWindowMustEndAfterTheFailure": "passed"
+ },
+ "contract-service/ActivationRefundCompletedConsumerTest": {
+  "readsTheContractOfAValidEvent_withOrWithoutReturnedLegs": "passed",
+  "refusesWhatTheSchemaDoesNotAllow": "passed"
+ },
+ "contract-service/ArchitectureTest": {
+  "layers": "passed",
+  "sharedKernel": "passed"
+ },
+ "contract-service/BreachCaseEndpointTest": {
+  "contestEvidence_needsOneToTenFiles_andReachesTheUseCase": "passed",
+  "contest_isForBuyerAndSeller_checksCaseAndPartyThenTheBody_andReachesTheUseCase": "passed",
+  "resolve_checksRoleThenCase_thenTheBody_andReachesTheUseCase": "passed",
+  "review_isArbitratorOnly_withNoFallback": "passed",
+  "theQueue_isArbitratorOnly_andValidatesItsParameters": "passed"
+ },
+ "contract-service/BreachCaseReviewIntegrationTest": {
+  "aComputedResolution_isApprovedWhenTheDecisionEqualsIt_andRefusedOtherwise_withNothingWritten": "passed",
+  "aContestedCase_cannotBeResolvedWithoutAComputedResolution_andNothingIsWritten": "passed",
+  "aContractLevelCase_isReviewedAndResolvedByTheArbitrator_withNoFault_andNoOutboxRow": "passed",
+  "aNoFaultComputedResolution_isApprovedWithANullRole": "passed",
+  "aResolveFromReported_orOnAnUnknownCase_isRefused": "passed",
+  "getBreachCase_isForPartiesAndTheArbitrator_withEveryKey": "passed",
+  "theFinalRole_isNeverDerivedFromTheAllegation": "passed",
+  "theQueue_filtersByStatusAndAwaitingApproval_pagesAndOrdersNewestFirst": "passed"
+ },
+ "contract-service/BreachCaseTest": {
+  "aComputedResolution_isOnlyApproved_asItIs": "passed",
+  "aContestedMilestoneWithoutAComputedResolution_isReportPending": "passed",
+  "aDecisionWithFaultOnAMilestoneCase_opensTheWindow_andAnyOtherDecisionDoesNot": "passed",
+  "aNoFaultDecision_isValid_andTheFinalRoleComesOnlyFromTheRequest": "passed",
+  "aResolvedCaseTakesNoComputedResolution": "passed",
+  "attach_isOnlyWhileNotResolved_andOnlyOnce": "passed",
+  "contestEvidence_isTheContestersAlone_dedupesAndStopsAtThirtyFiles": "passed",
+  "contest_isOnceBeforeTheDeadline_byThePartyAtFault": "passed",
+  "inspectorL15WithoutAComputedResolution_isAMismatch": "passed",
+  "resolve_isOnlyFromUnderReview_andOnlyOnce": "passed",
+  "review_isOnlyFromReported": "passed",
+  "theFrozenReasonList_isComplete": "passed",
+  "theSecondReport_replacesTheComputedResolution_andSendsTheCaseBackToReview": "passed",
+  "theWindow_expiresOnlyOnceItHasPassed_andNeverAfterAContest": "passed",
+  "theWindow_isTwoBusinessDaysOfIct_endingWithTheDay_overAWeekendToo": "passed"
+ },
+ "contract-service/BuyerReceiptIntegrationTest": {
+  "aMilestoneNotSellerWeighed_orOfAContractNotActive_cannotBeReceived": "passed",
+  "aRepeatedKey_isANoOp_aNewKeyIsRefused_andADifferentBodyWithTheSameKeyConflicts": "passed",
+  "aWrongHashOrStatement_isRefused_withNothingPersisted": "passed",
+  "receiptClosesTheSellersCorrection_evenInsideTheWindow": "passed",
+  "theBuyerRecordsReceipt_andTheReceiptIsPersisted_consented_andPublishedOnce": "passed",
+  "theDetail_showsTheReceipt_withTheConfirmWindowInBusinessDays": "passed",
+  "theFilesMustBeTheBuyersOwn_andReady": "passed",
+  "whoMayReceive_andWhichMilestone": "passed",
+  "withoutACertificate_theEventLeavesItOut_andTheWeightMayExceedTheSellers": "passed"
+ },
+ "contract-service/BuyerReceiptTest": {
+  "anInvalidWeight_isRefused_andNothingChanges": "passed",
+  "anyOtherState_isNotAllowed_aSecondReceiptIncluded": "passed",
+  "theBuyersWeight_mayBeAboveOrBelowTheSellers": "passed",
+  "theConsent_isTheFixedStatement_andBindsExactlyThisReceipt": "passed",
+  "theContentHash_isThePipeString_withThreeDecimalKg_lowercaseIds_andEmptyForNull": "passed",
+  "theReceipt_movesSellerWeighedToBuyerReceived_andKeepsEverythingRecorded": "passed",
+  "theSellerCannotCorrect_afterReceipt_evenInsideTheWindow": "passed"
+ },
+ "contract-service/CancelContractUseCaseTest": {
+  "execute_buyerCancels_statusCancelledByBuyerAndSaves": "passed",
+  "execute_cancelReasonIsPersistedOnContract": "passed",
+  "execute_contractNotFound_throws": "passed",
+  "execute_sellerCancels_statusCancelledBySellerAndSaves": "passed",
+  "execute_unauthorizedUser_throwsUnauthorized": "passed",
+  "execute_wrongStatus_throwsIllegalArgument": "passed"
+ },
+ "contract-service/CleanReceiptConsentTest": {
+  "theContentHash_isTheSha256OfTheLiteralString": "passed"
+ },
+ "contract-service/CleanSettlementIntegrationTest": {
+  "aMandatoryInspection_blocksTheBuyer_andTheTimeout": "passed",
+  "aMilestoneNotBuyerReceived_orOfAContractNotActive_cannotBeConfirmed": "passed",
+  "aWrongHashOrStatement_isRefused_withNothingWritten": "passed",
+  "afterTheWindow_theTimeoutSettlesOnce_withSystemTimeout_andNoConsent": "passed",
+  "beforeTheWindowCloses_theTimeoutLeavesTheMilestoneAlone_andALateConfirmIsStillAccepted": "passed",
+  "theBuyerConfirms_theMilestoneIsSettled_andEachEventIsWrittenExactlyOnce": "passed",
+  "theDetail_showsTheSettlementOnlyOnceSettled": "passed",
+  "whoMayConfirm_andWhichMilestone": "passed",
+  "withinTolerance_theSellerIsPaidTheDeclaredWeight_andOverDeliveryIsCapped": "passed"
+ },
+ "contract-service/CleanSettlementTest": {
+  "overDelivery_isCappedByTheLockedAmount": "passed",
+  "settleClean_isOnlyFromBuyerReceived_andOnlyOnce": "passed",
+  "theD77Vectors": "passed"
+ },
+ "contract-service/ConfirmDeliveryUseCaseTest": {
+  "execute_contractNotFound_throws": "passed",
+  "execute_happyPath_statusDeliveredAndSaves": "passed",
+  "execute_sellerTriesToConfirm_throwsUnauthorized": "passed",
+  "execute_wrongStatus_throwsIllegalArgument": "passed"
+ },
+ "contract-service/ConsumerQueuesDeclaredAheadTest": {
+  "activatedQueueIsDeclaredLikeProductServiceDoes": "passed",
+  "activationFailedQueueIsDeclaredLikeNotificationServiceDoes": "passed",
+  "anchorRequestedQueueIsDeclaredLikeNotificationServiceDoes": "passed",
+  "auditQueuesAreDeclaredForTheEventsAuditWillChain": "passed",
+  "cancelBranchQueuesAreDeclaredLikeTheirOwnersDo": "passed",
+  "withdrawQueuesAreDeclaredLikeTheirOwnersDo": "passed"
+ },
+ "contract-service/ContractConsentToSignTest": {
+  "buyerGetsTheBuyerStatementAndConsentDoesNotChangeTheContract": "passed",
+  "contractPastSigningIsRefused": "passed",
+  "outdatedStatementVersionIsRefused": "passed",
+  "outsiderIsRefused": "passed",
+  "partyClaimingTheOtherSideIsRefused": "passed",
+  "partyThatAlreadySignedIsRefused": "passed",
+  "phase1ContractWithoutCoffeeTermsIsRefused": "passed",
+  "sellerConsentIsBoundToStatementAndCurrentTerms": "passed",
+  "staleContentHashIsRefused": "passed",
+  "theOtherPartyMayConsentAfterTheFirstSignature": "passed"
+ },
+ "contract-service/ContractLockClearedQueueTest": {
+  "aMalformedPayloadOrAnUnknownContract_isRejectedAfterOneAttempt": "passed",
+  "theQueue_hasItsBinding_itsDlx_andItsDlq": "passed"
+ },
+ "contract-service/ContractReviseCoffeeTermsTest": {
+  "eitherPartyRevisesAndTheContractMovesToNegotiating": "passed",
+  "goodsCannotBeSwappedDuringNegotiation": "passed",
+  "outsiderCannotRevise": "passed",
+  "phaseOneContractWithoutCoffeeTermsCannotBeRevised": "passed",
+  "reschedulingTheSameTotalIsAllowed": "passed",
+  "signedContractIsNotNegotiable": "passed",
+  "termsFreezeAtTheFirstSignature": "passed",
+  "theTotalIsHeldToTheStoredReservedQuantity_notToTheCurrentTerms": "passed",
+  "totalQuantityMustStayTheReservedQuantity": "passed"
+ },
+ "contract-service/ContractSignTest": {
+  "callerWhoIsNotThatParty_isRefused": "passed",
+  "challengeForOtherTerms_isRefused": "passed",
+  "firstSignature_isRecordedForTheChallengeAndTheCurrentTerms_contractNotSignedYet": "passed",
+  "roleOf_namesTheParty_orNothing": "passed",
+  "samePartyTwice_isRefused": "passed",
+  "secondSignatureOnOtherTermsThanTheFirst_isRefused": "passed",
+  "secondSignatureOnTheSameTerms_makesTheContractSigned": "passed",
+  "secondSignature_onATotalOtherThanTheReservedQuantity_isRefused_F18": "passed",
+  "signedContract_cannotBeSignedAgain": "passed"
+ },
+ "contract-service/ContractSigningEndpointTest": {
+  "idempotencyKeyIsRequired": "passed",
+  "onlyBuyerOrSellerMaySign": "passed",
+  "refusalsMapToTheirStatus": "passed",
+  "returnsTheChallengeBare_andPassesTheGatewayAuthTime": "passed",
+  "unknownFieldMissingFieldOrBadHash_isBadRequest": "passed",
+  "verify_badBody_isBadRequest_withoutEchoingTheCode": "passed",
+  "verify_onlyBuyerOrSeller": "passed",
+  "verify_returns204_andPassesCodeAuthTimeAndNoIp": "passed",
+  "verify_wrongCodeIs409_counterpartyIs409": "passed"
+ },
+ "contract-service/ContractTerminalGuardIntegrationTest": {
+  "operatorRetry_writesOneRetryRequest_andAReplayWritesNothing": "passed",
+  "payloadOutsideTheSchema_isRefused_beforeAnything": "passed",
+  "pendingDecisionAmongTheCleared_settlesTheContract_withOneContractSettled": "passed",
+  "pendingDecisionNotCleared_orNothingPending_leavesTheContractActive": "passed",
+  "retry_onAnUnknownContract_is404_andOnAContractNotActive_is409": "passed",
+  "sameEventAgain_doesNothing_andANewEventOnASettledContractIsANoOp": "passed",
+  "unknownContract_isRefused_andNotClaimed": "passed"
+ },
+ "contract-service/ContractTerminalGuardTest": {
+  "awaitTerminal_acceptsOnlySettledForNow": "passed",
+  "awaitTerminal_onlyOnAnActiveContract": "passed",
+  "awaitTerminal_recordsTheDecision_andTheSameDecisionAgainIsANoOp": "passed",
+  "awaitTerminal_refusesAnotherDecisionWhileOneIsPending": "passed",
+  "commitTerminal_commitsWhenThePendingDecisionIsAmongTheCleared": "passed",
+  "commitTerminal_leavesTheContractActiveWhenThePendingDecisionIsNotCleared": "passed",
+  "commitTerminal_onAContractThatIsNotActive_changesNothing": "passed",
+  "commitTerminal_withNothingPending_changesNothing": "passed",
+  "reconstitute_refusesHalfAPendingDecision": "passed"
+ },
+ "contract-service/ContractTermsPersistenceIntegrationTest": {
+  "coffeeTermsAndFingerprintRoundTripThroughMysqlUnchanged": "passed",
+  "databaseRefusesAFingerprintWithoutTerms": "passed",
+  "templateFingerprintComesFromTheTemplateFile": "passed"
+ },
+ "contract-service/ContractTermsRulesTest": {
+  "agreedPriceMustLieInsideThePriceBand": "passed",
+  "civilLawHasNoPercentageCapButOnlyItsOwnDamagesPolicies": "passed",
+  "clientCannotRaiseTheLegalCap": "passed",
+  "coffeeWithoutPlotIsRejected": "passed",
+  "fundingLead_defaultsToSeven_whenLeftOut_andIsStoredInTheSnapshot": "passed",
+  "fundingLead_mustStayBetweenThreeAndSixty": "passed",
+  "levelTwoInspectionNeedsAnInspectorOrganisation": "passed",
+  "milestoneIndexesMustRunWithoutGaps": "passed",
+  "newBuyerDepositMustStayInsideTheNegotiationBand": "passed",
+  "nonCoffeeGoodsAreRejected": "passed",
+  "nonCoffeeQualityTermsAreRejected": "passed",
+  "penaltyAboveTheCommercialLawCapIsRejected": "passed",
+  "qualityDeviationMustEscalateFromToleranceToPenaltyToReject": "passed",
+  "qualityPercentagesAllowAtMostTwoDecimals": "passed",
+  "templateFingerprintMustBeASha256": "passed",
+  "totalContractValue_isRoundedToTheWholeDong_halfUp": "passed",
+  "validCoffeeTermsDeriveTotalFromPriceTimesScheduledQuantity": "passed"
+ },
+ "contract-service/ContractTest": {
+  "activate_notSigned_isAConflict": "passed",
+  "activate_signedContract_becomesActive_withoutALegacyEvent": "passed",
+  "counterOffer_fromNegotiating_eventEmittedAgain": "passed",
+  "counterOffer_fromOffered_statusNegotiatingAndEventEmitted": "passed",
+  "counterOffer_invalidStatus_throws": "passed",
+  "counterOffer_invalidUser_throws": "passed",
+  "offer_happyPath_contractCreatedWithOfferedStatusAndEvent": "passed",
+  "pullDomainEvents_calledTwice_secondCallReturnsEmpty": "passed"
+ },
+ "contract-service/ContractWithdrawTest": {
+  "aPhase1Row_withoutCoffeeTerms_isRefused": "passed",
+  "afterTheSecondSignatureOrOnceEnded_isRefused": "passed",
+  "eitherParty_withdrawsAnOfferNotSignedByBoth": "passed",
+  "someoneElse_isRefused_andNothingChanges": "passed",
+  "theOtherParty_canWithdrawAfterTheFirstSignature": "passed",
+  "thePartyThatAlreadySigned_canStillWithdraw": "passed"
+ },
+ "contract-service/CreateContractEndpointTest": {
+  "clientCannotSendAQuantity_goodsTerms_orAContractId": "passed",
+  "createsTheOffer_andAnswersTheUnwrappedContractResponse": "passed",
+  "errorBodyIsTheSharedEnvelope": "passed",
+  "idempotencyKeyIsRequired": "passed",
+  "insufficientQuantityIsA409WithTheProductServiceCode": "passed",
+  "onlyABuyerCanOffer": "passed",
+  "productServiceDownIsA503": "passed",
+  "unreadableListingDataIsA500_withoutTheDetail": "passed"
+ },
+ "contract-service/CreateContractIntegrationTest": {
+  "insufficientQuantity_leavesNoOfferedRow": "passed",
+  "localCommitFails_noOfferNoEventNoKey_andTheReservationIsReleased": "passed",
+  "offerRow_reservedQuantity_andContractCreated_commitTogether": "passed",
+  "retryWithTheSameKey_reservesOnce_storesOnce_publishesOnce": "passed",
+  "unreadableReservationAnswer_givesTheReservationBack_andStoresNothing": "passed",
+  "unreadableSnapshot_nothingReservedNothingStored": "passed"
+ },
+ "contract-service/CreateContractUseCaseTest": {
+  "buyerEligibilityUnknown_failsClosed_beforeAnyListingCall": "passed",
+  "buyerWhoMayNotContract_isA403_beforeAnyListingCallOrReservation": "passed",
+  "concurrentRequestWithTheSameKeyWins_thisReservationIsReleased_andTheWinnerReturned": "passed",
+  "insufficientQuantity_isA409_withNothingStoredAndNothingToRelease": "passed",
+  "listingChangedSinceTheBuyerLoadedIt_isA409_beforeAnySnapshotOrReservation": "passed",
+  "localPersistenceFailure_releasesTheReservation_andLeavesNoOffer": "passed",
+  "lockedBuyerReplayingAnEarlierCreate_isRefusedToo": "passed",
+  "moreThanThreeDecimalsOfKg_cannotBeReservedExactly_andIsRejected": "passed",
+  "nonCoffeeGoods_areRejected_beforeAnyReservation": "passed",
+  "nonCoffeeQualityTerms_areRejected_beforeAnyRemoteCall": "passed",
+  "outboxFailure_rollsBackAndReleases": "passed",
+  "releaseKeepsBeingRetried_untilProductServiceAnswers": "passed",
+  "reservationThatDoesNotMatchTheRequest_isReleased_andNotStored": "passed",
+  "reserveWithoutAnAnswer_failsClosed_andGivesBackWhateverMayHaveBeenReserved": "passed",
+  "reservesTheScheduleTotal_beforeStoringTheOffer_andPublishesContractCreatedInTheSameTransaction": "passed",
+  "retryWithTheSameKey_returnsTheFirstContract_withoutReservingAgain": "passed",
+  "sameKeyForADifferentRequest_isRefused_withoutReserving": "passed",
+  "sellerCannotOfferOnTheirOwnListing": "passed",
+  "snapshotUnavailable_failsClosed_beforeAnyReservation": "passed",
+  "userServiceUnavailable_failsClosed_beforeAnyReservation": "passed"
+ },
+ "contract-service/DepositAmountTest": {
+  "depositsAreRoundedToTheWholeDong": "passed",
+  "exactAmountsStayExact": "passed",
+  "halfADongRoundsUp": "passed"
+ },
+ "contract-service/DisputeContractUseCaseTest": {
+  "execute_contractNotFound_throws": "passed",
+  "execute_happyPath_statusDisputedAndSaves": "passed",
+  "execute_sellerTriesToDispute_throwsUnauthorized": "passed",
+  "execute_wrongStatus_throwsIllegalArgument": "passed"
+ },
+ "contract-service/DisputeExitIntegrationTest": {
+  "aContestedDecision_thenTheBuyerConcedes_oldDecisionSuperseded_newOneFinalizedWithNoFault": "passed",
+  "aLateReportAfterTheExit_isIgnored": "passed",
+  "aMandatoryInspectionContract_refusesTheExit_andKeepsItsInspection": "passed",
+  "assignedConsumer_dedupsByEventId_andRefusesAMalformedPayload": "passed",
+  "buyerWithdrawsTheFlag_isAConcession_onTheSellersPosition": "passed",
+  "deleteProposal_byProposerWithdraws_byOtherRefuses_noneIs409": "passed",
+  "fee_insideTheFreeWindowNone_afterItTheConcederOrTheRequester": "passed",
+  "fee_ofASettlementAfterTheFreeWindow_isOnThePartyThatRequestedTheInspection": "passed",
+  "inconclusiveFirstReport_settlementSplitsTheFee_concessionPutsItOnTheConceder": "passed",
+  "noExit_afterACompleteReport_norForAMandatoryInspectionCase": "passed",
+  "sellerConcedesAQualityFlagWhileContested_nonConformingWithPenalty_cancelsTheInspection_lapsesTheProposal": "passed",
+  "sellerConcedesAQuantityFlag_whileAwaiting_caseOpenedAndResolvedMutual_noFault_buyerFigure": "passed",
+  "settlementWhileAwaiting_isNotAllowed": "passed",
+  "settlement_rangeAndProposalConflicts_thenAcceptEqual_noFault_noDisputeResolved": "passed",
+  "verifyReplay_isANoOp_withNoSecondEvent": "passed"
+ },
+ "contract-service/DisputeExitWindowTest": {
+  "aContestedDecision_isAWindow_untilTheContestReportIsComplete_buyerPositionIsTheDecision": "passed",
+  "aContractWithMandatoryInspection_hasNoWindow_awaitingOrContested": "passed",
+  "anInconclusiveFirstReport_keepsTheWindowOpen_andIsRemembered": "passed",
+  "awaitingSellerResponse_allowsConcessionOnly_withBothPositions": "passed",
+  "endByAgreement_resolvesMutual_withNoWindow_andRefusesADecidedOrSystemCase": "passed",
+  "feeRule_inconclusiveFirst_thenAssignmentPastTheFreeWindow_elseNone": "passed",
+  "noWindow_onceAReportDecided_forASystemCase_orAfterTheDecision": "passed",
+  "positions_areCappedAtTheLockedBatch_andAQualityFlagPutsTheBuyerAtZero": "passed",
+  "sellerConcession_onQuantity_isTheBuyersFigureWithNoFault_onQuality_isNonConformingWithFault": "passed",
+  "sellerPosition_roundsHalfUpToTheDong": "passed",
+  "settlement_bothEndsIncluded_outsideIs400": "passed"
+ },
+ "contract-service/DumpTermsTest": {
+  "dump": "passed"
+ },
+ "contract-service/ErrorDispatchSecurityTest": {
+  "anOrdinaryRequestToErrorIsStillNotOpen": "passed",
+  "errorDispatchRendersTheRealStatusInsteadOfAnEmpty403": "passed",
+  "theErrorDispatchRuleDoesNotOpenBusinessRoutes": "passed"
+ },
+ "contract-service/EvidenceAttachmentBackoffTest": {
+  "theBackoff_doublesFromFiveMinutes_andIsCappedAtSixHours": "passed"
+ },
+ "contract-service/FilesExchangeNotDeclaredTest": {
+  "theFileQueuesAreOurs_butTheExchangeAndItsBindingsAreNot": "passed"
+ },
+ "contract-service/FlagAndRespondIntegrationTest": {
+  "aFlaggedMilestone_isIgnoredByTheAutoConfirmJob_evenPastTheConfirmWindow": "passed",
+  "aMandatoryInspection_doesNotBlockAFlag": "passed",
+  "aQualityContest_usesQualityBelowCommitted": "passed",
+  "aWrongHashOrStatementOrIssueType_isRefused_withNothingWritten": "passed",
+  "afterTheConfirmWindow_orOnAnInactiveContract_orBeforeTheReceipt_aFlagIsRefused": "passed",
+  "respondingToAnUnflaggedMilestone_orWithAWrongHash_isRefused_withNothingWritten": "passed",
+  "sellerSilence_leavesAMilestoneInsideItsWindow_andAContestedOneAlone": "passed",
+  "sellerSilence_onAQualityFlag_isContestedBySystem_withNoActorAndNoConsent": "passed",
+  "sellerSilence_onAQuantityFlag_settlesOnTheBuyersWeight_once": "passed",
+  "theBuyerFlags_theMilestoneAwaitsTheSeller_withOneFlaggedMail_andNoMoneyEvent": "passed",
+  "theDetail_showsTheFlagAndTheBreachCase_onlyOnceTheyExist": "passed",
+  "theSellerContests_theMilestoneIsContested_aBreachCaseIsOpened_andLevel15IsRequested": "passed",
+  "whoMayFlag_andWhichMilestone": "passed",
+  "whoMayRespond_andWhen": "passed"
+ },
+ "contract-service/GatewayAuthDetailsTest": {
+  "epochSecondsBecomeTheAuthTime": "passed",
+  "missingOrUnreadableHeader_givesNoAuthTime": "passed"
+ },
+ "contract-service/GetContractEndpointTest": {
+  "activationRecoveryAppearsOnlyAfterADepositLockFailure": "passed",
+  "coffeeContractIsTheFrozenContractResponseWithItsHashAndNoWrapper": "passed",
+  "phaseOneRowWithoutCoffeeTermsAnswersItsOldBodyUnwrapped": "passed"
+ },
+ "contract-service/GetContractUseCaseTest": {
+  "execute_adminAccesses_returnsResponse": "passed",
+  "execute_buyerAccesses_returnsResponse": "passed",
+  "execute_buyerOfDifferentContract_throwsUnauthorized": "passed",
+  "execute_contractNotFound_throws": "passed",
+  "execute_sellerAccesses_returnsResponse": "passed",
+  "execute_strangerNotAdmin_throwsUnauthorized": "passed"
+ },
+ "contract-service/HmacOtpCodesTest": {
+  "codesAreSixDigitsIncludingLeadingZeros": "passed",
+  "hashIsKeyedAndNeverTheCode": "passed",
+  "shortOrMissingPepperIsRefused": "passed"
+ },
+ "contract-service/HttpEvidenceFileStoreStatusTest": {
+  "aServerError_isUnavailable_andRetryable": "passed",
+  "anyOtherUnexpectedStatus_isAFailure_notRetryable": "passed"
+ },
+ "contract-service/InitiateSignIntegrationTest": {
+  "codeGoesToTheProfileEmail_boundToTheChallengeAndTheCurrentTerms": "passed",
+  "emailNotSent_killsTheNewCode_keepsTheConsent": "passed",
+  "ineligibleSigner_leavesNoTrace": "passed",
+  "newCodeAfterTheCooldown_replacesTheEarlierOne": "passed",
+  "newCodeWithinTheCooldown_isRefused_andTheEarlierCodeStaysUsable": "passed",
+  "sameKeyAgainAfterTheEmailFailed_asksForANewRequest": "passed",
+  "sameKeyAgain_returnsTheSameChallenge_withoutASecondEmail": "passed",
+  "sameKeyForAnotherRequest_isRefused": "passed",
+  "sixthCodeWithinAnHour_isRefused": "passed",
+  "staleLogin_leavesNoTrace": "passed",
+  "termsChangedSinceThePageLoaded_leavesNoTrace": "passed",
+  "theOtherPartysCodes_doNotCountTowardsTheLimits": "passed"
+ },
+ "contract-service/InspectionReportHashesTest": {
+  "aTamperedReportHash_orCommitment_failsOnTheReportHash": "passed",
+  "aTamperedResult_failsOnTheResultHash": "passed",
+  "goodHashesVerify_andKeyOrderDoesNotMatter": "passed"
+ },
+ "contract-service/InspectionReportIntegrationTest": {
+  "aBadHash_goesToTheDlq_andNothingIsWritten_andTheEventIsNotClaimed": "passed",
+  "aReportForAMilestoneThatDoesNotRequireOne_isIgnored": "passed",
+  "aReportThatDoesNotFit_isAcknowledgedAndIgnored_withNothingWritten": "passed",
+  "level15_isRequestedOnReceiptOnlyInMandatoryMode": "passed",
+  "mandatory_inconclusiveReport_isStored_butNothingMoves_andTheConfirmStaysBlocked": "passed",
+  "mandatory_nonConformingReport_blamesTheSeller_refundsTheBatch_andNeverSettlesOrChangesTheContract": "passed",
+  "mandatory_partiallyConformingReport_opensASystemCase_contestsTheMilestone_andSettlesNothing": "passed",
+  "mandatory_requestsLevel15OnReceipt_blocksTheConfirm_andSettlesOnAConformingReport": "passed",
+  "mandatory_theBuyerMayStillFlagInsideTheConfirmWindow_andTheReportThenGoesToTheCase": "passed",
+  "qualityDispute_attachesThePartiallyConformingResolution_andOnlyThat": "passed",
+  "quantityDispute_theNearerWeightPrevails_andTheMoneyFollowsTheAcceptedQuantity": "passed"
+ },
+ "contract-service/InspectionReportQueueTest": {
+  "theQueue_hasItsBinding_itsDlx_andItsDlq": "passed"
+ },
+ "contract-service/JcsTermsCanonicalizerTest": {
+  "aNewFieldInLaterCodeDoesNotBreakStoredFingerprints": "passed",
+  "changingAnyTermChangesTheFingerprint": "passed",
+  "changingOnlyTheTemplateOrQualityProfileChangesTheFingerprint": "passed",
+  "editedStoredTermsAreRefused": "passed",
+  "inspectionCostResponsibilityOtherThanLoserPays_isRejectedAsInvalidTerms": "passed",
+  "numberWritingDoesNotChangeTheFingerprint": "passed",
+  "sameTermsAlwaysGiveTheSameFingerprint": "passed",
+  "storedTermsReadBackToTheSameFingerprint": "passed",
+  "wireShapeIsFlatSortedAndKeepsNullKeys": "passed"
+ },
+ "contract-service/Level15AssignedQueueTest": {
+  "anInvalidPayload_isRejectedAfterOneAttempt": "passed",
+  "theCancelEvent_isRoutedToTheInspectionRequestQueue": "passed",
+  "theQueue_hasItsBinding_itsDlx_andItsDlq": "passed"
+ },
+ "contract-service/ListContractsUseCaseTest": {
+  "executeByBuyer_noContracts_returnsEmptyPagedResult": "passed",
+  "executeByBuyer_nullStatus_returnsAllContracts": "passed",
+  "executeByBuyer_withStatusFilter_returnsFilteredContracts": "passed",
+  "executeBySeller_noContracts_returnsEmptyPagedResult": "passed",
+  "executeBySeller_nullStatus_returnsAllContracts": "passed",
+  "executeBySeller_withStatusFilter_returnsFilteredContracts": "passed",
+  "pagingMetadata_isCorrect": "passed"
+ },
+ "contract-service/ListingPortAdapterFeignTest": {
+  "productServiceAnswering503_staysUnavailable": "passed",
+  "productServiceUnreachable_staysUnavailable": "passed",
+  "reservationWithAnUnreadableQuantity_isInvalidData": "passed",
+  "snapshotWithANonUuidCategory_isInvalidData_namingTheListingAndTheField": "passed"
+ },
+ "contract-service/ListingPortAdapterTest": {
+  "releaseOfANeverTakenReservation_isNothingToDo": "passed",
+  "releaseSendsTheCompensationReason": "passed",
+  "reserveConflict_carriesProductServiceCode": "passed",
+  "reserveSendsTheDerivedQuantityAndToken": "passed",
+  "serverErrorOrNoAnswer_failsClosed": "passed",
+  "snapshotVersionMismatch_isA409": "passed",
+  "unknownListing_isNotFound": "passed",
+  "unreadableConflictBody_isStillA409": "passed"
+ },
+ "contract-service/MilestoneDeliveryEndpointTest": {
+  "aBodyOutsideTheSchema_is400_beforeTheUseCase": "passed",
+  "aReceive_isMappedToTheCommand_204_andRefusalsCarryTheirCodes": "passed",
+  "aWeigh_isMappedToTheCommand_and204": "passed",
+  "anUpload_isStreamedWithItsTypeAndLength_and202CarriesTheFileAndStatus": "passed",
+  "confirm_isBuyerOnly_checksPartyThenMilestone_thenTheBody_andReachesTheUseCase": "passed",
+  "flag_isBuyerOnly_hasAWrappedConsent_andReachesTheUseCaseWithTheIssueType": "passed",
+  "receive_isBuyerOnly_checksPartyThenMilestone_beforeTheMalformedBodyIsParsed": "passed",
+  "respond_isSellerOnly_hasAFlatConsent_andReachesTheUseCase": "passed",
+  "staffCannotUpload_norWeigh": "passed",
+  "theEvidenceBytes_areStreamedWithTheirType_andNotCached": "passed",
+  "uploadErrors_keepTheirStatusAndCode": "passed",
+  "weighChecks_partyThenMilestone_beforeTheBody": "passed",
+  "weighRefusals_carryTheirCodes": "passed"
+ },
+ "contract-service/MilestoneFlagTest": {
+  "aContest_isOnlyFromAwaitingSellerResponse_andOnlyOnce": "passed",
+  "aFlag_isOnlyFromBuyerReceived_andOnlyOnce": "passed",
+  "sellerSilence_settlesOnTheBuyersWeight_withNoTolerance": "passed",
+  "theContestHash_isTheSha256OfTheLiteralString": "passed",
+  "theFlagHash_isTheSha256OfTheLiteralString": "passed",
+  "theSilentSettlement_isOnlyForAQuantityFlagAwaitingTheSeller_andOnlyOnce": "passed"
+ },
+ "contract-service/MilestoneFundingIntegrationTest": {
+  "aContractThatIsNoLongerActive_asksForNoMoreMoney": "passed",
+  "aFailure_isRecorded_andTheMilestoneKeepsWaiting": "passed",
+  "aMilestoneWhoseDateHasCome_isRequestedOnce_andTheOthersWait": "passed",
+  "aPayloadOutsideTheSchema_isRefusedBeforeAnything": "passed",
+  "aResultItsMilestoneCannotTake_isRefused_andNotMarkedProcessed": "passed",
+  "eachMilestoneFollowsItsOwnDate_withoutWaitingForThePreviousOne": "passed",
+  "theDatabase_refusesADeliveryStateBeforeTheLock": "passed",
+  "theLock_startsTheDelivery_andCountsTheDelayOnTheVietnamCalendar": "passed",
+  "theSameResultTwice_orAgainUnderANewEventId_changesNothing": "passed"
+ },
+ "contract-service/MilestoneTest": {
+  "aFailureAfterTheLock_isRefused_andALongReasonIsClipped": "passed",
+  "aFailure_isRecorded_andALaterLockAfterARetryIsStillAccepted": "passed",
+  "aLockBeforeTheRequest_orWithoutARequest_isRefused": "passed",
+  "aPlannedMilestone_waitsInCreated_withNoBatchFixedYet": "passed",
+  "batchAmount_belowHalfADong_isRoundedDown": "passed",
+  "batchAmount_isRoundedOnceToTheWholeDong_halfUp": "passed",
+  "fundingIsDue_fromItsDateOn_andOnlyWhileNotRequested": "passed",
+  "fundingIsRequestedOnlyOnce": "passed",
+  "theFundingDate_mustBeBeforeTheDeliveryDate": "passed",
+  "theLock_startsTheDelivery_andKeepsTheDelay": "passed"
+ },
+ "contract-service/NegotiateContractUseCaseTest": {
+  "execute_contractNotFound_throws": "passed",
+  "execute_happyPath_statusNegotiatingAndSaves": "passed",
+  "execute_sellerCounterOffers_statusNegotiatingAndSaves": "passed",
+  "execute_unauthorizedUser_propagatesUnauthorizedAndDoesNotSave": "passed"
+ },
+ "contract-service/OtpChallengeIntegrationTest": {
+  "challengeIsStoredBoundAndWithoutThePlainCode": "passed",
+  "concurrentResendsLeaveExactlyOneUsableChallenge": "passed",
+  "consentForAnotherContractIsRefused": "passed",
+  "expireKillsTheChallengeWhenTheEmailFails": "passed",
+  "issuingOutsideATransactionIsRefused": "passed",
+  "resendDoesNotTouchTheOtherPartysChallenge": "passed",
+  "resendKillsTheOlderChallengeEvenWithTheRightCode": "passed"
+ },
+ "contract-service/OtpChallengeTest": {
+  "exhaustedAfterMaxWrongAttempts": "passed",
+  "expiredAtTheExactExpiryInstant": "passed",
+  "issuedChallengeLivesForTheExpiryWindow": "passed",
+  "policyRejectsNonPositiveValues": "passed",
+  "usedChallengeIsRefused": "passed"
+ },
+ "contract-service/OtpEmailPortAdapterTest": {
+  "accepted_postsExactlyTheOtpEmailRequestWithTheSecret": "passed",
+  "cancelRequestCode_carriesItsPurpose": "passed",
+  "configuredTimeouts_readAtLeastFiveSeconds": "passed",
+  "inProgressOrLogUnavailable_isNotSent": "passed",
+  "nobodyListening_isNotSent": "passed",
+  "providerFailure_isNotSent_withTheEnvelopeCode_andIsNotRetried": "passed",
+  "serverErrorWithoutEnvelope_isNotSent": "passed",
+  "slowAnswer_waitsTheFullFiveSeconds_thenIsNotSent": "passed"
+ },
+ "contract-service/OtpPolicyTest": {
+  "codeWithinSixtySecondsOfTheLastOne_isRefused": "passed",
+  "firstCodeAndCodeAfterTheCooldown_canBeSent": "passed",
+  "sixthCodeWithinAnHour_isRefused": "passed"
+ },
+ "contract-service/OutboxContractEventPublisherTest": {
+  "anchorCommand_matchesTheFrozenSchema_withBothPartiesAndTheExactSignedTerms": "passed",
+  "anchorCommand_notSignedYet_isRefused": "passed",
+  "createdContract_matchesTheFrozenSchema_withTheStoredReservedQuantity": "passed",
+  "createdEvent_forAContractNoLongerOffered_isRefused": "passed",
+  "idThatIsNotAUuid_isRefusedHere_notInAConsumersDlq": "passed",
+  "notSignedYet_isRefused": "passed",
+  "signedContract_matchesTheFrozenSchema_withDepositsAndHashFromTheTerms": "passed",
+  "terminated_withdrawOffer_matchesTheFrozenSchema_withNoBreachNoRemedy": "passed",
+  "withdrawEvents_forAContractNotWithdrawn_areRefused": "passed",
+  "withdrawNotice_goesToTheOtherPartyOnly_andMatchesTheFrozenSchema": "passed",
+  "withdrawn_carriesTheStoredReservedQuantity_notTheTermsTotal": "passed",
+  "withdrawn_matchesTheFrozenSchema_withTheReservedQuantity": "passed"
+ },
+ "contract-service/OutboxEventCatalogTest": {
+  "everyEventTypeWrittenToTheOutbox_isFrozen_andHasAConsumer": "passed"
+ },
+ "contract-service/Phase1DeadPathMigrationTest": {
+  "removesPhase1OnlyStatesAndCancelColumns": "passed"
+ },
+ "contract-service/PrevailingRoleRuleTest": {
+  "conformingWithQualityFlagOrNoFlag_isSeller": "passed",
+  "conformingWithQuantityFlag_theNearerWeightWins_aTieGoesToTheSeller": "passed",
+  "finalBreachingRole_isSellerOnlyForNonConforming": "passed",
+  "inconclusive_hasNoPrevailingRole": "passed",
+  "partiallyAndNonConforming_alwaysBuyer_whateverTheFlag": "passed"
+ },
+ "contract-service/QualityDispositionCalculatorTest": {
+  "conforming_andQuantityCappedByLockedAmount": "passed",
+  "inconclusive_allowsMissingMetrics": "passed",
+  "inconclusive_hasNoMoneyEvenWithConformingMetrics": "passed",
+  "invalidActualMetrics_areRejected": "passed",
+  "invalidMoneyInputs_areRejected": "passed",
+  "minimumDirection_countsOnlyShortfall": "passed",
+  "partiallyConforming_usesTheMaxRateOnce": "passed",
+  "rejectBoundary_refundsEverything": "passed",
+  "rounding_isDoneOncePerStep": "passed",
+  "sameInputs_giveEqualAssessments": "passed",
+  "typeMismatch_isNonConforming": "passed",
+  "zoneBoundaries": "passed"
+ },
+ "contract-service/RemedyCalculatorTest": {
+  "aCaseThatIsNotResolved_orHasNoComputedResolution_orIsAnotherMilestones_isRefused": "passed",
+  "aComputedResolutionThatDoesNotAddUpToTheLockedBatch_isRefused": "passed",
+  "aDecisionOnABreachCase_mustNameItsMilestone": "passed",
+  "aReportBasedDecision_putsTheInspectionFeeOnTheNonPrevailingRole": "passed",
+  "aZeroAmountIsNeverALeg": "passed",
+  "anAgreedConcessionWithFault_isFinalizedAtOnce_withThePenalty_andTheGivenFeeParty": "passed",
+  "everyLegHasItsOwnId": "passed",
+  "finalizing_movesOnlyTheStatus_once": "passed",
+  "nonConforming_aSecondDecisionIsCappedByWhatIsLeftOfTheDeposit_theRestIsDebt": "passed",
+  "nonConforming_refundsTheWholeMilestone_andForfeitsThePenaltyFromTheSellerDeposit": "passed",
+  "nonConforming_withNoSellerDeposit_hasNoForfeitureLeg_andTheWholePenaltyIsDebt": "passed",
+  "normalCompletion_aDepositWithNothingLeft_getsNoLeg": "passed",
+  "normalCompletion_refusesADepositThatLostMoreThanItHeld_andAContractWithNoMilestone": "passed",
+  "normalCompletion_returnsBothDepositsLessWhatWasForfeited_systemNoFault_finalizedAtOnce": "passed",
+  "partiallyConforming_paysTheSellerAndRefundsTheBuyer_finalizedAtOnce": "passed",
+  "penaltyBase_isTheMilestoneNotTheContract_roundedOnceToTheDong": "passed",
+  "penaltyRateAboveTheLegalCap_isRefused_butTheCivilCodeHasNoPercentageCap": "passed",
+  "quantityConforming_followsTheComputedMoney_andCarriesNoDisposition": "passed"
+ },
+ "contract-service/RemedyFinalizedEventTest": {
+  "aDecisionStillPendingTheContestWindow_orOfAnotherContract_isRefused": "passed",
+  "aMilestoneDecisionWithoutACase_isRefused": "passed",
+  "disputeResolved_carriesTheGivenRole_andTheBuyerAsFlagger": "passed",
+  "envelopeIsKeyedByTheDecision_andCorrelatedToTheContract": "passed",
+  "noFaultConforming_isValid": "passed",
+  "noFaultPartiallyConforming_isValid": "passed",
+  "nonConforming_isValid_withRefundAndForfeiture": "passed",
+  "nonConforming_withNoForfeitureLeg_isValid": "passed",
+  "normalCompletion_isValid_contractLevel_withTheDecisionAsAttribution": "passed",
+  "quantityWithoutDisposition_isValid": "passed",
+  "theSchemaRejectsEachBrokenRule": "passed"
+ },
+ "contract-service/RemedyFinalizedIntegrationTest": {
+  "aCaseWithNoComputedResolution_getsNoRemedyDecision": "passed",
+  "aContest_holdsTheDecision_andASecondConformingReportSettlesForTheSeller": "passed",
+  "aNonConformingDecision_opensTheWindow_andTheSchedulerFinalizesItOncePassed": "passed",
+  "aSecondNonConformingMilestone_isCappedByTheRestOfTheSellerDeposit_andTheRestIsDebt": "passed",
+  "aSecondNonConformingReport_isFinalAtOnce_withNoNewWindow_andTheForfeitureIsTakenOnce": "passed",
+  "aSecondReport_isIgnored_whenTheFirstDecidedAndNobodyContested": "passed",
+  "aSellerDepositFullyTakenByPenalties_hasNoSellerLeg_andTheDebtIsNotCollected": "passed",
+  "anInconclusiveFirstReport_asksAgainWithTheSameReason_andASecondOneIsFinal_withNoMoney": "passed",
+  "anInconclusiveRerun_doesNotUseUpTheContest_soAThirdReportDecides": "passed",
+  "contestEvidence_cannotBeUploadedOnceTheWindowPassed": "passed",
+  "contestEvidence_isTheContestersOwn_dedupes_andClosesWithTheSecondReport": "passed",
+  "contestEvidence_isUploadedByTheBlamedPartyWhileOpen_thenByTheContester_untilTheContestReport": "passed",
+  "contest_isRefusedForTheWrongParty_afterTheDeadline_twice_andOnAContractLevelCase": "passed",
+  "mandatory_anInconclusiveFirstReport_asksAgainAsAMandatoryInspection_andARerunSettles": "passed",
+  "nonConforming_waitsForTheContestWindow_thenFinalizeSettlesAndPublishes_once": "passed",
+  "partiallyConforming_finalizesAtOnce_settlesTheMilestone_andNeverPublishesMilestoneSettled": "passed",
+  "quantityDispute_thatTheSellerWins_settlesOnTheAcceptedQuantity_andFavorsTheSeller": "passed",
+  "remedyTables_areInsertOnceAndRefuseWhatBreaksTheirChecks": "passed",
+  "theDisputePath_writesEveryMailCommand_toTheRightParty_insideTheFrozenSchema": "passed",
+  "theFundingReminder_comesBeforeTheFundingDate_once_andFundingFailedAlsoTellsTheOperator": "passed",
+  "theLastMilestoneSettled_returnsWhatIsLeftOfEachDeposit_once_thenTheClearedLockSettlesTheContract": "passed",
+  "theReceiveReminder_isWrittenOnceTheWindowPassed_andOnlyOnce": "passed",
+  "withNoSellerDeposit_onlyTheBuyerDepositGoesBack_andTheTimeoutCanBeTheLastSettle": "passed",
+  "withNoSellerDeposit_thereIsNoForfeitureLeg_andThePenaltyIsDebt": "passed"
+ },
+ "contract-service/RemedyRecoveryControllerTest": {
+  "operatorRetry_is204_withTheOperatorAsActor": "passed",
+  "partiesAndOtherStaffCannotRetry_andTheKeyIsRequired": "passed",
+  "unknownContract_is404_andAContractNotActive_is409": "passed"
+ },
+ "contract-service/SellerWeighIntegrationTest": {
+  "aCorrection_insideTheWindow_isANewDeclaration_andTheFirstOneStays": "passed",
+  "aFailedConfirmAttached_isSentAgainLater": "passed",
+  "aFileThatKeepsFailing_doesNotStarveANewerOne": "passed",
+  "afterTheWindow_orOnceTheBuyerRecordedReceipt_theWeightIsClosed": "passed",
+  "anUploadRepeated_answersWithTheSameFile_evenAfterTheTurnPassed_butNotForAnotherMilestone": "passed",
+  "anUpload_isRecordedForItsUploader_andAScanReportedEarly_isNotLost": "passed",
+  "onlyTheSellerWeighs_andOnlyAFundedMilestone_ofAnActiveContract": "passed",
+  "scanEvents_outsideTheSchema_areRefused_andDuplicatesIgnored": "passed",
+  "theBuyer_uploadsOnlyOnceTheSellerWeighed_andAnOutsiderNever": "passed",
+  "theConsent_mustBeTheStatementInForce_onExactlyThisDeclaration": "passed",
+  "theDetail_showsTheDeclarationInForce_itsWindow_andEveryFile_toPartiesAndStaffOnly": "passed",
+  "theEvidenceBytes_areServedOnlyForAReadyFileOfThisMilestone": "passed",
+  "theFiles_mustBeTheSellersOwnUploads_forThisMilestone_differentAndScanned": "passed",
+  "theSameKeyAgain_isNotASecondDeclaration_andAnotherBodyUnderIt_isRefused": "passed",
+  "theSellerWeighs_withAScannedPhoto_andTheDeclarationIsPublished": "passed",
+  "withoutACertificate_theEventLeavesItOut": "passed"
+ },
+ "contract-service/SellerWeighTest": {
+  "anUnfundedMilestone_cannotBeWeighed": "passed",
+  "corrections_countUp_insideTheWindowFromTheFirstDeclaration_only": "passed",
+  "namedFiles_areTheActorsOwnForThisMilestone_different_thenReady": "passed",
+  "onceTheBuyerRecordedReceipt_theDeclarationIsClosed_evenInsideTheWindow": "passed",
+  "theConsent_isTheFixedStatement_andBindsExactlyThisDeclaration": "passed",
+  "theContentHash_isTheD84PipeString_withThreeDecimalKg_lowercaseIds_andEmptyForNull": "passed",
+  "theFirstDeclaration_makesTheMilestoneSellerWeighed_evenAboveTheCommittedQuantity": "passed",
+  "theWeight_hasTheD72Bounds": "passed",
+  "uploadTurns_sellerInProgressOrCorrecting_buyerOnceWeighed": "passed"
+ },
+ "contract-service/SettleContractUseCaseTest": {
+  "execute_alreadySettled_skipsSilently": "passed",
+  "execute_contractNotFound_throws": "passed",
+  "execute_happyPath_statusSettledAndSaves": "passed"
+ },
+ "contract-service/SignContractUseCaseTest": {
+  "execute_bothSign_statusSignedAndListingClosed": "passed",
+  "execute_buyerSignsFirst_partialSignAndSaves": "passed",
+  "execute_contractNotFound_throws": "passed",
+  "execute_duplicateSign_throwsIllegalArgumentAndDoesNotSave": "passed",
+  "execute_sellerSignsFirst_partialSignAndDoesNotCloseListing": "passed",
+  "execute_signFromNegotiating_statusSignedWhenBothSign": "passed",
+  "execute_unauthorizedUser_throwsUnauthorized": "passed",
+  "execute_wrongStatus_throwsIllegalArgument": "passed"
+ },
+ "contract-service/SignerEligibilityTest": {
+  "authorizationEndedAtOrBeforeNow_isRefused": "passed",
+  "authorizationEndingLaterAndLockThatAlreadyEnded_areEligible": "passed",
+  "counterpartyCheckWithUserServiceDown_failsClosed": "passed",
+  "counterpartyThatCanSign_passes_evenWithoutAnEmail": "passed",
+  "counterpartyUnverifiedPastAuthorizationLockedOrUnknown_isAConflictWithoutTheReason": "passed",
+  "freshLogin_withinFiveMinutesPasses": "passed",
+  "noEmailToSendTheCodeTo_isRefused": "passed",
+  "notVerified_isRefused": "passed",
+  "offer_unverifiedExpiredOrLockedBuyer_isRefusedWithTheSameCodesAsSigning": "passed",
+  "offer_verifiedUnlockedBuyerWithOpenAuthorization_mayOffer": "passed",
+  "reputationLockStillRunning_isRefused": "passed",
+  "staleMissingOrFutureLogin_asksForThePasswordAgain": "passed",
+  "unknownUser_isRefused": "passed",
+  "userServiceDown_failsClosed": "passed",
+  "verifiedUnlockedUserWithOpenAuthorization_isEligible": "passed"
+ },
+ "contract-service/SigningConsentPersistenceIntegrationTest": {
+  "consentIsStoredAsShown": "passed",
+  "eachAttemptIsItsOwnRow": "passed",
+  "recordingOutsideATransactionIsRefused": "passed",
+  "refusedConsentWritesNothing": "passed",
+  "rowsCannotBeUpdatedOrDeleted": "passed",
+  "statementFilesLoadWithTheHashOfTheirText": "passed"
+ },
+ "contract-service/UpdateContractTermsEndpointTest": {
+  "adminCannotReviseTermsForTheParties": "passed",
+  "idempotencyKeyIsRequired": "passed",
+  "returnsTheStoredTermsVerbatimWithoutAWrapper": "passed",
+  "serverDerivedFieldsInTheBodyAreRejected": "passed"
+ },
+ "contract-service/UpdateContractTermsIntegrationTest": {
+  "aRejectedRequestDoesNotConsumeTheKey": "passed",
+  "concurrentWriterIsRejectedByTheVersion": "passed",
+  "keysAreScopedPerActor": "passed",
+  "retryWithTheSameKeyDoesNotApplyTheChangeAgain": "passed",
+  "revisionIsStoredWithANewFingerprint": "passed",
+  "sameKeyForADifferentRequestIsRefused": "passed",
+  "termsAreFrozenAfterTheFirstSignature": "passed"
+ },
+ "contract-service/UserPortAdapterTest": {
+  "anyOtherFailure_isUnavailable_neverAPass": "passed",
+  "unknownUser_isEmpty": "passed"
+ },
+ "contract-service/UserServiceClientTest": {
+  "getUser_callsInternalEndpointWithSecret_andMapsBareBody": "passed"
+ },
+ "contract-service/VerifySignIntegrationTest": {
+  "bothPartiesAtOnce_bothSign_andTheContractIsSigned": "passed",
+  "codeForTermsThatChanged_isKilled": "passed",
+  "codeReplacedByAResend_isRefused_evenWhenRight": "passed",
+  "fifthWrongCode_locksTheChallenge_evenForTheRightCode": "passed",
+  "firstSignature_isNotCheckedAgainstTheFundingLead": "passed",
+  "firstSignerLockedBeforeTheSecondSigns_contractStaysUnsigned": "passed",
+  "otherPartyLockedSinceTheyCouldSign_stopsTheSignature": "passed",
+  "refusedSecondSignature_leavesNoEvent": "passed",
+  "replayOfTheSecondSignature_doesNotWriteASecondEvent": "passed",
+  "rightCode_recordsTheSignature_andTheSecondPartyMakesTheContractSigned": "passed",
+  "sameKeyAfterSuccess_isAReplay_notASecondSignature": "passed",
+  "sameKeyForAnotherCode_isRefused": "passed",
+  "secondSignature_isRefused_whenAMilestoneIsDueSoonerThanTheFundingLead": "passed",
+  "signatureRows_cannotBeChangedOrDeleted": "passed",
+  "signerLockedSinceTheCodeWasSent_isRefused": "passed",
+  "someoneElsesCode_isRefused_withoutCountingAnAttempt": "passed",
+  "staleLogin_isRefused": "passed",
+  "usedCodeWithANewKey_afterTheOfferWasWithdrawn_stillAnswersSigned": "passed",
+  "usedCodeWithANewKey_byTheOtherParty_isStillForbidden": "passed",
+  "usedCodeWithANewKey_rightCode_answersSigned_andWritesNothing": "passed",
+  "usedCodeWithANewKey_wrongCode_isUsed_withoutCountingAnAttempt": "passed",
+  "userServiceDown_failsClosed": "passed",
+  "wrongCode_isCountedEvenThoughRefused_andTheSameKeyCanStillSign": "passed"
+ },
+ "contract-service/WithdrawOfferEndpointTest": {
+  "afterTheSecondSignature_is409": "passed",
+  "idempotencyKeyIsRequired": "passed",
+  "notAParty_is403_unknownContract_is404": "passed",
+  "party_gets204_withNoBody_andTheCallerFromThePrincipal": "passed",
+  "staffCannotWithdrawForTheParties": "passed"
+ },
+ "contract-service/WithdrawOfferIntegrationTest": {
+  "afterTheSecondSignature_withdrawIsRefused_andNothingIsWritten": "passed",
+  "buyerWithdraws_contractEnds_andTheThreeRecordsAreWrittenOnce": "passed",
+  "sameKeyAgain_isA204Replay_newKeyOnAWithdrawnOffer_is409": "passed",
+  "someoneElse_isRefused_andTheKeyIsNotSpent": "passed",
+  "thePartyThatSignedFirst_withdraws_andTheOthersPendingCodeIsKilled": "passed",
+  "withdrawRacingTheSecondSignature_exactlyOneWins": "passed"
+ }
+}
