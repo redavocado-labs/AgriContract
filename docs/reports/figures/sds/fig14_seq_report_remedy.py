@@ -1,4 +1,4 @@
-﻿"""Export fig14_seq_report_remedy from the approved Draw.io source."""
+"""Export fig14_seq_report_remedy from the approved Draw.io source."""
 
 import subprocess
 import sys

@@ -1,4 +1,4 @@
-﻿"""Export fig12_class_dispute from the approved Draw.io source."""
+"""Export fig12_class_dispute from the approved Draw.io source."""
 
 import subprocess
 import sys

@@ -1,4 +1,4 @@
-﻿"""Export fig09_class_milestone from the approved Draw.io source."""
+"""Export fig09_class_milestone from the approved Draw.io source."""
 
 import subprocess
 import sys

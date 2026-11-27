@@ -1,4 +1,4 @@
-﻿"""Export fig10a_seq_seller_weighing from the approved Draw.io source."""
+"""Export fig10a_seq_seller_weighing from the approved Draw.io source."""
 
 import subprocess
 import sys
