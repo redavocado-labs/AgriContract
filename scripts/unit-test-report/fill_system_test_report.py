@@ -127,6 +127,49 @@ def bruno_result(rnd, flow, case_id):
     return status, "", ""
 
 
+def body_summary(data):
+    """short text of a response body: the ErrorEnvelope code and message, else the start of the JSON"""
+    if data in (None, ""):
+        return "body rỗng"
+    if isinstance(data, dict) and "code" in data:
+        return f"{data['code']}: {data.get('message', '')}".strip()
+    if isinstance(data, list):
+        return f"mảng {len(data)} phần tử"
+    text = data if isinstance(data, str) else json.dumps(data, ensure_ascii=False)
+    return text if len(text) <= 160 else text[:157] + "..."
+
+
+def observed(rnd, flow, case_id):
+    """what the system returned for one Bruno case in one round (Actual Results column)"""
+    result = e2e.load_results(rnd["dir"] / f"bruno-{flow.lower()}.json").get(case_id)
+    if not result or result.get("skipped"):
+        return "không chạy (request trước đó dừng flow)"
+    response = result.get("response") or {}
+    checks = result.get("testResults") or []
+    error = result.get("error") or next((c.get("error") for c in checks if c["status"] == "fail"), "")
+    status = response.get("status")
+    text = (f"HTTP {status}; " if isinstance(status, int) else "") + (
+        body_summary(response.get("data")) if isinstance(status, int) else "không có response")
+    return text + (f"; lỗi: {str(error)[:200]}" if error else "")
+
+
+def actual_text(per_round):
+    """one line per round, or one line when every round saw the same"""
+    if len(set(per_round)) == 1:
+        label = "Round 1" if len(per_round) == 1 else f"Round 1-{len(per_round)}"
+        return f"{label}: {per_round[0]}"
+    return "\n".join(f"Round {i + 1}: {text}" for i, text in enumerate(per_round))
+
+
+def dlq_observed(rnd, flow):
+    snapshot = rnd["dir"] / f"queues-{flow.lower()}.json"
+    if not snapshot.exists():
+        return "không có snapshot queue"
+    dlqs = [q for q in json.loads(snapshot.read_text(encoding="utf-8")) if q["name"].endswith(".dlq")]
+    dirty = [f"{q['name']} = {q.get('messages')}" for q in dlqs if q.get("messages") != 0]
+    return f"{len(dlqs)} queue .dlq, " + ("có message: " + ", ".join(dirty) if dirty else "tất cả 0 message")
+
+
 def dlq_result(rnd, flow):
     snapshot = rnd["dir"] / f"queues-{flow.lower()}.json"
     if not snapshot.exists():
@@ -184,6 +227,7 @@ for flow, sheet, folder, desc, pre in FLOWS:
                     f"\nGiới hạn: {BOUNDARY[case_id]}" if case_id in BOUNDARY else ""),
                 ret=(f"HTTP {status}; " if status else "") + title,
                 typ=typ, rounds=rounds, defect=", ".join(sorted(defects)),
+                actual=actual_text([observed(rnd, flow, case_id) for rnd in ROUNDS]),
                 note=f"Bruno: {location.relative_to(BRUNO).as_posix()}\nSpec: {reference}"
                      + ("".join("\n" + n for n in notes))))
             previous = case_id
@@ -195,6 +239,7 @@ for flow, sheet, folder, desc, pre in FLOWS:
         groups.append(("Chưa chạy được (backend/scripts/e2e/status.tsv)", [dict(
             pre=KIND_LABEL[kind] + "\nN/A", inp=f"{case_id}: {title}", ret=title, typ="Normal",
             rounds=[status] * len(ROUNDS), defect="",
+            actual=actual_text(["không chạy: " + reason] * len(ROUNDS)),
             note=f"{status}: {reason}" + (f" Issue {issue}." if issue else ""))
             for _, case_id, title, kind, status, issue, reason in pending]))
     # run-e2e-full.sh snapshots the queues after every flow, BF06 included
@@ -204,6 +249,7 @@ for flow, sheet, folder, desc, pre in FLOWS:
         pre=KIND_LABEL["IT-DIRECT"] + f"\nSau mọi case của {flow}",
         inp=f"{flow}-DLQ: GET http://localhost:15672/api/queues", ret="Mọi queue .dlq có mặt và rỗng",
         typ="Normal", rounds=[r for r, _, _ in dlq], defect="",
+        actual=actual_text([dlq_observed(rnd, flow) for rnd in ROUNDS]),
         note=f"queues-{flow.lower()}.json" + "".join(
             f"\nRound {i + 1}: {why}" for i, (_, _, why) in enumerate(dlq) if why))]))
     MODULES.append(dict(flow=flow, sheet=sheet, desc=desc, pre=pre, groups=groups))
@@ -284,9 +330,14 @@ for m in MODULES:
     sh = busy(lambda: wb.Worksheets(wb.Worksheets.Count))
     assert sh.Name != "ModuleName1" and sh.Name != last.Name, "sheet copy went to the wrong place"
     busy(lambda: setattr(sh, "Name", m["sheet"]))
+    # Actual Results (mentor review 27/11): the template has no such column, so Q takes the look of Note (P)
+    # after it; A..P keep their place so the template's COUNTIF ranges and dropdowns stay valid
+    for r in (11, 12, 13):
+        busy(lambda: sh.Range(f"P{r}").Copy(sh.Range(f"Q{r}")))
     copy_row(sh, 12, STYLE_HEADER)
     copy_row(sh, 13, STYLE_CASE)
-    busy(lambda: sh.Range("A12:P1003").ClearContents())
+    busy(lambda: sh.Range("A12:Q1003").ClearContents())
+    put(sh.Range("Q11"), "Actual Results")
     put(sh.Range("B2"), m["sheet"])
     busy(lambda: setattr(sh.Range("B3"), "Formula", '=COUNTIF(A13:A1005,"STC*")'))
     busy(lambda: setattr(sh.Range("D9"), "Formula", "=COUNTIF($E12:$E1003,D8)"))
@@ -307,8 +358,8 @@ for m in MODULES:
                 cells += [result, "'" + rnd["date"] if tested else "", rnd["tester"] if tested else ""]
             cells += [""] * (9 - len(cells))
             values = [f"STC{n:03d}", c["pre"], c["inp"], f"Return: {c['ret']}\nException: N/A\nLog message: N/A",
-                      c["typ"], *cells, c["defect"], c["note"]]
-            rng = busy(lambda: sh.Range(sh.Cells(row, 1), sh.Cells(row, 16)))
+                      c["typ"], *cells, c["defect"], c["note"], c["actual"]]
+            rng = busy(lambda: sh.Range(sh.Cells(row, 1), sh.Cells(row, 17)))
             put(rng, [values])
             same_font(rng)
             for col in (6, 9, 12):
@@ -319,8 +370,8 @@ for m in MODULES:
     total += n
     busy(lambda: sh.Rows(f"{STYLE_HEADER}:{STYLE_CASE}").Delete())
     set_widths(sh, {1: 32, 2: 55, 3: 75, 4: 75, 5: 20, 6: 18, 7: 22, 8: 34, 9: 18, 10: 22, 11: 34,
-                    12: 18, 13: 22, 14: 34, 15: 24, 16: 80})
-    fit_rows(sh, 13, row - 1, 16, skip=header_rows)
+                    12: 18, 13: 22, 14: 34, 15: 24, 16: 80, 17: 90})
+    fit_rows(sh, 13, row - 1, 17, skip=header_rows)
 busy(lambda: tpl.Delete())
 
 
@@ -368,7 +419,9 @@ put(tc.Range("D5"), (
     "4. Kết quả: report.py của runner quyết định Passed/Failed/Pending từ JSON của Bruno; nhập vào "
     "scripts/unit-test-report/results/st-round<N>/ bằng import_e2e_round.py\n"
     "5. 1 dòng = 1 bước của luồng; Pre-conditions ghi case phải chạy trước; Note ghi request Bruno và nguồn đặc tả; "
-    "Defect IDs ghi defect của Report 5.5; dòng Pending/N/A ghi lý do theo status.tsv"))
+    "Defect IDs ghi defect của Report 5.5; dòng Pending/N/A ghi lý do theo status.tsv\n"
+    "6. Actual Results (cột Q, thêm theo góp ý mentor 27/11): HTTP status và body (code, message của ErrorEnvelope) "
+    "hoặc lỗi assertion mà hệ thống trả ở từng round, đọc từ JSON của Bruno; dòng DLQ ghi số message của queue .dlq"))
 for i, m in enumerate(MODULES):
     r = 9 + i
     if r > 10:
@@ -381,7 +434,7 @@ for i, m in enumerate(MODULES):
 set_widths(tc, {2: 12, 3: 24, 4: 40, 5: 95, 6: 80})
 fit_rows(tc, 9, 8 + len(MODULES), 6)
 busy(lambda: setattr(tc.Range("D5"), "WrapText", True))
-busy(lambda: setattr(tc.Rows(5), "RowHeight", 10 * 14.5))
+busy(lambda: setattr(tc.Rows(5), "RowHeight", 12 * 14.5))
 fit_page_width(tc)
 
 # ── Test Statistics ──────────────────────────────────────────────────────────
