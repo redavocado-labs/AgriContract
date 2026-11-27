@@ -533,7 +533,28 @@ ms(40, "claim_force_majeure", "SELLER", "Milestone 7", "IN_PROGRESS", [
     ]),
 ], 1)
 
-ms(41, "milestone_price_adjustment", "BUYER", "Milestone 8", "CREATED", [
+ms(41, "dispute_exit", "SELLER", "Milestone 4", "CONTESTED", [
+    ("card", "End the dispute", [
+        ("kv", [("Seller receives at Buyer's position", "912,950,000"),
+                ("Seller receives at Seller's position", "950,000,000")]),
+        ("text", "Calculated by the system; a settlement must lie between the two amounts.", "s"),
+    ]),
+    ("card", "Buyer's proposal", [
+        ("kv", [("Seller receives", "930,000,000"), ("Buyer refund", "20,000,000"),
+                ("Proposed at", "28/11/2026 09:15")]),
+        ("buttons", ["Refuse proposal"]),
+    ]),
+    ("buttons", ["Concede", "*Accept proposal"]),
+    ("card", "Confirm with OTP", [
+        ("check", "I agree the Seller receives 930,000,000 VND for this batch; the rest is refunded to the Buyer. "
+                  "No party is at fault.", True),
+        ("buttons", ["Send OTP"]),
+        ("otp",),
+        ("buttons", ["*Confirm OTP"]),
+    ]),
+], 4)
+
+ms(42, "milestone_price_adjustment", "BUYER", "Milestone 8", "CREATED", [
     ("card", "Milestone price adjustment", [
         ("kv", [("Signed unit price", "95,000 VND/kg"), ("Allowed band", "90,250 - 99,750")]),
         ("fields", [("!Proposed unit price (VND/kg) *", "93000")], 1),
@@ -547,7 +568,7 @@ ms(41, "milestone_price_adjustment", "BUYER", "Milestone 8", "CREATED", [
 
 # ======================================================== 7. Dispute & Inspection
 REPORT_BASE = CONTRACT_DETAIL
-screen(42, "report_breach_dialog", shell="app", role="BUYER", active="My Contracts",
+screen(43, "report_breach_dialog", shell="app", role="BUYER", active="My Contracts",
        crumb="Contracts / Contract detail", base=REPORT_BASE, dialog=dict(title="Report breach", w=600, blocks=[
            ("fields", [("Scope *", "v:Milestone 4"), ("Reason *", "v:QUALITY"), ("Severity *", "v:MATERIAL"),
                        ("Alleged party", "SELLER"), ("!Description *", "ta:")]),
@@ -556,7 +577,7 @@ screen(42, "report_breach_dialog", shell="app", role="BUYER", active="My Contrac
            ("text", "The counterparty and the Arbitrator are notified.", "s"),
        ], buttons=["Cancel", "*Submit report"]))
 
-screen(43, "breach_case_detail_party", shell="app", role="SELLER", active="My Contracts",
+screen(44, "breach_case_detail_party", shell="app", role="SELLER", active="My Contracts",
        crumb="Contracts / c0ffee00 / Breach case", blocks=[
            ("title", "Breach case BC-0091", "RESOLVED", ["Contest decision", "~Request termination"]),
            ("cols", [
@@ -580,7 +601,7 @@ BREACH_Q = [("title", "Breach case queue"),
              [["BC-0091", "c0ffee00", "QUALITY", "MATERIAL", "BUYER", "27/11", "[REPORTED]", "<Open>"],
               ["BC-0092", "c0ffee38", "QUANTITY", "MINOR", "BUYER", "26/11", "[UNDER_REVIEW]", "<Open>"],
               ["BC-0093", "c0ffee00", "LATE", "MATERIAL", "SELLER", "24/11", "[UNDER_REVIEW]", "<Open>"]])]
-screen(44, "breach_case_queue", shell="app", role="ARBITRATOR", active="Breach Cases", crumb="Disputes / Queue",
+screen(45, "breach_case_queue", shell="app", role="ARBITRATOR", active="Breach Cases", crumb="Disputes / Queue",
        blocks=BREACH_Q)
 
 BREACH_ARB = [
@@ -598,10 +619,10 @@ BREACH_ARB = [
                     "effect after the contest window.")],
     ]),
 ]
-screen(45, "breach_case_detail_arbitrator", shell="app", role="ARBITRATOR", active="Breach Cases",
+screen(46, "breach_case_detail_arbitrator", shell="app", role="ARBITRATOR", active="Breach Cases",
        crumb="Disputes / Breach case", blocks=BREACH_ARB)
 
-screen(46, "request_inspection_dialog", shell="app", role="ARBITRATOR", active="Breach Cases",
+screen(47, "request_inspection_dialog", shell="app", role="ARBITRATOR", active="Breach Cases",
        crumb="Disputes / Breach case", base=BREACH_ARB, dialog=dict(title="Request inspection", blocks=[
            ("radio", ["Level 1.5 inspection", "Level 2 commission"], 0),
            "Inspector: assigned by the system",
@@ -609,7 +630,7 @@ screen(46, "request_inspection_dialog", shell="app", role="ARBITRATOR", active="
            ("fields", [("!Note to inspector", "ta:")], 1),
        ], buttons=["Cancel", "*Request"]))
 
-screen(47, "resolve_breach_case_dialog", shell="app", role="ARBITRATOR", active="Breach Cases",
+screen(48, "resolve_breach_case_dialog", shell="app", role="ARBITRATOR", active="Breach Cases",
        crumb="Disputes / Breach case", base=BREACH_ARB, dialog=dict(title="Resolve breach case", blocks=[
            ("text", "Final breaching party *", "s"),
            ("radio", ["BUYER", "SELLER", "No fault"], 1),
@@ -618,7 +639,7 @@ screen(47, "resolve_breach_case_dialog", shell="app", role="ARBITRATOR", active=
            ("text", "Recorded in the audit chain; both parties are notified.", "s"),
        ], buttons=["Cancel", "*Resolve case"]))
 
-screen(48, "terminate_contract_dialog", shell="app", role="BUYER", active="My Contracts",
+screen(49, "terminate_contract_dialog", shell="app", role="BUYER", active="My Contracts",
        crumb="Contracts / Contract detail", base=CONTRACT_DETAIL, dialog=dict(title="Terminate contract", blocks=[
            "Basis: BC-0091 resolved - MATERIAL breach by SELLER",
            ("kv", [("Settled milestones", "unchanged (2)"), ("Unsettled milestones", "end (9)"),
@@ -630,10 +651,10 @@ FM_Q = [("title", "Force majeure review queue"),
         ("table", ["Contract", "Milestone", "Seller", "Event", "Filed", "Window", ""],
          [["c0ffee00", "7", "Ea Kar Coffee Coop", "Flood", "25/11/2026", "[IN WINDOW]", "<Open>"],
           ["c0ffee38", "3", "Tay Nguyen Coffee", "Drought", "10/11/2026", "[LATE]", "<Open>"]])]
-screen(49, "force_majeure_review_queue", shell="app", role="ARBITRATOR", active="Force Majeure",
+screen(50, "force_majeure_review_queue", shell="app", role="ARBITRATOR", active="Force Majeure",
        crumb="Force majeure / Queue", blocks=FM_Q)
 
-screen(50, "force_majeure_claim_detail", shell="app", role="ARBITRATOR", active="Force Majeure",
+screen(51, "force_majeure_claim_detail", shell="app", role="ARBITRATOR", active="Force Majeure",
        crumb="Force majeure / Claim", blocks=[
            ("title", "Force majeure claim - c0ffee00 / M7", "PENDING", ["Reject", "*Approve"]),
            ("cols", [
@@ -646,7 +667,7 @@ screen(50, "force_majeure_claim_detail", shell="app", role="ARBITRATOR", active=
            ("banner", "The losing party may contest; the claim then goes to a Level 1.5 inspection."),
        ])
 
-screen(51, "activation_failures", shell="app", role="OPERATOR", active="Activation Failures",
+screen(52, "activation_failures", shell="app", role="OPERATOR", active="Activation Failures",
        crumb="Operations / Activation failures", blocks=[
            ("title", "Activation failures"),
            ("table", ["Contract", "Missing leg", "Last error", "Cancel request", "Status", ""],
@@ -656,7 +677,7 @@ screen(51, "activation_failures", shell="app", role="OPERATOR", active="Activati
            ("text", "The Operator cannot cancel the contract or change amounts (MSG92).", "s"),
        ])
 
-screen(52, "milestone_funding_failures", shell="app", role="OPERATOR", active="Funding Failures",
+screen(53, "milestone_funding_failures", shell="app", role="OPERATOR", active="Funding Failures",
        crumb="Operations / Funding failures", blocks=[
            ("title", "Milestone funding failures"),
            ("table", ["Contract", "Milestone", "Amount", "Last error", "Cure deadline", ""],
@@ -671,10 +692,10 @@ ASSIGNED = [("title", "Assigned cases"),
               ["BC-0088", "c0ffee12", "COFFEE", "3", "29/11/2026", "[IN_PROGRESS]", "<Open>"]]),
             ("card", "What to measure - BC-0092", ["Moisture max: 12.5 %", "Defects max: 5 %", "Screen size: 16",
                                                    "Deviation policy: price discount"])]
-screen(53, "assigned_cases", shell="app", role="INSPECTOR", active="Assigned Cases", crumb="Inspection / Assigned",
+screen(54, "assigned_cases", shell="app", role="INSPECTOR", active="Assigned Cases", crumb="Inspection / Assigned",
        blocks=ASSIGNED)
 
-screen(54, "submit_inspection_result", shell="app", role="INSPECTOR", active="Assigned Cases",
+screen(55, "submit_inspection_result", shell="app", role="INSPECTOR", active="Assigned Cases",
        crumb="Inspection / BC-0092 / Submit result", blocks=[
            ("title", "Submit inspection result", "IN_PROGRESS"),
            ("cols", [
@@ -691,7 +712,7 @@ screen(54, "submit_inspection_result", shell="app", role="INSPECTOR", active="As
            ("buttons", ["Cancel", "*Submit result"]),
        ])
 
-screen(55, "level2_commissions", shell="app", role="ARBITRATOR", active="Level 2 Commissions",
+screen(56, "level2_commissions", shell="app", role="ARBITRATOR", active="Level 2 Commissions",
        crumb="Inspection / Level 2 commissions", blocks=[
            ("title", "Level 2 commissions"),
            ("table", ["Commission", "Case", "Organization", "Sent", "Org case ID", "Suggestion", ""],
@@ -700,7 +721,7 @@ screen(55, "level2_commissions", shell="app", role="ARBITRATOR", active="Level 2
            ("text", "Suggestions come from acknowledgement emails from the organization's domain.", "s"),
        ])
 
-screen(56, "pending_external_report_review", shell="app", role="OPERATOR", active="Level 2 Reports",
+screen(57, "pending_external_report_review", shell="app", role="OPERATOR", active="Level 2 Reports",
        crumb="Inspection / Level 2 reports", blocks=[
            ("title", "Pending external report review"),
            ("cols", [
@@ -714,7 +735,7 @@ screen(56, "pending_external_report_review", shell="app", role="OPERATOR", activ
            ], [1, 1]),
        ])
 
-screen(57, "manual_external_report_upload", shell="app", role="OPERATOR", active="Level 2 Reports",
+screen(58, "manual_external_report_upload", shell="app", role="OPERATOR", active="Level 2 Reports",
        crumb="Inspection / Manual upload", blocks=[
            ("title", "Manual external report upload"),
            ("card", "Report", [("fields", [("Commission *", "v:L2-014"), ("Received via *", "v:Courier")]),
@@ -725,7 +746,7 @@ screen(57, "manual_external_report_upload", shell="app", role="OPERATOR", active
            ("text", "Confirmed under your Operator identity (MSG101).", "s"),
        ])
 
-screen(58, "email_intake_failures", shell="app", role="OPERATOR", active="Email Intake",
+screen(59, "email_intake_failures", shell="app", role="OPERATOR", active="Email Intake",
        crumb="Inspection / Email intake failures", blocks=[
            ("title", "Email intake failures"),
            ("table", ["Received", "Sender", "Subject", "Failure", "Status", ""],
@@ -734,7 +755,7 @@ screen(58, "email_intake_failures", shell="app", role="OPERATOR", active="Email 
        ])
 
 # ======================================================== 8. Audit & Security
-screen(59, "audit_chain_verification_status", shell="app", role="ADMIN", active="Audit Chain",
+screen(60, "audit_chain_verification_status", shell="app", role="ADMIN", active="Audit Chain",
        crumb="Audit / Chain verification", blocks=[
            ("title", "Audit chain verification status"),
            ("cols", [
@@ -749,7 +770,7 @@ screen(59, "audit_chain_verification_status", shell="app", role="ADMIN", active=
                                                [["c0ffee12", "3", "950,000,000", "948,100,000"]])]),
        ])
 
-screen(60, "contract_evidence_export", shell="app", role="ADMIN", active="Evidence Export",
+screen(61, "contract_evidence_export", shell="app", role="ADMIN", active="Evidence Export",
        crumb="Audit / Evidence export", blocks=[
            ("title", "Contract evidence export"),
            ("filters", ["Contract ID: c0ffee00-2026-4142-8000-000000000142"], "Verify chain"),
@@ -763,7 +784,7 @@ screen(60, "contract_evidence_export", shell="app", role="ADMIN", active="Eviden
                                         ["7", "12:00", "Milestone settled 948,100,000", "7f3a...7777"]])]),
        ])
 
-screen(61, "security_lock_status", shell="app", role="ADMIN", active="Security Lock",
+screen(62, "security_lock_status", shell="app", role="ADMIN", active="Security Lock",
        crumb="Security / Lock status", blocks=[
            ("title", "Security lock status", "INACTIVE"),
            ("banner", "Only the External Verifier can unlock, by a signed request. The Admin has no unlock action."),
@@ -776,7 +797,7 @@ screen(61, "security_lock_status", shell="app", role="ADMIN", active="Security L
        ])
 
 # ======================================================== 9. Analytics
-screen(62, "termination_report_by_commodity", shell="app", role="ADMIN", active="Analytics",
+screen(63, "termination_report_by_commodity", shell="app", role="ADMIN", active="Analytics",
        crumb="Analytics / Terminations", blocks=[
            ("title", "Termination report by commodity"),
            ("filters", ["Year: 2026  v", "", ""]),
@@ -785,7 +806,7 @@ screen(62, "termination_report_by_commodity", shell="app", role="ADMIN", active=
             [["COFFEE", "4", "7", "3", "2"]]),
        ])
 
-screen(63, "escrow_effectiveness_report", shell="app", role="ADMIN", active="Analytics",
+screen(64, "escrow_effectiveness_report", shell="app", role="ADMIN", active="Analytics",
        crumb="Analytics / Escrow effectiveness", blocks=[
            ("title", "Escrow effectiveness report"),
            ("filters", ["Month: 11/2026  v", "", ""]),
@@ -795,7 +816,7 @@ screen(63, "escrow_effectiveness_report", shell="app", role="ADMIN", active="Ana
            ("bars", 200, ["W1", "W2", "W3", "W4"], [6, 8, 5, 9], "Locked vs disbursed by week"),
        ])
 
-screen(64, "force_majeure_trends", shell="app", role="ADMIN", active="Analytics",
+screen(65, "force_majeure_trends", shell="app", role="ADMIN", active="Analytics",
        crumb="Analytics / Force majeure trends", blocks=[
            ("title", "Force majeure trends"),
            ("filters", ["Year: 2026  v", "", ""]),

@@ -17,8 +17,14 @@ FONT_DIR = Path("C:/Windows/Fonts")
 INK, MUTED, LINE, FILL, SOFT, WHITE = "#222222", "#707070", "#9a9a9a", "#e6e6e6", "#f4f4f4", "#ffffff"
 
 
+# Segoe UI where it exists (Windows); elsewhere Open Sans, the closest free face
+FALLBACK_DIR = Path("/usr/share/fonts/open-sans")
+
+
 def font(size, bold=False):
-    return ImageFont.truetype(str(FONT_DIR / ("segoeuib.ttf" if bold else "segoeui.ttf")), size * S)
+    segoe = FONT_DIR / ("segoeuib.ttf" if bold else "segoeui.ttf")
+    path = segoe if segoe.exists() else FALLBACK_DIR / ("OpenSans-Bold.ttf" if bold else "OpenSans-Regular.ttf")
+    return ImageFont.truetype(str(path), size * S)
 
 
 F = {k: font(*v) for k, v in {"t": (20, True), "h": (14, True), "b": (12, False), "bb": (12, True),

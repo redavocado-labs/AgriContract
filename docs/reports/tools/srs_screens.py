@@ -52,10 +52,10 @@ for el in body[start + 1:]:
             continue
     if cur is not None and el.tag == qn("w:p"):
         cur[1].append(el)
-assert len(groups) == 64, f"expected 64 screens, found {len(groups)}"
+assert len(groups) == 65, f"expected 65 screens, found {len(groups)}"
 
 files = sorted(SCREENS.glob("s[0-9][0-9]_*.png"))
-assert len(files) == 64, len(files)
+assert len(files) == 65, len(files)
 for (title, pars), png in zip(groups, files):
     pics = [p for p in pars if p.find(f".//{qn('w:drawing')}") is not None]
     if not pics:
