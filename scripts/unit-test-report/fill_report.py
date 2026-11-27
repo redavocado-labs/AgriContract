@@ -11,6 +11,12 @@
 # api-gateway, product-service and user-service come from data_nhl.py / data_nhl_new.py instead: each row names its
 # test methods and Round 3 is read per test from results/unit-round3 (surefire_cases.py collect). Without LibreOffice,
 # update_51_nhl.py rebuilds just those sheets in the existing workbook through Excel.
+#
+# Since #521 the other nine services are traced too, on the committed workbook, by Excel scripts this file does not
+# run yet: update_51_traced.py with each trace_<svc>.py and its results/unit-round3-*/ run, then update_51_rounds.py
+# (round classification, what changed since Round 2). A workbook rebuilt by this script alone loses them and shows
+# its default Round 1/2 Passed again for AnalyticsTopology UTC004 (DEF-01). After a rebuild run those scripts on the
+# output, or teach this script to read the trace files; that LibreOffice path has not been run since #521.
 import glob, json, os, re, sys, time
 import uno
 from com.sun.star.beans import PropertyValue
