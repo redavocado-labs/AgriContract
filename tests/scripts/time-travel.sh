@@ -18,7 +18,7 @@ milestone=${BASH_REMATCH[2]}
 project=${E2E_COMPOSE_PROJECT:-agricontract-bruno}
 [[ $project =~ ^agricontract-[a-z0-9-]+$ ]] || exit 2
 
-backend=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
+backend=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../../backend" && pwd)
 cd "$backend"
 docker compose -p "$project" -f docker-compose.yml exec -T contract-db \
     mysql --batch --skip-column-names -uroot "-p${DB_ROOT_PASSWORD:-password}" contract_db <<SQL

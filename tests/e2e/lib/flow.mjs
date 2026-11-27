@@ -85,7 +85,7 @@ export async function coffeeListing(api, trace, t, { offeredQuantity = 5000 } = 
     },
     expect: [200, 201],
   });
-  // A new plot is PENDING until its geo check ends (UNVERIFIED at once with e2e/compose.e2e.yml); the same
+  // A new plot is PENDING until its geo check ends (UNVERIFIED at once with tests/e2e/compose.e2e.yml); the same
   // Idempotency-Key makes the retries one creation.
   const listingKey = randomUUID();
   const listing = await waitFor(

@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-backend=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+backend=$(cd -- "$here/../../backend" && pwd)  # compose files and seed data
+api=$(cd -- "$here/../api" && pwd)             # Bruno collection
 project=${E2E_COMPOSE_PROJECT:-agricontract-bruno}
 fresh=false
 keep=false
@@ -117,7 +119,7 @@ start() {
 }
 
 if ! config=$("${base[@]}" config --services 2>"$round/stack.log"); then
-  python3 scripts/e2e/report.py "$round" "$backend/bruno" --setup-failed "${suites[@]}"
+  python3 "$here/report.py" "$round" "$api" --setup-failed "${suites[@]}"
   exit 1
 fi
 mapfile -t services <<< "$config"
@@ -143,7 +145,7 @@ cleanup() {
 trap cleanup EXIT
 
 if ! start >> "$round/stack.log" 2>&1; then
-  python3 scripts/e2e/report.py "$round" "$backend/bruno" --setup-failed "${suites[@]}"
+  python3 "$here/report.py" "$round" "$api" --setup-failed "${suites[@]}"
   exit 1
 fi
 
@@ -159,7 +161,7 @@ run_bru() {
   local name=$1 folder=$2
   shift 2
   (
-    cd "$backend/bruno"
+    cd "$api"
     bru run "$folder" "${bru_opts[@]}" "$@" \
       --reporter-json "$round/bruno-$name.json" --reporter-html "$round/bruno-$name.html"
   ) > "$round/bruno-$name.log" 2>&1 || true
@@ -214,4 +216,4 @@ for suite in "${suites[@]}"; do
   queues "$round/queues-$name.json" 2>> "$round/stack.log" || true
 done
 
-python3 scripts/e2e/report.py "$round" "$backend/bruno" "${suites[@]}"
+python3 "$here/report.py" "$round" "$api" "${suites[@]}"

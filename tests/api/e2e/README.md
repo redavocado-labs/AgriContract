@@ -26,10 +26,9 @@ Các kiểm tra phòng thủ dựa trên data-governance design §5.4 và hash-c
 Cần Docker Compose v2, Bruno CLI 3.x, Node 22 trở lên, jq, curl và Python 3.
 
 ```bash
-cd backend
-./scripts/run-e2e-full.sh --fresh --keep
-./scripts/run-e2e-full.sh --flows bf02,bf03 --no-security --keep
-cd bruno
+./tests/scripts/run-e2e-full.sh --fresh --keep
+./tests/scripts/run-e2e-full.sh --flows bf02,bf03 --no-security --keep
+cd tests/api
 bru run e2e/bf04-milestone-delivery-settlement --env local --sandbox developer -r
 ```
 
@@ -56,7 +55,7 @@ BF04-250 tạo một hợp đồng riêng, ghi thời điểm nhận bình thư�
 `milestone.buyer_received_at` đúng 14 ngày cho một dòng đã xác nhận thuộc fixture. Helper ghi
 giá trị UTC cũ/mới vào log Bruno. Job D78 mặc định chạy mỗi phút.
 
-Các yêu cầu chưa chạy và issue đi kèm nằm ở [status.tsv](../../scripts/e2e/status.tsv).
+Các yêu cầu chưa chạy và issue đi kèm nằm ở [status.tsv](../../scripts/status.tsv).
 Bộ phòng thủ hiện chạy xác thực phiên hợp lệ/ẩn danh, ma trận quyền đọc hàng đợi KYC và trọng tài,
 retry idempotent, lỗi phân trang và audit đọc. Ma trận quyền ghi đầy đủ, các kiểm thử đối kháng,
 các nhánh lỗi cọc, seller im lặng/contest có lỗi và D92 vẫn chưa phủ.

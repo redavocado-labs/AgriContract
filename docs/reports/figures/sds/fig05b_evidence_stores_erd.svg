@@ -11,11 +11,11 @@
 <line x1="309.0" y1="399.0" x2="309.0" y2="387.0" stroke="black" stroke-width="1.2"/><circle cx="300.0" cy="393.0" r="4" fill="white" stroke="black" stroke-width="1.2"/>
 <rect x="258.130859375" y="369.25" width="51.0859375" height="13.75" fill="white"/>
 <text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="260.130859375" y="376.125">signed by</tspan></text>
-<path d="M670.0,251.0 L670.0,320.0" fill="none" stroke="black" stroke-width="1.1"/>
-<line x1="676.0" y1="258.0" x2="664.0" y2="258.0" stroke="black" stroke-width="1.2"/><line x1="676.0" y1="263.0" x2="664.0" y2="263.0" stroke="black" stroke-width="1.2"/>
+<path d="M670.0,236.0 L670.0,320.0" fill="none" stroke="black" stroke-width="1.1"/>
+<line x1="676.0" y1="243.0" x2="664.0" y2="243.0" stroke="black" stroke-width="1.2"/><line x1="676.0" y1="248.0" x2="664.0" y2="248.0" stroke="black" stroke-width="1.2"/>
 <line x1="670.0" y1="309.0" x2="663.0" y2="320.0" stroke="black" stroke-width="1.2"/><line x1="670.0" y1="309.0" x2="677.0" y2="320.0" stroke="black" stroke-width="1.2"/><circle cx="670.0" cy="301.0" r="4" fill="white" stroke="black" stroke-width="1.2"/>
-<rect x="632.23046875" y="278.625" width="75.5390625" height="13.75" fill="white"/>
-<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="634.23046875" y="285.5">is anchored by</tspan></text>
+<rect x="632.23046875" y="271.125" width="75.5390625" height="13.75" fill="white"/>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="634.23046875" y="278.0">is anchored by</tspan></text>
 <rect x="5.0" y="10.0" width="101.8" height="20" fill="white" stroke="black"/>
 <rect x="5.0" y="30.0" width="520" height="540" fill="none" stroke="black"/>
 <text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="13.0" y="20.0">inspection_db</tspan></text>
@@ -54,55 +54,53 @@
 <line x1="326.60546875" y1="258.0" x2="457.98828125" y2="258.0" stroke="black" stroke-width="0.9"/>
 <text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="326.60546875" y="266.5">milestone_id : CHAR(36)</tspan></text>
 <line x1="326.60546875" y1="273.0" x2="466.6640625" y2="273.0" stroke="black" stroke-width="0.9"/>
-<rect x="9.615234375" y="320.0" width="240.76953125" height="236" fill="white" stroke="black" stroke-width="1.2" stroke-dasharray="6,3"/>
-<text text-anchor="middle" dominant-baseline="central" font-size="11" font-style="italic"><tspan x="130" y="331.5">«planned»</tspan></text>
-<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="130" y="347.5">inspection_report</tspan></text>
-<line x1="9.615234375" y1="360.0" x2="250.384765625" y2="360.0" stroke="black" stroke-dasharray="6,3"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="17.615234375" y="371.5">report_id : CHAR(36)</tspan></text>
-<line x1="17.615234375" y1="378.0" x2="136.322265625" y2="378.0" stroke="black" stroke-width="0.9"/>
-<line x1="9.615234375" y1="383.0" x2="250.384765625" y2="383.0" stroke="black" stroke-dasharray="6,3"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-style="italic"><tspan x="17.615234375" y="394.5">l15_commission_id : CHAR(36) (FK, UQ)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="409.5">tier : VARCHAR(10)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="424.5">contract_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="439.5">milestone_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="454.5">content : JSON</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="469.5">normalized_result : JSON</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="484.5">result_hash : CHAR(64)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="499.5">report_hash : CHAR(64)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="514.5">inspector_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="529.5">external_org : VARCHAR(255)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="544.5">status : VARCHAR(20)</tspan></text>
-<rect x="316.962890625" y="320.0" width="186.07421875" height="146" fill="white" stroke="black" stroke-width="1.2" stroke-dasharray="6,3"/>
-<text text-anchor="middle" dominant-baseline="central" font-size="11" font-style="italic"><tspan x="410" y="331.5">«planned»</tspan></text>
-<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="410" y="347.5">inspector_signature</tspan></text>
-<line x1="316.962890625" y1="360.0" x2="503.037109375" y2="360.0" stroke="black" stroke-dasharray="6,3"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="324.962890625" y="371.5">signature_id : CHAR(36)</tspan></text>
-<line x1="324.962890625" y1="378.0" x2="463.017578125" y2="378.0" stroke="black" stroke-width="0.9"/>
-<line x1="316.962890625" y1="383.0" x2="503.037109375" y2="383.0" stroke="black" stroke-dasharray="6,3"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-style="italic"><tspan x="324.962890625" y="394.5">report_id : CHAR(36) (FK, UQ)</tspan></text>
+<rect x="9.615234375" y="320.0" width="240.76953125" height="221" fill="white" stroke="black" stroke-width="1.2"/>
+<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="130" y="332.5">inspection_report</tspan></text>
+<line x1="9.615234375" y1="345.0" x2="250.384765625" y2="345.0" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="17.615234375" y="356.5">report_id : CHAR(36)</tspan></text>
+<line x1="17.615234375" y1="363.0" x2="136.322265625" y2="363.0" stroke="black" stroke-width="0.9"/>
+<line x1="9.615234375" y1="368.0" x2="250.384765625" y2="368.0" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="12" font-style="italic"><tspan x="17.615234375" y="379.5">l15_commission_id : CHAR(36) (FK, UQ)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="394.5">tier : VARCHAR(10)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="409.5">contract_id : CHAR(36)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="424.5">milestone_id : CHAR(36)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="439.5">content : JSON</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="454.5">normalized_result : JSON</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="469.5">result_hash : VARCHAR(64)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="484.5">report_hash : VARCHAR(64)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="499.5">inspector_id : CHAR(36)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="514.5">external_org : VARCHAR(255)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="17.615234375" y="529.5">status : VARCHAR(20)</tspan></text>
+<rect x="316.962890625" y="320.0" width="186.07421875" height="146" fill="white" stroke="black" stroke-width="1.2"/>
+<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="410" y="332.5">inspector_signature</tspan></text>
+<line x1="316.962890625" y1="345.0" x2="503.037109375" y2="345.0" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="324.962890625" y="356.5">signature_id : CHAR(36)</tspan></text>
+<line x1="324.962890625" y1="363.0" x2="463.017578125" y2="363.0" stroke="black" stroke-width="0.9"/>
+<line x1="316.962890625" y1="368.0" x2="503.037109375" y2="368.0" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="12" font-style="italic"><tspan x="324.962890625" y="379.5">report_id : CHAR(36) (FK, UQ)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="324.962890625" y="394.5">contract_id : CHAR(36)</tspan></text>
 <text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="324.962890625" y="409.5">signer_user_id : CHAR(36)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="324.962890625" y="424.5">auth_time : TIMESTAMP</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="324.962890625" y="439.5">signed_at : TIMESTAMP</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="324.962890625" y="454.5">report_hash : CHAR(64)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="324.962890625" y="424.5">auth_time : TIMESTAMP(6)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="324.962890625" y="439.5">signed_at : TIMESTAMP(6)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="324.962890625" y="454.5">report_hash : VARCHAR(64)</tspan></text>
 <rect x="545.0" y="10.0" width="68.8" height="20" fill="white" stroke="black"/>
 <rect x="545.0" y="30.0" width="250" height="540" fill="none" stroke="black"/>
 <text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="553.0" y="20.0">audit_db</tspan></text>
-<rect x="560.376953125" y="45.0" width="219.24609375" height="206" fill="white" stroke="black" stroke-width="1.2" stroke-dasharray="6,3"/>
-<text text-anchor="middle" dominant-baseline="central" font-size="11" font-style="italic"><tspan x="670" y="56.5">«planned»</tspan></text>
-<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="670" y="72.5">audit_record</tspan></text>
-<line x1="560.376953125" y1="85.0" x2="779.623046875" y2="85.0" stroke="black" stroke-dasharray="6,3"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="568.376953125" y="96.5">record_id : CHAR(36)</tspan></text>
-<line x1="568.376953125" y1="103.0" x2="689.763671875" y2="103.0" stroke="black" stroke-width="0.9"/>
-<line x1="560.376953125" y1="108.0" x2="779.623046875" y2="108.0" stroke="black" stroke-dasharray="6,3"/>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="119.5">subject_type : VARCHAR(20)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="134.5">subject_id : VARCHAR(100)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="149.5">source_event_type : VARCHAR(100)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="164.5">source_event_id : CHAR(36) (UQ)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="179.5">source_hash : CHAR(64)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="194.5">content : JSON</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="209.5">record_hash : CHAR(64)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="224.5">prev_hash_global : CHAR(64)</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="239.5">prev_hash_subject : CHAR(64)</tspan></text>
+<rect x="560.376953125" y="45.0" width="219.24609375" height="191" fill="white" stroke="black" stroke-width="1.2"/>
+<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="670" y="57.5">audit_record</tspan></text>
+<line x1="560.376953125" y1="70.0" x2="779.623046875" y2="70.0" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="568.376953125" y="81.5">record_id : CHAR(36)</tspan></text>
+<line x1="568.376953125" y1="88.0" x2="689.763671875" y2="88.0" stroke="black" stroke-width="0.9"/>
+<line x1="560.376953125" y1="93.0" x2="779.623046875" y2="93.0" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="104.5">subject_type : VARCHAR(20)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="119.5">subject_id : VARCHAR(100)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="134.5">source_event_type : VARCHAR(100)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="149.5">source_event_id : CHAR(36) (UQ)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="164.5">source_hash : CHAR(64)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="179.5">content : JSON</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="194.5">record_hash : CHAR(64)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="209.5">prev_hash_global : CHAR(64)</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="568.376953125" y="224.5">prev_hash_subject : CHAR(64)</tspan></text>
 <rect x="581.396484375" y="320.0" width="177.20703125" height="131" fill="white" stroke="black" stroke-width="1.2" stroke-dasharray="6,3"/>
 <text text-anchor="middle" dominant-baseline="central" font-size="11" font-style="italic"><tspan x="670" y="331.5">«planned»</tspan></text>
 <text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="670" y="347.5">audit_anchor</tspan></text>

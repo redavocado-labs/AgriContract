@@ -95,7 +95,7 @@ function ageBuyerReceipt(bru) {
   const { resolve } = require('path');
   const contract = bru.getVar('contract_id');
   const milestone = bru.getVar('milestone_id');
-  const helper = resolve(__dirname, '../../scripts/e2e/time-travel.sh');
+  const helper = resolve(__dirname, '../../scripts/time-travel.sh');
   const sql = "UPDATE milestone SET buyer_received_at = UTC_TIMESTAMP(6) - INTERVAL 14 DAY" +
     ` WHERE contract_id = '${contract}' AND milestone_id = '${milestone}'`;
   // Windows cannot execute a shell script directly (spawn EFTYPE), so run it through Git Bash there
