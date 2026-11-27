@@ -44,12 +44,9 @@ test.describe.serial("BF-01 buyer onboarding approved", () => {
   })
 
   test("ST-BF01-050 The KYC result reaches the buyer by e-mail", async () => {
-    const message = await mail(email, /./, since)
+    // the mail goes out on the user event, a moment after the screen changes: wait for it like any user would
+    const message = await mail(email, /^(?!.*email verification code)/i, since)
     expect(message).toBeTruthy()
-    const res = await fetch(`http://localhost:8025/api/v2/search?kind=to&query=${encodeURIComponent(email)}&limit=20`)
-    const subjects = ((await res.json()).items as { Content: { Headers: { Subject: string[] } } }[])
-      .map((m) => m.Content.Headers.Subject[0])
-    expect(subjects.some((s) => !/email verification code/.test(s))).toBe(true)
   })
 })
 

@@ -34,15 +34,16 @@ test("ST-USA-010 Inline field validation shows beside the field and preserves ot
   await expect(buyer).toHaveURL(/\/contracts\/new/)
 })
 
-test("ST-USA-020 Money values display in VND with thousand separators", async ({ browser }) => {
+// SRS IV.2.1 Money presentation: VND, thousands separators and two decimal places (96.000,00 ₫ in vi-VN)
+test("ST-USA-020 Money values display in VND with thousand separators and two decimals", async ({ browser }) => {
   const { listingId } = await coffeeListing()
   const buyer = await session(browser, "buyer1")
-  await buyer.goto(`/listings/${listingId}`)
-  await expect(buyer.getByText("96.000 ₫/kg").first()).toBeVisible()
   await offerFromUi(buyer, listingId)
   const main = await buyer.getByRole("main").innerText()
-  expect(main).toMatch(/96\.000\s*₫/) // unit price
-  expect(main).toMatch(/96\.000\.000\s*₫/) // total value of 1,000 kg
+  expect.soft(main).toMatch(/96\.000,00\s*₫/) // unit price
+  expect.soft(main).toMatch(/96\.000\.000,00\s*₫/) // total value of 1,000 kg
+  await buyer.goto(`/listings/${listingId}`)
+  await expect(buyer.getByText(/96\.000,00\s*₫\/kg/).first()).toBeVisible({ timeout: 5000 })
 })
 
 test("ST-USA-030 Dates display as dd/MM/yyyy and server timestamps use Asia/Ho_Chi_Minh", async ({ browser }) => {
