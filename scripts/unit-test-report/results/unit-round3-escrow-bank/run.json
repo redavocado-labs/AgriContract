@@ -1,0 +1,10 @@
+{
+  "date": "27/11/2026",
+  "tester": "Nguyen Hai Long",
+  "commit": "94d46500",
+  "command": "mvn -pl escrow-service,bank-service -am test",
+  "services": [
+    "escrow-service",
+    "bank-service"
+  ]
+}
