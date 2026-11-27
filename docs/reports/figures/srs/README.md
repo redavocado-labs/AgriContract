@@ -1,54 +1,21 @@
-\# SRS Diagram Sources
+# SRS Diagram Sources
 
+## Context Diagram and Business Flows (BF-01–BF-07)
 
+The editable `.drawio` files are the authoritative sources for the Context Diagram and BF-01 through BF-07.
 
-\## Context Diagram and Business Flows (BF-01–BF-07)
+- `.drawio`: Editable diagram source.
+- `.png`: Raster export embedded in Report 3.
+- `.svg`: Vector export for inspection and reuse.
 
+Edit the `.drawio` source in Draw.io Desktop, then regenerate both PNG and SVG from that source. Do not edit the PNG or SVG separately. Re-embed the exported PNG in the matching Report 3 section and verify byte equality between the embedded image and the repository PNG. Preserve document styles, version and unrelated content; refresh the table of contents if pagination changes.
 
+## Legacy generators
 
-Following the diagram revisions in Issue #517, the editable `.drawio` files are the authoritative sources for the Context Diagram and BF-01 through BF-07.
+The former `context.py`, `context.dot` and `bf01.py` through `bf07.py` generators have been retired to avoid overwriting the maintained Draw.io diagrams. Their history remains available in Git.
 
+The ERD, Use Case Diagram and SDS generation workflows are unchanged.
 
+## Related issue
 
-\- `.drawio`: Editable diagram source.
-
-\- `.png`: Exported raster image used in Report 3.
-
-\- `.svg`: Exported vector image.
-
-
-
-When updating a diagram, edit its `.drawio` file and regenerate both PNG and SVG using Draw.io Desktop.
-
-
-
-\## Legacy Generators
-
-
-
-The following files contain previous diagram definitions and are retained for historical reference:
-
-
-
-\- `context.py`
-
-\- `context.dot`
-
-\- `bf01.py` through `bf07.py`
-
-
-
-Do not run these legacy generators to regenerate the updated diagrams, as they may overwrite the approved versions.
-
-
-
-The ERD, Use Case Diagram and SDS generation workflows remain unchanged.
-
-
-
-\## Related Issue
-
-
-
-\#517 — SRS Context Diagram and Business Flow corrections.
-
+#517 — SRS Context Diagram and Business Flow corrections.

@@ -1,2 +1,225 @@
-<?xml version='1.0' encoding='utf-8'?>
-<mxfile host="app.diagrams.net"><diagram name="bf07" id="bf07"><mxGraphModel grid="1" gridSize="10" page="1" pageWidth="780" pageHeight="1110"><root><mxCell id="0" /><mxCell id="1" parent="0" /><mxCell id="lane0" value="External Verifier" style="swimlane;horizontal=1;startSize=32;fontStyle=1;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;swimlaneFillColor=#FFFFFF;" vertex="1" parent="1"><mxGeometry x="0" y="0" width="260" height="1110" as="geometry" /></mxCell><mxCell id="lane1" value="Admin" style="swimlane;horizontal=1;startSize=32;fontStyle=1;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;swimlaneFillColor=#FFFFFF;" vertex="1" parent="1"><mxGeometry x="260" y="0" width="240" height="1110" as="geometry" /></mxCell><mxCell id="lane2" value="System" style="swimlane;horizontal=1;startSize=32;fontStyle=1;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;swimlaneFillColor=#FFFFFF;" vertex="1" parent="1"><mxGeometry x="500" y="0" width="280" height="1110" as="geometry" /></mxCell><mxCell id="start" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1"><mxGeometry x="118" y="43" width="24" height="24" as="geometry" /></mxCell><mxCell id="a1" value="1. Detect a suspected&lt;br&gt;incident" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="30" y="90" width="200" height="48" as="geometry" /></mxCell><mxCell id="a2" value="2. Send a signed&lt;br&gt;LOCK request" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="30" y="165" width="200" height="48" as="geometry" /></mxCell><mxCell id="a3" value="3. Verify the key,&lt;br&gt;signature, time&lt;br&gt;and nonce" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="535" y="157" width="210" height="64" as="geometry" /></mxCell><mxCell id="d1" value="LOCK request&lt;br&gt;valid?" style="rhombus;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1"><mxGeometry x="575" y="247" width="130" height="76" as="geometry" /></mxCell><mxCell id="a4" value="4. Reject the request&lt;br&gt;with an error code" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="535" y="365" width="210" height="48" as="geometry" /></mxCell><mxCell id="a4r" value="5. Receive LOCK rejection&lt;br&gt;and error code" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="30" y="365" width="200" height="48" as="geometry" /></mxCell><mxCell id="f1" value="" style="ellipse;shape=endState;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1"><mxGeometry x="117" y="435" width="26" height="26" as="geometry" /></mxCell><mxCell id="f1_name" value="Lock not applied" style="text;strokeColor=none;fillColor=none;align=center;fontFamily=Arial;fontSize=12;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="40" y="464" width="180" height="20" as="geometry" /></mxCell><mxCell id="a5" value="6. Stop all money&lt;br&gt;commands" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="535" y="475" width="210" height="48" as="geometry" /></mxCell><mxCell id="a6" value="7. Record the lock,&lt;br&gt;notify Admin and&lt;br&gt;the verifier" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="535" y="550" width="210" height="64" as="geometry" /></mxCell><mxCell id="a6r" value="8. Receive security&lt;br&gt;lock notification" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="280" y="558" width="200" height="48" as="geometry" /></mxCell><mxCell id="a7" value="9. Investigate and&lt;br&gt;report to the verifier" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="280" y="645" width="200" height="48" as="geometry" /></mxCell><mxCell id="n1" value="Admin cannot unlock" style="shape=note;size=10;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="285" y="720" width="190" height="32" as="geometry" /></mxCell><mxCell id="a8" value="10. Send a signed&lt;br&gt;UNLOCK request" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="30" y="720" width="200" height="48" as="geometry" /></mxCell><mxCell id="a9" value="11. Verify the request&lt;br&gt;and resume money&lt;br&gt;commands" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="535" y="790" width="210" height="64" as="geometry" /></mxCell><mxCell id="a10" value="12. Record the unlock&lt;br&gt;and notify" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="535" y="882" width="210" height="48" as="geometry" /></mxCell><mxCell id="a10r" value="13. Receive unlock&lt;br&gt;confirmation" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="30" y="882" width="200" height="48" as="geometry" /></mxCell><mxCell id="f2" value="" style="ellipse;shape=endState;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1"><mxGeometry x="117" y="966" width="26" height="26" as="geometry" /></mxCell><mxCell id="f2_name" value="Money flow resumed" style="text;strokeColor=none;fillColor=none;align=center;fontFamily=Arial;fontSize=12;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="35" y="997" width="190" height="20" as="geometry" /></mxCell><mxCell id="e0" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="start" target="a1"><mxGeometry relative="1" as="geometry"><Array as="points" /></mxGeometry></mxCell><mxCell id="e1" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a1" target="a2"><mxGeometry relative="1" as="geometry"><Array as="points" /></mxGeometry></mxCell><mxCell id="e3" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a3" target="d1"><mxGeometry relative="1" as="geometry"><Array as="points" /></mxGeometry></mxCell><mxCell id="e4" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="d1" target="a4"><mxGeometry relative="1" as="geometry"><Array as="points" /></mxGeometry></mxCell><mxCell id="e5b" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a4r" target="f1"><mxGeometry relative="1" as="geometry"><Array as="points" /></mxGeometry></mxCell><mxCell id="e7" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a5" target="a6"><mxGeometry relative="1" as="geometry"><Array as="points" /></mxGeometry></mxCell><mxCell id="e8b" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a6r" target="a7"><mxGeometry relative="1" as="geometry"><Array as="points" /></mxGeometry></mxCell><mxCell id="e12" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a9" target="a10"><mxGeometry relative="1" as="geometry"><Array as="points" /></mxGeometry></mxCell><mxCell id="e13b" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a10r" target="f2"><mxGeometry relative="1" as="geometry"><Array as="points" /></mxGeometry></mxCell><mxCell id="e2" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="a2" target="a3"><mxGeometry relative="1" as="geometry"><Array as="points" /></mxGeometry></mxCell><mxCell id="e5" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="a4" target="a4r"><mxGeometry relative="1" as="geometry"><Array as="points" /></mxGeometry></mxCell><mxCell id="e6" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="d1" target="a5"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="765" y="285" /><mxPoint x="765" y="452" /><mxPoint x="640" y="452" /></Array></mxGeometry></mxCell><mxCell id="e8" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="a6" target="a6r"><mxGeometry relative="1" as="geometry"><Array as="points" /></mxGeometry></mxCell><mxCell id="e9" style="edgeStyle=none;rounded=0;html=1;endArrow=none;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=0;entryX=0.5;entryY=1;dashed=1;" edge="1" parent="1" source="n1" target="a7"><mxGeometry relative="1" as="geometry"><Array as="points" /></mxGeometry></mxCell><mxCell id="e10" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="a7" target="a8"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="130" y="669" /></Array></mxGeometry></mxCell><mxCell id="e11" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0;entryY=0.5;" edge="1" parent="1" source="a8" target="a9"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="130" y="822" /></Array></mxGeometry></mxCell><mxCell id="e13" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="a10" target="a10r"><mxGeometry relative="1" as="geometry"><Array as="points" /></mxGeometry></mxCell><mxCell id="e4l" value="[invalid]" style="text;strokeColor=none;fillColor=none;align=center;fontFamily=Arial;fontSize=12;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="647" y="328" width="65" height="20" as="geometry" /></mxCell><mxCell id="e6l" value="[valid]" style="text;strokeColor=none;fillColor=none;align=center;fontFamily=Arial;fontSize=12;html=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="705" y="263" width="55" height="20" as="geometry" /></mxCell></root></mxGraphModel></diagram></mxfile>
+<?xml version='1.0' encoding='UTF-8'?>
+<mxfile host="app.diagrams.net">
+  <diagram name="bf07" id="bf07">
+    <mxGraphModel grid="1" gridSize="10" page="1" pageWidth="780" pageHeight="1410.0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="lane0" value="External Verifier" style="swimlane;horizontal=1;startSize=32;fontStyle=1;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;swimlaneFillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="0" y="0" width="260" height="1410.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane1" value="Admin" style="swimlane;horizontal=1;startSize=32;fontStyle=1;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;swimlaneFillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="260" y="0" width="240" height="1410.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane2" value="System" style="swimlane;horizontal=1;startSize=32;fontStyle=1;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;swimlaneFillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="500" y="0" width="280" height="1410.0" as="geometry"/>
+        </mxCell>
+        <mxCell id="start" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1">
+          <mxGeometry x="118" y="43" width="24" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="a1" value="1. Detect a suspected&lt;br&gt;incident" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="30" y="90" width="200" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" value="2. Send a signed&lt;br&gt;LOCK request" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="30" y="165" width="200" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="a3" value="3. Verify the key,&lt;br&gt;signature, time&lt;br&gt;and nonce" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="535" y="157" width="210" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1" value="LOCK request&lt;br&gt;valid?" style="rhombus;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="575" y="247" width="130" height="76" as="geometry"/>
+        </mxCell>
+        <mxCell id="a4" value="4. Reject the request&lt;br&gt;with an error code" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="535" y="365" width="210" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="a4r" value="5. Receive LOCK rejection&lt;br&gt;and error code" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="30" y="365" width="200" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1" value="" style="ellipse;shape=endState;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1">
+          <mxGeometry x="117" y="435" width="26" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1_name" value="Lock not applied" style="text;strokeColor=none;fillColor=none;align=center;fontFamily=Arial;fontSize=12;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="40" y="464" width="180" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="a5" value="6. Stop all money&lt;br&gt;commands" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="535" y="475" width="210" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="a6" value="7. Record the lock,&lt;br&gt;notify Admin and&lt;br&gt;the verifier" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="535" y="550" width="210" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="a6r" value="8. Receive security&lt;br&gt;lock notification" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="280" y="558" width="200" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="a7" value="9. Investigate and&lt;br&gt;report to the verifier" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="280" y="645" width="200" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="n1" value="Admin cannot unlock" style="shape=note;size=10;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="285" y="720" width="190" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="a8" value="10. Send a signed&lt;br&gt;UNLOCK request" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="30" y="720" width="200" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="a9" value="11. Verify the UNLOCK&lt;br&gt;key, signature, time&lt;br&gt;and nonce" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="535" y="790" width="210" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="a10" value="12. Record the unlock&lt;br&gt;and notify" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="535" y="1182.0" width="210" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="a10r" value="13. Receive unlock&lt;br&gt;confirmation" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="30" y="1182.0" width="200" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2" value="" style="ellipse;shape=endState;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1">
+          <mxGeometry x="117" y="1266.0" width="26" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_name" value="Money flow resumed" style="text;strokeColor=none;fillColor=none;align=center;fontFamily=Arial;fontSize=12;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="35" y="1297.0" width="190" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="e0" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="start" target="a1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e1" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a1" target="a2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a3" target="d1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="d1" target="a4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5b" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a4r" target="f1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a5" target="a6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8b" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a6r" target="a7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e12" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;labelBackgroundColor=#FFFFFF;jumpStyle=arc;jumpSize=8;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a9" target="d_unlock" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e13b" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a10r" target="f2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="a2" target="a3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="a4" target="a4r">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="d1" target="a5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="765" y="285"/>
+              <mxPoint x="765" y="452"/>
+              <mxPoint x="640" y="452"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="a6" target="a6r">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e9" style="edgeStyle=none;rounded=0;html=1;endArrow=none;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=0;entryX=0.5;entryY=1;dashed=1;" edge="1" parent="1" source="n1" target="a7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e10" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="a7" target="a8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="669"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e11" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0.5;exitY=1;entryX=0;entryY=0.5;" edge="1" parent="1" source="a8" target="a9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="822"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e13" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="a10" target="a10r">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4l" value="[invalid]" style="text;strokeColor=none;fillColor=none;align=center;fontFamily=Arial;fontSize=12;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="647" y="328" width="65" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6l" value="[valid]" style="text;strokeColor=none;fillColor=none;align=center;fontFamily=Arial;fontSize=12;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="705" y="263" width="55" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_unlock" value="UNLOCK request&lt;br&gt;valid?" style="rhombus;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="565" y="880" width="150" height="76" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_unlock_reject" value="11a. Reject UNLOCK&lt;br&gt;with an error code" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="535" y="979" width="210" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="r_unlock_reject" value="Receive UNLOCK&lt;br&gt;rejection and error code" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="30" y="979" width="200" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_unlock_reject" value="" style="ellipse;shape=endState;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1">
+          <mxGeometry x="117" y="1052" width="26" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_unlock_reject_name" value="Lock remains active" style="text;strokeColor=none;fillColor=none;align=center;fontFamily=Arial;fontSize=12;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1081" width="180" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_resume" value="11b. Resume money&lt;br&gt;commands" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="535" y="1100" width="210" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="unlock_no" edge="1" parent="1" source="d_unlock" target="a_unlock_reject" value="[invalid]" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;labelBackgroundColor=#FFFFFF;jumpStyle=arc;jumpSize=8;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="unlock_reject" edge="1" parent="1" source="a_unlock_reject" target="r_unlock_reject" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;labelBackgroundColor=#FFFFFF;jumpStyle=arc;jumpSize=8;exitX=0;exitY=0.5;entryX=1;entryY=0.5;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="unlock_reject_end" edge="1" parent="1" source="r_unlock_reject" target="f_unlock_reject" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;labelBackgroundColor=#FFFFFF;jumpStyle=arc;jumpSize=8;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="unlock_yes" edge="1" parent="1" source="d_unlock" target="a_resume" value="[valid]" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;labelBackgroundColor=#FFFFFF;jumpStyle=arc;jumpSize=8;exitX=1;exitY=0.5;entryX=1;entryY=0.5;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="766" y="918"/>
+              <mxPoint x="766" y="1124"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="unlock_resume" edge="1" parent="1" source="a_resume" target="a10" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endSize=10;strokeColor=#000000;fontFamily=Arial;fontSize=11;labelBackgroundColor=#FFFFFF;jumpStyle=arc;jumpSize=8;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"/>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
