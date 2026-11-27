@@ -1,5 +1,5 @@
 import { expect, type Browser, type Page } from "@playwright/test"
-import { PASSWORD } from "./api"
+import { PASSWORD, decodeMail, mail, token } from "./api"
 
 /** Signs in through the real Keycloak login page, as a user does, and lands back in the web client. */
 export async function signIn(page: Page, username: string, password = PASSWORD) {
@@ -63,4 +63,46 @@ export async function expectStatus(page: Page, label: string) {
 
 export function contractIdOf(page: Page) {
   return page.url().match(/contracts\/([0-9a-f-]{36})/)?.[1] ?? ""
+}
+
+// ── onboarding (BF-01), shared with the usability cases ─────────────────────────────────────────────────────
+
+/** password of the accounts the onboarding cases register (meets the realm policy) */
+export const NEW_PASSWORD = "Agri#Contract2026x"
+
+/** Guest signs up on the Keycloak page with an e-mail and a role, and lands on /onboarding. */
+export async function register(page: Page, email: string, role: "Người mua" | "Người bán") {
+  await page.goto("/register")
+  await page.getByRole("button", { name: "Đăng ký" }).click()
+  await page.waitForURL(/\/realms\/agricontract\//)
+  await page.getByLabel("Email *").fill(email)
+  await page.getByRole("radio", { name: role }).check()
+  await page.getByLabel("Mật khẩu *", { exact: true }).fill(NEW_PASSWORD)
+  await page.getByLabel("Nhập lại mật khẩu *").fill(NEW_PASSWORD)
+  await page.getByRole("button", { name: "Tạo tài khoản" }).click()
+  await page.waitForURL(/\/onboarding/)
+}
+
+export async function submitProfile(page: Page, name: string) {
+  await page.getByLabel("Tên doanh nghiệp *").fill(name)
+  await page.getByLabel("Số điện thoại").fill("0901000111")
+  await page.getByLabel("Địa chỉ").fill("1 Le Loi, Buon Ma Thuot")
+  await page.getByRole("button", { name: "Gửi hồ sơ doanh nghiệp" }).click()
+  await page.waitForURL(/\/account/)
+}
+
+export async function verifyEmail(page: Page, email: string, since: Date) {
+  const message = await mail(email, /email verification code/, since)
+  const code = decodeMail(message!.Content.Body).match(/\b\d{6}\b/)![0]
+  const boxes = page.getByRole("group", { name: "Mã xác minh email" }).getByRole("textbox")
+  await boxes.first().click()
+  await page.keyboard.type(code)
+  await page.getByRole("button", { name: "Xác minh email" }).click()
+}
+
+export async function accountId(email: string) {
+  const res = await fetch(`${process.env.ST_GATEWAY_URL ?? "http://localhost:8080"}/api/v1/users/me`, {
+    headers: { authorization: `Bearer ${await token(email, NEW_PASSWORD)}` },
+  })
+  return (await res.json()).userId as string
 }

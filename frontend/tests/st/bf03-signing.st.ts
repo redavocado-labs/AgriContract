@@ -1,11 +1,17 @@
-// BF-03 Contract Signing & Activation through the web client: the buyer makes an offer from the listing page, the
-// seller revises the price, both sign with the OTP from their mail, the contract turns ACTIVE once escrow locks the
-// deposits. A second offer is withdrawn before any signature. The seller's listing is created through the API.
+// BF-03 Contract Signing & Activation and BF-04 Milestone Delivery & Settlement through the web client, as one chain:
+// the buyer makes an offer from the listing page, the seller revises the price, both sign with the OTP from their
+// mail, the contract turns ACTIVE once escrow locks the deposits; then the seller weighs the goods with a photo, the
+// buyer weighs on receipt and confirms clean, the single milestone and the contract settle. A second offer is
+// withdrawn before any signature. The seller's listing is created through the API.
 import { expect, test, type Page } from "@playwright/test"
 import { api, coffeeListing, decodeMail, mail } from "./api"
 import { FUNDING_LEAD, NOT_A_BUSINESS_DAY, businessDaysAfter, contractIdOf, expectStatus, session, todayIct } from "./fixtures"
 
-export const shared: { contractId?: string; listingId?: string } = {}
+// 1x1 PNG used as the weighing photo
+const PIXEL_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==",
+  "base64",
+)
 
 async function offer(page: Page, listingId: string, quantity: string, delivery: string) {
   await page.goto(`/listings/${listingId}`)
@@ -41,24 +47,41 @@ async function sign(page: Page, email: string, contractId: string) {
   await panel.getByRole("button", { name: "Xác nhận chữ ký" }).click()
 }
 
-test.describe.serial("BF-03 offer, negotiation, signing, activation", () => {
+/** waits until the milestone page shows this status label (settlement and escrow move by event) */
+async function expectMilestoneStatus(page: Page, url: string, label: string) {
+  await expect(async () => {
+    await page.goto(url)
+    await expect(page.getByText(label, { exact: true }).first()).toBeVisible({ timeout: 3000 })
+  }).toPass({ timeout: 90_000, intervals: [3000] })
+}
+
+/** one side weighs: weight, photo (waits for the virus scan), review, operational consent, submit */
+async function weigh(page: Page, side: "SELLER" | "BUYER", weight: string, submit: string) {
+  await page.locator(`#${side}-weight`).fill(weight)
+  await page.locator(`#${side}-photo`).setInputFiles({ name: `${side.toLowerCase()}-weigh.png`, mimeType: "image/png", buffer: PIXEL_PNG })
+  await expect(page.getByText("Sẵn sàng").first()).toBeVisible({ timeout: 60_000 })
+  await page.getByRole("button", { name: "Xem lại trước khi gửi" }).click()
+  await page.getByRole("checkbox").first().check()
+  await page.getByRole("button", { name: submit }).click()
+}
+
+test.describe.serial("Golden flow: BF-03 signing and activation, then BF-04 delivery and settlement", () => {
   let buyer: Page
   let seller: Page
   let listingId: string
   let contractId: string
+  let milestoneUrl: string
   // funding date = delivery minus the lead = today, so the milestone is funded at activation (D63, D67)
   const delivery = businessDaysAfter(todayIct(), FUNDING_LEAD)
 
   test.beforeAll(async ({ browser }) => {
     listingId = (await coffeeListing()).listingId
-    shared.listingId = listingId
     buyer = await session(browser, "buyer1")
     seller = await session(browser, "seller1")
   })
 
   test("ST-BF03-010 Buyer sends an offer from the listing page", async () => {
     contractId = await offer(buyer, listingId, "1000", delivery)
-    shared.contractId = contractId
     await expect(buyer.getByText("Đã gửi đề nghị").first()).toBeVisible()
   })
 
@@ -97,6 +120,50 @@ test.describe.serial("BF-03 offer, negotiation, signing, activation", () => {
     await expectStatus(buyer, "Đang hiệu lực")
     await seller.goto(`/contracts/${contractId}`)
     await expect(seller.getByText("Đang hiệu lực").first()).toBeVisible()
+  })
+
+  test("ST-BF04-010 Both parties see the funded milestone of the ACTIVE contract", async () => {
+    test.skip(!!NOT_A_BUSINESS_DAY, NOT_A_BUSINESS_DAY)
+    const contract = (await api("buyer1", "GET", `/api/v1/contracts/${contractId}`, undefined, 200)).data
+    expect(contract.milestones).toHaveLength(1)
+    milestoneUrl = `/contracts/${contractId}/milestones/${contract.milestones[0].milestoneId}`
+    await buyer.goto(`/contracts/${contractId}`)
+    await expect(buyer.getByText("Đợt 1").first()).toBeVisible()
+    await expect(buyer.getByText(/Đã khoá tiền đợt|Đang chuẩn bị hàng/).first()).toBeVisible()
+  })
+
+  test("ST-BF04-020 Seller weighs before dispatch with a photo; the milestone is SELLER_WEIGHED", async () => {
+    test.skip(!!NOT_A_BUSINESS_DAY, NOT_A_BUSINESS_DAY)
+    await seller.goto(milestoneUrl)
+    await expect(seller.getByText("Cân hàng trước khi xe chạy").first()).toBeVisible()
+    await weigh(seller, "SELLER", "1000", "Xác nhận đã cân")
+    await expectMilestoneStatus(seller, milestoneUrl, "Đã cân, đang vận chuyển")
+  })
+
+  test("ST-BF04-030 Buyer sees the seller's weight and records the received weight", async () => {
+    test.skip(!!NOT_A_BUSINESS_DAY, NOT_A_BUSINESS_DAY)
+    await buyer.goto(milestoneUrl)
+    await expect(buyer.getByText("Đã cân, đang vận chuyển").first()).toBeVisible()
+    await expect(buyer.getByText("1.000").first()).toBeVisible()
+    await weigh(buyer, "BUYER", "998", "Ghi nhận cân nhận hàng")
+    await expectMilestoneStatus(buyer, milestoneUrl, "Đã nhận, chờ xác nhận")
+  })
+
+  test("ST-BF04-040 Buyer confirms a clean receipt; the milestone settles", async () => {
+    test.skip(!!NOT_A_BUSINESS_DAY, NOT_A_BUSINESS_DAY)
+    await buyer.goto(milestoneUrl)
+    await buyer.getByRole("button", { name: /Hàng đạt, xác nhận đúng/ }).click()
+    await buyer.getByRole("checkbox").first().check()
+    await buyer.getByRole("button", { name: "Xác nhận đúng và tất toán" }).click()
+    await expectMilestoneStatus(buyer, milestoneUrl, "Đã tất toán")
+  })
+
+  test("ST-BF04-050 With its only milestone settled, the contract is SETTLED once escrow clears the locks", async () => {
+    test.skip(!!NOT_A_BUSINESS_DAY, NOT_A_BUSINESS_DAY)
+    // D94: completion decision -> escrow returns the deposits -> contract_lock_cleared -> contract.settled
+    await expectStatus(buyer, "Đã tất toán")
+    await seller.goto(`/contracts/${contractId}`)
+    await expect(seller.getByText("Đã tất toán").first()).toBeVisible()
   })
 })
 

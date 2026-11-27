@@ -2,45 +2,8 @@
 // organization profile, verifies the e-mail with the code from the mail, and sees the Operator's KYC decision.
 // The Operator's decision itself goes through the API: the web client has no KYC review screen yet.
 import { expect, test, type Page } from "@playwright/test"
-import { api, decodeMail, mail, token } from "./api"
-
-const PASSWORD = "Agri#Contract2026x"
-
-async function register(page: Page, email: string, role: "Người mua" | "Người bán") {
-  await page.goto("/register")
-  await page.getByRole("button", { name: "Đăng ký" }).click()
-  await page.waitForURL(/\/realms\/agricontract\//)
-  await page.getByLabel("Email *").fill(email)
-  await page.getByRole("radio", { name: role }).check()
-  await page.getByLabel("Mật khẩu *", { exact: true }).fill(PASSWORD)
-  await page.getByLabel("Nhập lại mật khẩu *").fill(PASSWORD)
-  await page.getByRole("button", { name: "Tạo tài khoản" }).click()
-  await page.waitForURL(/\/onboarding/)
-}
-
-async function submitProfile(page: Page, name: string) {
-  await page.getByLabel("Tên doanh nghiệp *").fill(name)
-  await page.getByLabel("Số điện thoại").fill("0901000111")
-  await page.getByLabel("Địa chỉ").fill("1 Le Loi, Buon Ma Thuot")
-  await page.getByRole("button", { name: "Gửi hồ sơ doanh nghiệp" }).click()
-  await page.waitForURL(/\/account/)
-}
-
-async function verifyEmail(page: Page, email: string, since: Date) {
-  const message = await mail(email, /email verification code/, since)
-  const code = decodeMail(message!.Content.Body).match(/\b\d{6}\b/)![0]
-  const boxes = page.getByRole("group", { name: "Mã xác minh email" }).getByRole("textbox")
-  await boxes.first().click()
-  await page.keyboard.type(code)
-  await page.getByRole("button", { name: "Xác minh email" }).click()
-}
-
-async function accountId(email: string) {
-  const res = await fetch(`${process.env.ST_GATEWAY_URL ?? "http://localhost:8080"}/api/v1/users/me`, {
-    headers: { authorization: `Bearer ${await token(email, PASSWORD)}` },
-  })
-  return (await res.json()).userId as string
-}
+import { api, decodeMail, mail } from "./api"
+import { accountId, register, submitProfile, verifyEmail } from "./fixtures"
 
 test.describe.serial("BF-01 buyer onboarding approved", () => {
   const email = `st-buyer-${Date.now()}@test.com`
@@ -119,7 +82,7 @@ test.describe.serial("BF-01 seller onboarding rejected", () => {
     }).toPass({ timeout: 60_000, intervals: [3000] })
     await expect(page.getByRole("definition").filter({ hasText: "Chưa được chấp thuận" })).toBeVisible()
     // SRS BF-01: the result is sent by e-mail; the screen only states that the profile was not accepted
-    const message = await mail(email, /./, sent)
+    const message = await mail(email, /^(?!.*email verification code)/i, sent)
     expect(decodeMail(message!.Content.Body)).toContain(reason)
   })
 })
