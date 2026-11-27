@@ -148,12 +148,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2937,
+                  "duration": 3329,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-27T23:07:24.548Z",
+                  "startTime": "2026-11-27T23:21:39.957Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -182,12 +182,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 9453,
+                  "duration": 9387,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-27T23:07:27.543Z",
+                  "startTime": "2026-11-27T23:21:43.342Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -216,12 +216,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2982,
+                  "duration": 3112,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-27T23:07:37.006Z",
+                  "startTime": "2026-11-27T23:21:52.741Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -250,12 +250,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2937,
+                  "duration": 2911,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-27T23:07:39.999Z",
+                  "startTime": "2026-11-27T23:21:55.866Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -284,12 +284,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4637,
+                  "duration": 4919,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-27T23:07:42.947Z",
+                  "startTime": "2026-11-27T23:21:58.789Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -342,12 +342,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 789,
+                      "duration": 853,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:07:47.603Z",
+                      "startTime": "2026-11-27T23:22:03.732Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -394,12 +394,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 159,
+                      "duration": 156,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:07:48.616Z",
+                      "startTime": "2026-11-27T23:22:04.844Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -446,12 +446,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 192,
+                      "duration": 164,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:07:48.791Z",
+                      "startTime": "2026-11-27T23:22:05.019Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -498,12 +498,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 878,
+                      "duration": 884,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:07:48.996Z",
+                      "startTime": "2026-11-27T23:22:05.199Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -550,12 +550,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5,
+                      "duration": 2005,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:07:49.887Z",
+                      "startTime": "2026-11-27T23:22:06.104Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -582,7 +582,7 @@
         {
           "title": "BF-01 seller onboarding rejected",
           "file": "bf01-onboarding.st.ts",
-          "line": 56,
+          "line": 53,
           "column": 15,
           "specs": [
             {
@@ -597,7 +597,7 @@
                       "type": "serial",
                       "location": {
                         "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
-                        "line": 56,
+                        "line": 53,
                         "column": 15
                       }
                     }
@@ -610,18 +610,18 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1013,
+                      "duration": 1110,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:07:49.909Z",
+                      "startTime": "2026-11-27T23:22:08.124Z",
                       "annotations": [
                         {
                           "type": "serial",
                           "location": {
                             "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
-                            "line": 56,
+                            "line": 53,
                             "column": 15
                           }
                         }
@@ -634,7 +634,7 @@
               ],
               "id": "b44d19da793a00c6b462-09f7b300910aae4ea13c",
               "file": "bf01-onboarding.st.ts",
-              "line": 65,
+              "line": 62,
               "column": 3
             },
             {
@@ -649,7 +649,7 @@
                       "type": "serial",
                       "location": {
                         "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
-                        "line": 56,
+                        "line": 53,
                         "column": 15
                       }
                     }
@@ -662,18 +662,18 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 885,
+                      "duration": 2875,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:07:51.129Z",
+                      "startTime": "2026-11-27T23:22:09.475Z",
                       "annotations": [
                         {
                           "type": "serial",
                           "location": {
                             "file": "/home/cuong/projects/AgriContract/frontend/tests/st/bf01-onboarding.st.ts",
-                            "line": 56,
+                            "line": 53,
                             "column": 15
                           }
                         }
@@ -686,7 +686,7 @@
               ],
               "id": "b44d19da793a00c6b462-eeaa9faa47c88528e187",
               "file": "bf01-onboarding.st.ts",
-              "line": 74,
+              "line": 71,
               "column": 3
             }
           ]
@@ -731,12 +731,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3186,
+                      "duration": 1058,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:07:52.035Z",
+                      "startTime": "2026-11-27T23:22:12.377Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -783,12 +783,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1035,
+                      "duration": 1077,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:07:55.440Z",
+                      "startTime": "2026-11-27T23:22:13.706Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -835,12 +835,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 898,
+                      "duration": 920,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:07:56.493Z",
+                      "startTime": "2026-11-27T23:22:14.803Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -887,12 +887,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 59,
+                      "duration": 70,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:07:57.412Z",
+                      "startTime": "2026-11-27T23:22:15.745Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -956,12 +956,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1168,
+                      "duration": 1191,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:07:57.494Z",
+                      "startTime": "2026-11-27T23:22:15.847Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -1008,12 +1008,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 862,
+                      "duration": 873,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:08:04.993Z",
+                      "startTime": "2026-11-27T23:22:25.626Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -1060,12 +1060,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1080,
+                      "duration": 1089,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:08:05.874Z",
+                      "startTime": "2026-11-27T23:22:26.522Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -1112,12 +1112,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3097,
+                      "duration": 3116,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:08:06.975Z",
+                      "startTime": "2026-11-27T23:22:27.635Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -1178,7 +1178,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:08:10.095Z",
+                      "startTime": "2026-11-27T23:22:30.773Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -1243,12 +1243,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "skipped",
-                      "duration": 1,
+                      "duration": 2,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:08:10.122Z",
+                      "startTime": "2026-11-27T23:22:30.798Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -1318,7 +1318,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:08:10.142Z",
+                      "startTime": "2026-11-27T23:22:30.822Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -1388,7 +1388,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:08:10.162Z",
+                      "startTime": "2026-11-27T23:22:30.842Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -1458,7 +1458,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:08:10.181Z",
+                      "startTime": "2026-11-27T23:22:30.863Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -1528,7 +1528,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:08:10.201Z",
+                      "startTime": "2026-11-27T23:22:30.883Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -1598,7 +1598,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:08:10.221Z",
+                      "startTime": "2026-11-27T23:22:30.904Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -1662,12 +1662,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1983,
+                      "duration": 2052,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:08:10.240Z",
+                      "startTime": "2026-11-27T23:22:30.927Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -1714,12 +1714,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 968,
+                      "duration": 996,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:08:17.849Z",
+                      "startTime": "2026-11-27T23:22:38.513Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -1766,12 +1766,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 6142,
+                      "duration": 6153,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-27T23:08:18.846Z",
+                      "startTime": "2026-11-27T23:22:39.534Z",
                       "annotations": [
                         {
                           "type": "serial",
@@ -1819,12 +1819,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1212,
+                  "duration": 1172,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-27T23:08:25.016Z",
+                  "startTime": "2026-11-27T23:22:45.718Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1853,12 +1853,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1753,
+                  "duration": 1586,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-27T23:08:29.663Z",
+                  "startTime": "2026-11-27T23:22:48.357Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1887,12 +1887,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 584,
+                  "duration": 633,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-27T23:08:31.443Z",
+                  "startTime": "2026-11-27T23:22:49.983Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1921,12 +1921,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1532,
+                  "duration": 1562,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-27T23:08:32.055Z",
+                  "startTime": "2026-11-27T23:22:50.657Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1955,12 +1955,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1915,
+                  "duration": 2387,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-27T23:08:33.607Z",
+                  "startTime": "2026-11-27T23:22:52.255Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1989,12 +1989,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 270,
+                  "duration": 307,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-27T23:08:35.542Z",
+                  "startTime": "2026-11-27T23:22:54.679Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2023,12 +2023,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1046,
+                  "duration": 1075,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-27T23:08:35.831Z",
+                  "startTime": "2026-11-27T23:22:55.025Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2065,12 +2065,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 6380,
+                  "duration": 6245,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-27T23:08:36.902Z",
+                  "startTime": "2026-11-27T23:22:56.128Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2084,8 +2084,8 @@
           "column": 1
         },
         {
-          "title": "ST-USA-020 Money values display in VND with thousand separators",
-          "ok": true,
+          "title": "ST-USA-020 Money values display in VND with thousand separators and two decimals",
+          "ok": false,
           "tags": [],
           "tests": [
             {
@@ -2098,23 +2098,144 @@
                 {
                   "workerIndex": 0,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 7221,
-                  "errors": [],
+                  "status": "failed",
+                  "duration": 11959,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/96\\.000,00\\s*₫/\u001b[39m\nReceived string:  \u001b[31m\"Hợp đồng\u001b[39m\n\u001b[31mChi tiết hợp đồng\u001b[39m\n\u001b[31me57b8f0a-c579-4055-acb4-608c3d99c340\u001b[39m\n\u001b[31mĐã gửi đề nghị\u001b[39m\n\u001b[31mTải lại trạng thái\u001b[39m\n\u001b[31mRút đề nghị\u001b[39m\n\u001b[31mTổng quan hợp đồng\u001b[39m\n\u001b[31mBằng chứng\u001b[39m\n\u001b[31mwarning\u001b[39m\n\u001b[31mCHƯA CÓ HIỆU LỰC — thông tin điều khoản dưới đây không phải PDF hợp đồng do máy chủ phát hành.\u001b[39m\n\u001b[31minfo\u001b[39m\n\u001b[31mHợp đồng chưa có hiệu lực. Điều khoản sửa được tới khi có chữ ký đầu tiên; cần đủ hai chữ ký để chuyển sang Đã ký.·\u001b[39m\n\u001b[31mMã vân tay nội dung từ máy chủ·\u001b[39m\n\u001b[31mc25e99ad…776c198b\u001b[39m\n\u001b[31mcontent_copy·\u001b[39m\n\u001b[31mMẫu hợp đồng VN_COFFEE_B2B phiên bản 1.0. Mã vân tay đổi mỗi lần điều khoản được sửa.·\u001b[39m\n\u001b[31mĐiều khoản hiện hành\u001b[39m\n\u001b[31mBên mua\u001b[39m\n\u001b[31m1de004cd-8493-463c-8f32-6c7b75bcbf16\u001b[39m\n\u001b[31mBên bán\u001b[39m\n\u001b[31m1a5a2ddd-56b9-492a-b966-99f436e0fc85\u001b[39m\n\u001b[31mMã nguồn hàng\u001b[39m\n\u001b[31m0fabc555-aa2f-4724-91b8-a3297fb04bfd\u001b[39m\n\u001b[31mKhối lượng đã giữ (kg)\u001b[39m\n\u001b[31m1000·\u001b[39m\n\u001b[31mKhi chưa có tên doanh nghiệp, hiển thị mã bên tham gia do máy chủ cung cấp. Các tỷ lệ giữ nguyên giá trị thập phân của điều khoản; số tiền cọc chờ máy chủ cung cấp.·\u001b[39m\n\u001b[31mĐơn giá (VND/kg)\u001b[39m\n\u001b[31m96.000 ₫\u001b[39m\n\u001b[31mHạn xác nhận (ngày làm việc)\u001b[39m\n\u001b[31m3\u001b[39m\n\u001b[31mTỷ lệ cọc bên mua\u001b[39m\n\u001b[31m0.05\u001b[39m\n\u001b[31mTỷ lệ phạt bên mua\u001b[39m\n\u001b[31m0.08\u001b[39m\n\u001b[31mPhiên bản hồ sơ chất lượng\u001b[39m\n\u001b[31m1.0\u001b[39m\n\u001b[31mMã mẫu hợp đồng\u001b[39m\n\u001b[31mVN_COFFEE_B2B\u001b[39m\n\u001b[31mHash mẫu\u001b[39m\n\u001b[31m96876467dbe1535e2a7e9c646459924b7a4ac63ff17d82e79e8db39b7ceeaa18\u001b[39m\n\u001b[31mPhiên bản mẫu\u001b[39m\n\u001b[31m1.0\u001b[39m\n\u001b[31mTiền tệ\u001b[39m\n\u001b[31mĐồng Việt Nam\u001b[39m\n\u001b[31mĐiều khoản giao nhận\u001b[39m\n\u001b[31mTrách nhiệm giao hàng\u001b[39m\n\u001b[31mBên bán giao hàng\u001b[39m\n\u001b[31mThời điểm chuyển rủi ro\u001b[39m\n\u001b[31mKhi bên mua nhận hàng\u001b[39m\n\u001b[31mThời điểm chuyển quyền sở hữu\u001b[39m\n\u001b[31mKhi thanh toán đủ\u001b[39m\n\u001b[31mBên chịu phí vận chuyển\u001b[39m\n\u001b[31mBên bán\u001b[39m\n\u001b[31mBên chịu phí dỡ hàng\u001b[39m\n\u001b[31mBên mua\u001b[39m\n\u001b[31mTỷ lệ giải ngân sàn\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mHạn báo bất khả kháng (ngày)\u001b[39m\n\u001b[31m7\u001b[39m\n\u001b[31mTrường chưa có nhãn (fundingLeadBusinessDays)\u001b[39m\n\u001b[31m7\u001b[39m\n\u001b[31mHàng hóa theo hồ sơ đã chốt\u001b[39m\n\u001b[31mMã danh mục\u001b[39m\n\u001b[31m5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02\u001b[39m\n\u001b[31mDanh mục\u001b[39m\n\u001b[31mCà phê\u001b[39m\n\u001b[31mHàng hóa\u001b[39m\n\u001b[31mCà phê\u001b[39m\n\u001b[31mNiên vụ\u001b[39m\n\u001b[31m2026\u001b[39m\n\u001b[31mMùa thu hoạch\u001b[39m\n\u001b[31m2026/27\u001b[39m\n\u001b[31mMã nguồn hàng\u001b[39m\n\u001b[31m0fabc555-aa2f-4724-91b8-a3297fb04bfd\u001b[39m\n\u001b[31mNguồn gốc\u001b[39m\n\u001b[31mThửa đất\u001b[39m\n\u001b[31mHash hình học\u001b[39m\n\u001b[31me1d88aa200411f98308f1939382175e1ff086651af12d330a7bb865186454075\u001b[39m\n\u001b[31mLoại hình học\u001b[39m\n\u001b[31mĐiểm\u001b[39m\n\u001b[31mHộ sản xuất\u001b[39m\n\u001b[31mST mwzlx7kg\u001b[39m\n\u001b[31mMã đăng ký\u001b[39m\n\u001b[31m91fba215-c3d6-418e-9055-e6a5aaeb42b5\u001b[39m\n\u001b[31mMức xác minh\u001b[39m\n\u001b[31mTự khai báo\u001b[39m\n\u001b[31mKhu vực\u001b[39m\n\u001b[31mBuon Ma Thuot, Dak Lak\u001b[39m\n\u001b[31mMã sản phẩm\u001b[39m\n\u001b[31mdbc88214-e86e-462d-81b0-53189672662f\u001b[39m\n\u001b[31mTên hàng hóa\u001b[39m\n\u001b[31mRobusta ST mwzlx7kg\u001b[39m\n\u001b[31mTruy xuất nguồn gốc\u001b[39m\n\u001b[31mChưa có thông tin\u001b[39m\n\u001b[31mĐơn vị\u001b[39m\n\u001b[31mkg\u001b[39m\n\u001b[31mĐiều khoản kiểm định\u001b[39m\n\u001b[31mTrách nhiệm phí kiểm định\u001b[39m\n\u001b[31mBên chịu trách nhiệm theo kết luận\u001b[39m\n\u001b[31mHạn báo cáo (ngày làm việc)\u001b[39m\n\u001b[31m5\u001b[39m\n\u001b[31mCấp kiểm định\u001b[39m\n\u001b[31mCấp 1.5\u001b[39m\n\u001b[31mYêu cầu kiểm định\u001b[39m\n\u001b[31mChỉ kiểm định khi có tranh chấp\u001b[39m\n\u001b[31mĐiều kiện pháp lý\u001b[39m\n\u001b[31mLoại hợp đồng\u001b[39m\n\u001b[31mCOFFEE_SALE\u001b[39m\n\u001b[31mChính sách bồi thường\u001b[39m\n\u001b[31mBồi thường thiệt hại khi có chứng minh\u001b[39m\n\u001b[31mLuật áp dụng\u001b[39m\n\u001b[31mLuật Thương mại Việt Nam\u001b[39m\n\u001b[31mTỷ lệ phạt tối đa\u001b[39m\n\u001b[31m0.08\u001b[39m\n\u001b[31mTổ chức giám định cấp 2\u001b[39m\n\u001b[31mChưa có thông tin\u001b[39m\n\u001b[31mLịch giao hàng cam kết\u001b[39m\n\u001b[31mKhối lượng cam kết (kg)\u001b[39m\n\u001b[31m1000\u001b[39m\n\u001b[31mNgày giao dự kiến\u001b[39m\n\u001b[31m15/12/2026\u001b[39m\n\u001b[31mSố ngày làm việc gia hạn\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mĐợt giao\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mQuy tắc điều chỉnh giá\u001b[39m\n\u001b[31mCơ chế chấp thuận\u001b[39m\n\u001b[31mHai bên chấp thuận\u001b[39m\n\u001b[31mHạn chấp thuận\u001b[39m\n\u001b[31mTrước yêu cầu tài trợ\u001b[39m\n\u001b[31mSố lần điều chỉnh mỗi đợt\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mBiên độ giá\u001b[39m\n\u001b[31mGiá cao nhất (VND/kg)\u001b[39m\n\u001b[31m105.600 ₫\u001b[39m\n\u001b[31mGiá thấp nhất (VND/kg)\u001b[39m\n\u001b[31m86.400 ₫\u001b[39m\n\u001b[31mĐiều kiện chất lượng\u001b[39m\n\u001b[31mChất lượng cam kết\u001b[39m\n\u001b[31mHạt đen vỡ (%)\u001b[39m\n\u001b[31m5\u001b[39m\n\u001b[31mHàng hóa\u001b[39m\n\u001b[31mCà phê\u001b[39m\n\u001b[31mTạp chất (%)\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mĐộ ẩm (%)\u001b[39m\n\u001b[31m12.5\u001b[39m\n\u001b[31mLoại cà phê\u001b[39m\n\u001b[31mRobusta\u001b[39m\n\u001b[31mHàng hóa\u001b[39m\n\u001b[31mCà phê\u001b[39m\n\u001b[31mChính sách sai lệch\u001b[39m\n\u001b[31mHạt đen vỡ (%)\u001b[39m\n\u001b[31mChiều đánh giá\u001b[39m\n\u001b[31mTối đa\u001b[39m\n\u001b[31mTỷ lệ giảm giá\u001b[39m\n\u001b[31m0.02\u001b[39m\n\u001b[31mNgưỡng điều chỉnh\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mNgưỡng từ chối\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mNgưỡng dung sai\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mTạp chất (%)\u001b[39m\n\u001b[31mChiều đánh giá\u001b[39m\n\u001b[31mTối đa\u001b[39m\n\u001b[31mTỷ lệ giảm giá\u001b[39m\n\u001b[31m0.02\u001b[39m\n\u001b[31mNgưỡng điều chỉnh\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mNgưỡng từ chối\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mNgưỡng dung sai\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mĐộ ẩm (%)\u001b[39m\n\u001b[31mChiều đánh giá\u001b[39m\n\u001b[31mTối đa\u001b[39m\n\u001b[31mTỷ lệ giảm giá\u001b[39m\n\u001b[31m0.02\u001b[39m\n\u001b[31mNgưỡng điều chỉnh\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mNgưỡng từ chối\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mNgưỡng dung sai\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mLoại cà phê\u001b[39m\n\u001b[31mTừ chối nếu không khớp\u001b[39m\n\u001b[31mCó\u001b[39m\n\u001b[31mTỷ lệ cọc bên bán\u001b[39m\n\u001b[31m0.03\u001b[39m\n\u001b[31mTỷ lệ phạt bên bán\u001b[39m\n\u001b[31m0.06\u001b[39m\n\u001b[31mNgưỡng thiếu hụt\u001b[39m\n\u001b[31m0.05\u001b[39m\n\u001b[31mTỷ lệ dung sai\u001b[39m\n\u001b[31m0.05\u001b[39m\n\u001b[31mTổng giá trị (VND)\u001b[39m\n\u001b[31m96.000.000 ₫\u001b[39m\n\u001b[31mĐàm phán điều khoản·\u001b[39m\n\u001b[31mHai bên sửa được điều khoản tới khi có chữ ký đầu tiên. Mỗi lần lưu tạo mã vân tay mới; cam kết ký cũ phải xác nhận lại.·\u001b[39m\n\u001b[31mĐơn giá đề xuất (VND/kg)\u001b[39m\n\u001b[31mXem lại thay đổi\u001b[39m\n\u001b[31mKý hợp đồng bằng OTP\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mĐọc & đồng ý\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mNhận mã\u001b[39m\n\u001b[31m3\u001b[39m\n\u001b[31mXác nhận\u001b[39m\n\u001b[31mc25e99ad…776c198b\u001b[39m\n\u001b[31mcontent_copy\u001b[39m\n\u001b[31mTôi xác nhận đã đọc toàn bộ hợp đồng có mã vân tay hiển thị bên dưới, hiểu rằng việc ký có hiệu lực ràng buộc tôi với tư cách bên mua, và đồng ý ký bằng mã OTP gửi tới email của tôi.·\u001b[39m\n\u001b[31mPhiên bản cam kết: 1.0·\u001b[39m\n\u001b[31mGửi mã OTP\u001b[39m\n\u001b[31mTài liệu & lịch sử\u001b[39m\n\u001b[31minfo\u001b[39m\n\u001b[31mTài liệu PDF chưa sẵn sàng: máy chủ chưa cung cấp bản xem trước và hợp đồng PDF đã ký.\u001b[39m\n\u001b[31mXem PDF nháp\u001b[39m\n\u001b[31mTải PDF đã ký\"\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/96\\.000,00\\s*₫/\u001b[39m\nReceived string:  \u001b[31m\"Hợp đồng\u001b[39m\n\u001b[31mChi tiết hợp đồng\u001b[39m\n\u001b[31me57b8f0a-c579-4055-acb4-608c3d99c340\u001b[39m\n\u001b[31mĐã gửi đề nghị\u001b[39m\n\u001b[31mTải lại trạng thái\u001b[39m\n\u001b[31mRút đề nghị\u001b[39m\n\u001b[31mTổng quan hợp đồng\u001b[39m\n\u001b[31mBằng chứng\u001b[39m\n\u001b[31mwarning\u001b[39m\n\u001b[31mCHƯA CÓ HIỆU LỰC — thông tin điều khoản dưới đây không phải PDF hợp đồng do máy chủ phát hành.\u001b[39m\n\u001b[31minfo\u001b[39m\n\u001b[31mHợp đồng chưa có hiệu lực. Điều khoản sửa được tới khi có chữ ký đầu tiên; cần đủ hai chữ ký để chuyển sang Đã ký.·\u001b[39m\n\u001b[31mMã vân tay nội dung từ máy chủ·\u001b[39m\n\u001b[31mc25e99ad…776c198b\u001b[39m\n\u001b[31mcontent_copy·\u001b[39m\n\u001b[31mMẫu hợp đồng VN_COFFEE_B2B phiên bản 1.0. Mã vân tay đổi mỗi lần điều khoản được sửa.·\u001b[39m\n\u001b[31mĐiều khoản hiện hành\u001b[39m\n\u001b[31mBên mua\u001b[39m\n\u001b[31m1de004cd-8493-463c-8f32-6c7b75bcbf16\u001b[39m\n\u001b[31mBên bán\u001b[39m\n\u001b[31m1a5a2ddd-56b9-492a-b966-99f436e0fc85\u001b[39m\n\u001b[31mMã nguồn hàng\u001b[39m\n\u001b[31m0fabc555-aa2f-4724-91b8-a3297fb04bfd\u001b[39m\n\u001b[31mKhối lượng đã giữ (kg)\u001b[39m\n\u001b[31m1000·\u001b[39m\n\u001b[31mKhi chưa có tên doanh nghiệp, hiển thị mã bên tham gia do máy chủ cung cấp. Các tỷ lệ giữ nguyên giá trị thập phân của điều khoản; số tiền cọc chờ máy chủ cung cấp.·\u001b[39m\n\u001b[31mĐơn giá (VND/kg)\u001b[39m\n\u001b[31m96.000 ₫\u001b[39m\n\u001b[31mHạn xác nhận (ngày làm việc)\u001b[39m\n\u001b[31m3\u001b[39m\n\u001b[31mTỷ lệ cọc bên mua\u001b[39m\n\u001b[31m0.05\u001b[39m\n\u001b[31mTỷ lệ phạt bên mua\u001b[39m\n\u001b[31m0.08\u001b[39m\n\u001b[31mPhiên bản hồ sơ chất lượng\u001b[39m\n\u001b[31m1.0\u001b[39m\n\u001b[31mMã mẫu hợp đồng\u001b[39m\n\u001b[31mVN_COFFEE_B2B\u001b[39m\n\u001b[31mHash mẫu\u001b[39m\n\u001b[31m96876467dbe1535e2a7e9c646459924b7a4ac63ff17d82e79e8db39b7ceeaa18\u001b[39m\n\u001b[31mPhiên bản mẫu\u001b[39m\n\u001b[31m1.0\u001b[39m\n\u001b[31mTiền tệ\u001b[39m\n\u001b[31mĐồng Việt Nam\u001b[39m\n\u001b[31mĐiều khoản giao nhận\u001b[39m\n\u001b[31mTrách nhiệm giao hàng\u001b[39m\n\u001b[31mBên bán giao hàng\u001b[39m\n\u001b[31mThời điểm chuyển rủi ro\u001b[39m\n\u001b[31mKhi bên mua nhận hàng\u001b[39m\n\u001b[31mThời điểm chuyển quyền sở hữu\u001b[39m\n\u001b[31mKhi thanh toán đủ\u001b[39m\n\u001b[31mBên chịu phí vận chuyển\u001b[39m\n\u001b[31mBên bán\u001b[39m\n\u001b[31mBên chịu phí dỡ hàng\u001b[39m\n\u001b[31mBên mua\u001b[39m\n\u001b[31mTỷ lệ giải ngân sàn\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mHạn báo bất khả kháng (ngày)\u001b[39m\n\u001b[31m7\u001b[39m\n\u001b[31mTrường chưa có nhãn (fundingLeadBusinessDays)\u001b[39m\n\u001b[31m7\u001b[39m\n\u001b[31mHàng hóa theo hồ sơ đã chốt\u001b[39m\n\u001b[31mMã danh mục\u001b[39m\n\u001b[31m5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02\u001b[39m\n\u001b[31mDanh mục\u001b[39m\n\u001b[31mCà phê\u001b[39m\n\u001b[31mHàng hóa\u001b[39m\n\u001b[31mCà phê\u001b[39m\n\u001b[31mNiên vụ\u001b[39m\n\u001b[31m2026\u001b[39m\n\u001b[31mMùa thu hoạch\u001b[39m\n\u001b[31m2026/27\u001b[39m\n\u001b[31mMã nguồn hàng\u001b[39m\n\u001b[31m0fabc555-aa2f-4724-91b8-a3297fb04bfd\u001b[39m\n\u001b[31mNguồn gốc\u001b[39m\n\u001b[31mThửa đất\u001b[39m\n\u001b[31mHash hình học\u001b[39m\n\u001b[31me1d88aa200411f98308f1939382175e1ff086651af12d330a7bb865186454075\u001b[39m\n\u001b[31mLoại hình học\u001b[39m\n\u001b[31mĐiểm\u001b[39m\n\u001b[31mHộ sản xuất\u001b[39m\n\u001b[31mST mwzlx7kg\u001b[39m\n\u001b[31mMã đăng ký\u001b[39m\n\u001b[31m91fba215-c3d6-418e-9055-e6a5aaeb42b5\u001b[39m\n\u001b[31mMức xác minh\u001b[39m\n\u001b[31mTự khai báo\u001b[39m\n\u001b[31mKhu vực\u001b[39m\n\u001b[31mBuon Ma Thuot, Dak Lak\u001b[39m\n\u001b[31mMã sản phẩm\u001b[39m\n\u001b[31mdbc88214-e86e-462d-81b0-53189672662f\u001b[39m\n\u001b[31mTên hàng hóa\u001b[39m\n\u001b[31mRobusta ST mwzlx7kg\u001b[39m\n\u001b[31mTruy xuất nguồn gốc\u001b[39m\n\u001b[31mChưa có thông tin\u001b[39m\n\u001b[31mĐơn vị\u001b[39m\n\u001b[31mkg\u001b[39m\n\u001b[31mĐiều khoản kiểm định\u001b[39m\n\u001b[31mTrách nhiệm phí kiểm định\u001b[39m\n\u001b[31mBên chịu trách nhiệm theo kết luận\u001b[39m\n\u001b[31mHạn báo cáo (ngày làm việc)\u001b[39m\n\u001b[31m5\u001b[39m\n\u001b[31mCấp kiểm định\u001b[39m\n\u001b[31mCấp 1.5\u001b[39m\n\u001b[31mYêu cầu kiểm định\u001b[39m\n\u001b[31mChỉ kiểm định khi có tranh chấp\u001b[39m\n\u001b[31mĐiều kiện pháp lý\u001b[39m\n\u001b[31mLoại hợp đồng\u001b[39m\n\u001b[31mCOFFEE_SALE\u001b[39m\n\u001b[31mChính sách bồi thường\u001b[39m\n\u001b[31mBồi thường thiệt hại khi có chứng minh\u001b[39m\n\u001b[31mLuật áp dụng\u001b[39m\n\u001b[31mLuật Thương mại Việt Nam\u001b[39m\n\u001b[31mTỷ lệ phạt tối đa\u001b[39m\n\u001b[31m0.08\u001b[39m\n\u001b[31mTổ chức giám định cấp 2\u001b[39m\n\u001b[31mChưa có thông tin\u001b[39m\n\u001b[31mLịch giao hàng cam kết\u001b[39m\n\u001b[31mKhối lượng cam kết (kg)\u001b[39m\n\u001b[31m1000\u001b[39m\n\u001b[31mNgày giao dự kiến\u001b[39m\n\u001b[31m15/12/2026\u001b[39m\n\u001b[31mSố ngày làm việc gia hạn\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mĐợt giao\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mQuy tắc điều chỉnh giá\u001b[39m\n\u001b[31mCơ chế chấp thuận\u001b[39m\n\u001b[31mHai bên chấp thuận\u001b[39m\n\u001b[31mHạn chấp thuận\u001b[39m\n\u001b[31mTrước yêu cầu tài trợ\u001b[39m\n\u001b[31mSố lần điều chỉnh mỗi đợt\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mBiên độ giá\u001b[39m\n\u001b[31mGiá cao nhất (VND/kg)\u001b[39m\n\u001b[31m105.600 ₫\u001b[39m\n\u001b[31mGiá thấp nhất (VND/kg)\u001b[39m\n\u001b[31m86.400 ₫\u001b[39m\n\u001b[31mĐiều kiện chất lượng\u001b[39m\n\u001b[31mChất lượng cam kết\u001b[39m\n\u001b[31mHạt đen vỡ (%)\u001b[39m\n\u001b[31m5\u001b[39m\n\u001b[31mHàng hóa\u001b[39m\n\u001b[31mCà phê\u001b[39m\n\u001b[31mTạp chất (%)\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mĐộ ẩm (%)\u001b[39m\n\u001b[31m12.5\u001b[39m\n\u001b[31mLoại cà phê\u001b[39m\n\u001b[31mRobusta\u001b[39m\n\u001b[31mHàng hóa\u001b[39m\n\u001b[31mCà phê\u001b[39m\n\u001b[31mChính sách sai lệch\u001b[39m\n\u001b[31mHạt đen vỡ (%)\u001b[39m\n\u001b[31mChiều đánh giá\u001b[39m\n\u001b[31mTối đa\u001b[39m\n\u001b[31mTỷ lệ giảm giá\u001b[39m\n\u001b[31m0.02\u001b[39m\n\u001b[31mNgưỡng điều chỉnh\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mNgưỡng từ chối\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mNgưỡng dung sai\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mTạp chất (%)\u001b[39m\n\u001b[31mChiều đánh giá\u001b[39m\n\u001b[31mTối đa\u001b[39m\n\u001b[31mTỷ lệ giảm giá\u001b[39m\n\u001b[31m0.02\u001b[39m\n\u001b[31mNgưỡng điều chỉnh\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mNgưỡng từ chối\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mNgưỡng dung sai\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mĐộ ẩm (%)\u001b[39m\n\u001b[31mChiều đánh giá\u001b[39m\n\u001b[31mTối đa\u001b[39m\n\u001b[31mTỷ lệ giảm giá\u001b[39m\n\u001b[31m0.02\u001b[39m\n\u001b[31mNgưỡng điều chỉnh\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mNgưỡng từ chối\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mNgưỡng dung sai\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mLoại cà phê\u001b[39m\n\u001b[31mTừ chối nếu không khớp\u001b[39m\n\u001b[31mCó\u001b[39m\n\u001b[31mTỷ lệ cọc bên bán\u001b[39m\n\u001b[31m0.03\u001b[39m\n\u001b[31mTỷ lệ phạt bên bán\u001b[39m\n\u001b[31m0.06\u001b[39m\n\u001b[31mNgưỡng thiếu hụt\u001b[39m\n\u001b[31m0.05\u001b[39m\n\u001b[31mTỷ lệ dung sai\u001b[39m\n\u001b[31m0.05\u001b[39m\n\u001b[31mTổng giá trị (VND)\u001b[39m\n\u001b[31m96.000.000 ₫\u001b[39m\n\u001b[31mĐàm phán điều khoản·\u001b[39m\n\u001b[31mHai bên sửa được điều khoản tới khi có chữ ký đầu tiên. Mỗi lần lưu tạo mã vân tay mới; cam kết ký cũ phải xác nhận lại.·\u001b[39m\n\u001b[31mĐơn giá đề xuất (VND/kg)\u001b[39m\n\u001b[31mXem lại thay đổi\u001b[39m\n\u001b[31mKý hợp đồng bằng OTP\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mĐọc & đồng ý\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mNhận mã\u001b[39m\n\u001b[31m3\u001b[39m\n\u001b[31mXác nhận\u001b[39m\n\u001b[31mc25e99ad…776c198b\u001b[39m\n\u001b[31mcontent_copy\u001b[39m\n\u001b[31mTôi xác nhận đã đọc toàn bộ hợp đồng có mã vân tay hiển thị bên dưới, hiểu rằng việc ký có hiệu lực ràng buộc tôi với tư cách bên mua, và đồng ý ký bằng mã OTP gửi tới email của tôi.·\u001b[39m\n\u001b[31mPhiên bản cam kết: 1.0·\u001b[39m\n\u001b[31mGửi mã OTP\u001b[39m\n\u001b[31mTài liệu & lịch sử\u001b[39m\n\u001b[31minfo\u001b[39m\n\u001b[31mTài liệu PDF chưa sẵn sàng: máy chủ chưa cung cấp bản xem trước và hợp đồng PDF đã ký.\u001b[39m\n\u001b[31mXem PDF nháp\u001b[39m\n\u001b[31mTải PDF đã ký\"\u001b[39m\n    at /home/cuong/projects/AgriContract/frontend/tests/st/usability.st.ts:43:21",
+                    "location": {
+                      "file": "/home/cuong/projects/AgriContract/frontend/tests/st/usability.st.ts",
+                      "column": 21,
+                      "line": 43
+                    },
+                    "snippet": "  41 |   await offerFromUi(buyer, listingId)\n  42 |   const main = await buyer.getByRole(\"main\").innerText()\n> 43 |   expect.soft(main).toMatch(/96\\.000,00\\s*₫/) // unit price\n     |                     ^\n  44 |   expect.soft(main).toMatch(/96\\.000\\.000,00\\s*₫/) // total value of 1,000 kg\n  45 |   await buyer.goto(`/listings/${listingId}`)\n  46 |   await expect(buyer.getByText(/96\\.000,00\\s*₫\\/kg/).first()).toBeVisible({ timeout: 5000 })"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/usability.st.ts",
+                        "column": 21,
+                        "line": 43
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/96\\.000,00\\s*₫/\u001b[39m\nReceived string:  \u001b[31m\"Hợp đồng\u001b[39m\n\u001b[31mChi tiết hợp đồng\u001b[39m\n\u001b[31me57b8f0a-c579-4055-acb4-608c3d99c340\u001b[39m\n\u001b[31mĐã gửi đề nghị\u001b[39m\n\u001b[31mTải lại trạng thái\u001b[39m\n\u001b[31mRút đề nghị\u001b[39m\n\u001b[31mTổng quan hợp đồng\u001b[39m\n\u001b[31mBằng chứng\u001b[39m\n\u001b[31mwarning\u001b[39m\n\u001b[31mCHƯA CÓ HIỆU LỰC — thông tin điều khoản dưới đây không phải PDF hợp đồng do máy chủ phát hành.\u001b[39m\n\u001b[31minfo\u001b[39m\n\u001b[31mHợp đồng chưa có hiệu lực. Điều khoản sửa được tới khi có chữ ký đầu tiên; cần đủ hai chữ ký để chuyển sang Đã ký.·\u001b[39m\n\u001b[31mMã vân tay nội dung từ máy chủ·\u001b[39m\n\u001b[31mc25e99ad…776c198b\u001b[39m\n\u001b[31mcontent_copy·\u001b[39m\n\u001b[31mMẫu hợp đồng VN_COFFEE_B2B phiên bản 1.0. Mã vân tay đổi mỗi lần điều khoản được sửa.·\u001b[39m\n\u001b[31mĐiều khoản hiện hành\u001b[39m\n\u001b[31mBên mua\u001b[39m\n\u001b[31m1de004cd-8493-463c-8f32-6c7b75bcbf16\u001b[39m\n\u001b[31mBên bán\u001b[39m\n\u001b[31m1a5a2ddd-56b9-492a-b966-99f436e0fc85\u001b[39m\n\u001b[31mMã nguồn hàng\u001b[39m\n\u001b[31m0fabc555-aa2f-4724-91b8-a3297fb04bfd\u001b[39m\n\u001b[31mKhối lượng đã giữ (kg)\u001b[39m\n\u001b[31m1000·\u001b[39m\n\u001b[31mKhi chưa có tên doanh nghiệp, hiển thị mã bên tham gia do máy chủ cung cấp. Các tỷ lệ giữ nguyên giá trị thập phân của điều khoản; số tiền cọc chờ máy chủ cung cấp.·\u001b[39m\n\u001b[31mĐơn giá (VND/kg)\u001b[39m\n\u001b[31m96.000 ₫\u001b[39m\n\u001b[31mHạn xác nhận (ngày làm việc)\u001b[39m\n\u001b[31m3\u001b[39m\n\u001b[31mTỷ lệ cọc bên mua\u001b[39m\n\u001b[31m0.05\u001b[39m\n\u001b[31mTỷ lệ phạt bên mua\u001b[39m\n\u001b[31m0.08\u001b[39m\n\u001b[31mPhiên bản hồ sơ chất lượng\u001b[39m\n\u001b[31m1.0\u001b[39m\n\u001b[31mMã mẫu hợp đồng\u001b[39m\n\u001b[31mVN_COFFEE_B2B\u001b[39m\n\u001b[31mHash mẫu\u001b[39m\n\u001b[31m96876467dbe1535e2a7e9c646459924b7a4ac63ff17d82e79e8db39b7ceeaa18\u001b[39m\n\u001b[31mPhiên bản mẫu\u001b[39m\n\u001b[31m1.0\u001b[39m\n\u001b[31mTiền tệ\u001b[39m\n\u001b[31mĐồng Việt Nam\u001b[39m\n\u001b[31mĐiều khoản giao nhận\u001b[39m\n\u001b[31mTrách nhiệm giao hàng\u001b[39m\n\u001b[31mBên bán giao hàng\u001b[39m\n\u001b[31mThời điểm chuyển rủi ro\u001b[39m\n\u001b[31mKhi bên mua nhận hàng\u001b[39m\n\u001b[31mThời điểm chuyển quyền sở hữu\u001b[39m\n\u001b[31mKhi thanh toán đủ\u001b[39m\n\u001b[31mBên chịu phí vận chuyển\u001b[39m\n\u001b[31mBên bán\u001b[39m\n\u001b[31mBên chịu phí dỡ hàng\u001b[39m\n\u001b[31mBên mua\u001b[39m\n\u001b[31mTỷ lệ giải ngân sàn\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mHạn báo bất khả kháng (ngày)\u001b[39m\n\u001b[31m7\u001b[39m\n\u001b[31mTrường chưa có nhãn (fundingLeadBusinessDays)\u001b[39m\n\u001b[31m7\u001b[39m\n\u001b[31mHàng hóa theo hồ sơ đã chốt\u001b[39m\n\u001b[31mMã danh mục\u001b[39m\n\u001b[31m5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02\u001b[39m\n\u001b[31mDanh mục\u001b[39m\n\u001b[31mCà phê\u001b[39m\n\u001b[31mHàng hóa\u001b[39m\n\u001b[31mCà phê\u001b[39m\n\u001b[31mNiên vụ\u001b[39m\n\u001b[31m2026\u001b[39m\n\u001b[31mMùa thu hoạch\u001b[39m\n\u001b[31m2026/27\u001b[39m\n\u001b[31mMã nguồn hàng\u001b[39m\n\u001b[31m0fabc555-aa2f-4724-91b8-a3297fb04bfd\u001b[39m\n\u001b[31mNguồn gốc\u001b[39m\n\u001b[31mThửa đất\u001b[39m\n\u001b[31mHash hình học\u001b[39m\n\u001b[31me1d88aa200411f98308f1939382175e1ff086651af12d330a7bb865186454075\u001b[39m\n\u001b[31mLoại hình học\u001b[39m\n\u001b[31mĐiểm\u001b[39m\n\u001b[31mHộ sản xuất\u001b[39m\n\u001b[31mST mwzlx7kg\u001b[39m\n\u001b[31mMã đăng ký\u001b[39m\n\u001b[31m91fba215-c3d6-418e-9055-e6a5aaeb42b5\u001b[39m\n\u001b[31mMức xác minh\u001b[39m\n\u001b[31mTự khai báo\u001b[39m\n\u001b[31mKhu vực\u001b[39m\n\u001b[31mBuon Ma Thuot, Dak Lak\u001b[39m\n\u001b[31mMã sản phẩm\u001b[39m\n\u001b[31mdbc88214-e86e-462d-81b0-53189672662f\u001b[39m\n\u001b[31mTên hàng hóa\u001b[39m\n\u001b[31mRobusta ST mwzlx7kg\u001b[39m\n\u001b[31mTruy xuất nguồn gốc\u001b[39m\n\u001b[31mChưa có thông tin\u001b[39m\n\u001b[31mĐơn vị\u001b[39m\n\u001b[31mkg\u001b[39m\n\u001b[31mĐiều khoản kiểm định\u001b[39m\n\u001b[31mTrách nhiệm phí kiểm định\u001b[39m\n\u001b[31mBên chịu trách nhiệm theo kết luận\u001b[39m\n\u001b[31mHạn báo cáo (ngày làm việc)\u001b[39m\n\u001b[31m5\u001b[39m\n\u001b[31mCấp kiểm định\u001b[39m\n\u001b[31mCấp 1.5\u001b[39m\n\u001b[31mYêu cầu kiểm định\u001b[39m\n\u001b[31mChỉ kiểm định khi có tranh chấp\u001b[39m\n\u001b[31mĐiều kiện pháp lý\u001b[39m\n\u001b[31mLoại hợp đồng\u001b[39m\n\u001b[31mCOFFEE_SALE\u001b[39m\n\u001b[31mChính sách bồi thường\u001b[39m\n\u001b[31mBồi thường thiệt hại khi có chứng minh\u001b[39m\n\u001b[31mLuật áp dụng\u001b[39m\n\u001b[31mLuật Thương mại Việt Nam\u001b[39m\n\u001b[31mTỷ lệ phạt tối đa\u001b[39m\n\u001b[31m0.08\u001b[39m\n\u001b[31mTổ chức giám định cấp 2\u001b[39m\n\u001b[31mChưa có thông tin\u001b[39m\n\u001b[31mLịch giao hàng cam kết\u001b[39m\n\u001b[31mKhối lượng cam kết (kg)\u001b[39m\n\u001b[31m1000\u001b[39m\n\u001b[31mNgày giao dự kiến\u001b[39m\n\u001b[31m15/12/2026\u001b[39m\n\u001b[31mSố ngày làm việc gia hạn\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mĐợt giao\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mQuy tắc điều chỉnh giá\u001b[39m\n\u001b[31mCơ chế chấp thuận\u001b[39m\n\u001b[31mHai bên chấp thuận\u001b[39m\n\u001b[31mHạn chấp thuận\u001b[39m\n\u001b[31mTrước yêu cầu tài trợ\u001b[39m\n\u001b[31mSố lần điều chỉnh mỗi đợt\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mBiên độ giá\u001b[39m\n\u001b[31mGiá cao nhất (VND/kg)\u001b[39m\n\u001b[31m105.600 ₫\u001b[39m\n\u001b[31mGiá thấp nhất (VND/kg)\u001b[39m\n\u001b[31m86.400 ₫\u001b[39m\n\u001b[31mĐiều kiện chất lượng\u001b[39m\n\u001b[31mChất lượng cam kết\u001b[39m\n\u001b[31mHạt đen vỡ (%)\u001b[39m\n\u001b[31m5\u001b[39m\n\u001b[31mHàng hóa\u001b[39m\n\u001b[31mCà phê\u001b[39m\n\u001b[31mTạp chất (%)\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mĐộ ẩm (%)\u001b[39m\n\u001b[31m12.5\u001b[39m\n\u001b[31mLoại cà phê\u001b[39m\n\u001b[31mRobusta\u001b[39m\n\u001b[31mHàng hóa\u001b[39m\n\u001b[31mCà phê\u001b[39m\n\u001b[31mChính sách sai lệch\u001b[39m\n\u001b[31mHạt đen vỡ (%)\u001b[39m\n\u001b[31mChiều đánh giá\u001b[39m\n\u001b[31mTối đa\u001b[39m\n\u001b[31mTỷ lệ giảm giá\u001b[39m\n\u001b[31m0.02\u001b[39m\n\u001b[31mNgưỡng điều chỉnh\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mNgưỡng từ chối\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mNgưỡng dung sai\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mTạp chất (%)\u001b[39m\n\u001b[31mChiều đánh giá\u001b[39m\n\u001b[31mTối đa\u001b[39m\n\u001b[31mTỷ lệ giảm giá\u001b[39m\n\u001b[31m0.02\u001b[39m\n\u001b[31mNgưỡng điều chỉnh\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mNgưỡng từ chối\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mNgưỡng dung sai\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mĐộ ẩm (%)\u001b[39m\n\u001b[31mChiều đánh giá\u001b[39m\n\u001b[31mTối đa\u001b[39m\n\u001b[31mTỷ lệ giảm giá\u001b[39m\n\u001b[31m0.02\u001b[39m\n\u001b[31mNgưỡng điều chỉnh\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mNgưỡng từ chối\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mNgưỡng dung sai\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mLoại cà phê\u001b[39m\n\u001b[31mTừ chối nếu không khớp\u001b[39m\n\u001b[31mCó\u001b[39m\n\u001b[31mTỷ lệ cọc bên bán\u001b[39m\n\u001b[31m0.03\u001b[39m\n\u001b[31mTỷ lệ phạt bên bán\u001b[39m\n\u001b[31m0.06\u001b[39m\n\u001b[31mNgưỡng thiếu hụt\u001b[39m\n\u001b[31m0.05\u001b[39m\n\u001b[31mTỷ lệ dung sai\u001b[39m\n\u001b[31m0.05\u001b[39m\n\u001b[31mTổng giá trị (VND)\u001b[39m\n\u001b[31m96.000.000 ₫\u001b[39m\n\u001b[31mĐàm phán điều khoản·\u001b[39m\n\u001b[31mHai bên sửa được điều khoản tới khi có chữ ký đầu tiên. Mỗi lần lưu tạo mã vân tay mới; cam kết ký cũ phải xác nhận lại.·\u001b[39m\n\u001b[31mĐơn giá đề xuất (VND/kg)\u001b[39m\n\u001b[31mXem lại thay đổi\u001b[39m\n\u001b[31mKý hợp đồng bằng OTP\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mĐọc & đồng ý\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mNhận mã\u001b[39m\n\u001b[31m3\u001b[39m\n\u001b[31mXác nhận\u001b[39m\n\u001b[31mc25e99ad…776c198b\u001b[39m\n\u001b[31mcontent_copy\u001b[39m\n\u001b[31mTôi xác nhận đã đọc toàn bộ hợp đồng có mã vân tay hiển thị bên dưới, hiểu rằng việc ký có hiệu lực ràng buộc tôi với tư cách bên mua, và đồng ý ký bằng mã OTP gửi tới email của tôi.·\u001b[39m\n\u001b[31mPhiên bản cam kết: 1.0·\u001b[39m\n\u001b[31mGửi mã OTP\u001b[39m\n\u001b[31mTài liệu & lịch sử\u001b[39m\n\u001b[31minfo\u001b[39m\n\u001b[31mTài liệu PDF chưa sẵn sàng: máy chủ chưa cung cấp bản xem trước và hợp đồng PDF đã ký.\u001b[39m\n\u001b[31mXem PDF nháp\u001b[39m\n\u001b[31mTải PDF đã ký\"\u001b[39m\n\n  41 |   await offerFromUi(buyer, listingId)\n  42 |   const main = await buyer.getByRole(\"main\").innerText()\n> 43 |   expect.soft(main).toMatch(/96\\.000,00\\s*₫/) // unit price\n     |                     ^\n  44 |   expect.soft(main).toMatch(/96\\.000\\.000,00\\s*₫/) // total value of 1,000 kg\n  45 |   await buyer.goto(`/listings/${listingId}`)\n  46 |   await expect(buyer.getByText(/96\\.000,00\\s*₫\\/kg/).first()).toBeVisible({ timeout: 5000 })\n    at /home/cuong/projects/AgriContract/frontend/tests/st/usability.st.ts:43:21"
+                    },
+                    {
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/usability.st.ts",
+                        "column": 21,
+                        "line": 44
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/96\\.000\\.000,00\\s*₫/\u001b[39m\nReceived string:  \u001b[31m\"Hợp đồng\u001b[39m\n\u001b[31mChi tiết hợp đồng\u001b[39m\n\u001b[31me57b8f0a-c579-4055-acb4-608c3d99c340\u001b[39m\n\u001b[31mĐã gửi đề nghị\u001b[39m\n\u001b[31mTải lại trạng thái\u001b[39m\n\u001b[31mRút đề nghị\u001b[39m\n\u001b[31mTổng quan hợp đồng\u001b[39m\n\u001b[31mBằng chứng\u001b[39m\n\u001b[31mwarning\u001b[39m\n\u001b[31mCHƯA CÓ HIỆU LỰC — thông tin điều khoản dưới đây không phải PDF hợp đồng do máy chủ phát hành.\u001b[39m\n\u001b[31minfo\u001b[39m\n\u001b[31mHợp đồng chưa có hiệu lực. Điều khoản sửa được tới khi có chữ ký đầu tiên; cần đủ hai chữ ký để chuyển sang Đã ký.·\u001b[39m\n\u001b[31mMã vân tay nội dung từ máy chủ·\u001b[39m\n\u001b[31mc25e99ad…776c198b\u001b[39m\n\u001b[31mcontent_copy·\u001b[39m\n\u001b[31mMẫu hợp đồng VN_COFFEE_B2B phiên bản 1.0. Mã vân tay đổi mỗi lần điều khoản được sửa.·\u001b[39m\n\u001b[31mĐiều khoản hiện hành\u001b[39m\n\u001b[31mBên mua\u001b[39m\n\u001b[31m1de004cd-8493-463c-8f32-6c7b75bcbf16\u001b[39m\n\u001b[31mBên bán\u001b[39m\n\u001b[31m1a5a2ddd-56b9-492a-b966-99f436e0fc85\u001b[39m\n\u001b[31mMã nguồn hàng\u001b[39m\n\u001b[31m0fabc555-aa2f-4724-91b8-a3297fb04bfd\u001b[39m\n\u001b[31mKhối lượng đã giữ (kg)\u001b[39m\n\u001b[31m1000·\u001b[39m\n\u001b[31mKhi chưa có tên doanh nghiệp, hiển thị mã bên tham gia do máy chủ cung cấp. Các tỷ lệ giữ nguyên giá trị thập phân của điều khoản; số tiền cọc chờ máy chủ cung cấp.·\u001b[39m\n\u001b[31mĐơn giá (VND/kg)\u001b[39m\n\u001b[31m96.000 ₫\u001b[39m\n\u001b[31mHạn xác nhận (ngày làm việc)\u001b[39m\n\u001b[31m3\u001b[39m\n\u001b[31mTỷ lệ cọc bên mua\u001b[39m\n\u001b[31m0.05\u001b[39m\n\u001b[31mTỷ lệ phạt bên mua\u001b[39m\n\u001b[31m0.08\u001b[39m\n\u001b[31mPhiên bản hồ sơ chất lượng\u001b[39m\n\u001b[31m1.0\u001b[39m\n\u001b[31mMã mẫu hợp đồng\u001b[39m\n\u001b[31mVN_COFFEE_B2B\u001b[39m\n\u001b[31mHash mẫu\u001b[39m\n\u001b[31m96876467dbe1535e2a7e9c646459924b7a4ac63ff17d82e79e8db39b7ceeaa18\u001b[39m\n\u001b[31mPhiên bản mẫu\u001b[39m\n\u001b[31m1.0\u001b[39m\n\u001b[31mTiền tệ\u001b[39m\n\u001b[31mĐồng Việt Nam\u001b[39m\n\u001b[31mĐiều khoản giao nhận\u001b[39m\n\u001b[31mTrách nhiệm giao hàng\u001b[39m\n\u001b[31mBên bán giao hàng\u001b[39m\n\u001b[31mThời điểm chuyển rủi ro\u001b[39m\n\u001b[31mKhi bên mua nhận hàng\u001b[39m\n\u001b[31mThời điểm chuyển quyền sở hữu\u001b[39m\n\u001b[31mKhi thanh toán đủ\u001b[39m\n\u001b[31mBên chịu phí vận chuyển\u001b[39m\n\u001b[31mBên bán\u001b[39m\n\u001b[31mBên chịu phí dỡ hàng\u001b[39m\n\u001b[31mBên mua\u001b[39m\n\u001b[31mTỷ lệ giải ngân sàn\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mHạn báo bất khả kháng (ngày)\u001b[39m\n\u001b[31m7\u001b[39m\n\u001b[31mTrường chưa có nhãn (fundingLeadBusinessDays)\u001b[39m\n\u001b[31m7\u001b[39m\n\u001b[31mHàng hóa theo hồ sơ đã chốt\u001b[39m\n\u001b[31mMã danh mục\u001b[39m\n\u001b[31m5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02\u001b[39m\n\u001b[31mDanh mục\u001b[39m\n\u001b[31mCà phê\u001b[39m\n\u001b[31mHàng hóa\u001b[39m\n\u001b[31mCà phê\u001b[39m\n\u001b[31mNiên vụ\u001b[39m\n\u001b[31m2026\u001b[39m\n\u001b[31mMùa thu hoạch\u001b[39m\n\u001b[31m2026/27\u001b[39m\n\u001b[31mMã nguồn hàng\u001b[39m\n\u001b[31m0fabc555-aa2f-4724-91b8-a3297fb04bfd\u001b[39m\n\u001b[31mNguồn gốc\u001b[39m\n\u001b[31mThửa đất\u001b[39m\n\u001b[31mHash hình học\u001b[39m\n\u001b[31me1d88aa200411f98308f1939382175e1ff086651af12d330a7bb865186454075\u001b[39m\n\u001b[31mLoại hình học\u001b[39m\n\u001b[31mĐiểm\u001b[39m\n\u001b[31mHộ sản xuất\u001b[39m\n\u001b[31mST mwzlx7kg\u001b[39m\n\u001b[31mMã đăng ký\u001b[39m\n\u001b[31m91fba215-c3d6-418e-9055-e6a5aaeb42b5\u001b[39m\n\u001b[31mMức xác minh\u001b[39m\n\u001b[31mTự khai báo\u001b[39m\n\u001b[31mKhu vực\u001b[39m\n\u001b[31mBuon Ma Thuot, Dak Lak\u001b[39m\n\u001b[31mMã sản phẩm\u001b[39m\n\u001b[31mdbc88214-e86e-462d-81b0-53189672662f\u001b[39m\n\u001b[31mTên hàng hóa\u001b[39m\n\u001b[31mRobusta ST mwzlx7kg\u001b[39m\n\u001b[31mTruy xuất nguồn gốc\u001b[39m\n\u001b[31mChưa có thông tin\u001b[39m\n\u001b[31mĐơn vị\u001b[39m\n\u001b[31mkg\u001b[39m\n\u001b[31mĐiều khoản kiểm định\u001b[39m\n\u001b[31mTrách nhiệm phí kiểm định\u001b[39m\n\u001b[31mBên chịu trách nhiệm theo kết luận\u001b[39m\n\u001b[31mHạn báo cáo (ngày làm việc)\u001b[39m\n\u001b[31m5\u001b[39m\n\u001b[31mCấp kiểm định\u001b[39m\n\u001b[31mCấp 1.5\u001b[39m\n\u001b[31mYêu cầu kiểm định\u001b[39m\n\u001b[31mChỉ kiểm định khi có tranh chấp\u001b[39m\n\u001b[31mĐiều kiện pháp lý\u001b[39m\n\u001b[31mLoại hợp đồng\u001b[39m\n\u001b[31mCOFFEE_SALE\u001b[39m\n\u001b[31mChính sách bồi thường\u001b[39m\n\u001b[31mBồi thường thiệt hại khi có chứng minh\u001b[39m\n\u001b[31mLuật áp dụng\u001b[39m\n\u001b[31mLuật Thương mại Việt Nam\u001b[39m\n\u001b[31mTỷ lệ phạt tối đa\u001b[39m\n\u001b[31m0.08\u001b[39m\n\u001b[31mTổ chức giám định cấp 2\u001b[39m\n\u001b[31mChưa có thông tin\u001b[39m\n\u001b[31mLịch giao hàng cam kết\u001b[39m\n\u001b[31mKhối lượng cam kết (kg)\u001b[39m\n\u001b[31m1000\u001b[39m\n\u001b[31mNgày giao dự kiến\u001b[39m\n\u001b[31m15/12/2026\u001b[39m\n\u001b[31mSố ngày làm việc gia hạn\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mĐợt giao\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mQuy tắc điều chỉnh giá\u001b[39m\n\u001b[31mCơ chế chấp thuận\u001b[39m\n\u001b[31mHai bên chấp thuận\u001b[39m\n\u001b[31mHạn chấp thuận\u001b[39m\n\u001b[31mTrước yêu cầu tài trợ\u001b[39m\n\u001b[31mSố lần điều chỉnh mỗi đợt\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mBiên độ giá\u001b[39m\n\u001b[31mGiá cao nhất (VND/kg)\u001b[39m\n\u001b[31m105.600 ₫\u001b[39m\n\u001b[31mGiá thấp nhất (VND/kg)\u001b[39m\n\u001b[31m86.400 ₫\u001b[39m\n\u001b[31mĐiều kiện chất lượng\u001b[39m\n\u001b[31mChất lượng cam kết\u001b[39m\n\u001b[31mHạt đen vỡ (%)\u001b[39m\n\u001b[31m5\u001b[39m\n\u001b[31mHàng hóa\u001b[39m\n\u001b[31mCà phê\u001b[39m\n\u001b[31mTạp chất (%)\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mĐộ ẩm (%)\u001b[39m\n\u001b[31m12.5\u001b[39m\n\u001b[31mLoại cà phê\u001b[39m\n\u001b[31mRobusta\u001b[39m\n\u001b[31mHàng hóa\u001b[39m\n\u001b[31mCà phê\u001b[39m\n\u001b[31mChính sách sai lệch\u001b[39m\n\u001b[31mHạt đen vỡ (%)\u001b[39m\n\u001b[31mChiều đánh giá\u001b[39m\n\u001b[31mTối đa\u001b[39m\n\u001b[31mTỷ lệ giảm giá\u001b[39m\n\u001b[31m0.02\u001b[39m\n\u001b[31mNgưỡng điều chỉnh\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mNgưỡng từ chối\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mNgưỡng dung sai\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mTạp chất (%)\u001b[39m\n\u001b[31mChiều đánh giá\u001b[39m\n\u001b[31mTối đa\u001b[39m\n\u001b[31mTỷ lệ giảm giá\u001b[39m\n\u001b[31m0.02\u001b[39m\n\u001b[31mNgưỡng điều chỉnh\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mNgưỡng từ chối\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mNgưỡng dung sai\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mĐộ ẩm (%)\u001b[39m\n\u001b[31mChiều đánh giá\u001b[39m\n\u001b[31mTối đa\u001b[39m\n\u001b[31mTỷ lệ giảm giá\u001b[39m\n\u001b[31m0.02\u001b[39m\n\u001b[31mNgưỡng điều chỉnh\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mNgưỡng từ chối\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mNgưỡng dung sai\u001b[39m\n\u001b[31m0.5\u001b[39m\n\u001b[31mLoại cà phê\u001b[39m\n\u001b[31mTừ chối nếu không khớp\u001b[39m\n\u001b[31mCó\u001b[39m\n\u001b[31mTỷ lệ cọc bên bán\u001b[39m\n\u001b[31m0.03\u001b[39m\n\u001b[31mTỷ lệ phạt bên bán\u001b[39m\n\u001b[31m0.06\u001b[39m\n\u001b[31mNgưỡng thiếu hụt\u001b[39m\n\u001b[31m0.05\u001b[39m\n\u001b[31mTỷ lệ dung sai\u001b[39m\n\u001b[31m0.05\u001b[39m\n\u001b[31mTổng giá trị (VND)\u001b[39m\n\u001b[31m96.000.000 ₫\u001b[39m\n\u001b[31mĐàm phán điều khoản·\u001b[39m\n\u001b[31mHai bên sửa được điều khoản tới khi có chữ ký đầu tiên. Mỗi lần lưu tạo mã vân tay mới; cam kết ký cũ phải xác nhận lại.·\u001b[39m\n\u001b[31mĐơn giá đề xuất (VND/kg)\u001b[39m\n\u001b[31mXem lại thay đổi\u001b[39m\n\u001b[31mKý hợp đồng bằng OTP\u001b[39m\n\u001b[31m1\u001b[39m\n\u001b[31mĐọc & đồng ý\u001b[39m\n\u001b[31m2\u001b[39m\n\u001b[31mNhận mã\u001b[39m\n\u001b[31m3\u001b[39m\n\u001b[31mXác nhận\u001b[39m\n\u001b[31mc25e99ad…776c198b\u001b[39m\n\u001b[31mcontent_copy\u001b[39m\n\u001b[31mTôi xác nhận đã đọc toàn bộ hợp đồng có mã vân tay hiển thị bên dưới, hiểu rằng việc ký có hiệu lực ràng buộc tôi với tư cách bên mua, và đồng ý ký bằng mã OTP gửi tới email của tôi.·\u001b[39m\n\u001b[31mPhiên bản cam kết: 1.0·\u001b[39m\n\u001b[31mGửi mã OTP\u001b[39m\n\u001b[31mTài liệu & lịch sử\u001b[39m\n\u001b[31minfo\u001b[39m\n\u001b[31mTài liệu PDF chưa sẵn sàng: máy chủ chưa cung cấp bản xem trước và hợp đồng PDF đã ký.\u001b[39m\n\u001b[31mXem PDF nháp\u001b[39m\n\u001b[31mTải PDF đã ký\"\u001b[39m\n\n  42 |   const main = await buyer.getByRole(\"main\").innerText()\n  43 |   expect.soft(main).toMatch(/96\\.000,00\\s*₫/) // unit price\n> 44 |   expect.soft(main).toMatch(/96\\.000\\.000,00\\s*₫/) // total value of 1,000 kg\n     |                     ^\n  45 |   await buyer.goto(`/listings/${listingId}`)\n  46 |   await expect(buyer.getByText(/96\\.000,00\\s*₫\\/kg/).first()).toBeVisible({ timeout: 5000 })\n  47 | })\n    at /home/cuong/projects/AgriContract/frontend/tests/st/usability.st.ts:44:21"
+                    },
+                    {
+                      "location": {
+                        "file": "/home/cuong/projects/AgriContract/frontend/tests/st/usability.st.ts",
+                        "column": 63,
+                        "line": 46
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText(/96\\.000,00\\s*₫\\/kg/).first()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText(/96\\.000,00\\s*₫\\/kg/).first() with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText(/96\\.000,00\\s*₫\\/kg/).first()\u001b[22m\n\n\n  44 |   expect.soft(main).toMatch(/96\\.000\\.000,00\\s*₫/) // total value of 1,000 kg\n  45 |   await buyer.goto(`/listings/${listingId}`)\n> 46 |   await expect(buyer.getByText(/96\\.000,00\\s*₫\\/kg/).first()).toBeVisible({ timeout: 5000 })\n     |                                                               ^\n  47 | })\n  48 |\n  49 | test(\"ST-USA-030 Dates display as dd/MM/yyyy and server timestamps use Asia/Ho_Chi_Minh\", async ({ browser }) => {\n    at /home/cuong/projects/AgriContract/frontend/tests/st/usability.st.ts:46:63"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-27T23:08:43.302Z",
+                  "startTime": "2026-11-27T23:23:02.396Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/agricontract-st-artifacts/usability.st.ts-ST-USA-020-43f19-separators-and-two-decimals-chromium/test-failed-9.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/agricontract-st-artifacts/usability.st.ts-ST-USA-020-43f19-separators-and-two-decimals-chromium/test-failed-10.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/agricontract-st-artifacts/usability.st.ts-ST-USA-020-43f19-separators-and-two-decimals-chromium/test-failed-2.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/agricontract-st-artifacts/usability.st.ts-ST-USA-020-43f19-separators-and-two-decimals-chromium/test-failed-4.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/agricontract-st-artifacts/usability.st.ts-ST-USA-020-43f19-separators-and-two-decimals-chromium/test-failed-11.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/agricontract-st-artifacts/usability.st.ts-ST-USA-020-43f19-separators-and-two-decimals-chromium/test-failed-3.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/agricontract-st-artifacts/usability.st.ts-ST-USA-020-43f19-separators-and-two-decimals-chromium/test-failed-5.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/agricontract-st-artifacts/usability.st.ts-ST-USA-020-43f19-separators-and-two-decimals-chromium/test-failed-6.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/agricontract-st-artifacts/usability.st.ts-ST-USA-020-43f19-separators-and-two-decimals-chromium/test-failed-7.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/agricontract-st-artifacts/usability.st.ts-ST-USA-020-43f19-separators-and-two-decimals-chromium/test-failed-12.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/agricontract-st-artifacts/usability.st.ts-ST-USA-020-43f19-separators-and-two-decimals-chromium/test-failed-1.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/agricontract-st-artifacts/usability.st.ts-ST-USA-020-43f19-separators-and-two-decimals-chromium/test-failed-8.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/agricontract-st-artifacts/usability.st.ts-ST-USA-020-43f19-separators-and-two-decimals-chromium/test-failed-13.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/tmp/agricontract-st-artifacts/usability.st.ts-ST-USA-020-43f19-separators-and-two-decimals-chromium/test-failed-14.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/agricontract-st-artifacts/usability.st.ts-ST-USA-020-43f19-separators-and-two-decimals-chromium/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/agricontract-st-artifacts/usability.st.ts-ST-USA-020-43f19-separators-and-two-decimals-chromium/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/cuong/projects/AgriContract/frontend/tests/st/usability.st.ts",
+                    "column": 21,
+                    "line": 43
+                  }
                 }
               ],
-              "status": "expected"
+              "status": "unexpected"
             }
           ],
-          "id": "e4658f1a75bdbb3ffc92-11348c3b0d545442682e",
+          "id": "e4658f1a75bdbb3ffc92-ad2d3b8fcb9d5c9ed35f",
           "file": "usability.st.ts",
-          "line": 37,
+          "line": 38,
           "column": 1
         },
         {
@@ -2130,15 +2251,15 @@
               "projectName": "chromium",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4310,
+                  "duration": 4679,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-27T23:08:50.554Z",
+                  "startTime": "2026-11-27T23:23:15.623Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2148,7 +2269,7 @@
           ],
           "id": "e4658f1a75bdbb3ffc92-cac60c4321f14f7c6922",
           "file": "usability.st.ts",
-          "line": 48,
+          "line": 49,
           "column": 1
         },
         {
@@ -2164,15 +2285,15 @@
               "projectName": "chromium",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 5057,
+                  "duration": 5094,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-27T23:08:54.907Z",
+                  "startTime": "2026-11-27T23:23:20.372Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2182,7 +2303,7 @@
           ],
           "id": "e4658f1a75bdbb3ffc92-14497c5d9e8f01b46e2d",
           "file": "usability.st.ts",
-          "line": 62,
+          "line": 63,
           "column": 1
         }
       ]
@@ -2190,11 +2311,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-11-27T23:07:24.145Z",
-    "duration": 96001.788,
-    "expected": 34,
+    "startTime": "2026-11-27T23:21:39.619Z",
+    "duration": 105905.17700000001,
+    "expected": 33,
     "skipped": 7,
-    "unexpected": 0,
+    "unexpected": 1,
     "flaky": 0
   }
 }
