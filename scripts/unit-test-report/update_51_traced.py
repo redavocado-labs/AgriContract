@@ -29,7 +29,8 @@ RUN, CASES = surefire_cases.load(ROUND_DIR)
 assert RUN["date"], f"no run.json in {ROUND_DIR}: run surefire_cases.py collect first"
 SVC = trace.SERVICE
 TESTER = RUN["tester"]
-COL = dict(round3=12, date3=13, tester3=14, note=16)
+COL = dict(round1=6, date1=7, tester1=8, round2=9, date2=10, tester2=11, round3=12, date3=13, tester3=14,
+           defect=15, note=16)
 
 
 def classes_of(sheet_names):
@@ -146,8 +147,18 @@ for sheet in SHEETS:
                 continue
             # {"tests": [...], "note": "..."}: the row still has its tests, but something about it needs saying
             # (e.g. its expected status is older than the test's)
+            # it may also correct the history of Rounds 1-2 and the defect from the defect log (Report 5.5), e.g. a
+            # row whose failure, fix and re-run are recorded there: {"round1": (result, date, tester), ...}
             extra = ""
             if isinstance(methods, dict):
+                for n in (1, 2):
+                    if f"round{n}" in methods:
+                        res, day, who = methods[f"round{n}"]
+                        put(sh, r, COL[f"round{n}"], res)
+                        put(sh, r, COL[f"date{n}"], "'" + day)
+                        put(sh, r, COL[f"tester{n}"], who)
+                if "defect" in methods:
+                    put(sh, r, COL["defect"], methods["defect"])
                 methods, extra = methods["tests"], "\n" + methods["note"]
             result = row_result(sheet, methods)
             assert result in ("Passed", "Failed"), f"{sheet} row {r}: {methods} did not run"
