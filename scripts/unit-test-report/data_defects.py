@@ -152,7 +152,7 @@ DEFECTS = [
          actual="Child module /app/shared/java-arch-rules of /app/pom.xml does not exist, không image Java nào build được",
          severity="High", found=("27/11/2026", "44202a49", CUONG, RUN + "45887466927"),
          cause="#673 thêm module shared vào pom cha nhưng 9 Dockerfile copy từng module bằng tay, không có module mới; E2E trên PR không chạy nên chỉ lộ trên main",
-         fix=("#288, PR #678", "1affea11", CUONG), status="Closed",
+         fix=("#288, PR #678", "7e708dab", CUONG), status="Closed",
          retest=("27/11/2026", "e1d33257", "Passed", RUN + "45888671217")),
     dict(id="DEF-18", test="5.3 BF04_Milestone BF04-250 (clean/095-auto-confirm.bru)", level="ST", module="e2e (helper Bruno)",
          title="Helper lùi thời gian của BF04-250 không chạy được trên máy Windows",
@@ -160,6 +160,7 @@ DEFECTS = [
          actual="spawnSync <repo>\\backend\\scripts\\e2e\\time-travel.sh EFTYPE, fixture không được lùi",
          severity="Low", found=("27/11/2026", "94d46500", LONG, "scripts/unit-test-report/results/st-round1/FINDINGS.md"),
          cause="milestone.js gọi thẳng file .sh bằng execFileSync; Windows không chạy trực tiếp được script shell",
-         fix=("#685, PR #686", "43c48666", LONG), status="Closed",
-         retest=("27/11/2026", "43c48666", "Passed", "scripts/unit-test-report/results/st-round2/")),
+         fix=("#685, PR #686", "4d0eff24", LONG), status="Closed",
+         # Round 2 ran on the PR head 43c48666, merged unchanged as 4d0eff24
+         retest=("27/11/2026", "4d0eff24", "Passed", "scripts/unit-test-report/results/st-round2/")),
 ]

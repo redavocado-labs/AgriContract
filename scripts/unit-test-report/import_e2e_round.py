@@ -3,7 +3,9 @@
 # Service logs stay in the run directory (named in run.json). Every JWT is masked, as redact_reports.py does for
 # Report 5.2; the local dev secrets of the runner are its documented defaults, not real credentials.
 #
-#   python import_e2e_round.py ~/agricontract-e2e/run-20261127-1610 st-round1 "Nguyen Hai Long" 94d46500
+#   python import_e2e_round.py ~/agricontract-e2e/run-20261127-1603 st-round1 "Nguyen Hai Long" 94d46500
+#   python import_e2e_round.py ~/agricontract-e2e/run-20261127-1630 st-round2 "Nguyen Hai Long" \
+#       "43c48666 (merged as 4d0eff24, PR #686)"
 import json
 import os
 import re
@@ -25,8 +27,10 @@ for name in sorted(os.listdir(run_dir)):
     # links in FINDINGS.md point at the tester's checkout
     text = re.sub(r"file:///[^)\s]*?/backend/", "<repo>/backend/", text)
     text = re.sub(r"[A-Za-z]:[\\/]+(?:[^\"\\/\s]+[\\/]+)*?(?=backend[\\/])", "<repo>/", text)
-    # stack traces of the Bruno CLI carry the tester's home directory
+    # stack traces of the Bruno CLI carry the tester's home directory: C:\Users\<name>, /c/Users/<name> (Git Bash),
+    # /Users/<name> (macOS), /home/<name> (Linux)
     text = re.sub(r"(?:[A-Za-z]:|/[a-z])?[\\/]+Users[\\/]+[^\"\\/\s]+", "<home>", text)
+    text = re.sub(r"(?<![\w.])/home/[^\"\\/\s]+", "<home>", text)
     with open(os.path.join(out, name), "w", encoding="utf-8", newline="\n") as f:
         f.write(text)
     copied.append(name)
