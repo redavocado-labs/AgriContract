@@ -1,0 +1,74 @@
+> playwright test --config tests/qa/playwright.config.ts
+
+
+Running 21 tests using 1 worker
+
+  ✓   1 tests/qa/accessibility.pw.ts:37:1 › FE-016 an offer withdrawal dialog can be opened, traversed and dismissed by keyboard (1.4s)
+  ✓   2 tests/qa/accessibility.pw.ts:66:1 › FE-016 contract detail with the withdrawal dialog open has no serious axe findings (1.9s)
+  ✓   3 tests/qa/accessibility.pw.ts:77:1 › FE-016 public prices expose a keyboard-accessible route without serious axe findings (1.4s)
+  ✘   4 tests/qa/accessibility.pw.ts:126:1 › FE-016 the public home page reflows at 320 CSS pixels (419ms)
+  ✓   5 tests/qa/critical-flows.pw.ts:41:1 › FE-004 begins polling when SIGNED follows a late manual read (2.1s)
+  ✓   6 tests/qa/critical-flows.pw.ts:68:1 › FE-004 uses a bounded budget for initially SIGNED and permits manual recovery (1.3s)
+  ✓   7 tests/qa/critical-flows.pw.ts:93:1 › FE-004 recovers from a failed activation read without declaring activation (1.3s)
+  ✓   8 tests/qa/critical-flows.pw.ts:112:1 › FE-004 switching contract IDs gets a fresh activation budget and stops polling the old resource (1.2s)
+  ✓   9 tests/qa/critical-flows.pw.ts:148:1 › FE-015 blocks evidence while the read model omits it, then enables review only after READY (1.3s)
+  ✓  10 tests/qa/critical-flows.pw.ts:182:1 › FE-015 a rejected scan offers replacement and leaves an independent file usable (1.3s)
+  ✓  11 tests/qa/critical-flows.pw.ts:223:1 › FE-015 a projected PROCESSING file stops automatic reads after its 60-second budget (1.2s)
+  ✓  12 tests/qa/critical-flows.pw.ts:252:1 › FE-003 a lost withdraw response reconciles across a second tab and reload without replay (3.4s)
+  ✘  13 tests/qa/critical-flows.pw.ts:281:1 › FE-003 an uncertain withdrawal survives reload and reuses its key after the authoritative read (2.4s)
+  ✓  14 tests/qa/critical-flows.pw.ts:319:1 › FE-003 concurrent tabs submit at most one withdrawal while the first response is pending (2.1s)
+  ✓  15 tests/qa/critical-flows.pw.ts:360:1 › FE-003 an expired unresolved withdrawal is never sent under a fresh key (1.4s)
+  ✓  16 tests/qa/critical-flows.pw.ts:385:1 › FE-003 a failed reconciliation read leaves an uncertain withdrawal unresolved (1.4s)
+  ✓  17 tests/qa/critical-flows.pw.ts:417:1 › FE-011 a Buyer cannot weigh as Seller, and an HTTP 403 hides milestone data (1.7s)
+  ✓  18 tests/qa/critical-flows.pw.ts:439:1 › FE-011 switching user identity does not display the previous actor's cached milestone (1.2s)
+  ✓  19 tests/qa/critical-flows.pw.ts:477:1 › FE-010 counts down the server's seller correction deadline and removes the edit action (1.2s)
+  ✓  20 tests/qa/critical-flows.pw.ts:504:1 › FE-015 an explicit retry after evidence upload 503 keeps the original key and bytes (1.3s)
+  ✓  21 tests/qa/listing-picker.pw.ts:43:1 › FE-007 an eligible buyer can select a reservable source and receives that listing's offer form (1.3s)
+
+
+  1) tests/qa/accessibility.pw.ts:126:1 › FE-016 the public home page reflows at 320 CSS pixels ────
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 320
+    Received:    343
+
+      13 |   })
+      14 |   expect(viewport).toBe(320)
+    > 15 |   expect(content).toBeLessThanOrEqual(viewport)
+         |                   ^
+      16 | }
+      17 |
+      18 | async function audit(page: Page, info: TestInfo) {
+        at expectPageReflow (/home/runner/work/AgriContract/AgriContract/frontend/tests/qa/accessibility.pw.ts:15:19)
+        at /home/runner/work/AgriContract/AgriContract/frontend/tests/qa/accessibility.pw.ts:131:3
+
+    Error Context: test-results/accessibility.pw.ts-FE-016-1b3dc-e-reflows-at-320-CSS-pixels/error-context.md
+
+  2) tests/qa/critical-flows.pw.ts:281:1 › FE-003 an uncertain withdrawal survives reload and reuses its key after the authoritative read 
+
+    AssertionError: Expected values to be strictly deep-equal:
+    + actual - expected
+
+    + []
+    - [
+    -   'read',
+    -   'write'
+    - ]
+
+
+      311 |   await confirm.click()
+      312 |   await waitForText(page, "Đã rút đề nghị")
+    > 313 |   assert.deepEqual(events.slice(0, 2), ["read", "write"])
+          |          ^
+      314 |   assert.equal(keys.length, 2)
+      315 |   assert.match(keys[0] ?? "", /^[0-9a-f-]{36}$/)
+      316 |   assert.equal(keys[0], keys[1])
+        at /home/runner/work/AgriContract/AgriContract/frontend/tests/qa/critical-flows.pw.ts:313:10
+
+    Error Context: test-results/critical-flows.pw.ts-FE-00-464ae-fter-the-authoritative-read/error-context.md
+
+  2 failed
+    tests/qa/accessibility.pw.ts:126:1 › FE-016 the public home page reflows at 320 CSS pixels ─────
+    tests/qa/critical-flows.pw.ts:281:1 › FE-003 an uncertain withdrawal survives reload and reuses its key after the authoritative read 
+  19 passed (38.7s)
