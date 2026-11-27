@@ -1,4 +1,4 @@
-﻿"""Export fig10b_seq_buyer_receipt from the approved Draw.io source."""
+"""Export fig10b_seq_buyer_receipt from the approved Draw.io source."""
 
 import subprocess
 import sys

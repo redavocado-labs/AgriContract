@@ -1,4 +1,4 @@
-﻿"""Export fig03_frontend_packages from the approved Draw.io source."""
+"""Export fig03_frontend_packages from the approved Draw.io source."""
 
 import subprocess
 import sys

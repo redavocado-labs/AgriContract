@@ -1,10 +1,10 @@
-import argparse
 """Regenerate approved SDS diagrams for Issue #518.
 
 The editable Draw.io files are the source of truth.
 Export PNG and SVG using the Draw.io Desktop CLI.
 """
 
+import argparse
 import os
 import subprocess
 from pathlib import Path
@@ -23,6 +23,7 @@ FIGURES = [
     "fig03_frontend_packages",
     "fig06_class_signing",
     "fig07_seq_initiate_sign",
+    "fig08_seq_verify_sign",
     "fig09_class_milestone",
     "fig10a_seq_seller_weighing",
     "fig10b_seq_buyer_receipt",
@@ -47,7 +48,7 @@ def validate_sources():
 
         ElementTree.parse(source)
 
-    print("Validated 13/13 Draw.io sources")
+    print("Validated 14/14 Draw.io sources")
 
 
 def export_figure(name, fmt, output_dir):

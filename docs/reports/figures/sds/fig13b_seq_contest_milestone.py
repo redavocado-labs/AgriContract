@@ -1,4 +1,4 @@
-﻿"""Export fig13b_seq_contest_milestone from the approved Draw.io source."""
+"""Export fig13b_seq_contest_milestone from the approved Draw.io source."""
 
 import subprocess
 import sys

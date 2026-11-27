@@ -1,4 +1,4 @@
-﻿"""Export fig11_seq_money_reconcile from the approved Draw.io source."""
+"""Export fig11_seq_money_reconcile from the approved Draw.io source."""
 
 import subprocess
 import sys

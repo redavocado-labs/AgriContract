@@ -10,9 +10,9 @@ from xml.etree import ElementTree as ET
 from docx import Document
 from docx.oxml.ns import qn
 
-FIGURES = dict(zip(('2','3','6','7','9','10a','10b','11','12','13a','13b','13c'), (
+FIGURES = dict(zip(('2','3','6','7','8','9','10a','10b','11','12','13a','13b','13c'), (
     'fig02_backend_packages','fig03_frontend_packages','fig06_class_signing',
-    'fig07_seq_initiate_sign','fig09_class_milestone','fig10a_seq_seller_weighing',
+    'fig07_seq_initiate_sign','fig08_seq_verify_sign','fig09_class_milestone','fig10a_seq_seller_weighing',
     'fig10b_seq_buyer_receipt','fig11_seq_money_reconcile','fig12_class_dispute',
     'fig13a_seq_flag_milestone','fig13b_seq_contest_milestone','fig13c_seq_inspector_assignment')))
 
@@ -23,7 +23,7 @@ def split_panels(source, directory):
     if cells is None or len(tree.findall('.//diagram')) != 1:
         raise ValueError('Expected approved single-page Figure 14 XML')
     groups = [set(), set(), set()]
-    bounds = [1188, 2822]  # approved baseline panel headings
+    bounds = [1460, 3536]  # approved baseline panel headings
     for cell in cells:
         if cell.get('id') in ('0','1'):
             continue
@@ -82,6 +82,8 @@ def replace_images(doc, images):
         w = min(old_w, int(old_h * ratio))
         h = round(w / ratio)
         blip.set(qn('r:embed'), rid)
+        for svg in blip.xpath('.//*[local-name()="svgBlip"]'):
+            svg.getparent().remove(svg)  # avoid stale vector alternative after replacing PNG
         for e in [extent, *pic.xpath('.//pic:spPr/a:xfrm/a:ext')]:
             e.set('cx', str(w)); e.set('cy', str(h))
         print(f'OK: Figure {key} <- {path.name}')
@@ -112,7 +114,7 @@ def main():
         doc = Document(args.input)
         replace_images(doc, images)
         doc.save(args.output)
-    print('Completed: 15 embedded images (13 figures, Figure 14 has 3 panels)')
+    print('Completed: 16 embedded images (14 figures, Figure 14 has 3 panels)')
 
 
 if __name__ == '__main__':

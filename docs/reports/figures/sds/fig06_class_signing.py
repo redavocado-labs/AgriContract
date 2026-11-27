@@ -1,4 +1,4 @@
-﻿"""Export fig06_class_signing from the approved Draw.io source."""
+"""Export fig06_class_signing from the approved Draw.io source."""
 
 import subprocess
 import sys

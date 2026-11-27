@@ -1,4 +1,4 @@
-﻿"""Export fig13c_seq_inspector_assignment from the approved Draw.io source."""
+"""Export fig13c_seq_inspector_assignment from the approved Draw.io source."""
 
 import subprocess
 import sys
