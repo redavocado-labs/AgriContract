@@ -1,0 +1,132 @@
+{
+ "shared/ErrorEnvelopeExceptionHandlerTest": {
+  "accessDeniedIsForbidden": "passed",
+  "apiExceptionKeepsStatusAndCodeAndEchoesCorrelationId": "passed",
+  "beanValidationIsBadRequest": "passed",
+  "codeMustBeUpperSnakeCase": "passed",
+  "missingCorrelationIdStillGetsTraceId": "passed",
+  "subclassHandlerWinsOverBaseCatchAll": "passed",
+  "unexpectedExceptionHidesItsMessage": "passed",
+  "unreadableBodyIsBadRequest": "passed"
+ },
+ "shared/EventContextTest": {
+  "create_emptyCausationId_throws": "passed",
+  "create_emptyCorrelationId_throws": "passed",
+  "derivedFrom_chainOfThree_eachLinksToItsDirectParent": "passed",
+  "derivedFrom_derivedParent_causationIsParentNotGrandparent": "passed",
+  "derivedFrom_parentWithoutCorrelation_doesNotFabricateOne": "passed",
+  "derivedFrom_rootParent_causationIsParentEventIdAndCorrelationCarriesOver": "passed",
+  "root_withCorrelationId_hasNoCausation": "passed",
+  "root_withoutCorrelationId_doesNotFabricateOne": "passed"
+ },
+ "shared/EventEnvelopeCodecTest": {
+  "level15RequestPreservesRequiredNullableActorWithoutInventingMissingFields": "passed",
+  "parse_correlationIdNumber_throwsInsteadOfCoercing": "passed",
+  "parse_explicitNullCorrelationAndCausation_isValid": "passed",
+  "parse_explicitNullSubject_throws": "passed",
+  "parse_failureMessage_doesNotLeakPayload": "passed",
+  "parse_failureMessage_namesTheFieldPath": "passed",
+  "parse_failure_doesNotLeakFieldValueInMessageOrCause": "passed",
+  "parse_invalidFieldValue_fromRecordValidation_throwsInvalidEnvelope": "passed",
+  "parse_minimalValidJson_succeeds": "passed",
+  "parse_missingEventVersion_throws": "passed",
+  "parse_notAnEnvelopeObject_throws": "passed",
+  "parse_occurredAtNumber_failureNamesTheField": "passed",
+  "parse_occurredAtWithoutOffset_throws": "passed",
+  "parse_payloadNotAnObject_throws": "passed",
+  "parse_recordValidationFailure_keepsOurFieldMessage": "passed",
+  "parse_scalarOfWrongType_throwsInsteadOfCoercing": "passed",
+  "parse_schemaViolation_throws": "passed",
+  "parse_trailingTokens_throws": "passed",
+  "toJsonThenParse_roundTripsToEqualEnvelope": "passed",
+  "toJson_emitsOnlySchemaFieldNames": "passed",
+  "toJson_nullOptionalFields_areAbsentNotNull": "passed",
+  "toJson_nullPayloadValues_stayOnTheWire": "passed",
+  "toJson_occurredAt_isIsoStringWithZ": "passed",
+  "toJson_sameEnvelope_producesIdenticalString": "passed"
+ },
+ "shared/EventEnvelopeTest": {
+  "create_allFieldsValid_keepsEveryValue": "passed",
+  "create_blankButNonEmptyText_isValidPerMinLength": "passed",
+  "create_emptyCausationId_throws": "passed",
+  "create_emptyCorrelationId_throws": "passed",
+  "create_emptyPayload_isValid": "passed",
+  "create_eventTypeMatchingPattern_isValid": "passed",
+  "create_eventTypeNotMatchingPattern_throws": "passed",
+  "create_eventVersionBelowOne_throws": "passed",
+  "create_missingAggregateId_throws": "passed",
+  "create_missingEventType_throws": "passed",
+  "create_missingProducer_throws": "passed",
+  "create_nullEventId_throws": "passed",
+  "create_nullOccurredAt_throws": "passed",
+  "create_nullPayload_throws": "passed",
+  "create_optionalFieldsNull_isValid": "passed"
+ },
+ "shared/EventSubjectTest": {
+  "create_everySubjectType_isValid": "passed",
+  "create_missingId_throws": "passed",
+  "create_nullType_throws": "passed"
+ },
+ "shared/EventingAutoConfigurationTest": {
+  "codecOnlyClasspath_withoutJdbcOrRabbit_startsWithCodecOnly": "passed",
+  "defaults_writerStoreAndCodecRegistered_pollerOff": "passed",
+  "enabledAlongsideLegacyOutboxPollerBean_bothCoexist": "passed",
+  "enabledWithBootStylePollInterval_failsFastNamingTheKey": "passed",
+  "enabledWithDefaultIntervals_startsWithoutOverride": "passed",
+  "enabledWithExchangeAndConfirms_pollerAndStaleMonitorRegistered": "passed",
+  "enabledWithMillisecondPollInterval_isAccepted": "passed",
+  "enabledWithoutExchange_failsFast": "passed",
+  "enabledWithoutPublisherConfirms_failsFast": "passed",
+  "noJdbcTemplate_noWriterOrStore": "passed"
+ },
+ "shared/EventingEndToEndIntegrationTest": {
+  "dlqReplay_preservesEventIdAndIsProcessedExactlyOnce": "passed",
+  "duplicateDelivery_isANoOp": "passed",
+  "malformedEnvelope_isDeadLetteredWithoutRunningTheHandler": "passed",
+  "outboxEventReachesConsumerWithItsOriginalEventIdAndIsHandledOnce": "passed"
+ },
+ "shared/OutboxPollerIntegrationTest": {
+  "poll_afterFailedRowIsFixed_restIsSentInOrder": "passed",
+  "poll_failedRow_stopsTheBatchAndLeavesLaterRowsUntouched": "passed",
+  "poll_pendingRow_publishesStoredEnvelopeAndMarksPublished": "passed",
+  "poll_resendAfterLostStatusUpdate_carriesTheSameEventId": "passed",
+  "poll_respectsBatchSize": "passed",
+  "poll_twoPollersConcurrently_eachEventSentOnce": "passed",
+  "poll_unroutableEvent_staysPendingWithAttemptAndError": "passed",
+  "staleMonitor_countsOnlyPendingRowsOlderThanThreshold": "passed"
+ },
+ "shared/OutboxWriterIntegrationTest": {
+  "append_callerRollsBack_rowIsRolledBackToo": "passed",
+  "append_insideTransaction_storesPendingRowWithFullEnvelope": "passed",
+  "append_sameEventIdTwice_throwsDuplicateKey": "passed",
+  "append_storedEnvelope_parsesBackToSameEnvelopeAndEventId": "passed",
+  "append_withoutTransaction_throwsAndWritesNothing": "passed"
+ },
+ "shared/ProcessedEventStoreIntegrationTest": {
+  "markProcessed_blankConsumerName_throws": "passed",
+  "markProcessed_concurrentDuplicate_processesWhenFirstRollsBack": "passed",
+  "markProcessed_concurrentDuplicate_waitsForFirstThenSkipsAfterCommit": "passed",
+  "markProcessed_consumerNameAtColumnLength_isStoredWhole": "passed",
+  "markProcessed_consumerNameOverColumnLength_throwsInsteadOfTruncating": "passed",
+  "markProcessed_firstDelivery_returnsTrueAndRecordsRow": "passed",
+  "markProcessed_handlerRolledBack_redeliveryIsProcessedAgain": "passed",
+  "markProcessed_redeliveryOfSameEventId_returnsFalse": "passed",
+  "markProcessed_sameEventDifferentConsumers_bothProcess": "passed",
+  "markProcessed_withoutTransaction_throwsAndRecordsNothing": "passed"
+ },
+ "shared/VietnamBusinessDaysTest": {
+  "businessDaysBeforeCountsBackOverWeekends": "passed",
+  "businessDaysBeforeRefusesAnOutOfRangeCount": "passed",
+  "businessDaysBeforeSkipsHolidays": "passed",
+  "businessDaysBetweenCountsIctDatesAfterTheStart": "passed",
+  "businessDaysBetweenSkipsHolidaysAndRefusesAReversedRange": "passed",
+  "configurationIgnoresSpacesDuplicatesAndEmptyTokens": "passed",
+  "crossesTheYearAndSkipsNewYearsDay": "passed",
+  "daysOutsideOneToThirtyAreRefused": "passed",
+  "fiveBusinessDaysSkipAWeekendAndConsecutiveHolidays": "passed",
+  "missingOrInvalidConfigurationFailsFast": "passed",
+  "oneBusinessDaySkipsTheWeekend": "passed",
+  "theIctDateDecides_notTheJvmTimezone": "passed",
+  "thirtyBusinessDaysIsAccepted": "passed"
+ }
+}

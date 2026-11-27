@@ -28,7 +28,8 @@ def collect(backend, services):
                 failed = tc.find("failure") is not None or tc.find("error") is not None
                 skipped = tc.find("skipped") is not None
                 status = "failed" if failed else ("skipped" if skipped else "passed")
-                key = f"{svc}/{cls}"
+                # the shared/* modules are one "shared" module in Report-5.1, as in fill_report.py
+                key = f"{'shared' if svc.startswith('shared/') else svc}/{cls}"
                 prev = cases.setdefault(key, {}).get(name)
                 if prev != "failed":  # one failed invocation fails the method
                     cases[key][name] = status if prev in (None, "passed") else prev
