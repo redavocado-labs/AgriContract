@@ -1,0 +1,448 @@
+[
+  {
+    "iterationIndex": 0,
+    "results": [
+      {
+        "test": {
+          "filename": "e2e\\bf02-plot-listing\\010-coffee-category.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/categories",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": [
+            {
+              "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02",
+              "name": "Cà phê",
+              "commodity": "COFFEE"
+            },
+            {
+              "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a03",
+              "name": "Gia vị",
+              "commodity": null
+            },
+            {
+              "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a01",
+              "name": "Ngũ cốc",
+              "commodity": null
+            },
+            {
+              "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a04",
+              "name": "Trái cây",
+              "commodity": null
+            }
+          ],
+          "url": "http://localhost/api/v1/categories",
+          "responseTime": 85,
+          "duration": 85,
+          "size": 365
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "eS6gW_Bnte0pdUP5DFERe"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 1.3388130999999999,
+        "name": "BF02-010 Resolve an approved coffee category",
+        "path": "e2e\\bf02-plot-listing\\010-coffee-category",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf02-plot-listing\\020-create-product.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/products",
+          "headers": {}
+        },
+        "response": {
+          "status": 201,
+          "statusText": "Created",
+          "headers": {},
+          "data": {
+            "productId": "1af59abb-b231-4b3c-a0ff-3841a05f0819",
+            "name": "Robusta Bruno mwysbg0b-nyqeqq7",
+            "unit": "kg",
+            "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02",
+            "images": [
+              "https://example.test/bruno-robusta.jpg"
+            ],
+            "cropYear": 2026,
+            "harvestSeason": "2026/27",
+            "certifications": []
+          },
+          "url": "http://localhost/api/v1/products",
+          "responseTime": 651,
+          "duration": 651,
+          "size": 270
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "oLG4EePct7idRIMwjL8W6"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.6652321,
+        "name": "BF02-020 Create a Robusta product",
+        "path": "e2e\\bf02-plot-listing\\020-create-product",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf02-plot-listing\\030-register-plot.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/plots",
+          "headers": {}
+        },
+        "response": {
+          "status": 201,
+          "statusText": "Created",
+          "headers": {},
+          "data": {
+            "registryEntryId": "66b0034b-5257-4d04-a1b8-6ad3943c4cf2",
+            "householdLabel": "Bruno mwysbg0b-nyqeqq7",
+            "geometryType": "POINT",
+            "geometryWkt": "POINT (108.0543 12.6642)",
+            "geometryHash": "e1d88aa200411f98308f1939382175e1ff086651af12d330a7bb865186454075",
+            "areaHectares": 1.5,
+            "source": "MANUAL_PIN",
+            "accuracyMeters": 8.5,
+            "verificationLevel": "SELF_DECLARED",
+            "declaredProvince": "DAK_LAK",
+            "geoVerificationStatus": "PENDING",
+            "geoRiskLevel": null,
+            "importedAt": "2026-11-27T09:34:19.122256343Z"
+          },
+          "url": "http://localhost/api/v1/plots",
+          "responseTime": 358,
+          "duration": 358,
+          "size": 476
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "gFvQ1OSfJBde4R3T70QSw"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.3729046,
+        "name": "BF02-030 Register one manual land plot",
+        "path": "e2e\\bf02-plot-listing\\030-register-plot",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf02-plot-listing\\040-plot-eligible.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/plots?size=100",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "content": [
+              {
+                "registryEntryId": "66b0034b-5257-4d04-a1b8-6ad3943c4cf2",
+                "householdLabel": "Bruno mwysbg0b-nyqeqq7",
+                "geometryType": "POINT",
+                "areaHectares": null,
+                "source": "MANUAL_PIN",
+                "declaredProvince": "DAK_LAK",
+                "geoVerificationStatus": "UNVERIFIED",
+                "geoRiskLevel": null,
+                "importedAt": "2026-11-27T09:34:19.122256Z"
+              }
+            ],
+            "page": 0,
+            "size": 100,
+            "totalElements": 1,
+            "totalPages": 1
+          },
+          "url": "http://localhost/api/v1/plots?size=100",
+          "responseTime": 93,
+          "duration": 93,
+          "size": 361
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "LMExCv0DTUlvvxDe3kPAt"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 2.4911666,
+        "name": "BF02-040 Wait for the plot geo check",
+        "path": "e2e\\bf02-plot-listing\\040-plot-eligible",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf02-plot-listing\\050-create-listing.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/listings",
+          "headers": {}
+        },
+        "response": {
+          "status": 201,
+          "statusText": "Created",
+          "headers": {},
+          "data": {
+            "listingId": "f1bf3894-e115-48ce-8701-6005e02f0834",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "productId": "1af59abb-b231-4b3c-a0ff-3841a05f0819",
+            "productName": "Robusta Bruno mwysbg0b-nyqeqq7",
+            "unitOfMeasure": "KG",
+            "offeredQuantity": 5000,
+            "quantityAvailable": 5000,
+            "minOrderQuantity": 100,
+            "askingUnitPrice": "96000.00",
+            "status": "AVAILABLE",
+            "listingVersionToken": "2026-11-27T09:34:22.552736Z",
+            "registryEntryIds": [
+              "66b0034b-5257-4d04-a1b8-6ad3943c4cf2"
+            ],
+            "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02",
+            "commodity": "COFFEE",
+            "regionText": "Buon Ma Thuot, Dak Lak",
+            "declaredQualitySpec": {
+              "commodity": "COFFEE",
+              "type": "ROBUSTA",
+              "moisturePercent": 12.5,
+              "foreignMatterPercent": 0.5,
+              "blackBrokenBeansPercent": 5
+            },
+            "legacyQualitySpecMissing": false,
+            "cropYear": 2026,
+            "harvestSeason": "2026/27",
+            "certifications": [],
+            "packagingDeclaration": "Bao day 60 kg",
+            "warehouseLocation": null,
+            "estimatedAvailabilityDate": null,
+            "traceabilityEvidencePackageId": null
+          },
+          "url": "http://localhost/api/v1/listings",
+          "responseTime": 982,
+          "duration": 982,
+          "size": 939
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "Ty9z638Fapz-0LqD4oK34"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.9959329,
+        "name": "BF02-050 Create an available listing",
+        "path": "e2e\\bf02-plot-listing\\050-create-listing",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf02-plot-listing\\060-edit-listing.bru"
+        },
+        "request": {
+          "method": "PUT",
+          "url": "http://localhost:8080/api/v1/listings/f1bf3894-e115-48ce-8701-6005e02f0834",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "listingId": "f1bf3894-e115-48ce-8701-6005e02f0834",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "productId": "1af59abb-b231-4b3c-a0ff-3841a05f0819",
+            "productName": "Robusta Bruno mwysbg0b-nyqeqq7",
+            "unitOfMeasure": "KG",
+            "offeredQuantity": 5500,
+            "quantityAvailable": 5500,
+            "minOrderQuantity": 100,
+            "askingUnitPrice": "95000.00",
+            "status": "AVAILABLE",
+            "listingVersionToken": "2026-11-27T09:34:22.971645Z",
+            "registryEntryIds": [
+              "66b0034b-5257-4d04-a1b8-6ad3943c4cf2"
+            ],
+            "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02",
+            "commodity": "COFFEE",
+            "regionText": "Buon Ma Thuot, Dak Lak",
+            "declaredQualitySpec": {
+              "commodity": "COFFEE",
+              "type": "ROBUSTA",
+              "moisturePercent": 12.5,
+              "foreignMatterPercent": 0.5,
+              "blackBrokenBeansPercent": 5
+            },
+            "legacyQualitySpecMissing": false,
+            "cropYear": 2026,
+            "harvestSeason": "2026/27",
+            "certifications": [],
+            "packagingDeclaration": "Bao day 60 kg",
+            "warehouseLocation": null,
+            "estimatedAvailabilityDate": null,
+            "traceabilityEvidencePackageId": null
+          },
+          "url": "http://localhost/api/v1/listings/f1bf3894-e115-48ce-8701-6005e02f0834",
+          "responseTime": 333,
+          "duration": 333,
+          "size": 951
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "RmAV89r4PSvJfdXoT5wDx"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.3429102,
+        "name": "BF02-060 Update quantity and price",
+        "path": "e2e\\bf02-plot-listing\\060-edit-listing",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf02-plot-listing\\070-public-listing.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/listings/f1bf3894-e115-48ce-8701-6005e02f0834",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "listingId": "f1bf3894-e115-48ce-8701-6005e02f0834",
+            "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+            "productId": "1af59abb-b231-4b3c-a0ff-3841a05f0819",
+            "productName": "Robusta Bruno mwysbg0b-nyqeqq7",
+            "unitOfMeasure": "KG",
+            "offeredQuantity": 5500,
+            "quantityAvailable": 5500,
+            "minOrderQuantity": 100,
+            "askingUnitPrice": "95000.00",
+            "status": "AVAILABLE",
+            "listingVersionToken": "2026-11-27T09:34:22.971645Z",
+            "registryEntryIds": [
+              "66b0034b-5257-4d04-a1b8-6ad3943c4cf2"
+            ],
+            "categoryId": "5b0c1a4e-7d2f-4c61-9a3b-0e8f2d6c1a02",
+            "commodity": "COFFEE",
+            "regionText": "Buon Ma Thuot, Dak Lak",
+            "declaredQualitySpec": {
+              "commodity": "COFFEE",
+              "type": "ROBUSTA",
+              "moisturePercent": 12.5,
+              "foreignMatterPercent": 0.5,
+              "blackBrokenBeansPercent": 5
+            },
+            "legacyQualitySpecMissing": false,
+            "cropYear": 2026,
+            "harvestSeason": "2026/27",
+            "certifications": [],
+            "packagingDeclaration": "Bao day 60 kg",
+            "warehouseLocation": null,
+            "estimatedAvailabilityDate": null,
+            "traceabilityEvidencePackageId": null
+          },
+          "url": "http://localhost/api/v1/listings/f1bf3894-e115-48ce-8701-6005e02f0834",
+          "responseTime": 102,
+          "duration": 102,
+          "size": 951
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "GWEJ5RNSPtJeQVEonex3J"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.1107065,
+        "name": "BF02-070 Read public listing through the gateway",
+        "path": "e2e\\bf02-plot-listing\\070-public-listing",
+        "iterationIndex": 0
+      }
+    ],
+    "summary": {
+      "totalRequests": 7,
+      "passedRequests": 7,
+      "failedRequests": 0,
+      "errorRequests": 0,
+      "skippedRequests": 0,
+      "totalAssertions": 0,
+      "passedAssertions": 0,
+      "failedAssertions": 0,
+      "totalTests": 7,
+      "passedTests": 7,
+      "failedTests": 0,
+      "totalPreRequestTests": 0,
+      "passedPreRequestTests": 0,
+      "failedPreRequestTests": 0,
+      "totalPostResponseTests": 0,
+      "passedPostResponseTests": 0,
+      "failedPostResponseTests": 0
+    }
+  }
+]

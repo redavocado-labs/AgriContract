@@ -1,0 +1,1385 @@
+[
+  {
+    "iterationIndex": 0,
+    "results": [
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\010-funded.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+            "milestone": {
+              "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+              "milestoneIndex": 1,
+              "status": "IN_PROGRESS",
+              "fundingStatus": "LOCKED",
+              "fundingScheduledDate": "2026-11-27",
+              "committedQuantity": 1000,
+              "batchAmount": "96000000.00",
+              "effectiveUnitPrice": "96000.00",
+              "acceptedPriceAdjustment": null,
+              "expectedDeliveryDate": "2026-12-02",
+              "graceDays": 2,
+              "fundingDelayBusinessDays": 0,
+              "effectiveDeliveryDeadline": "2026-12-04"
+            },
+            "sellerDeclaration": null,
+            "buyerReceipt": null,
+            "flag": null,
+            "evidence": [],
+            "settlement": null,
+            "breachCaseId": null,
+            "disputeExit": null,
+            "remedyDecision": null
+          },
+          "url": "http://localhost/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+          "responseTime": 251,
+          "duration": 251,
+          "size": 609
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "_3dttCK2pjdqeOKJdkuxw"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 1.3248663999999999,
+        "name": "BF04-010 Wait for a locked milestone",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\010-funded",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\015-funding-ledger.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8086/internal/v1/bank/ledger?contractId=2809abda-b4ac-4287-87a3-2b929c63055b",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {},
+          "data": [
+            {
+              "entryId": "8f5b42e8-f877-404f-a539-c3dad4a4e7fa",
+              "sourceEventId": "6583d1e0-b97d-4682-a4c4-ad696f35857f",
+              "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+              "milestoneId": null,
+              "userId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+              "entryType": "LOCK_BUYER_DEPOSIT",
+              "fundType": "BUYER_DEPOSIT",
+              "remedyDecisionId": null,
+              "remedyLegId": null,
+              "amount": "4800000.00",
+              "createdAt": "2026-11-27T09:11:12.884982Z"
+            },
+            {
+              "entryId": "9f436ea1-dfa6-4244-868b-7b25858294e5",
+              "sourceEventId": "a3e943ee-1dfe-4459-9556-9f1ea73f84bc",
+              "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+              "milestoneId": null,
+              "userId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+              "entryType": "LOCK_SELLER_DEPOSIT",
+              "fundType": "SELLER_DEPOSIT",
+              "remedyDecisionId": null,
+              "remedyLegId": null,
+              "amount": "2880000.00",
+              "createdAt": "2026-11-27T09:11:13.168315Z"
+            },
+            {
+              "entryId": "428d3dfd-d1ff-40e5-8459-66dd3c47c3da",
+              "sourceEventId": "c9eb686a-fa2c-4255-b76c-0f35b0707000",
+              "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+              "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+              "userId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+              "entryType": "LOCK_MILESTONE",
+              "fundType": "MILESTONE_PAYMENT",
+              "remedyDecisionId": null,
+              "remedyLegId": null,
+              "amount": "96000000.00",
+              "createdAt": "2026-11-27T09:11:15.764234Z"
+            }
+          ],
+          "url": "http://localhost/internal/v1/bank/ledger?contractId=2809abda-b4ac-4287-87a3-2b929c63055b",
+          "responseTime": 25,
+          "duration": 25,
+          "size": 1214
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "rwwVWKXa8i09msLDhq2TF"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.0391864,
+        "name": "BF04-015 Confirm the batch lock",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\015-funding-ledger",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\017-audit-signature.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8092/api/v1/audit/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/records",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {},
+          "data": {
+            "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+            "currentRecordHash": "3b5f204e6e2240d09cd4d71fece3c4fe5eb8b3bb48395672706aaf4502c4d1f1",
+            "anchorStatus": "NOT_ANCHORED",
+            "records": [
+              {
+                "recordId": "d9b339dd-21ca-4d5b-a1ff-2431d49995d3",
+                "sourceType": "CONTRACT_SIGNED",
+                "sourceEventType": "contract.signed",
+                "content": {
+                  "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+                  "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                  "signedAt": "2026-11-27T09:11:11.442807Z",
+                  "commodity": "COFFEE",
+                  "listingId": "97d953ea-44bb-4e8d-83fb-7066a8f12286",
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "totalAmount": "96000000.00",
+                  "reservedQuantity": "1000.0",
+                  "signedContentHash": "da50bf3e63c89a4c87bf8a6f0d77b3f3999d13074cb9681c718b61ec88f910ed",
+                  "buyerDepositAmount": "4800000.00",
+                  "sellerDepositAmount": "2880000.00"
+                },
+                "recordHash": "3b5f204e6e2240d09cd4d71fece3c4fe5eb8b3bb48395672706aaf4502c4d1f1",
+                "createdAt": "2026-11-27T09:11:12.109Z"
+              }
+            ]
+          },
+          "url": "http://localhost/api/v1/audit/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/records",
+          "responseTime": 49,
+          "duration": 49,
+          "size": 908
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "TLdF8QGetrvEsrd7Vzz3o"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.550214,
+        "name": "BF04-017 Assert audit record contract.signed",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\017-audit-signature",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\020-upload-seller.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160/evidence",
+          "headers": {}
+        },
+        "response": {
+          "status": 202,
+          "statusText": "Accepted",
+          "headers": {},
+          "data": {
+            "fileId": "6b90e4e2-c92b-4206-b6a0-a2d73c325178",
+            "status": "PROCESSING"
+          },
+          "url": "http://localhost/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160/evidence",
+          "responseTime": 691,
+          "duration": 691,
+          "size": 71
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "6g1kTSlKt357wLbi1rUUK"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.7112237,
+        "name": "BF04-020 Upload evidence as seller",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\020-upload-seller",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\030-weigh.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160/weigh",
+          "headers": {}
+        },
+        "response": {
+          "status": 204,
+          "statusText": "No Content",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160/weigh",
+          "responseTime": 232,
+          "duration": 232,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "B4Mwxoy68A1-byW6wLbx_"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 2.5343515,
+        "name": "BF04-030 Record seller weight",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\030-weigh",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\035-audit-seller-weight.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8092/api/v1/audit/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/records",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {},
+          "data": {
+            "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+            "currentRecordHash": "70013e240787590715602d0b9cf0e78e9588d9194289fb9292746e9684365a74",
+            "anchorStatus": "NOT_ANCHORED",
+            "records": [
+              {
+                "recordId": "d9b339dd-21ca-4d5b-a1ff-2431d49995d3",
+                "sourceType": "CONTRACT_SIGNED",
+                "sourceEventType": "contract.signed",
+                "content": {
+                  "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+                  "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                  "signedAt": "2026-11-27T09:11:11.442807Z",
+                  "commodity": "COFFEE",
+                  "listingId": "97d953ea-44bb-4e8d-83fb-7066a8f12286",
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "totalAmount": "96000000.00",
+                  "reservedQuantity": "1000.0",
+                  "signedContentHash": "da50bf3e63c89a4c87bf8a6f0d77b3f3999d13074cb9681c718b61ec88f910ed",
+                  "buyerDepositAmount": "4800000.00",
+                  "sellerDepositAmount": "2880000.00"
+                },
+                "recordHash": "3b5f204e6e2240d09cd4d71fece3c4fe5eb8b3bb48395672706aaf4502c4d1f1",
+                "createdAt": "2026-11-27T09:11:12.109Z"
+              },
+              {
+                "recordId": "ec8a539b-6d49-4e9b-bb2b-775d34f057f2",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.seller_weighed",
+                "content": {
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+                  "declarationNumber": "1",
+                  "sellerDeclaredWeight": "1000",
+                  "sellerEvidenceFileId": "6b90e4e2-c92b-4206-b6a0-a2d73c325178"
+                },
+                "recordHash": "70013e240787590715602d0b9cf0e78e9588d9194289fb9292746e9684365a74",
+                "createdAt": "2026-11-27T09:11:44.449Z"
+              }
+            ]
+          },
+          "url": "http://localhost/api/v1/audit/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/records",
+          "responseTime": 34,
+          "duration": 34,
+          "size": 1388
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "XPxE-lIiCaL2f2HT57Sls"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 2.1256235,
+        "name": "BF04-035 Assert audit record milestone.seller_weighed",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\035-audit-seller-weight",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\040-upload-buyer.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160/evidence",
+          "headers": {}
+        },
+        "response": {
+          "status": 202,
+          "statusText": "Accepted",
+          "headers": {},
+          "data": {
+            "fileId": "e905df8c-7b6f-4bc7-8aec-c0fed1a77fb8",
+            "status": "PROCESSING"
+          },
+          "url": "http://localhost/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160/evidence",
+          "responseTime": 203,
+          "duration": 203,
+          "size": 71
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "wnnNn5dxYh12jWsT0SfoE"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.2187824,
+        "name": "BF04-040 Upload evidence as buyer",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\040-upload-buyer",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\050-receive.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160/receive",
+          "headers": {}
+        },
+        "response": {
+          "status": 204,
+          "statusText": "No Content",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160/receive",
+          "responseTime": 217,
+          "duration": 217,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "0A2-5MF-WfbNlIX7NC9IF"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 2.5263096000000003,
+        "name": "BF04-050 Record buyer weight",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\050-receive",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\055-audit-buyer-receipt.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8092/api/v1/audit/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/records",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {},
+          "data": {
+            "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+            "currentRecordHash": "e1383dd9c30c09e6ba62a1096d952f6be60f5a1e1457cecc1c16be459cd58149",
+            "anchorStatus": "NOT_ANCHORED",
+            "records": [
+              {
+                "recordId": "d9b339dd-21ca-4d5b-a1ff-2431d49995d3",
+                "sourceType": "CONTRACT_SIGNED",
+                "sourceEventType": "contract.signed",
+                "content": {
+                  "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+                  "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                  "signedAt": "2026-11-27T09:11:11.442807Z",
+                  "commodity": "COFFEE",
+                  "listingId": "97d953ea-44bb-4e8d-83fb-7066a8f12286",
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "totalAmount": "96000000.00",
+                  "reservedQuantity": "1000.0",
+                  "signedContentHash": "da50bf3e63c89a4c87bf8a6f0d77b3f3999d13074cb9681c718b61ec88f910ed",
+                  "buyerDepositAmount": "4800000.00",
+                  "sellerDepositAmount": "2880000.00"
+                },
+                "recordHash": "3b5f204e6e2240d09cd4d71fece3c4fe5eb8b3bb48395672706aaf4502c4d1f1",
+                "createdAt": "2026-11-27T09:11:12.109Z"
+              },
+              {
+                "recordId": "ec8a539b-6d49-4e9b-bb2b-775d34f057f2",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.seller_weighed",
+                "content": {
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+                  "declarationNumber": "1",
+                  "sellerDeclaredWeight": "1000",
+                  "sellerEvidenceFileId": "6b90e4e2-c92b-4206-b6a0-a2d73c325178"
+                },
+                "recordHash": "70013e240787590715602d0b9cf0e78e9588d9194289fb9292746e9684365a74",
+                "createdAt": "2026-11-27T09:11:44.449Z"
+              },
+              {
+                "recordId": "95239829-6412-4e58-a94a-0894aae3c286",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.buyer_received",
+                "content": {
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "receivedAt": "2026-11-27T09:11:49.045322Z",
+                  "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+                  "buyerEvidenceFileId": "e905df8c-7b6f-4bc7-8aec-c0fed1a77fb8",
+                  "buyerReceivedWeight": "1000"
+                },
+                "recordHash": "e1383dd9c30c09e6ba62a1096d952f6be60f5a1e1457cecc1c16be459cd58149",
+                "createdAt": "2026-11-27T09:11:49.534Z"
+              }
+            ]
+          },
+          "url": "http://localhost/api/v1/audit/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/records",
+          "responseTime": 23,
+          "duration": 23,
+          "size": 1885
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "Lxn5MTR5inNbMgRAwSFlM"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 2.2616841,
+        "name": "BF04-055 Assert audit record milestone.buyer_received",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\055-audit-buyer-receipt",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\060-confirm.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160/confirm",
+          "headers": {}
+        },
+        "response": {
+          "status": 204,
+          "statusText": "No Content",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160/confirm",
+          "responseTime": 342,
+          "duration": 342,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "86K1JZeURzBdsKYgEar6y"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.4666793,
+        "name": "BF04-060 Buyer confirms clean receipt",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\060-confirm",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\065-audit-confirmation.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8092/api/v1/audit/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/records",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {},
+          "data": {
+            "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+            "currentRecordHash": "4d2f1506e791cae042cef804a574b6da2153c79813acb15d1e069f77bbce82ce",
+            "anchorStatus": "NOT_ANCHORED",
+            "records": [
+              {
+                "recordId": "d9b339dd-21ca-4d5b-a1ff-2431d49995d3",
+                "sourceType": "CONTRACT_SIGNED",
+                "sourceEventType": "contract.signed",
+                "content": {
+                  "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+                  "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                  "signedAt": "2026-11-27T09:11:11.442807Z",
+                  "commodity": "COFFEE",
+                  "listingId": "97d953ea-44bb-4e8d-83fb-7066a8f12286",
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "totalAmount": "96000000.00",
+                  "reservedQuantity": "1000.0",
+                  "signedContentHash": "da50bf3e63c89a4c87bf8a6f0d77b3f3999d13074cb9681c718b61ec88f910ed",
+                  "buyerDepositAmount": "4800000.00",
+                  "sellerDepositAmount": "2880000.00"
+                },
+                "recordHash": "3b5f204e6e2240d09cd4d71fece3c4fe5eb8b3bb48395672706aaf4502c4d1f1",
+                "createdAt": "2026-11-27T09:11:12.109Z"
+              },
+              {
+                "recordId": "ec8a539b-6d49-4e9b-bb2b-775d34f057f2",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.seller_weighed",
+                "content": {
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+                  "declarationNumber": "1",
+                  "sellerDeclaredWeight": "1000",
+                  "sellerEvidenceFileId": "6b90e4e2-c92b-4206-b6a0-a2d73c325178"
+                },
+                "recordHash": "70013e240787590715602d0b9cf0e78e9588d9194289fb9292746e9684365a74",
+                "createdAt": "2026-11-27T09:11:44.449Z"
+              },
+              {
+                "recordId": "95239829-6412-4e58-a94a-0894aae3c286",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.buyer_received",
+                "content": {
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "receivedAt": "2026-11-27T09:11:49.045322Z",
+                  "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+                  "buyerEvidenceFileId": "e905df8c-7b6f-4bc7-8aec-c0fed1a77fb8",
+                  "buyerReceivedWeight": "1000"
+                },
+                "recordHash": "e1383dd9c30c09e6ba62a1096d952f6be60f5a1e1457cecc1c16be459cd58149",
+                "createdAt": "2026-11-27T09:11:49.534Z"
+              },
+              {
+                "recordId": "3978df99-8ad6-4e4a-98eb-4ca091c7e46f",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.settled",
+                "content": {
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+                  "actualAmount": "96000000.00",
+                  "lockedAmount": "96000000.00"
+                },
+                "recordHash": "95c2284bab84b7f925c8fb32a5a16f3aa4992777493cd92b9e44311535258d17",
+                "createdAt": "2026-11-27T09:11:52.578Z"
+              },
+              {
+                "recordId": "43ca94b9-20a5-48f0-8b98-09397dbe9b78",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.buyer_confirmed",
+                "content": {
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "confirmedBy": "BUYER",
+                  "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160"
+                },
+                "recordHash": "99bde199c3667b9fedccfef66e99d6f9f22fd27739e43653aa8b5df87af9ab80",
+                "createdAt": "2026-11-27T09:11:52.615Z"
+              },
+              {
+                "recordId": "72ac20f6-af8f-472c-b1cc-da80312f0c71",
+                "sourceType": "REMEDY_FINALIZED",
+                "sourceEventType": "remedy.finalized",
+                "content": {
+                  "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+                  "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "remedyLegs": [
+                    {
+                      "role": "BUYER",
+                      "amount": "4800000.00",
+                      "fundType": "BUYER_DEPOSIT",
+                      "remedyType": "PAYMENT_REFUND",
+                      "remedyLegId": "10a23884-deb0-4141-a287-8c1787eea3fb"
+                    },
+                    {
+                      "role": "SELLER",
+                      "amount": "2880000.00",
+                      "fundType": "SELLER_DEPOSIT",
+                      "remedyType": "PAYMENT_SETTLEMENT",
+                      "remedyLegId": "1206f780-a411-48a7-85cf-5c5f40ee41ce"
+                    }
+                  ],
+                  "breachCaseId": null,
+                  "decisionSource": "SYSTEM",
+                  "penaltyEligible": "false",
+                  "breachReasonCode": null,
+                  "remedyDecisionId": "f0d33943-7c03-4e6e-b1a4-e1761327c0ea",
+                  "finalBreachingRole": null,
+                  "qualityDisposition": null,
+                  "reputationEligible": "false",
+                  "affectedMilestoneIds": [],
+                  "attributionDecisionId": "f0d33943-7c03-4e6e-b1a4-e1761327c0ea",
+                  "settledMilestoneCount": "1"
+                },
+                "recordHash": "4d2f1506e791cae042cef804a574b6da2153c79813acb15d1e069f77bbce82ce",
+                "createdAt": "2026-11-27T09:11:52.706Z"
+              }
+            ]
+          },
+          "url": "http://localhost/api/v1/audit/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/records",
+          "responseTime": 35,
+          "duration": 35,
+          "size": 3761
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "eI0PqIkUcD4InTpvwrPuR"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 2.1147355,
+        "name": "BF04-065 Assert audit record milestone.buyer_confirmed",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\065-audit-confirmation",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\070-settled.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+            "milestone": {
+              "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+              "milestoneIndex": 1,
+              "status": "SETTLED",
+              "fundingStatus": "LOCKED",
+              "fundingScheduledDate": "2026-11-27",
+              "committedQuantity": 1000,
+              "batchAmount": "96000000.00",
+              "effectiveUnitPrice": "96000.00",
+              "acceptedPriceAdjustment": null,
+              "expectedDeliveryDate": "2026-12-02",
+              "graceDays": 2,
+              "fundingDelayBusinessDays": 0,
+              "effectiveDeliveryDeadline": "2026-12-04"
+            },
+            "sellerDeclaration": {
+              "declarationNumber": 1,
+              "sellerDeclaredWeight": 1000,
+              "sellerEvidenceFileId": "6b90e4e2-c92b-4206-b6a0-a2d73c325178",
+              "deliveryCertificateFileId": null,
+              "declaredAt": "2026-11-27T09:11:44.140486Z",
+              "correctionWindowClosesAt": "2026-11-27T10:11:44.140486Z"
+            },
+            "buyerReceipt": {
+              "buyerReceivedWeight": 1000,
+              "buyerEvidenceFileId": "e905df8c-7b6f-4bc7-8aec-c0fed1a77fb8",
+              "deliveryCertificateFileId": null,
+              "receivedAt": "2026-11-27T09:11:49.045322Z",
+              "confirmWindowClosesAt": "2026-12-02T16:59:59.999Z"
+            },
+            "flag": null,
+            "evidence": [
+              {
+                "fileId": "6b90e4e2-c92b-4206-b6a0-a2d73c325178",
+                "uploadedByRole": "SELLER",
+                "status": "READY",
+                "uploadedAt": "2026-11-27T09:11:41.631202Z"
+              },
+              {
+                "fileId": "e905df8c-7b6f-4bc7-8aec-c0fed1a77fb8",
+                "uploadedByRole": "BUYER",
+                "status": "READY",
+                "uploadedAt": "2026-11-27T09:11:46.572785Z"
+              }
+            ],
+            "settlement": {
+              "path": "CLEAN_CONFIRMED",
+              "billableQuantityKg": 1000,
+              "sellerAmount": "96000000.00",
+              "buyerRefundAmount": "0.00",
+              "settledAt": "2026-11-27T09:11:51.725802Z"
+            },
+            "breachCaseId": null,
+            "disputeExit": null,
+            "remedyDecision": null
+          },
+          "url": "http://localhost/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+          "responseTime": 126,
+          "duration": 126,
+          "size": 1475
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "0Aurj3jGrMNq5zZpuFbL7"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.2533352,
+        "name": "BF04-070 Wait for clean settlement",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\070-settled",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\085-audit-settled.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8092/api/v1/audit/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/records",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {},
+          "data": {
+            "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+            "currentRecordHash": "4d2f1506e791cae042cef804a574b6da2153c79813acb15d1e069f77bbce82ce",
+            "anchorStatus": "NOT_ANCHORED",
+            "records": [
+              {
+                "recordId": "d9b339dd-21ca-4d5b-a1ff-2431d49995d3",
+                "sourceType": "CONTRACT_SIGNED",
+                "sourceEventType": "contract.signed",
+                "content": {
+                  "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+                  "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                  "signedAt": "2026-11-27T09:11:11.442807Z",
+                  "commodity": "COFFEE",
+                  "listingId": "97d953ea-44bb-4e8d-83fb-7066a8f12286",
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "totalAmount": "96000000.00",
+                  "reservedQuantity": "1000.0",
+                  "signedContentHash": "da50bf3e63c89a4c87bf8a6f0d77b3f3999d13074cb9681c718b61ec88f910ed",
+                  "buyerDepositAmount": "4800000.00",
+                  "sellerDepositAmount": "2880000.00"
+                },
+                "recordHash": "3b5f204e6e2240d09cd4d71fece3c4fe5eb8b3bb48395672706aaf4502c4d1f1",
+                "createdAt": "2026-11-27T09:11:12.109Z"
+              },
+              {
+                "recordId": "ec8a539b-6d49-4e9b-bb2b-775d34f057f2",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.seller_weighed",
+                "content": {
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+                  "declarationNumber": "1",
+                  "sellerDeclaredWeight": "1000",
+                  "sellerEvidenceFileId": "6b90e4e2-c92b-4206-b6a0-a2d73c325178"
+                },
+                "recordHash": "70013e240787590715602d0b9cf0e78e9588d9194289fb9292746e9684365a74",
+                "createdAt": "2026-11-27T09:11:44.449Z"
+              },
+              {
+                "recordId": "95239829-6412-4e58-a94a-0894aae3c286",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.buyer_received",
+                "content": {
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "receivedAt": "2026-11-27T09:11:49.045322Z",
+                  "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+                  "buyerEvidenceFileId": "e905df8c-7b6f-4bc7-8aec-c0fed1a77fb8",
+                  "buyerReceivedWeight": "1000"
+                },
+                "recordHash": "e1383dd9c30c09e6ba62a1096d952f6be60f5a1e1457cecc1c16be459cd58149",
+                "createdAt": "2026-11-27T09:11:49.534Z"
+              },
+              {
+                "recordId": "3978df99-8ad6-4e4a-98eb-4ca091c7e46f",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.settled",
+                "content": {
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+                  "actualAmount": "96000000.00",
+                  "lockedAmount": "96000000.00"
+                },
+                "recordHash": "95c2284bab84b7f925c8fb32a5a16f3aa4992777493cd92b9e44311535258d17",
+                "createdAt": "2026-11-27T09:11:52.578Z"
+              },
+              {
+                "recordId": "43ca94b9-20a5-48f0-8b98-09397dbe9b78",
+                "sourceType": "MILESTONE_EVENT",
+                "sourceEventType": "milestone.buyer_confirmed",
+                "content": {
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "confirmedBy": "BUYER",
+                  "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160"
+                },
+                "recordHash": "99bde199c3667b9fedccfef66e99d6f9f22fd27739e43653aa8b5df87af9ab80",
+                "createdAt": "2026-11-27T09:11:52.615Z"
+              },
+              {
+                "recordId": "72ac20f6-af8f-472c-b1cc-da80312f0c71",
+                "sourceType": "REMEDY_FINALIZED",
+                "sourceEventType": "remedy.finalized",
+                "content": {
+                  "buyerId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+                  "sellerId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+                  "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+                  "remedyLegs": [
+                    {
+                      "role": "BUYER",
+                      "amount": "4800000.00",
+                      "fundType": "BUYER_DEPOSIT",
+                      "remedyType": "PAYMENT_REFUND",
+                      "remedyLegId": "10a23884-deb0-4141-a287-8c1787eea3fb"
+                    },
+                    {
+                      "role": "SELLER",
+                      "amount": "2880000.00",
+                      "fundType": "SELLER_DEPOSIT",
+                      "remedyType": "PAYMENT_SETTLEMENT",
+                      "remedyLegId": "1206f780-a411-48a7-85cf-5c5f40ee41ce"
+                    }
+                  ],
+                  "breachCaseId": null,
+                  "decisionSource": "SYSTEM",
+                  "penaltyEligible": "false",
+                  "breachReasonCode": null,
+                  "remedyDecisionId": "f0d33943-7c03-4e6e-b1a4-e1761327c0ea",
+                  "finalBreachingRole": null,
+                  "qualityDisposition": null,
+                  "reputationEligible": "false",
+                  "affectedMilestoneIds": [],
+                  "attributionDecisionId": "f0d33943-7c03-4e6e-b1a4-e1761327c0ea",
+                  "settledMilestoneCount": "1"
+                },
+                "recordHash": "4d2f1506e791cae042cef804a574b6da2153c79813acb15d1e069f77bbce82ce",
+                "createdAt": "2026-11-27T09:11:52.706Z"
+              }
+            ]
+          },
+          "url": "http://localhost/api/v1/audit/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/records",
+          "responseTime": 56,
+          "duration": 56,
+          "size": 3761
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "OND59erxGD4FMdkG7BpiS"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.1261507,
+        "name": "BF04-085 Assert audit record milestone.settled",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\085-audit-settled",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\090-confirmation-mail.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+            "milestone": {
+              "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+              "milestoneIndex": 1,
+              "status": "SETTLED",
+              "fundingStatus": "LOCKED",
+              "fundingScheduledDate": "2026-11-27",
+              "committedQuantity": 1000,
+              "batchAmount": "96000000.00",
+              "effectiveUnitPrice": "96000.00",
+              "acceptedPriceAdjustment": null,
+              "expectedDeliveryDate": "2026-12-02",
+              "graceDays": 2,
+              "fundingDelayBusinessDays": 0,
+              "effectiveDeliveryDeadline": "2026-12-04"
+            },
+            "sellerDeclaration": {
+              "declarationNumber": 1,
+              "sellerDeclaredWeight": 1000,
+              "sellerEvidenceFileId": "6b90e4e2-c92b-4206-b6a0-a2d73c325178",
+              "deliveryCertificateFileId": null,
+              "declaredAt": "2026-11-27T09:11:44.140486Z",
+              "correctionWindowClosesAt": "2026-11-27T10:11:44.140486Z"
+            },
+            "buyerReceipt": {
+              "buyerReceivedWeight": 1000,
+              "buyerEvidenceFileId": "e905df8c-7b6f-4bc7-8aec-c0fed1a77fb8",
+              "deliveryCertificateFileId": null,
+              "receivedAt": "2026-11-27T09:11:49.045322Z",
+              "confirmWindowClosesAt": "2026-12-02T16:59:59.999Z"
+            },
+            "flag": null,
+            "evidence": [
+              {
+                "fileId": "6b90e4e2-c92b-4206-b6a0-a2d73c325178",
+                "uploadedByRole": "SELLER",
+                "status": "READY",
+                "uploadedAt": "2026-11-27T09:11:41.631202Z"
+              },
+              {
+                "fileId": "e905df8c-7b6f-4bc7-8aec-c0fed1a77fb8",
+                "uploadedByRole": "BUYER",
+                "status": "READY",
+                "uploadedAt": "2026-11-27T09:11:46.572785Z"
+              }
+            ],
+            "settlement": {
+              "path": "CLEAN_CONFIRMED",
+              "billableQuantityKg": 1000,
+              "sellerAmount": "96000000.00",
+              "buyerRefundAmount": "0.00",
+              "settledAt": "2026-11-27T09:11:51.725802Z"
+            },
+            "breachCaseId": null,
+            "disputeExit": null,
+            "remedyDecision": null
+          },
+          "url": "http://localhost/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+          "responseTime": 76,
+          "duration": 76,
+          "size": 1475
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "LikIltJSrJB2Z7Z7ecmj3"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.1284006,
+        "name": "BF04-090 Verify WEIGHED and CONFIRMED mail recipients",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\090-confirmation-mail",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\091-ledger-before-replay.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8086/internal/v1/bank/ledger?contractId=2809abda-b4ac-4287-87a3-2b929c63055b",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {},
+          "data": [
+            {
+              "entryId": "8f5b42e8-f877-404f-a539-c3dad4a4e7fa",
+              "sourceEventId": "6583d1e0-b97d-4682-a4c4-ad696f35857f",
+              "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+              "milestoneId": null,
+              "userId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+              "entryType": "LOCK_BUYER_DEPOSIT",
+              "fundType": "BUYER_DEPOSIT",
+              "remedyDecisionId": null,
+              "remedyLegId": null,
+              "amount": "4800000.00",
+              "createdAt": "2026-11-27T09:11:12.884982Z"
+            },
+            {
+              "entryId": "9f436ea1-dfa6-4244-868b-7b25858294e5",
+              "sourceEventId": "a3e943ee-1dfe-4459-9556-9f1ea73f84bc",
+              "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+              "milestoneId": null,
+              "userId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+              "entryType": "LOCK_SELLER_DEPOSIT",
+              "fundType": "SELLER_DEPOSIT",
+              "remedyDecisionId": null,
+              "remedyLegId": null,
+              "amount": "2880000.00",
+              "createdAt": "2026-11-27T09:11:13.168315Z"
+            },
+            {
+              "entryId": "428d3dfd-d1ff-40e5-8459-66dd3c47c3da",
+              "sourceEventId": "c9eb686a-fa2c-4255-b76c-0f35b0707000",
+              "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+              "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+              "userId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+              "entryType": "LOCK_MILESTONE",
+              "fundType": "MILESTONE_PAYMENT",
+              "remedyDecisionId": null,
+              "remedyLegId": null,
+              "amount": "96000000.00",
+              "createdAt": "2026-11-27T09:11:15.764234Z"
+            },
+            {
+              "entryId": "2d275254-d6cf-4ae5-9f2f-4fa9bce2c162",
+              "sourceEventId": "2f121c33-4967-4cce-b9ca-a6965d3e2aa9",
+              "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+              "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+              "userId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+              "entryType": "RELEASE_TO_SELLER",
+              "fundType": "MILESTONE_PAYMENT",
+              "remedyDecisionId": null,
+              "remedyLegId": null,
+              "amount": "96000000.00",
+              "createdAt": "2026-11-27T09:11:53.202949Z"
+            },
+            {
+              "entryId": "2b22183d-4dc0-4d8d-b7d9-a71a392e1735",
+              "sourceEventId": "1c9c415e-cee8-4070-80b8-cd740d973e85",
+              "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+              "milestoneId": null,
+              "userId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+              "entryType": "REFUND_TO_BUYER",
+              "fundType": "BUYER_DEPOSIT",
+              "remedyDecisionId": "f0d33943-7c03-4e6e-b1a4-e1761327c0ea",
+              "remedyLegId": "10a23884-deb0-4141-a287-8c1787eea3fb",
+              "amount": "4800000.00",
+              "createdAt": "2026-11-27T09:11:53.221409Z"
+            },
+            {
+              "entryId": "0315727b-1fce-40fd-a9c9-dbc67e5029e6",
+              "sourceEventId": "96158be3-df4e-49ac-8e34-0278bc2d8f3f",
+              "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+              "milestoneId": null,
+              "userId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+              "entryType": "RELEASE_TO_SELLER",
+              "fundType": "SELLER_DEPOSIT",
+              "remedyDecisionId": "f0d33943-7c03-4e6e-b1a4-e1761327c0ea",
+              "remedyLegId": "1206f780-a411-48a7-85cf-5c5f40ee41ce",
+              "amount": "2880000.00",
+              "createdAt": "2026-11-27T09:11:53.259712Z"
+            }
+          ],
+          "url": "http://localhost/internal/v1/bank/ledger?contractId=2809abda-b4ac-4287-87a3-2b929c63055b",
+          "responseTime": 41,
+          "duration": 41,
+          "size": 2561
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "Ul0Z6aXwWfR8yLvdB5ZIb"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 19.0080077,
+        "name": "BF04-091 Record the final ledger before retrying confirmation",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\091-ledger-before-replay",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\092-replay-confirmation.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160/confirm",
+          "headers": {}
+        },
+        "response": {
+          "status": 204,
+          "statusText": "No Content",
+          "headers": {},
+          "data": "",
+          "url": "http://localhost/api/v1/contracts/2809abda-b4ac-4287-87a3-2b929c63055b/milestones/c0096429-9f6a-4fe3-8bee-1a08b7f36160/confirm",
+          "responseTime": 122,
+          "duration": 122,
+          "size": 0
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "QDoHkUXh3gLHFdyMNt8cu"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.1337314,
+        "name": "BF04-092 Retry clean confirmation with its original idempotency key",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\092-replay-confirmation",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\093-ledger-after-replay.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8086/internal/v1/bank/ledger?contractId=2809abda-b4ac-4287-87a3-2b929c63055b",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": {},
+          "data": [
+            {
+              "entryId": "8f5b42e8-f877-404f-a539-c3dad4a4e7fa",
+              "sourceEventId": "6583d1e0-b97d-4682-a4c4-ad696f35857f",
+              "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+              "milestoneId": null,
+              "userId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+              "entryType": "LOCK_BUYER_DEPOSIT",
+              "fundType": "BUYER_DEPOSIT",
+              "remedyDecisionId": null,
+              "remedyLegId": null,
+              "amount": "4800000.00",
+              "createdAt": "2026-11-27T09:11:12.884982Z"
+            },
+            {
+              "entryId": "9f436ea1-dfa6-4244-868b-7b25858294e5",
+              "sourceEventId": "a3e943ee-1dfe-4459-9556-9f1ea73f84bc",
+              "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+              "milestoneId": null,
+              "userId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+              "entryType": "LOCK_SELLER_DEPOSIT",
+              "fundType": "SELLER_DEPOSIT",
+              "remedyDecisionId": null,
+              "remedyLegId": null,
+              "amount": "2880000.00",
+              "createdAt": "2026-11-27T09:11:13.168315Z"
+            },
+            {
+              "entryId": "428d3dfd-d1ff-40e5-8459-66dd3c47c3da",
+              "sourceEventId": "c9eb686a-fa2c-4255-b76c-0f35b0707000",
+              "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+              "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+              "userId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+              "entryType": "LOCK_MILESTONE",
+              "fundType": "MILESTONE_PAYMENT",
+              "remedyDecisionId": null,
+              "remedyLegId": null,
+              "amount": "96000000.00",
+              "createdAt": "2026-11-27T09:11:15.764234Z"
+            },
+            {
+              "entryId": "2d275254-d6cf-4ae5-9f2f-4fa9bce2c162",
+              "sourceEventId": "2f121c33-4967-4cce-b9ca-a6965d3e2aa9",
+              "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+              "milestoneId": "c0096429-9f6a-4fe3-8bee-1a08b7f36160",
+              "userId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+              "entryType": "RELEASE_TO_SELLER",
+              "fundType": "MILESTONE_PAYMENT",
+              "remedyDecisionId": null,
+              "remedyLegId": null,
+              "amount": "96000000.00",
+              "createdAt": "2026-11-27T09:11:53.202949Z"
+            },
+            {
+              "entryId": "2b22183d-4dc0-4d8d-b7d9-a71a392e1735",
+              "sourceEventId": "1c9c415e-cee8-4070-80b8-cd740d973e85",
+              "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+              "milestoneId": null,
+              "userId": "1de004cd-8493-463c-8f32-6c7b75bcbf16",
+              "entryType": "REFUND_TO_BUYER",
+              "fundType": "BUYER_DEPOSIT",
+              "remedyDecisionId": "f0d33943-7c03-4e6e-b1a4-e1761327c0ea",
+              "remedyLegId": "10a23884-deb0-4141-a287-8c1787eea3fb",
+              "amount": "4800000.00",
+              "createdAt": "2026-11-27T09:11:53.221409Z"
+            },
+            {
+              "entryId": "0315727b-1fce-40fd-a9c9-dbc67e5029e6",
+              "sourceEventId": "96158be3-df4e-49ac-8e34-0278bc2d8f3f",
+              "contractId": "2809abda-b4ac-4287-87a3-2b929c63055b",
+              "milestoneId": null,
+              "userId": "1a5a2ddd-56b9-492a-b966-99f436e0fc85",
+              "entryType": "RELEASE_TO_SELLER",
+              "fundType": "SELLER_DEPOSIT",
+              "remedyDecisionId": "f0d33943-7c03-4e6e-b1a4-e1761327c0ea",
+              "remedyLegId": "1206f780-a411-48a7-85cf-5c5f40ee41ce",
+              "amount": "2880000.00",
+              "createdAt": "2026-11-27T09:11:53.259712Z"
+            }
+          ],
+          "url": "http://localhost/internal/v1/bank/ledger?contractId=2809abda-b4ac-4287-87a3-2b929c63055b",
+          "responseTime": 26,
+          "duration": 26,
+          "size": 2561
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "Q65O2YjsS_DZ5H4fWSJa3"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 4.1328257,
+        "name": "BF04-093 Confirm the exact retry leaves the bank ledger intact",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\093-ledger-after-replay",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e\\bf04-milestone-delivery-settlement\\clean\\095-auto-confirm.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "{{base_url}}/api/v1/contracts/{{contract_id}}/milestones/{{milestone_id}}",
+          "headers": {}
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": {},
+          "data": null,
+          "url": null,
+          "responseTime": 0,
+          "duration": 0,
+          "size": 0
+        },
+        "error": "spawnSync <repo>/backend\\scripts\\e2e\\time-travel.sh EFTYPE",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 15.6012176,
+        "name": "BF04-250 Advance a separate fixture receipt and wait for system confirmation",
+        "path": "e2e\\bf04-milestone-delivery-settlement\\clean\\095-auto-confirm",
+        "iterationIndex": 0
+      }
+    ],
+    "summary": {
+      "totalRequests": 18,
+      "passedRequests": 17,
+      "failedRequests": 0,
+      "errorRequests": 1,
+      "skippedRequests": 0,
+      "totalAssertions": 0,
+      "passedAssertions": 0,
+      "failedAssertions": 0,
+      "totalTests": 17,
+      "passedTests": 17,
+      "failedTests": 0,
+      "totalPreRequestTests": 0,
+      "passedPreRequestTests": 0,
+      "failedPreRequestTests": 0,
+      "totalPostResponseTests": 0,
+      "passedPostResponseTests": 0,
+      "failedPostResponseTests": 0
+    }
+  }
+]

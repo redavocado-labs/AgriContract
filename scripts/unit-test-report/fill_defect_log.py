@@ -74,6 +74,8 @@ cv["F11"] = "Report 5.0, 5.1, 5.2; #670"
 CHANGES = [
     ("27/11/2026", "Defect List", "A", "Thêm DEF-17: image Java thiếu module luật kiến trúc, stack không build từ main",
      "#288, PR #678"),
+    ("27/11/2026", "Defect List", "A", "Thêm DEF-18: helper lùi thời gian của BF04-250 không chạy trên Windows "
+     "(Report 5.3 Round 1), sửa và chạy lại ở Round 2", "#685, PR #686, #676"),
 ]
 for row, (date, item, kind, text, ref) in enumerate(CHANGES, start=12):
     for col, value in zip("ABCDEF", (date, "v1.0", item, kind, text, ref)):

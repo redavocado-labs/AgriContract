@@ -1,0 +1,101 @@
+[
+  {
+    "iterationIndex": 0,
+    "results": [
+      {
+        "test": {
+          "filename": "e2e\\bf05-breach-force-majeure\\010-arbitration-queue.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/arbitration/breach-cases?size=10",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "content": [
+              {
+                "breachCaseId": "848b7738-4f17-46f4-a900-d75015208950",
+                "contractId": "6dd7d807-313e-4e30-add6-9a1b474782f9",
+                "milestoneId": "0ac4e399-1647-4b0f-89ad-76dc1f9d6592",
+                "requestedBy": "BUYER",
+                "allegedBreachingRole": "SELLER",
+                "breachReasonCode": "QUALITY_BELOW_COMMITTED",
+                "severity": "MINOR",
+                "evidenceFileIds": [
+                  "d49f12d9-c6be-4d05-ba64-06c32c084347",
+                  "290ef3e1-8ff5-4159-9e37-c6ef9f46f0a4"
+                ],
+                "finalBreachingRole": null,
+                "decisionSource": "INSPECTOR_L1_5",
+                "status": "RESOLVED",
+                "contestStatus": "NOT_APPLICABLE",
+                "contestDeadline": null,
+                "computedResolution": {
+                  "inspectionReportId": "10e31c51-880e-4301-9136-2c68db8b5bd2",
+                  "issueType": "QUALITY",
+                  "acceptedQuantityKg": 1000,
+                  "qualityDisposition": "PARTIALLY_CONFORMING",
+                  "finalBreachingRole": null,
+                  "decisionSource": "INSPECTOR_L1_5",
+                  "sellerEntitlementAmount": "94080000.00",
+                  "buyerRefundAmount": "1920000.00",
+                  "prevailingRole": "BUYER"
+                },
+                "reportedAt": "2026-11-27T09:13:09.783980Z",
+                "resolvedAt": "2026-11-27T09:13:17.669982Z"
+              }
+            ],
+            "page": 0,
+            "size": 10,
+            "totalElements": 1,
+            "totalPages": 1
+          },
+          "url": "http://localhost/api/v1/arbitration/breach-cases?size=10",
+          "responseTime": 70,
+          "duration": 70,
+          "size": 997
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "9SPF73tgyUPYws8vMPzej"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.749282,
+        "name": "BF05-010 Read the Arbitrator breach queue",
+        "path": "e2e\\bf05-breach-force-majeure\\010-arbitration-queue",
+        "iterationIndex": 0
+      }
+    ],
+    "summary": {
+      "totalRequests": 1,
+      "passedRequests": 1,
+      "failedRequests": 0,
+      "errorRequests": 0,
+      "skippedRequests": 0,
+      "totalAssertions": 0,
+      "passedAssertions": 0,
+      "failedAssertions": 0,
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "totalPreRequestTests": 0,
+      "passedPreRequestTests": 0,
+      "failedPreRequestTests": 0,
+      "totalPostResponseTests": 0,
+      "passedPostResponseTests": 0,
+      "failedPostResponseTests": 0
+    }
+  }
+]
