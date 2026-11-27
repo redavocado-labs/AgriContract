@@ -11,7 +11,7 @@
         <mxCell id="guest" parent="1" style="fontFamily=Arial;fontSize=19;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;rounded=0;strokeWidth=1.5;" value="Guest" vertex="1">
           <mxGeometry height="116" width="220" x="22" y="76" as="geometry"/>
         </mxCell>
-        <mxCell id="flow00" edge="1" parent="1" source="guest" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.125000000;entryX=0.180978057;entryY=0.115000000;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Registration data">
+        <mxCell id="flow00" edge="1" parent="1" source="guest" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.125000000;entryX=0.180978057;entryY=0.115000000;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Registration information">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -19,7 +19,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow01" edge="1" parent="1" source="guest" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.375000000;entryX=0.153180386;entryY=0.139838710;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Listing search criteria">
+        <mxCell id="flow01" edge="1" parent="1" source="guest" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.375000000;entryX=0.153180386;entryY=0.139838710;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Search information">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -27,7 +27,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow02" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.129110843;exitY=0.164677419;entryX=1.000000000;entryY=0.625000000;exitPerimeter=0;entryPerimeter=0;" target="guest" value="Listing information">
+        <mxCell id="flow02" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.129110843;exitY=0.164677419;entryX=1.000000000;entryY=0.625000000;exitPerimeter=0;entryPerimeter=0;" target="guest" value="Listing information">
           <mxGeometry relative="1" as="geometry" x="0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -35,7 +35,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow03" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.108081940;exitY=0.189516129;entryX=1.000000000;entryY=0.875000000;exitPerimeter=0;entryPerimeter=0;" target="guest" value="Reference prices">
+        <mxCell id="flow03" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.108081940;exitY=0.189516129;entryX=1.000000000;entryY=0.875000000;exitPerimeter=0;entryPerimeter=0;" target="guest" value="Reference price information">
           <mxGeometry relative="1" as="geometry" x="0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -46,7 +46,7 @@
         <mxCell id="buyer" parent="1" style="fontFamily=Arial;fontSize=19;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;rounded=0;strokeWidth=1.5;" value="Buyer" vertex="1">
           <mxGeometry height="348" width="220" x="22" y="207" as="geometry"/>
         </mxCell>
-        <mxCell id="flow04" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.041666667;entryX=0.089625973;entryY=0.214354839;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Contract offer">
+        <mxCell id="flow04" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.041666667;entryX=0.089625973;entryY=0.214354839;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Offer information">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -54,7 +54,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow05" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.125000000;entryX=0.073408867;entryY=0.239193548;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Contract terms">
+        <mxCell id="flow05" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.125000000;entryX=0.073408867;entryY=0.239193548;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Negotiation information">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -62,7 +62,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow06" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.208333333;entryX=0.059183457;entryY=0.264032258;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Signature OTP">
+        <mxCell id="flow06" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.208333333;entryX=0.059183457;entryY=0.264032258;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Signing information">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -70,7 +70,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow07" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.291666667;entryX=0.046762169;entryY=0.288870968;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Delivery receipt">
+        <mxCell id="flow07" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.291666667;entryX=0.046762169;entryY=0.288870968;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Receipt information">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -78,7 +78,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow08" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.375000000;entryX=0.036000091;entryY=0.313709677;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Delivery issue report">
+        <mxCell id="flow08" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.375000000;entryX=0.036000091;entryY=0.313709677;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Delivery issue information">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -86,7 +86,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow09" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.458333333;entryX=0.026784006;entryY=0.338548387;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Offer withdrawal">
+        <mxCell id="flow09" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.458333333;entryX=0.026784006;entryY=0.338548387;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Withdrawal request">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -94,7 +94,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow10" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.003870994;exitY=0.437903226;entryX=1.000000000;entryY=0.791666667;exitPerimeter=0;entryPerimeter=0;" target="buyer" value="Contract status">
+        <mxCell id="flow10" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.003870994;exitY=0.437903226;entryX=1.000000000;entryY=0.791666667;exitPerimeter=0;entryPerimeter=0;" target="buyer" value="Contract information">
           <mxGeometry relative="1" as="geometry" x="0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -102,7 +102,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow11" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.001390096;exitY=0.462741935;entryX=1.000000000;entryY=0.875000000;exitPerimeter=0;entryPerimeter=0;" target="buyer" value="Email notifications">
+        <mxCell id="flow11" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.001390096;exitY=0.462741935;entryX=1.000000000;entryY=0.875000000;exitPerimeter=0;entryPerimeter=0;" target="buyer" value="Notification information">
           <mxGeometry relative="1" as="geometry" x="0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -110,7 +110,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow12" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.000154264;exitY=0.487580645;entryX=1.000000000;entryY=0.958333333;exitPerimeter=0;entryPerimeter=0;" target="buyer" value="OTP code">
+        <mxCell id="flow12" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.000154264;exitY=0.487580645;entryX=1.000000000;entryY=0.958333333;exitPerimeter=0;entryPerimeter=0;" target="buyer" value="OTP information">
           <mxGeometry relative="1" as="geometry" x="0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -137,7 +137,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow15" edge="1" parent="1" source="seller" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.192307692;entryX=0.003870994;entryY=0.562096774;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Contract terms">
+        <mxCell id="flow15" edge="1" parent="1" source="seller" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.192307692;entryX=0.003870994;entryY=0.562096774;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Negotiation information">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -145,7 +145,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow16" edge="1" parent="1" source="seller" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.269230769;entryX=0.007615778;entryY=0.586935484;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Signature OTP">
+        <mxCell id="flow16" edge="1" parent="1" source="seller" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.269230769;entryX=0.007615778;entryY=0.586935484;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Signing information">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -153,7 +153,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow17" edge="1" parent="1" source="seller" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.346153846;entryX=0.012653584;entryY=0.611774194;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Delivery weight">
+        <mxCell id="flow17" edge="1" parent="1" source="seller" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.346153846;entryX=0.012653584;entryY=0.611774194;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Weighing information">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -161,7 +161,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow18" edge="1" parent="1" source="seller" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.423076923;entryX=0.019025037;entryY=0.636612903;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Dispute contest">
+        <mxCell id="flow18" edge="1" parent="1" source="seller" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.423076923;entryX=0.019025037;entryY=0.636612903;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Contest information">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -169,7 +169,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow19" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.073408867;exitY=0.760806452;entryX=1.000000000;entryY=0.807692308;exitPerimeter=0;entryPerimeter=0;" target="seller" value="Contract status">
+        <mxCell id="flow19" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.073408867;exitY=0.760806452;entryX=1.000000000;entryY=0.807692308;exitPerimeter=0;entryPerimeter=0;" target="seller" value="Contract information">
           <mxGeometry relative="1" as="geometry" x="0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -177,7 +177,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow20" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.089625973;exitY=0.785645161;entryX=1.000000000;entryY=0.884615385;exitPerimeter=0;entryPerimeter=0;" target="seller" value="Email notifications">
+        <mxCell id="flow20" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.089625973;exitY=0.785645161;entryX=1.000000000;entryY=0.884615385;exitPerimeter=0;entryPerimeter=0;" target="seller" value="Notification information">
           <mxGeometry relative="1" as="geometry" x="0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -185,7 +185,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow21" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.108081940;exitY=0.810483871;entryX=1.000000000;entryY=0.961538462;exitPerimeter=0;entryPerimeter=0;" target="seller" value="OTP code">
+        <mxCell id="flow21" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.108081940;exitY=0.810483871;entryX=1.000000000;entryY=0.961538462;exitPerimeter=0;entryPerimeter=0;" target="seller" value="OTP information">
           <mxGeometry relative="1" as="geometry" x="0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -196,7 +196,7 @@
         <mxCell id="inspector" parent="1" style="fontFamily=Arial;fontSize=19;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;rounded=0;strokeWidth=1.5;" value="Inspector&lt;br&gt;(Level 1.5)" vertex="1">
           <mxGeometry height="87" width="220" x="22" y="962" as="geometry"/>
         </mxCell>
-        <mxCell id="flow22" edge="1" parent="1" source="inspector" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.166666667;entryX=0.129110843;entryY=0.835322581;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Inspection report">
+        <mxCell id="flow22" edge="1" parent="1" source="inspector" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.166666667;entryX=0.129110843;entryY=0.835322581;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Inspection result information">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -204,7 +204,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow23" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.153180386;exitY=0.860161290;entryX=1.000000000;entryY=0.500000000;exitPerimeter=0;entryPerimeter=0;" target="inspector" value="Inspection assignment">
+        <mxCell id="flow23" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.153180386;exitY=0.860161290;entryX=1.000000000;entryY=0.500000000;exitPerimeter=0;entryPerimeter=0;" target="inspector" value="Assignment information">
           <mxGeometry relative="1" as="geometry" x="0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -212,7 +212,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow24" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.180978057;exitY=0.885000000;entryX=1.000000000;entryY=0.833333333;exitPerimeter=0;entryPerimeter=0;" target="inspector" value="Inspection evidence">
+        <mxCell id="flow24" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=0.180978057;exitY=0.885000000;entryX=1.000000000;entryY=0.833333333;exitPerimeter=0;entryPerimeter=0;" target="inspector" value="Evidence information">
           <mxGeometry relative="1" as="geometry" x="0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -223,7 +223,7 @@
         <mxCell id="operator" parent="1" style="fontFamily=Arial;fontSize=19;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;rounded=0;strokeWidth=1.5;" value="Operator" vertex="1">
           <mxGeometry height="174" width="220" x="1898" y="87.5" as="geometry"/>
         </mxCell>
-        <mxCell id="flow25" edge="1" parent="1" source="operator" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.0833333;exitPerimeter=0;entryX=0.821297741;entryY=0.116897192;entryPerimeter=0;" target="sys" value="KYC decision">
+        <mxCell id="flow25" edge="1" parent="1" source="operator" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.0833333;exitPerimeter=0;entryX=0.821297741;entryY=0.116897192;entryPerimeter=0;" target="sys" value="KYC decision information">
           <mxGeometry relative="1" x="-0.13886038" as="geometry">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -239,7 +239,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow27" edge="1" parent="1" source="operator" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.4166667;exitPerimeter=0;entryX=0.868844730;entryY=0.162429911;entryPerimeter=0;" target="sys" value="Price data">
+        <mxCell id="flow27" edge="1" parent="1" source="operator" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.4166667;exitPerimeter=0;entryX=0.868844730;entryY=0.162429911;entryPerimeter=0;" target="sys" value="Price information">
           <mxGeometry relative="1" x="-0.13701463" as="geometry">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -247,7 +247,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow28" edge="1" parent="1" source="operator" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.5833333;exitPerimeter=0;entryX=0.888456694;entryY=0.185196257;entryPerimeter=0;" target="sys" value="Moderation decision">
+        <mxCell id="flow28" edge="1" parent="1" source="operator" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.5833333;exitPerimeter=0;entryX=0.888456694;entryY=0.185196257;entryPerimeter=0;" target="sys" value="Moderation decision information">
           <mxGeometry relative="1" x="-0.13464528" as="geometry">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -255,7 +255,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow29" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.905849931;exitY=0.207962617;exitPerimeter=0;entryX=0.0000000;entryY=0.7500000;entryPerimeter=0;" target="operator" value="Review queues">
+        <mxCell id="flow29" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.905849931;exitY=0.207962617;exitPerimeter=0;entryX=0.0000000;entryY=0.7500000;entryPerimeter=0;" target="operator" value="Review queue information">
           <mxGeometry relative="1" x="0.13131519" as="geometry">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -263,7 +263,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow30" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.921299319;exitY=0.230728977;exitPerimeter=0;entryX=0.0000000;entryY=0.9166667;entryPerimeter=0;" target="operator" value="Operational alerts">
+        <mxCell id="flow30" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.921299319;exitY=0.230728977;exitPerimeter=0;entryX=0.0000000;entryY=0.9166667;entryPerimeter=0;" target="operator" value="Alert information">
           <mxGeometry relative="1" x="0.12701065" as="geometry">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -274,7 +274,7 @@
         <mxCell id="arbitrator" parent="1" style="fontFamily=Arial;fontSize=19;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;rounded=0;strokeWidth=1.5;" value="Arbitrator" vertex="1">
           <mxGeometry height="87" width="220" x="1898" y="276.5" as="geometry"/>
         </mxCell>
-        <mxCell id="flow31" edge="1" parent="1" source="arbitrator" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.1666667;exitPerimeter=0;entryX=0.941477418;entryY=0.265271030;entryPerimeter=0;" target="sys" value="Breach decision">
+        <mxCell id="flow31" edge="1" parent="1" source="arbitrator" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.1666667;exitPerimeter=0;entryX=0.941477418;entryY=0.265271030;entryPerimeter=0;" target="sys" value="Breach decision information">
           <mxGeometry relative="1" x="-0.11857458" as="geometry">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -282,7 +282,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow32" edge="1" parent="1" source="arbitrator" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.5000000;exitPerimeter=0;entryX=0.952848594;entryY=0.288037383;entryPerimeter=0;" target="sys" value="Force majeure decision">
+        <mxCell id="flow32" edge="1" parent="1" source="arbitrator" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.5000000;exitPerimeter=0;entryX=0.952848594;entryY=0.288037383;entryPerimeter=0;" target="sys" value="Force majeure decision information">
           <mxGeometry relative="1" x="-0.11172837" as="geometry">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -290,7 +290,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow33" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.962822616;exitY=0.310803736;exitPerimeter=0;entryX=0.0000000;entryY=0.8333333;entryPerimeter=0;" target="arbitrator" value="Case evidence">
+        <mxCell id="flow33" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.962822616;exitY=0.310803736;exitPerimeter=0;entryX=0.0000000;entryY=0.8333333;entryPerimeter=0;" target="arbitrator" value="Case information">
           <mxGeometry relative="1" x="0.1038402" as="geometry">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -301,7 +301,7 @@
         <mxCell id="admin" parent="1" style="fontFamily=Arial;fontSize=19;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;rounded=0;strokeWidth=1.5;" value="Admin" vertex="1">
           <mxGeometry height="87" width="220" x="1898" y="378.5" as="geometry"/>
         </mxCell>
-        <mxCell id="flow34" edge="1" parent="1" source="admin" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.1666667;exitPerimeter=0;entryX=0.975480891;entryY=0.345345797;entryPerimeter=0;" target="sys" value="System administration request">
+        <mxCell id="flow34" edge="1" parent="1" source="admin" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.1666667;exitPerimeter=0;entryX=0.975480891;entryY=0.345345797;entryPerimeter=0;" target="sys" value="Administration request">
           <mxGeometry relative="1" x="-0.08986318" as="geometry">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -309,12 +309,12 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow35" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.974708400;exitY=0.342990654;exitPerimeter=0;entryX=0.0000000;entryY=0.5000000;entryPerimeter=0;" target="admin" value="Audit report">
+        <mxCell id="flow35" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.974708400;exitY=0.342990654;exitPerimeter=0;entryX=0.0000000;entryY=0.5000000;entryPerimeter=0;" target="admin" value="Audit information">
           <mxGeometry relative="1" as="geometry">
             <mxPoint y="-11" as="offset"/>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow36" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.982829462;exitY=0.370093455;exitPerimeter=0;entryX=0.0000000;entryY=0.8333333;entryPerimeter=0;" target="admin" value="Security report">
+        <mxCell id="flow36" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.982829462;exitY=0.370093455;exitPerimeter=0;entryX=0.0000000;entryY=0.8333333;entryPerimeter=0;" target="admin" value="Security information">
           <mxGeometry relative="1" as="geometry">
             <mxPoint y="-11" as="offset"/>
           </mxGeometry>
@@ -322,22 +322,22 @@
         <mxCell id="verifier" parent="1" style="fontFamily=Arial;fontSize=19;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;rounded=0;strokeWidth=1.5;" value="External&lt;br&gt;Verifier" vertex="1">
           <mxGeometry height="116" width="220" x="1898" y="480.5" as="geometry"/>
         </mxCell>
-        <mxCell id="flow37" edge="1" parent="1" source="verifier" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.1250000;exitPerimeter=0;entryX=0.992054078;entryY=0.411214953;entryPerimeter=0;" target="sys" value="Signed LOCK request">
+        <mxCell id="flow37" edge="1" parent="1" source="verifier" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.1250000;exitPerimeter=0;entryX=0.992054078;entryY=0.411214953;entryPerimeter=0;" target="sys" value="Lock request">
           <mxGeometry relative="1" as="geometry">
             <mxPoint y="-11" as="offset"/>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow38" edge="1" parent="1" source="verifier" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.3750000;exitPerimeter=0;entryX=0.996180714;entryY=0.438317757;entryPerimeter=0;" target="sys" value="Signed UNLOCK request">
+        <mxCell id="flow38" edge="1" parent="1" source="verifier" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.3750000;exitPerimeter=0;entryX=0.996180714;entryY=0.438317757;entryPerimeter=0;" target="sys" value="Unlock request">
           <mxGeometry relative="1" as="geometry">
             <mxPoint y="-11" as="offset"/>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow39" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.998802829;exitY=0.465420561;exitPerimeter=0;entryX=0.0000000;entryY=0.6250000;entryPerimeter=0;" target="verifier" value="Lock status">
+        <mxCell id="flow39" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.998802829;exitY=0.465420561;exitPerimeter=0;entryX=0.0000000;entryY=0.6250000;entryPerimeter=0;" target="verifier" value="Lock status information">
           <mxGeometry relative="1" as="geometry">
             <mxPoint y="-11" as="offset"/>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow40" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.999944097;exitY=0.492523364;exitPerimeter=0;entryX=0.0000000;entryY=0.8750000;entryPerimeter=0;" target="verifier" value="Audit hashes">
+        <mxCell id="flow40" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.999944097;exitY=0.492523364;exitPerimeter=0;entryX=0.0000000;entryY=0.8750000;entryPerimeter=0;" target="verifier" value="Audit hash information">
           <mxGeometry relative="1" as="geometry">
             <mxPoint y="-11" as="offset"/>
           </mxGeometry>
@@ -345,22 +345,22 @@
         <mxCell id="bank" parent="1" style="fontFamily=Arial;fontSize=19;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;rounded=0;strokeWidth=1.5;" value="Custodian Bank&lt;br&gt;(mock bank-service)" vertex="1">
           <mxGeometry height="116" width="220" x="1898" y="611.5" as="geometry"/>
         </mxCell>
-        <mxCell id="flow41" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.998866739;exitY=0.533644860;exitPerimeter=0;entryX=0.0000000;entryY=0.1250000;entryPerimeter=0;" target="bank" value="Lock command">
+        <mxCell id="flow41" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.998866739;exitY=0.533644860;exitPerimeter=0;entryX=0.0000000;entryY=0.1250000;entryPerimeter=0;" target="bank" value="Lock request">
           <mxGeometry relative="1" as="geometry">
             <mxPoint y="-11" as="offset"/>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow42" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.996296002;exitY=0.560747664;exitPerimeter=0;entryX=0.0000000;entryY=0.3750000;entryPerimeter=0;" target="bank" value="Release command">
+        <mxCell id="flow42" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.996296002;exitY=0.560747664;exitPerimeter=0;entryX=0.0000000;entryY=0.3750000;entryPerimeter=0;" target="bank" value="Release request">
           <mxGeometry relative="1" as="geometry">
             <mxPoint y="-11" as="offset"/>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow43" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.992221795;exitY=0.587850467;exitPerimeter=0;entryX=0.0000000;entryY=0.6250000;entryPerimeter=0;" target="bank" value="Refund command">
+        <mxCell id="flow43" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.992221795;exitY=0.587850467;exitPerimeter=0;entryX=0.0000000;entryY=0.6250000;entryPerimeter=0;" target="bank" value="Refund request">
           <mxGeometry relative="1" as="geometry">
             <mxPoint y="-11" as="offset"/>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow44" edge="1" parent="1" source="bank" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.8750000;exitPerimeter=0;entryX=0.986606356;entryY=0.614953271;entryPerimeter=0;" target="sys" value="Ledger results">
+        <mxCell id="flow44" edge="1" parent="1" source="bank" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.8750000;exitPerimeter=0;entryX=0.986606356;entryY=0.614953271;entryPerimeter=0;" target="sys" value="Ledger information">
           <mxGeometry relative="1" as="geometry">
             <mxPoint y="-11" as="offset"/>
           </mxGeometry>
@@ -368,12 +368,12 @@
         <mxCell id="l2" parent="1" style="fontFamily=Arial;fontSize=19;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;rounded=0;strokeWidth=1.5;" value="Level 2&lt;br&gt;Inspection Org" vertex="1">
           <mxGeometry height="58" width="220" x="1898" y="742.5" as="geometry"/>
         </mxCell>
-        <mxCell id="flow45" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.975016492;exitY=0.656074766;exitPerimeter=0;entryX=0.0000000;entryY=0.2500000;entryPerimeter=0;" target="l2" value="Inspection commission">
+        <mxCell id="flow45" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.975016492;exitY=0.656074766;exitPerimeter=0;entryX=0.0000000;entryY=0.2500000;entryPerimeter=0;" target="l2" value="Inspection request">
           <mxGeometry relative="1" as="geometry">
             <mxPoint y="-11" as="offset"/>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow46" edge="1" parent="1" source="l2" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.7500000;exitPerimeter=0;entryX=0.975735517;entryY=0.653869159;entryPerimeter=0;" target="sys" value="External report (by email)">
+        <mxCell id="flow46" edge="1" parent="1" source="l2" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.7500000;exitPerimeter=0;entryX=0.975735517;entryY=0.653869159;entryPerimeter=0;" target="sys" value="Inspection result information">
           <mxGeometry relative="1" x="-0.08951739" as="geometry">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -384,7 +384,7 @@
         <mxCell id="email" parent="1" style="fontFamily=Arial;fontSize=19;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;rounded=0;strokeWidth=1.5;" value="Email Service&lt;br&gt;(SMTP / intake mailbox)" vertex="1">
           <mxGeometry height="58" width="220" x="1898" y="815.5" as="geometry"/>
         </mxCell>
-        <mxCell id="flow47" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.963142758;exitY=0.688411215;exitPerimeter=0;entryX=0.0000000;entryY=0.2500000;entryPerimeter=0;" target="email" value="Outgoing emails">
+        <mxCell id="flow47" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.963142758;exitY=0.688411215;exitPerimeter=0;entryX=0.0000000;entryY=0.2500000;entryPerimeter=0;" target="email" value="Email information">
           <mxGeometry relative="1" x="0.10354947" as="geometry">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -392,7 +392,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow48" edge="1" parent="1" source="email" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.7500000;exitPerimeter=0;entryX=0.953215218;entryY=0.711177570;entryPerimeter=0;" target="sys" value="Intake emails">
+        <mxCell id="flow48" edge="1" parent="1" source="email" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.7500000;exitPerimeter=0;entryX=0.953215218;entryY=0.711177570;entryPerimeter=0;" target="sys" value="Intake email information">
           <mxGeometry relative="1" x="-0.11147379" as="geometry">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -403,7 +403,7 @@
         <mxCell id="ots" parent="1" style="fontFamily=Arial;fontSize=19;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;rounded=0;strokeWidth=1.5;" value="OpenTimestamps" vertex="1">
           <mxGeometry height="58" width="220" x="1898" y="888.5" as="geometry"/>
         </mxCell>
-        <mxCell id="flow49" edge="1" parent="1" source="sys" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.935455928;exitY=0.745719626;exitPerimeter=0;entryX=0.0000000;entryY=0.2500000;entryPerimeter=0;" target="ots" value="Record hashes">
+        <mxCell id="flow49" edge="1" parent="1" source="sys" style="dashed=1;edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.935455928;exitY=0.745719626;exitPerimeter=0;entryX=0.0000000;entryY=0.2500000;entryPerimeter=0;" target="ots" value="Hash information">
           <mxGeometry relative="1" x="0.12151147" as="geometry">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -411,7 +411,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow50" edge="1" parent="1" source="ots" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.7500000;exitPerimeter=0;entryX=0.921800045;entryY=0.768485981;entryPerimeter=0;" target="sys" value="Timestamp proofs">
+        <mxCell id="flow50" edge="1" parent="1" source="ots" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.7500000;exitPerimeter=0;entryX=0.921800045;entryY=0.768485981;entryPerimeter=0;" target="sys" value="Timestamp proof information">
           <mxGeometry relative="1" x="-0.12684462" as="geometry">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -422,7 +422,7 @@
         <mxCell id="vnsat" parent="1" style="fontFamily=Arial;fontSize=19;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;rounded=0;strokeWidth=1.5;" value="VNSAT Price&lt;br&gt;Source" vertex="1">
           <mxGeometry height="58" width="220" x="1898" y="961.5" as="geometry"/>
         </mxCell>
-        <mxCell id="flow51" edge="1" parent="1" source="vnsat" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.5000000;exitPerimeter=0;entryX=0.888774469;entryY=0.814411215;entryPerimeter=0;" target="sys" value="Reference prices">
+        <mxCell id="flow51" edge="1" parent="1" source="vnsat" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.5000000;exitPerimeter=0;entryX=0.888774469;entryY=0.814411215;entryPerimeter=0;" target="sys" value="Reference price information">
           <mxGeometry relative="1" x="-0.13459603" as="geometry">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -433,7 +433,7 @@
         <mxCell id="geo" parent="1" style="fontFamily=Arial;fontSize=19;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;rounded=0;strokeWidth=1.5;" value="Geo Datasets" vertex="1">
           <mxGeometry height="58" width="220" x="1898" y="1034.5" as="geometry"/>
         </mxCell>
-        <mxCell id="flow52" edge="1" parent="1" source="geo" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.2500000;exitPerimeter=0;entryX=0.846637626;entryY=0.860336449;entryPerimeter=0;" target="sys" value="Province polygons">
+        <mxCell id="flow52" edge="1" parent="1" source="geo" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.2500000;exitPerimeter=0;entryX=0.846637626;entryY=0.860336449;entryPerimeter=0;" target="sys" value="Province boundary information">
           <mxGeometry relative="1" x="-0.13842559" as="geometry">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -441,7 +441,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="flow53" edge="1" parent="1" source="geo" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.7500000;exitPerimeter=0;entryX=0.821297746;entryY=0.883102804;entryPerimeter=0;" target="sys" value="Forest 2020 map">
+        <mxCell id="flow53" edge="1" parent="1" source="geo" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.0000000;exitY=0.7500000;exitPerimeter=0;entryX=0.821297746;entryY=0.883102804;entryPerimeter=0;" target="sys" value="Forest map information">
           <mxGeometry relative="1" x="-0.13886038" as="geometry">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -449,7 +449,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="buyer_termination" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.541666667;entryX=0.019025037;entryY=0.363387097;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Mutual termination proposal">
+        <mxCell id="buyer_termination" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.541666667;entryX=0.019025037;entryY=0.363387097;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Termination request">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -457,7 +457,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="buyer_replacement" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.625000000;entryX=0.012653584;entryY=0.388225806;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Mutual replacement proposal">
+        <mxCell id="buyer_replacement" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.625000000;entryX=0.012653584;entryY=0.388225806;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Replacement request">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -465,7 +465,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="buyer_activation_cancel" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.708333333;entryX=0.007615778;entryY=0.413064516;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Activation-cancel request">
+        <mxCell id="buyer_activation_cancel" edge="1" parent="1" source="buyer" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.708333333;entryX=0.007615778;entryY=0.413064516;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Activation cancel request">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -473,7 +473,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="seller_withdrawal" edge="1" parent="1" source="seller" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.500000000;entryX=0.026784006;entryY=0.661451613;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Offer withdrawal">
+        <mxCell id="seller_withdrawal" edge="1" parent="1" source="seller" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.500000000;entryX=0.026784006;entryY=0.661451613;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Withdrawal request">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -481,7 +481,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="seller_termination" edge="1" parent="1" source="seller" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.576923077;entryX=0.036000091;entryY=0.686290323;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Mutual termination proposal">
+        <mxCell id="seller_termination" edge="1" parent="1" source="seller" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.576923077;entryX=0.036000091;entryY=0.686290323;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Termination request">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -489,7 +489,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="seller_replacement" edge="1" parent="1" source="seller" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.653846154;entryX=0.046762169;entryY=0.711129032;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Mutual replacement proposal">
+        <mxCell id="seller_replacement" edge="1" parent="1" source="seller" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.653846154;entryX=0.046762169;entryY=0.711129032;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Replacement request">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
@@ -497,7 +497,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="seller_activation_cancel" edge="1" parent="1" source="seller" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.730769231;entryX=0.059183457;entryY=0.735967742;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Activation-cancel request">
+        <mxCell id="seller_activation_cancel" edge="1" parent="1" source="seller" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;endSize=7;strokeColor=#000000;strokeWidth=1.25;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;;exitX=1.000000000;exitY=0.730769231;entryX=0.059183457;entryY=0.735967742;exitPerimeter=0;entryPerimeter=0;" target="sys" value="Activation cancel request">
           <mxGeometry relative="1" as="geometry" x="-0.45">
             <mxPoint y="-11" as="offset"/>
             <Array as="points">
