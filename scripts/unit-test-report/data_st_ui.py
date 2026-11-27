@@ -1,140 +1,159 @@
 # System test cases through the web client (Report 5.3 from 28/11/2026): one entry per Playwright test of
 # tests/st/*.st.ts. The key is the test-title prefix; results come from results/st-ui/results-chromium.json.
 # Steps the web client has no screen for yet (Operator KYC decision, seller catalogue) go through the API and say so.
+# The web client is in Vietnamese: labels and messages on screen are quoted as shown, with their meaning in brackets.
 
 SHEETS = [
     # sheet, module, description (Test Cases), pre-condition (Test Cases)
     ("BF01_Onboarding", "BF01",
-     "BF-01 User Onboarding & KYC qua giao diện: đăng ký trên trang Keycloak (chọn vai trò), hoàn tất hồ sơ doanh "
-     "nghiệp, xác minh email bằng mã trong thư, xem kết quả KYC; quyết định KYC của Operator gọi API (chưa có màn hình)",
-     "Stack chạy đủ; email mới mỗi lần chạy (st-buyer-<ms>@test.com, st-seller-<ms>@test.com); MailHog 8025"),
+     "BF-01 User Onboarding & KYC through the screens: sign up on the Keycloak page (choosing a role), complete the "
+     "organization profile, verify the e-mail with the code from the mail, see the KYC result; the Operator's KYC "
+     "decision goes through the API (no screen yet)",
+     "Stack running; a new e-mail on every run (st-buyer-<ms>@test.com, st-seller-<ms>@test.com); MailHog on 8025"),
     ("BF02_Marketplace", "BF02",
-     "BF-02 Plot & Listing Publication nhìn từ sàn: seller đăng listing cà phê (API, chưa có màn hình seller), Guest "
-     "tìm và đọc listing không cần đăng nhập, bấm Gửi đề nghị thì được đưa đi đăng nhập",
-     "seller1 VERIFIED (seed); product-service kiểm tra geo ngay (overlay PLOT_GEO_VERIFICATION_TIMEOUT_HOURS=0)"),
+     "BF-02 Plot & Listing Publication as the marketplace shows it: the seller publishes a coffee listing (API, no "
+     "seller screen yet), a Guest finds and reads it without signing in, and is sent to sign in to make an offer",
+     "seller1 VERIFIED (seed); product-service checks the plot at once (overlay PLOT_GEO_VERIFICATION_TIMEOUT_HOURS=0)"),
     ("BF03_Signing", "BF03",
-     "BF-03 Contract Signing & Activation qua giao diện: buyer gửi đề nghị từ trang listing, seller sửa đơn giá, 2 bên "
-     "ký bằng OTP trong thư, escrow khoá cọc thì hợp đồng ACTIVE; nhánh rút đề nghị trước chữ ký thứ 2",
-     "buyer1, seller1 VERIFIED có tài khoản ngân hàng mock; listing 5.000 kg giá 96.000 ₫/kg tạo mới cho mỗi luồng"),
+     "BF-03 Contract Signing & Activation through the screens: the buyer offers from the listing page, the seller "
+     "revises the price, both sign with the OTP from their mail, the contract turns ACTIVE once escrow locks the "
+     "deposits; branch: the offer withdrawn before the second signature",
+     "buyer1, seller1 VERIFIED with mock bank accounts; a new listing of 5,000 kg at 96,000 VND/kg for each flow"),
     ("BF04_Milestone", "BF04",
-     "BF-04 Milestone Delivery & Settlement qua giao diện, nối tiếp chuỗi BF-03 (cùng hợp đồng, cùng phiên): seller cân "
-     "kèm ảnh, buyer cân nhận hàng và xác nhận đạt, đợt và hợp đồng tất toán",
-     "Hợp đồng ACTIVE của ST-BF03-060 với 1 đợt 1.000 kg đã khoá tiền lúc kích hoạt (chỉ được vào ngày làm việc)"),
+     "BF-04 Milestone Delivery & Settlement through the screens, continuing the BF-03 chain (same contract, same "
+     "sessions): the seller weighs with a photo, the buyer weighs on receipt and confirms clean, the milestone and the "
+     "contract settle",
+     "The ACTIVE contract of ST-BF03-060 with one 1,000 kg milestone funded at activation (only on a business day)"),
     ("RolePortals", "Roles",
-     "Màn hình của Admin, Operator, Arbitrator và cách ly vai trò không fallback (data-governance §5.4): nhật ký bằng "
-     "chứng + kiểm tra chuỗi hash, gửi lại lệnh tiền, hàng đợi tranh chấp, chặn route sai vai trò",
-     "admin1, operator1, arbitrator1, buyer1 (Report 5.0 §II.1.1); ADM-020 tạo và rút 1 đề nghị qua API để có trail"),
+     "Admin, Operator and Arbitrator screens and role isolation without fallback (data-governance §5.4): evidence log "
+     "and hash-chain check, resending failed money orders, dispute queue, routes refused to the wrong role",
+     "admin1, operator1, arbitrator1, buyer1 (Report 5.0 §II.1.1); ADM-020 creates and withdraws one offer through the "
+     "API so the contract has a trail"),
 ]
 
-PRE_STACK = "ST qua giao diện web (Playwright Chromium 1366x900, đăng nhập trên trang Keycloak thật)"
+PRE_STACK = "ST through the web client (Playwright Chromium 1366x900, signing in on the real Keycloak page)"
 
 # test-title prefix -> sheet, group, pre-condition, steps, expected, type, observed when passed
 CASES = [
     # ── BF-01 ──
-    ("ST-BF01-010", "BF01_Onboarding", "Buyer đăng ký và được duyệt", "Guest chưa có tài khoản",
-     "/register → Đăng ký → trang Keycloak: Email st-buyer-<ms>@test.com, vai trò Người mua, mật khẩu đúng chính sách "
-     "realm → Tạo tài khoản",
-     "Về /onboarding, tiêu đề 'Hoàn tất hồ sơ doanh nghiệp', vai trò Bên mua đã chọn sẵn", "Normal",
-     "Về /onboarding, form hồ sơ hiện với Bên mua đã chọn"),
-    ("ST-BF01-020", "BF01_Onboarding", None, "Chạy sau ST-BF01-010",
-     "Tên doanh nghiệp, Số điện thoại 0901000111, Địa chỉ → Gửi hồ sơ doanh nghiệp",
-     "Về /account, banner 'Hồ sơ đang chờ Operator xác minh', trạng thái Chờ xác minh", "Normal",
-     "/account hiện banner chờ xác minh, trạng thái Chờ xác minh"),
-    ("ST-BF01-030", "BF01_Onboarding", None, "Chạy sau ST-BF01-020",
-     "Đọc mã 6 số trong thư 'email verification code' ở MailHog, gõ vào ô Mã xác minh email → Xác minh email",
-     "Mục Email nhận OTP chuyển Đã xác minh", "Normal", "Email nhận OTP: Đã xác minh"),
-    ("ST-BF01-040", "BF01_Onboarding", None, "Chạy sau ST-BF01-030",
-     "Operator xác minh KYC qua API (POST /api/v1/admin/users/{id}/verify, chưa có màn hình duyệt); buyer tải lại /account",
-     "Banner chờ xác minh biến mất, trạng thái hồ sơ Đã xác minh", "Normal",
-     "Trong 60 s banner biến mất, hồ sơ Đã xác minh"),
-    ("ST-BF01-050", "BF01_Onboarding", None, "Chạy sau ST-BF01-040",
-     "Tìm thư gửi tới email của buyer trên MailHog",
-     "Có thư báo kết quả KYC ngoài thư mã xác minh email", "Normal", "Có thư kết quả KYC trong MailHog"),
-    ("ST-BF01-060", "BF01_Onboarding", "Seller đăng ký và bị từ chối", "Guest chưa có tài khoản",
-     "Đăng ký vai trò Người bán, gửi hồ sơ, xác minh email bằng mã trong thư",
-     "Vai trò Bên bán đã chọn; sau khi gửi hồ sơ trạng thái Chờ xác minh", "Normal",
-     "Bên bán được chọn, trạng thái Chờ xác minh"),
-    ("ST-BF01-070", "BF01_Onboarding", None, "Chạy sau ST-BF01-060",
-     "Operator từ chối KYC qua API với lý do 'Thiếu giấy phép kinh doanh'; seller tải lại /account",
-     "Màn hình báo 'Hồ sơ chưa được chấp thuận', trạng thái Chưa được chấp thuận; lý do nằm trong thư gửi seller "
-     "(SRS BF-01: kết quả gửi bằng email)", "Abnormal",
-     "Hiện Hồ sơ chưa được chấp thuận; thư từ chối chứa đúng lý do"),
+    ("ST-BF01-010", "BF01_Onboarding", "Buyer signs up and is approved", "Guest without an account",
+     "/register → 'Đăng ký' (Sign up) → Keycloak page: e-mail st-buyer-<ms>@test.com, role 'Người mua' (Buyer), a "
+     "password meeting the realm policy → 'Tạo tài khoản' (Create account)",
+     "Lands on /onboarding, heading 'Hoàn tất hồ sơ doanh nghiệp' (Complete the organization profile), role Buyer "
+     "already selected", "Normal",
+     "Landed on /onboarding, profile form shown with Buyer selected"),
+    ("ST-BF01-020", "BF01_Onboarding", None, "Runs after ST-BF01-010",
+     "Organization name, phone 0901000111, address → 'Gửi hồ sơ doanh nghiệp' (Submit the organization profile)",
+     "Lands on /account with the banner 'Hồ sơ đang chờ Operator xác minh' (Profile waiting for Operator "
+     "verification), status 'Chờ xác minh' (Pending verification)", "Normal",
+     "/account shows the pending banner, status Pending verification"),
+    ("ST-BF01-030", "BF01_Onboarding", None, "Runs after ST-BF01-020",
+     "Read the 6-digit code of the 'email verification code' mail in MailHog, type it into the e-mail verification "
+     "boxes → 'Xác minh email' (Verify e-mail)",
+     "The OTP e-mail section turns 'Đã xác minh' (Verified)", "Normal", "OTP e-mail: Verified"),
+    ("ST-BF01-040", "BF01_Onboarding", None, "Runs after ST-BF01-030",
+     "Operator verifies the KYC through the API (POST /api/v1/admin/users/{id}/verify, no review screen yet); the "
+     "buyer reloads /account",
+     "The pending banner disappears, profile status Verified", "Normal",
+     "Within 60 s the banner disappeared, profile Verified"),
+    ("ST-BF01-050", "BF01_Onboarding", None, "Runs after ST-BF01-040",
+     "Wait for mail to the buyer's e-mail in MailHog",
+     "A KYC result mail arrives besides the e-mail verification code", "Normal", "KYC result mail found in MailHog"),
+    ("ST-BF01-060", "BF01_Onboarding", "Seller signs up and is rejected", "Guest without an account",
+     "Sign up with role 'Người bán' (Seller), submit the profile, verify the e-mail with the code from the mail",
+     "Role Seller selected; after submitting the profile the status is Pending verification", "Normal",
+     "Seller selected, status Pending verification"),
+    ("ST-BF01-070", "BF01_Onboarding", None, "Runs after ST-BF01-060",
+     "Operator rejects the KYC through the API with the reason 'Thiếu giấy phép kinh doanh' (Business licence "
+     "missing); the seller reloads /account",
+     "The screen says 'Hồ sơ chưa được chấp thuận' (Profile not accepted), status Not accepted; the reason comes in "
+     "the mail to the seller (SRS BF-01: the result is sent by e-mail)", "Abnormal",
+     "Profile not accepted shown; the rejection mail carries the exact reason"),
     # ── BF-02 ──
-    ("ST-BF02-010", "BF02_Marketplace", "Listing đăng lên sàn", "seller1 VERIFIED",
-     "API: category COFFEE (Operator duyệt nếu chưa có), product Robusta ST <id>, lô đất Đắk Lắk (chờ kiểm tra geo), "
-     "listing 5.000 kg, tối thiểu 100 kg, 96000.00 VND/kg",
-     "Listing được tạo, có listingId", "Normal", "listingId trả về đúng dạng UUID"),
-    ("ST-BF02-020", "BF02_Marketplace", None, "Chạy sau ST-BF02-010; trình duyệt chưa đăng nhập",
-     "Mở /listing", "Tiêu đề 'Sàn nguồn hàng', có ít nhất 1 thẻ listing", "Normal", "Sàn hiện danh sách listing"),
-    ("ST-BF02-030", "BF02_Marketplace", None, "Chạy sau ST-BF02-020",
-     "Mở /listings/{listingId}",
-     "Tên sản phẩm, Đang mở bán, 96.000 ₫/kg, 5.000 kg, Robusta; không có email, tên đăng nhập hay số điện thoại của "
-     "seller (SRS IV.2.3)", "Normal", "Đủ thông tin listing, không lộ thông tin liên hệ"),
-    ("ST-BF02-040", "BF02_Marketplace", None, "Chạy sau ST-BF02-030",
-     "Guest bấm Gửi đề nghị", "Chuyển sang đăng nhập (trang Keycloak hoặc /login)", "Abnormal",
-     "Chuyển sang trang đăng nhập"),
+    ("ST-BF02-010", "BF02_Marketplace", "Listing published on the marketplace", "seller1 VERIFIED",
+     "API: COFFEE category (Operator approves one if missing), product Robusta ST <id>, a Dak Lak plot (wait for the "
+     "geo check), listing 5,000 kg, minimum 100 kg, 96000.00 VND/kg",
+     "The listing is created and has a listingId", "Normal", "listingId returned as a UUID"),
+    ("ST-BF02-020", "BF02_Marketplace", None, "Runs after ST-BF02-010; browser not signed in",
+     "Open /listing", "Heading 'Sàn nguồn hàng' (Marketplace) with at least one listing card", "Normal",
+     "Marketplace shows the listings"),
+    ("ST-BF02-030", "BF02_Marketplace", None, "Runs after ST-BF02-020",
+     "Open /listings/{listingId}",
+     "Product name, 'Đang mở bán' (Open for sale), 96.000 ₫/kg, 5.000 kg, Robusta; no e-mail, user name or phone "
+     "number of the seller (SRS IV.2.3)", "Normal", "Full listing data, no contact data shown"),
+    ("ST-BF02-040", "BF02_Marketplace", None, "Runs after ST-BF02-030",
+     "Guest clicks 'Gửi đề nghị' (Make an offer)", "Sent to sign in (Keycloak page or /login)", "Abnormal",
+     "Sent to the sign-in page"),
     # ── BF-03 + BF-04 (one serial chain) ──
-    ("ST-BF03-010", "BF03_Signing", "Đề nghị → thương lượng → ký → ACTIVE", "buyer1, seller1 đã đăng nhập; listing mới",
-     "buyer1: /listings/{id} → Gửi đề nghị → Khối lượng 1000, Ngày giao = hôm nay + 7 ngày làm việc (ngày khoá tiền "
-     "đợt = hôm nay) → Gửi đề nghị",
-     "Sang /contracts/{id}, Chi tiết hợp đồng, trạng thái Đã gửi đề nghị", "Normal",
-     "Hợp đồng tạo, trạng thái Đã gửi đề nghị"),
-    ("ST-BF03-020", "BF03_Signing", None, "Chạy sau ST-BF03-010",
-     "Mở lại trang listing", "Khối lượng khả dụng còn 4.000 kg (giữ hàng theo event)", "Normal",
-     "Khả dụng 4.000 kg"),
-    ("ST-BF03-030", "BF03_Signing", None, "Chạy sau ST-BF03-020",
-     "seller1 mở hợp đồng → Đơn giá đề xuất 95000.00 → Xem lại thay đổi → Lưu điều khoản",
-     "'Đã lưu điều khoản mới', đơn giá 95.000 ₫, dấu vân tay điều khoản đổi", "Normal",
-     "Lưu được, giá 95.000 ₫, vân tay điều khoản đổi"),
-    ("ST-BF03-040", "BF03_Signing", None, "Chạy sau ST-BF03-030",
-     "buyer1: đánh dấu đồng ý → Gửi mã OTP → đọc mã trong thư 'contract signing code' (thư chứa contractId) → nhập → "
-     "Xác nhận chữ ký",
-     "'Máy chủ đã xác nhận chữ ký của bạn'", "Normal", "Chữ ký buyer được xác nhận"),
-    ("ST-BF03-050", "BF03_Signing", None, "Chạy sau ST-BF03-040; hôm nay là ngày làm việc",
-     "seller1 ký bằng OTP như ST-BF03-040", "Chữ ký seller được xác nhận, hợp đồng SIGNED", "Normal", None),
-    ("ST-BF03-060", "BF03_Signing", None, "Chạy sau ST-BF03-050",
-     "Chờ escrow khoá cọc, tải lại trang hợp đồng của 2 bên", "Cả 2 bên thấy Đang hiệu lực", "Normal", None),
-    ("ST-BF04-010", "BF04_Milestone", "Đợt sạch: cân → nhận → xác nhận → tất toán", "Hợp đồng ACTIVE của ST-BF03-060",
-     "Mở hợp đồng", "Có Đợt 1 (1 đợt duy nhất), trạng thái Đã khoá tiền đợt hoặc Đang chuẩn bị hàng", "Normal", None),
-    ("ST-BF04-020", "BF04_Milestone", None, "Chạy sau ST-BF04-010",
-     "seller1: trang đợt → Cân hàng trước khi xe chạy: 1000 kg, ảnh cân (chờ quét virus Sẵn sàng) → Xem lại trước khi "
-     "gửi → checkbox đồng ý → Xác nhận đã cân",
-     "Đợt chuyển Đã cân, đang vận chuyển", "Normal", None),
-    ("ST-BF04-030", "BF04_Milestone", None, "Chạy sau ST-BF04-020",
-     "buyer1: trang đợt thấy số cân 1.000 của seller → cân nhận 998 kg + ảnh → Ghi nhận cân nhận hàng",
-     "Đợt chuyển Đã nhận, chờ xác nhận", "Normal", None),
-    ("ST-BF04-040", "BF04_Milestone", None, "Chạy sau ST-BF04-030 (lệch 0,2% < dung sai 5%)",
-     "buyer1: Hàng đạt, xác nhận đúng → checkbox → Xác nhận đúng và tất toán", "Đợt Đã tất toán", "Normal", None),
-    ("ST-BF04-050", "BF04_Milestone", None, "Chạy sau ST-BF04-040",
-     "Tải lại trang hợp đồng của 2 bên",
-     "Hợp đồng Đã tất toán sau khi escrow trả cọc và báo contract_lock_cleared (D94)", "Normal", None),
-    ("ST-BF03-110", "BF03_Signing", "Rút đề nghị trước chữ ký thứ 2", "buyer1 đã đăng nhập; listing mới",
-     "Gửi đề nghị 1000 kg, ngày giao hôm nay + 12 ngày làm việc", "Khả dụng còn 4.000 kg", "Normal",
-     "Hợp đồng tạo, khả dụng 4.000 kg"),
-    ("ST-BF03-120", "BF03_Signing", None, "Chạy sau ST-BF03-110",
-     "Rút đề nghị → hộp thoại 'Rút đề nghị hợp đồng?' → Rút đề nghị", "Trạng thái Đã rút đề nghị", "Normal",
-     "Trạng thái Đã rút đề nghị"),
-    ("ST-BF03-130", "BF03_Signing", None, "Chạy sau ST-BF03-120",
-     "Mở lại trang listing; đọc hợp đồng qua API", "Khả dụng về 5.000 kg; hợp đồng WITHDRAWN", "Normal",
-     "Khả dụng 5.000 kg, status WITHDRAWN"),
+    ("ST-BF03-010", "BF03_Signing", "Offer → negotiation → signing → ACTIVE", "buyer1, seller1 signed in; a new listing",
+     "buyer1: /listings/{id} → 'Gửi đề nghị' (Make an offer) → quantity 1000, delivery date = today + 7 business days "
+     "(the milestone funding date is today) → 'Gửi đề nghị'",
+     "Lands on /contracts/{id}, contract details, status 'Đã gửi đề nghị' (Offered)", "Normal",
+     "Contract created, status Offered"),
+    ("ST-BF03-020", "BF03_Signing", None, "Runs after ST-BF03-010",
+     "Reopen the listing page", "Available quantity down to 4.000 kg (reserved by event)", "Normal",
+     "Available 4.000 kg"),
+    ("ST-BF03-030", "BF03_Signing", None, "Runs after ST-BF03-020",
+     "seller1 opens the contract → proposed unit price 95000.00 → 'Xem lại thay đổi' (Review changes) → 'Lưu điều "
+     "khoản' (Save terms)",
+     "'Đã lưu điều khoản mới' (New terms saved), unit price 95.000 ₫, the terms fingerprint changes", "Normal",
+     "Saved, price 95.000 ₫, fingerprint changed"),
+    ("ST-BF03-040", "BF03_Signing", None, "Runs after ST-BF03-030",
+     "buyer1: tick the consent → 'Gửi mã OTP' (Send OTP) → read the code of the 'contract signing code' mail (the mail "
+     "names the contractId) → enter it → 'Xác nhận chữ ký' (Confirm signature)",
+     "'Máy chủ đã xác nhận chữ ký của bạn' (The server confirmed your signature)", "Normal",
+     "Buyer signature confirmed"),
+    ("ST-BF03-050", "BF03_Signing", None, "Runs after ST-BF03-040; today is a business day",
+     "seller1 signs with the OTP as in ST-BF03-040", "Seller signature confirmed, contract SIGNED", "Normal", None),
+    ("ST-BF03-060", "BF03_Signing", None, "Runs after ST-BF03-050",
+     "Wait for escrow to lock the deposits, reload the contract page of both parties",
+     "Both parties see 'Đang hiệu lực' (Active)", "Normal", None),
+    ("ST-BF04-010", "BF04_Milestone", "Clean milestone: weigh → receive → confirm → settle",
+     "The ACTIVE contract of ST-BF03-060",
+     "Open the contract", "Milestone 1 (the only one), status funded or preparing the goods", "Normal", None),
+    ("ST-BF04-020", "BF04_Milestone", None, "Runs after ST-BF04-010",
+     "seller1: milestone page → 'Cân hàng trước khi xe chạy' (Weigh before dispatch): 1000 kg, weighing photo (wait "
+     "for the virus scan to show 'Sẵn sàng', Ready) → review → consent checkbox → 'Xác nhận đã cân' (Confirm weighed)",
+     "Milestone becomes 'Đã cân, đang vận chuyển' (Weighed, in transit)", "Normal", None),
+    ("ST-BF04-030", "BF04_Milestone", None, "Runs after ST-BF04-020",
+     "buyer1: the milestone page shows the seller's 1.000 → received weight 998 kg + photo → 'Ghi nhận cân nhận hàng' "
+     "(Record received weight)",
+     "Milestone becomes 'Đã nhận, chờ xác nhận' (Received, awaiting confirmation)", "Normal", None),
+    ("ST-BF04-040", "BF04_Milestone", None, "Runs after ST-BF04-030 (0.2% short < 5% tolerance)",
+     "buyer1: 'Hàng đạt, xác nhận đúng' (Goods conform) → checkbox → 'Xác nhận đúng và tất toán' (Confirm and settle)",
+     "Milestone 'Đã tất toán' (Settled)", "Normal", None),
+    ("ST-BF04-050", "BF04_Milestone", None, "Runs after ST-BF04-040",
+     "Reload the contract page of both parties",
+     "Contract Settled once escrow returns the deposits and reports contract_lock_cleared (D94)", "Normal", None),
+    ("ST-BF03-110", "BF03_Signing", "Offer withdrawn before the second signature", "buyer1 signed in; a new listing",
+     "Offer 1000 kg, delivery today + 12 business days", "Available quantity down to 4.000 kg", "Normal",
+     "Contract created, available 4.000 kg"),
+    ("ST-BF03-120", "BF03_Signing", None, "Runs after ST-BF03-110",
+     "'Rút đề nghị' (Withdraw offer) → dialog 'Rút đề nghị hợp đồng?' → 'Rút đề nghị'",
+     "Status 'Đã rút đề nghị' (Withdrawn)", "Normal", "Status Withdrawn"),
+    ("ST-BF03-130", "BF03_Signing", None, "Runs after ST-BF03-120",
+     "Reopen the listing page; read the contract through the API",
+     "Available back to 5.000 kg; contract WITHDRAWN", "Normal", "Available 5.000 kg, status WITHDRAWN"),
     # ── role portals ──
-    ("ST-ADM-010", "RolePortals", "Admin: nhật ký bằng chứng", "admin1 đăng nhập",
-     "/admin/audit → Kiểm tra toàn chuỗi",
-     "Tiêu đề Nhật ký bằng chứng, câu báo mỗi lần mở được ghi lại; kết quả 'Toàn chuỗi nguyên vẹn'", "Normal",
-     "Toàn chuỗi nguyên vẹn"),
-    ("ST-ADM-020", "RolePortals", None, "Một đề nghị vừa tạo và rút qua API (có trail contract.terminated)",
-     "Tab Theo hợp đồng → Mã hợp đồng (UUID) → Tra cứu",
-     "Hiện Mã bằng chứng hiện tại và Nguyên vẹn; nhật ký SYSTEM có bản ghi audit.viewed cho đúng hợp đồng", "Normal",
-     "Trail nguyên vẹn, có audit.viewed"),
-    ("ST-OPR-010", "RolePortals", "Operator: gửi lại lệnh tiền", "operator1 đăng nhập",
-     "/operations/remedy → Mã hợp đồng 'not-a-uuid', rồi 1 UUID ngẫu nhiên → Gửi lại lệnh tiền lỗi",
-     "Mã sai: báo 'Nhập mã hợp đồng đầy đủ.' và nút bị khoá; UUID không có lệnh lỗi: hiện thông báo kết quả",
-     "Abnormal", "Chặn mã sai; UUID lạ trả thông báo"),
-    ("ST-ARB-010", "RolePortals", "Arbitrator: hàng đợi tranh chấp", "arbitrator1 đăng nhập",
-     "/disputes", "Tiêu đề Tranh chấp chờ duyệt; danh sách vụ hoặc trạng thái rỗng", "Normal",
-     "Hàng đợi hiện từ backend thật"),
-    ("ST-SEC-010", "RolePortals", "Cách ly vai trò", "admin1, buyer1 đăng nhập",
-     "admin1 mở /disputes, /operations/remedy; buyer1 mở /admin/audit, /disputes, /operations/remedy",
-     "Mọi route sai vai trò hiện 'Tài khoản chưa có vai trò phù hợp để truy cập trang này.' (ADMIN không thay "
-     "OPERATOR/ARBITRATOR)", "Abnormal", "5 route đều bị chặn với đúng thông báo"),
+    ("ST-ADM-010", "RolePortals", "Admin: evidence log", "admin1 signed in",
+     "/admin/audit → 'Kiểm tra toàn chuỗi' (Check the whole chain)",
+     "Heading 'Nhật ký bằng chứng' (Evidence log), notice that every opening is recorded; result 'Toàn chuỗi nguyên "
+     "vẹn' (Whole chain intact)", "Normal", "Whole chain intact"),
+    ("ST-ADM-020", "RolePortals", None, "An offer just created and withdrawn through the API (contract.terminated trail)",
+     "Tab 'Theo hợp đồng' (By contract) → contract UUID → 'Tra cứu' (Look up)",
+     "Shows 'Mã bằng chứng hiện tại' (Current evidence hash) and 'Nguyên vẹn' (Intact); the SYSTEM log has an "
+     "audit.viewed record for this contract", "Normal", "Trail intact, audit.viewed recorded"),
+    ("ST-OPR-010", "RolePortals", "Operator: resend money orders", "operator1 signed in",
+     "/operations/remedy → contract id 'not-a-uuid', then a random UUID → 'Gửi lại lệnh tiền lỗi' (Resend failed "
+     "money orders)",
+     "Bad id: 'Nhập mã hợp đồng đầy đủ.' (Enter the full contract id) and the button disabled; a UUID without failed "
+     "orders: a result message", "Abnormal", "Bad id blocked; unknown UUID answered with a message"),
+    ("ST-ARB-010", "RolePortals", "Arbitrator: dispute queue", "arbitrator1 signed in",
+     "/disputes", "Heading 'Tranh chấp chờ duyệt' (Disputes awaiting review); cases or the empty state", "Normal",
+     "Queue loaded from the real backend"),
+    ("ST-SEC-010", "RolePortals", "Role isolation", "admin1, buyer1 signed in",
+     "admin1 opens /disputes, /operations/remedy; buyer1 opens /admin/audit, /disputes, /operations/remedy",
+     "Every route of another role shows 'Tài khoản chưa có vai trò phù hợp để truy cập trang này.' (This account has "
+     "no role for this page; ADMIN does not stand in for OPERATOR/ARBITRATOR)", "Abnormal",
+     "All 5 routes refused with the right message"),
 ]

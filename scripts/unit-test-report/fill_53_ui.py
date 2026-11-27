@@ -20,9 +20,9 @@ ROUND_DATE = "28/11/2026"
 TESTER = "Nguyen Minh Cuong"
 OLD_SHEETS = ["BF01_Onboarding", "BF02_PlotListing", "BF03_Signing", "BF04_Milestone", "BF05_Breach",
               "BF06_Termination", "BF07_SecurityLock", "Security"]
-WEEKEND = ("Chưa chạy: 28/11/2026 là thứ Bảy, ngày khoá tiền đợt (ngày giao trừ 7 ngày làm việc) không thể là hôm "
-           "nay nên chữ ký thứ 2 bị từ chối (D67) và đợt không được cấp tiền lúc kích hoạt (D63); test tự skip, chạy "
-           "lại vào ngày làm việc (30/11/2026)")
+WEEKEND = ("Not run: 28/11/2026 is a Saturday, so the milestone funding date (delivery minus 7 business days) cannot "
+           "be today: the second signature is refused (D67) and the milestone is not funded at activation (D63); the "
+           "test skips itself and runs again on a business day (30/11/2026)")
 
 
 def prop(name, value):
@@ -108,7 +108,7 @@ for name, *_ in SHEETS:
         status, duration, where = results[key]
         status = {"passed": "Passed", "failed": "Failed", "skipped": "Pending"}[status]
         actual = (f"Round 1 (Chromium): {observed} ({duration / 1000:.1f} s)" if status == "Passed"
-                  else f"Round 1: {WEEKEND}" if status == "Pending" else "Round 1: xem trace của Playwright")
+                  else f"Round 1: {WEEKEND}" if status == "Pending" else "Round 1: see the Playwright trace")
         values = {
             "A": f"STC{n:03d}", "B": f"{PRE_STACK}\n{pre}", "C": f"{key}: {steps}",
             "D": f"Return: {expected}\nException: N/A\nLog message: N/A", "E": kind,
@@ -139,19 +139,20 @@ for i, (name, module, description, precondition) in enumerate(SHEETS):
     put(tc, f"F{r}", precondition)
     tc.Rows.getByIndex(r - 1).OptimalHeight = True
 put(tc, "D5", "\n".join([
-    "1. Stack: Docker Compose project agricontract-bruno của backend/ (docker-compose.yml + docker-compose.override.yml "
-    "+ overlay rút ngắn kiểm tra geo), gateway 8080, Keycloak 8180, MailHog 8025; không mock gì",
-    "2. Web client: bản build production của frontend/ (VITE_API_BASE_URL=http://localhost:8080 VITE_USE_MOCKS=false "
-    "vite build) chạy bằng vite preview cổng 5173 (dev server tự tải lại trang khi Playwright ghi file)",
+    "1. Stack: Docker Compose project agricontract-bruno of backend/ (docker-compose.yml + docker-compose.override.yml "
+    "+ an overlay that shortens the geo check), gateway 8080, Keycloak 8180, MailHog 8025; nothing mocked",
+    "2. Web client: a production build of frontend/ (VITE_API_BASE_URL=http://localhost:8080 VITE_USE_MOCKS=false "
+    "vite build) served by vite preview on port 5173 (the dev server reloads the page when Playwright writes files)",
     "3. Playwright: cd tests/st && npm ci && npx playwright test --project=chromium "
-    "(Chromium 1366x900, vi-VN, Asia/Ho_Chi_Minh, 1 worker); các case của 1 luồng chạy nối tiếp và dùng chung trạng thái",
-    "4. Tài khoản Keycloak (Report 5.0 §II.1.1): buyer1, seller1, operator1, arbitrator1, admin1; BF-01 đăng ký "
-    "tài khoản mới mỗi lần chạy; mã xác minh email và OTP ký đọc từ MailHog",
-    "5. Bước chưa có màn hình (Operator duyệt KYC, seller tạo category/product/lô đất/listing) gọi API và ghi rõ "
-    "trong Input parameters; mọi bước còn lại đi qua giao diện như người dùng",
-    "6. Kết quả: reporter JSON của Playwright ở scripts/unit-test-report/results/st-ui/results-chromium.json; "
-    "Note ghi file:dòng của test; Actual Results ghi điều quan sát được và thời gian chạy",
-    "7. Bộ Bruno e2e (gọi API qua gateway) trước đây ở report này đã chuyển sang Report 5.2 (D95: là integration test)",
+    "(Chromium 1366x900, vi-VN, Asia/Ho_Chi_Minh, 1 worker); the cases of one flow run in order and share its state",
+    "4. Keycloak accounts (Report 5.0 §II.1.1): buyer1, seller1, operator1, arbitrator1, admin1; BF-01 registers new "
+    "accounts on every run; the e-mail verification code and the signing OTP are read from MailHog",
+    "5. Steps without a screen yet (Operator KYC decision, seller category/product/plot/listing) call the API and say "
+    "so in Input parameters; every other step goes through the screens as a user does",
+    "6. Results: Playwright's JSON reporter in scripts/unit-test-report/results/st-ui/results-chromium.json; "
+    "Note gives the test's file:line; Actual Results gives what was observed and the run time",
+    "7. The Bruno e2e suite (API through the gateway) that this report held before moved to Report 5.2 (D95: it is "
+    "integration testing)",
 ]))
 tc.Rows.getByIndex(4).OptimalHeight = True
 
@@ -169,26 +170,34 @@ passed = sum(1 for k, *_ in CASES if results[k][0] == "passed")
 pending = sum(1 for k, *_ in CASES if results[k][0] == "skipped")
 failed = total - passed - pending
 put(st, "B7", (
-    f"System test qua giao diện web (STC) của 5 sheet: BF-01..BF-04 và màn hình theo vai trò, {total} case, mỗi case 1 "
-    f"test Playwright trong tests/st/ chạy trên stack thật (không mock). Round 1 ngày {ROUND_DATE}, tester "
-    f"{TESTER}, Chromium: {passed} Passed, {failed} Failed, {pending} Pending. 7 case Pending là phần ký thứ 2 → "
-    "ACTIVE → BF-04 của chuỗi chính: 28/11/2026 là thứ Bảy nên không có ngày khoá tiền đợt hợp lệ (D63, D67), test tự "
-    "skip; chạy lại ngày 30/11/2026 thành Round 2. BF-05..BF-07 chưa có màn hình nên chưa có ST qua giao diện, phần "
-    "API của chúng ở Report 5.2. Kiểm tra trình duyệt (Firefox) và usability ở Report 5.4. Log: "
-    "scripts/unit-test-report/results/st-ui/."))
+    f"System tests through the web client (STC) in 5 sheets: BF-01..BF-04 and the role screens, {total} cases, each "
+    f"one Playwright test in tests/st/ on a real stack (nothing mocked). Round 1 on {ROUND_DATE}, tester {TESTER}, "
+    f"Chromium: {passed} Passed, {failed} Failed, {pending} Pending. The {pending} Pending cases are the second "
+    "signature → ACTIVE → BF-04 part of the main chain: 28/11/2026 is a Saturday, so no milestone funding date is "
+    "valid (D63, D67) and the tests skip themselves; the run of 30/11/2026 becomes Round 2. BF-05..BF-07 have no "
+    "screens yet, so no system test through the web client; their API side is in Report 5.2. Browser (Firefox) and "
+    "usability checks are in Report 5.4. Log: scripts/unit-test-report/results/st-ui/."))
 st.Rows.getByIndex(6).OptimalHeight = True
 put(st, "F6", ROUND_DATE)
 
-# 4. Cover: change log
+# 4. Cover: change log (the rows of the Bruno version translated, then this version)
 cv = sheets.getByName("Cover")
+put(cv, "C11", "Whole document")
+put(cv, "E11", "First version: 128 system test cases (STC) of BF-01..BF-07 and the defence suite, one row per step of "
+                "the flow (Bruno requests in backend/bruno/e2e, backend/bruno/security), plus the steps of status.tsv "
+                "that cannot run yet and a DLQ check after each flow; results from run-e2e-full.sh, Round 1 "
+                "run-20261127-1603, Round 2 run-20261127-1630")
+put(cv, "C12", "Round 3 of every sheet")
+put(cv, "E12", "Round 3: run run-20261128-0350 of run-e2e-full.sh on 42a48dd5, 128 rows: 46 Passed, 21 Failed, "
+                "53 Pending, 8 N/A")
 last = 12  # row 12 is the latest entry
 copy_row(cv, last - 1, cv, last, 5)
 for ref, value in {
     f"A{last + 1}": ROUND_DATE, f"B{last + 1}": "v1.0",
-    f"C{last + 1}": "Toàn bộ sheet module, Test Cases, Test Statistics", f"D{last + 1}": "M",
-    f"E{last + 1}": (f"ST làm lại qua giao diện web: {total} case Playwright trên stack thật (BF-01..BF-04, màn hình "
-                     f"theo vai trò), Round 1 {passed} Passed, {pending} Pending (thứ Bảy). 8 sheet Bruno e2e (gọi API) "
-                     "chuyển sang Report 5.2 vì là integration test (D95)"),
+    f"C{last + 1}": "Every module sheet, Test Cases, Test Statistics", f"D{last + 1}": "M",
+    f"E{last + 1}": (f"System test redone through the web client: {total} Playwright cases on a real stack (BF-01..BF-04, "
+                     f"role screens), Round 1 {passed} Passed, {pending} Pending (Saturday). The 8 Bruno e2e sheets "
+                     "(API calls) moved to Report 5.2 as integration tests (D95)"),
     f"F{last + 1}": "D95, Report 5.2, tests/st/",
 }.items():
     put(cv, ref, value)
