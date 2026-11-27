@@ -777,3 +777,99 @@ services:
         condition: service_completed_successfully
     networks:
       - agricontract-net
+
+  # pricing-service and analytics-service apply their migrations with their own runner (migrations/V<n>__*.sql,
+  # recorded in schema_migrations), not Flyway: the one-shot containers below run it from the service image.
+  pricing-migrate:
+    build:
+      context: .
+      dockerfile: pricing-service/Dockerfile
+    image: agricontract/pricing-service:local
+    container_name: pricing-migrate
+    command: [ "node", "dist/infrastructure/persistence/migrate.js" ]
+    environment:
+      DB_HOST: pricing-db
+      DB_PORT: 3306
+      DB_NAME: pricing_db
+      DB_USERNAME: ${DB_USERNAME:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+    depends_on:
+      pricing-db:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - agricontract-net
+
+  # pricing-service-phase2-design.md: advisory coffee reference prices (public reads through the gateway,
+  # OPERATOR manual entry, daily VNSAT scrape). Redis is a cache only: the service starts and answers without it.
+  pricing-service:
+    image: agricontract/pricing-service:local
+    container_name: pricing-service
+    environment:
+      DB_HOST: pricing-db
+      DB_PORT: 3306
+      DB_NAME: pricing_db
+      DB_USERNAME: ${DB_USERNAME:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      REDIS_URL: redis://redis:6379
+      GATEWAY_INTERNAL_SECRET: ${GATEWAY_INTERNAL_SECRET:?GATEWAY_INTERNAL_SECRET must be set in .env}
+    # Local only, for manual tests; the browser goes through the gateway (/api/v1/prices/**).
+    ports:
+      - "8091:8091"
+    depends_on:
+      pricing-db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      pricing-migrate:
+        condition: service_completed_successfully
+    networks:
+      - agricontract-net
+
+  analytics-migrate:
+    build:
+      context: .
+      dockerfile: analytics-service/Dockerfile
+    image: agricontract/analytics-service:local
+    container_name: analytics-migrate
+    command: [ "node", "dist/infrastructure/persistence/migrate.js" ]
+    environment:
+      DB_HOST: analytics-db
+      DB_PORT: 3306
+      DB_NAME: analytics_db
+      DB_USERNAME: ${DB_USERNAME:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+    depends_on:
+      analytics-db:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - agricontract-net
+
+  # analytics-service-phase2-design.md: non-critical CQRS projection fed only by RabbitMQ events
+  # (dead letters on agricontract.analytics.dlx). Never on the transaction path: producers do not wait for it.
+  analytics-service:
+    image: agricontract/analytics-service:local
+    container_name: analytics-service
+    # Above the app's 25s in-flight drain (SHUTDOWN_TIMEOUT_MS).
+    stop_grace_period: 40s
+    environment:
+      DB_HOST: analytics-db
+      DB_PORT: 3306
+      DB_NAME: analytics_db
+      DB_USERNAME: ${DB_USERNAME:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-guest}
+    ports:
+      - "8093:8093"
+    depends_on:
+      analytics-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      analytics-migrate:
+        condition: service_completed_successfully
+    networks:
+      - agricontract-net
