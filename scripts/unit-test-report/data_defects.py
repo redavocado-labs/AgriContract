@@ -190,7 +190,8 @@ DEFECTS = [
                                    "scripts/unit-test-report/results/perf-20261128/perf.json"),
          cause="backend/docker-compose.yml only declares pricing-db and analytics-db, no pricing-service or "
                "analytics-service; the gateway forwards /api/v1/prices/** to a PRICING_SERVICE_URL nobody listens on",
-         fix=("#714", None, "N/A"), status="Open", retest=None),
+         fix=("#714, PR #715", "6109fc3b", CUONG), status="Closed",
+         retest=("28/11/2026", "6c336a95", "Passed", "scripts/unit-test-report/results/perf-20261128-retest/perf.json")),
     dict(id="DEF-21", test="5.3 every case that signs in through the web client (BF01_Onboarding, BF03_Signing, RolePortals)",
          level="ST", module="infra (Keycloak realm agricontract)",
          title="The web client loses its session after signing in: Keycloak answers 403 to the login-status iframe",

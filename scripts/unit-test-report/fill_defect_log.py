@@ -85,6 +85,9 @@ CHANGES = [
      "system tests through the web client; DEF-18 and DEF-19 point at the Bruno e2e sheets of Report 5.2",
      "Report 5.3, Report 5.4"),
     ("28/11/2026", "Whole document", "M", "Translated into English", ""),
+    ("28/11/2026", "Defect List", "M", "DEF-20 closed: pricing-service and analytics-service run in the Compose stack "
+     "(#715); the load test re-run has 0 errors and the reference price screen loads in about 1.1 s",
+     "#714, PR #715, Report 5.4"),
 ]
 for row, (date, item, kind, text, ref) in enumerate(CHANGES, start=12):
     for col, value in zip("ABCDEF", (date, "v1.0", item, kind, text, ref)):
