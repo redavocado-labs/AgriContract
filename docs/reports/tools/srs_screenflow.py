@@ -108,6 +108,7 @@ COLS = [
         (3, L("Respond to Flag (Seller)"), {}),
         (3, L("Claim Force Majeure (Seller)"), {}),
         (3, L("Milestone Price Adjustment"), {}),
+        (3, L("Dispute Exit"), {}),
         (2, L("Propose Replacement Contract"), {}),
         (2, L("Export Escrow Statement"), {}),
         (2, L("Report Breach Dialog"), dict(dashed=True)),

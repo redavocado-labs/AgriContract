@@ -35,8 +35,9 @@ NAV = {
     "SELLER": ["My Contracts", "My Plots", "My Products", "My Listings", "Marketplace", "Escrow Statement",
                "Notifications", "Profile"],
     "OPERATOR": ["KYC Review", "Reputation Requests", "Plot Risk Review", "Moderation", "Manual Prices",
-                 "Activation Failures", "Funding Failures", "Level 2 Reports", "Email Intake", "Profile"],
-    "ARBITRATOR": ["Breach Cases", "Force Majeure", "Level 2 Commissions", "Reputation Requests", "Profile"],
+                 "Activation Failures", "Funding Failures", "Level 2 Commissions", "Level 2 Reports", "Email Intake",
+                 "Profile"],
+    "ARBITRATOR": ["Breach Cases", "Force Majeure", "Reputation Requests", "Profile"],
     "INSPECTOR": ["Assigned Cases", "Profile"],
     "ADMIN": ["Audit Chain", "Evidence Export", "Security Lock", "Analytics", "Profile"],
 }
@@ -409,7 +410,7 @@ def _app_shell(c, W, H, role, active, crumb):
     return 232, 80, W - 248  # content x, y, w
 
 
-def _public_shell(c, W, H, active):
+def _public_shell(c, W, H, active, user=None):
     c.d.rectangle([0, 0, W * S, H * S], fill="#fafafa")
     c.d.rectangle([0, 0, W * S, 56 * S], fill=WHITE)
     c.line(0, 56, W, 56)
@@ -420,8 +421,12 @@ def _public_shell(c, W, H, active):
         if item == active:
             c.line(x, 50, x + c.tw(item, "bb"), 50, INK, 2)
         x += c.tw(item, "bb") + 28
-    c.text(W - 120, 28, "Log in", "b", INK, "lm")
-    c.button(W - 70, 14, "Register")
+    if user:  # signed in: the same header as the app shell, without the sidebar
+        c.text(W - 120, 28, user, "b", INK, "rm")
+        c.button(W - 100, 14, "Log out")
+    else:
+        c.text(W - 120, 28, "Log in", "b", INK, "lm")
+        c.button(W - 70, 14, "Register")
     return 120, 80, W - 240
 
 
@@ -460,7 +465,7 @@ def render(spec: dict, out: Path):
         if kind == "app":
             _app_shell(c, W, H, spec["role"], spec.get("active"), spec.get("crumb"))
         else:
-            _public_shell(c, W, H, spec.get("active"))
+            _public_shell(c, W, H, spec.get("active"), spec.get("user"))
             c.d.rectangle([0, (H - 110) * S, W * S, H * S], fill="#d9d9d9")
             c.text(120, H - 80, "AgriContract", "bb")
             c.text(120, H - 58, "Coffee trade contracts with escrow  ·  Marketplace · Prices · Escrow · Disputes · EUDR",

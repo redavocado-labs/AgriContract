@@ -35,7 +35,7 @@
         <mxCell id="a1" parent="1" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" value="1. Register with e-mail,&lt;br&gt;password and the Buyer&lt;br&gt;or Seller role" vertex="1">
           <mxGeometry height="63" width="200" x="25" y="93.5" as="geometry"/>
         </mxCell>
-        <mxCell id="a2" parent="1" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" value="2. Create the Keycloak&lt;br&gt;account and assign&lt;br&gt;the selected role" vertex="1">
+        <mxCell id="a2" parent="1" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" value="2. Create the identity&lt;br&gt;provider account and assign&lt;br&gt;the selected role" vertex="1">
           <mxGeometry height="63" width="210" x="275" y="93.5" as="geometry"/>
         </mxCell>
         <mxCell id="a3" parent="1" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" value="3. Open onboarding; submit&lt;br&gt;organization details and&lt;br&gt;supporting documents" vertex="1">
