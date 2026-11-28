@@ -10,7 +10,7 @@ from pathlib import Path
 import docx
 
 SRC = Path(__file__).resolve().parents[1] / "figures" / "srs"
-DOC = Path(__file__).resolve().parents[1] / "Report-3_Software Requirement Specification.docx"
+DOC = Path(__file__).resolve().parents[1] / "Report-3_Software_Requirement_Specification.docx"
 new_dir = Path(sys.argv[1])
 d = docx.Document(DOC)
 for name in ("bf03", "bf04"):

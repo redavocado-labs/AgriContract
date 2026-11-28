@@ -9,7 +9,7 @@
 # The Exploratory sheet keeps only its header: no exploratory session with business users has been held. Pure openpyxl.
 #
 #   python fill_55_uat.py results/st-ui/results-chromium.json ../../docs/reports/Report-5.2_Test_Report.xlsx \
-#       "../../docs/reports/Report-5.5_Acceptance Test Scripts.xlsx"
+#       "../../docs/reports/Report-5.5_Acceptance_Test_Scripts.xlsx"
 import json
 import sys
 from copy import copy

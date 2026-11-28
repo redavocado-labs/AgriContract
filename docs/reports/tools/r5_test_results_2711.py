@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from docxedit import fill_change_log, find, insert_copy_after, next_table, set_cell_text, set_par_text  # noqa: E402
 
 REPORTS = Path(__file__).resolve().parents[1]
-DOC = REPORTS / "Report-5.0_Test Documentation.docx"
+DOC = REPORTS / "Report-5.0_Test_Documentation.docx"
 BOOKS = {"5.1": "Report-5.1_Unit_Test.xlsx", "5.2": "Report-5.2_Test_Report.xlsx", "5.3": "Report-5.3_System_Test_FRs.xlsx",
          "5.5": "Report-5.5_Acceptance_Test.xlsx", "5.6": "Report-5.6_Defect_Log.xlsx"}
 parser = argparse.ArgumentParser()

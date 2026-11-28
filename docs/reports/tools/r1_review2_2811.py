@@ -14,7 +14,7 @@ from docx.oxml.ns import qn
 sys.path.insert(0, str(Path(__file__).parent))
 from docxedit import append_row, fill_change_log, set_cell_text, text_of  # noqa: E402
 
-DOC = Path(__file__).resolve().parents[1] / "Report-1_Project Introduction_v1.docx"
+DOC = Path(__file__).resolve().parents[1] / "Report-1_Project_Introduction_v1.docx"
 d = docx.Document(DOC)
 
 

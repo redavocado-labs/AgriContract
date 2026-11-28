@@ -19,7 +19,7 @@ from docxedit import append_row, find, replace_image, set_cell_text, set_par_tex
 
 REPO = Path(__file__).resolve().parents[3]
 FIG = REPO / "docs/reports/figures/srs"
-DOC = REPO / "docs/reports/Report-3_Software Requirement Specification.docx"
+DOC = REPO / "docs/reports/Report-3_Software_Requirement_Specification.docx"
 d = docx.Document(DOC)
 body = lambda: list(d.element.body.iterchildren())  # noqa: E731
 

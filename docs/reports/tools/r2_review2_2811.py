@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from docxedit import append_row, find, replace_image, set_cell_text, set_par_text, text_of  # noqa: E402
 
 REPORTS = Path(__file__).resolve().parents[1]
-DOC = REPORTS / "Report-2_Project Management Plan_v1.docx"
+DOC = REPORTS / "Report-2_Project_Management_Plan_v1.docx"
 d = docx.Document(DOC)
 
 PHASES = "P1 27/10–06/11, P2 07/11–17/11 and P3 18/11–30/11/2026"

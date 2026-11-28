@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from docxedit import append_row, replace_image, set_cell_text, set_par_text, text_of  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-DOC = ROOT / "Report-3_Software Requirement Specification.docx"
+DOC = ROOT / "Report-3_Software_Requirement_Specification.docx"
 PNG = ROOT / "figures/srs/screens/s41_dispute_exit.png"
 d = docx.Document(DOC)
 body = d.element.body

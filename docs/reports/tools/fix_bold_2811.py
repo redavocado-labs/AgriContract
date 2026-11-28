@@ -15,7 +15,7 @@ from docxedit import emphasize, text_of  # noqa: E402
 
 R = Path(__file__).resolve().parents[1]
 LABELS = ("Track funding", "Confirm clean", "Flag an issue", "Trigger", "Purpose")
-d = docx.Document(R / "Report-3_Software Requirement Specification.docx")
+d = docx.Document(R / "Report-3_Software_Requirement_Specification.docx")
 n = 0
 for p in d.element.body.iter(qn("w:p")):
     s = text_of(p)
@@ -25,7 +25,7 @@ for p in d.element.body.iter(qn("w:p")):
                 emphasize(p, [lab])
                 n += 1
 print("Report 3 labels restored:", n)
-d.save(R / "Report-3_Software Requirement Specification.docx")
+d.save(R / "Report-3_Software_Requirement_Specification.docx")
 
 d = docx.Document(R / "Report-4_SDS.docx")
 p = next(p for p in d.element.body.iter(qn("w:p")) if text_of(p).startswith("AgriContract is a B2B forward-contract"))

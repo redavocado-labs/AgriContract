@@ -12,7 +12,7 @@ from docx.oxml.ns import qn
 sys.path.insert(0, str(Path(__file__).parent))
 from docxedit import text_of  # noqa: E402
 
-DOC = Path(__file__).resolve().parents[1] / "Report-5.0_Test Documentation.docx"
+DOC = Path(__file__).resolve().parents[1] / "Report-5.0_Test_Documentation.docx"
 d = docx.Document(DOC)
 WIDTHS = {"RoundMetrics": [1250, 1000, 820, 640, 600, 600, 760, 3397],
           "MetricReview": [2050, 900, 600, 600, 600, 600, 700, 3017],

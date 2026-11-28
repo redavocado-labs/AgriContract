@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from docxedit import replace_image  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-DOC = ROOT / "Report-3_Software Requirement Specification.docx"
+DOC = ROOT / "Report-3_Software_Requirement_Specification.docx"
 old = Path(sys.argv[1]).read_bytes()
 d = docx.Document(DOC)
 hits = []

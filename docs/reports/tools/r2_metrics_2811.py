@@ -13,7 +13,7 @@ from docx.oxml.ns import qn
 sys.path.insert(0, str(Path(__file__).parent))
 from docxedit import set_cell_text, text_of  # noqa: E402
 
-DOC = Path(__file__).resolve().parents[1] / "Report-2_Project Management Plan_v1.docx"
+DOC = Path(__file__).resolve().parents[1] / "Report-2_Project_Management_Plan_v1.docx"
 d = docx.Document(DOC)
 
 obj = next(t for t in d.element.body.iter(qn("w:tbl")) if "Effort Usage" in text_of(t))

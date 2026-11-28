@@ -5,7 +5,7 @@ Numbers are read from the workbooks, not typed:
 * IT  Report-5.2_Test_Report.xlsx            Rounds 1-3 (Bruno, api-gateway / user / product, GoldenFlow)
 * ST  Report-5.3_System_Test_FRs.xlsx        Rounds 1-3 (run-e2e-full.sh, BF-01..BF-07 and Security)
 * NFR Report-5.4_System_Test_NFRs.xlsx       Security, Reliability, Usability, Performance (one status per row)
-* AT  Report-5.5_Acceptance Test Scripts.xlsx UAT scripts (Result Not Executed counts as Pending)
+* AT  Report-5.5_Acceptance_Test_Scripts.xlsx UAT scripts (Result Not Executed counts as Pending)
 * defects  Report-5.6_Defect_Log.xlsx
 A round's Total counts its Passed, Failed and Pending cases; N/A cases are left out of Total and named in the Note.
 
@@ -23,11 +23,11 @@ sys.path.insert(0, str(Path(__file__).parent))
 from docxedit import append_row, fill_change_log, find, next_table, set_cell_text, set_par_text  # noqa: E402
 
 REPORTS = Path(__file__).resolve().parents[1]
-DOC = REPORTS / "Report-5.0_Test Documentation.docx"
+DOC = REPORTS / "Report-5.0_Test_Documentation.docx"
 B = {k: REPORTS / v for k, v in {
     "5.1": "Report-5.1_Unit_Test.xlsx", "5.2": "Report-5.2_Test_Report.xlsx",
     "5.3": "Report-5.3_System_Test_FRs.xlsx", "5.4": "Report-5.4_System_Test_NFRs.xlsx",
-    "5.5": "Report-5.5_Acceptance Test Scripts.xlsx", "5.6": "Report-5.6_Defect_Log.xlsx"}.items()}
+    "5.5": "Report-5.5_Acceptance_Test_Scripts.xlsx", "5.6": "Report-5.6_Defect_Log.xlsx"}.items()}
 
 
 def rounds(book, prefix):
@@ -143,7 +143,7 @@ for values in (
          "In-house", "v1.0"],
         ["Non-functional system test workbook (security, reliability, usability, performance)",
          "Report-5.4_System_Test_NFRs.xlsx", "In-house", "v1.0"],
-        ["Acceptance test scripts (UAT) and exploratory log", "Report-5.5_Acceptance Test Scripts.xlsx", "In-house",
+        ["Acceptance test scripts (UAT) and exploratory log", "Report-5.5_Acceptance_Test_Scripts.xlsx", "In-house",
          "v1.0"],
         ["Defect log and statistics", "Report-5.6_Defect_Log.xlsx", "In-house", "v1.0"]):
     if values[1] not in "".join(t.text or "" for t in tools.iter(qn("w:t"))):
@@ -167,7 +167,7 @@ set_par_text(find(d, "UI and Acceptance Test Cases (AT): Report-5.4"),
              "(UT, ST case, Playwright test of frontend/tests/qa, or the load measurement) and takes its status from "
              "it.")
 set_par_text(find(d, "Defect Log: Report-5.5"),
-             "Acceptance Test Scripts (AT): Report-5.5_Acceptance Test Scripts.xlsx, one UAT script per business "
+             "Acceptance Test Scripts (AT): Report-5.5_Acceptance_Test_Scripts.xlsx, one UAT script per business "
              "scenario of BF-01..BF-07 in business language, run by a business user on the demo stack; the "
              "Exploratory sheet logs free exploration sessions.\n"
              "Defect Log: Report-5.6_Defect_Log.xlsx, every real test failure with its run, cause, fix and re-test; "

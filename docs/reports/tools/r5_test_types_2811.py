@@ -13,7 +13,7 @@ from docx.oxml.ns import qn
 sys.path.insert(0, str(Path(__file__).parent))
 from docxedit import fill_change_log, find, insert_copy_after, next_table, set_par_text, set_table_rows  # noqa: E402
 
-DOC = Path(__file__).resolve().parents[1] / "Report-5.0_Test Documentation.docx"
+DOC = Path(__file__).resolve().parents[1] / "Report-5.0_Test_Documentation.docx"
 d = docx.Document(DOC)
 
 functional = find(d, "Functional testing. Objective")

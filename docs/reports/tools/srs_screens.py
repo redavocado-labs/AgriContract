@@ -13,7 +13,7 @@ from docx.oxml.ns import qn
 from docxedit import append_row, find, next_table, replace_image, text_of
 
 REPO = Path(__file__).resolve().parents[3]
-DOC = REPO / "docs/reports/Report-3_Software Requirement Specification.docx"
+DOC = REPO / "docs/reports/Report-3_Software_Requirement_Specification.docx"
 SCREENS = REPO / "docs/reports/figures/srs/screens"
 d = docx.Document(DOC)
 

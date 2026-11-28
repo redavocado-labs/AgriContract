@@ -15,7 +15,7 @@ from docx.oxml.ns import qn
 sys.path.insert(0, str(Path(__file__).parent))
 from docxedit import append_row, set_cell_text, set_par_text, text_of  # noqa: E402
 
-DOC = Path(__file__).resolve().parents[1] / "Report-5.0_Test Documentation.docx"
+DOC = Path(__file__).resolve().parents[1] / "Report-5.0_Test_Documentation.docx"
 d = docx.Document(DOC)
 body = d.element.body
 
@@ -110,7 +110,7 @@ sub("each row names its evidence (UT, ST case, Playwright test of frontend/tests
 at = next(p for p in body.iter(qn("w:p")) if text_of(p).startswith("Acceptance Test Scripts (AT): Report-5.5"))
 defect = copy.deepcopy(at)
 at.addnext(defect)
-set_par_text(at, "Acceptance Test Scripts (AT): Report-5.5_Acceptance Test Scripts.xlsx, one UAT script per business "
+set_par_text(at, "Acceptance Test Scripts (AT): Report-5.5_Acceptance_Test_Scripts.xlsx, one UAT script per business "
                  "scenario of BF-01..BF-07 in business language, run by a business user on the demo stack; on "
                  "28/11/2026 they were run by Playwright through the web client (1 Pass, 4 Partial, 6 Not Executed). "
                  "The Exploratory sheet logs free exploration sessions.")

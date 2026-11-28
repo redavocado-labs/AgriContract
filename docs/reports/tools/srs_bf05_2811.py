@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from docxedit import replace_image, text_of  # noqa: E402
 
 R = Path(__file__).resolve().parents[1]
-DOC = R / "Report-3_Software Requirement Specification.docx"
+DOC = R / "Report-3_Software_Requirement_Specification.docx"
 d = docx.Document(DOC)
 for el in d.element.body.iterchildren():
     ps = el.find(f"{qn('w:pPr')}/{qn('w:pStyle')}") if el.tag == qn("w:p") else None

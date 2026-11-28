@@ -25,7 +25,7 @@ from docx.oxml.ns import qn
 sys.path.insert(0, str(Path(__file__).parent))
 from docxedit import fill_change_log, find, next_table, set_cell_text, set_par_text, set_table_rows, text_of  # noqa: E402
 
-DOC = Path(__file__).resolve().parents[1] / "Report-5.0_Test Documentation.docx"
+DOC = Path(__file__).resolve().parents[1] / "Report-5.0_Test_Documentation.docx"
 d = docx.Document(DOC)
 
 

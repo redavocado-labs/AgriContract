@@ -14,7 +14,7 @@ from docx.oxml.ns import qn
 sys.path.insert(0, str(Path(__file__).parent))
 from docxedit import fill_change_log, set_cell_text, set_par_text, text_of  # noqa: E402
 
-DOC = Path(__file__).resolve().parents[1] / "Report-3_Software Requirement Specification.docx"
+DOC = Path(__file__).resolve().parents[1] / "Report-3_Software_Requirement_Specification.docx"
 d = docx.Document(DOC)
 body = d.element.body
 
