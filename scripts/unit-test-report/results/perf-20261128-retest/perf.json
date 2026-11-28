@@ -1,0 +1,123 @@
+{
+  "date": "28/11/2026",
+  "listings": 10015,
+  "form_submission": {
+    "count": 54,
+    "mean": 76.4,
+    "p50": 30,
+    "p95": 237,
+    "p99": 449,
+    "max": 895,
+    "slowest": [
+      {
+        "file": "bruno-bf01.json",
+        "name": "BF01-010 Register buyer profile",
+        "method": "POST",
+        "status": 201,
+        "ms": 895
+      },
+      {
+        "file": "bruno-bf03-happy.json",
+        "name": "BF03-010 Create a coffee offer",
+        "method": "POST",
+        "status": 201,
+        "ms": 449
+      },
+      {
+        "file": "user-service-new-profile.json",
+        "name": "POST /api/v1/users/register (201 first time, 200 when the seed already has the profile)",
+        "method": "POST",
+        "status": 201,
+        "ms": 292
+      },
+      {
+        "file": "product-service.json",
+        "name": "POST /api/v1/categories (propose category)",
+        "method": "POST",
+        "status": 201,
+        "ms": 237
+      },
+      {
+        "file": "bruno-bf02.json",
+        "name": "BF02-050 Create an available listing",
+        "method": "POST",
+        "status": 201,
+        "ms": 227
+      }
+    ]
+  },
+  "single_user": {
+    "browse": {
+      "count": 30,
+      "mean": 11.0,
+      "p50": 11.4,
+      "p95": 13.9,
+      "p99": 17.4,
+      "max": 17.4,
+      "errors": 0
+    },
+    "filtered": {
+      "count": 30,
+      "mean": 12.5,
+      "p50": 12.3,
+      "p95": 15.2,
+      "p99": 15.3,
+      "max": 15.3,
+      "errors": 0
+    }
+  },
+  "concurrent": {
+    "users": 100,
+    "seconds": 60.3,
+    "requests": 76575,
+    "throughput": 1269.1,
+    "errors": {},
+    "error_rate": 0.0,
+    "per_request": {
+      "browse": {
+        "count": 15315,
+        "mean": 184.9,
+        "p50": 184.9,
+        "p95": 210.9,
+        "p99": 333.5,
+        "max": 545.5
+      },
+      "filtered": {
+        "count": 15315,
+        "mean": 189.2,
+        "p50": 188.6,
+        "p95": 214.9,
+        "p99": 341.5,
+        "max": 500.0
+      },
+      "prices": {
+        "count": 15315,
+        "mean": 4.1,
+        "p50": 3.8,
+        "p95": 5.9,
+        "p99": 8.9,
+        "max": 31.8
+      },
+      "profile": {
+        "count": 15315,
+        "mean": 3.6,
+        "p50": 3.4,
+        "p95": 5.2,
+        "p99": 7.0,
+        "max": 11.8
+      },
+      "contracts": {
+        "count": 15315,
+        "mean": 10.9,
+        "p50": 10.6,
+        "p95": 13.4,
+        "p99": 15.4,
+        "max": 26.8
+      }
+    }
+  },
+  "sources": {
+    "st": "st-round3",
+    "it": "round3"
+  }
+}
