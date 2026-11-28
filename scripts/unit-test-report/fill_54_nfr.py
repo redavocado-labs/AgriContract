@@ -14,7 +14,7 @@
 #   perf       results/perf-<date>/perf.json and pageload.json (perf_nfr.py)
 # A row without evidence is Not Run, with the reason in Notes.
 #
-#   python fill_54_nfr.py results/ut-round3-20261128 results/st-round3 results/pw-20261128 results/perf-20261128 \
+#   python fill_54_nfr.py results/ut-round3-20261128 results/st-round3 results/pw-20261128 results/perf-20261128-retest \
 #       ../../docs/reports/Report-5.4_System_Test_NFRs.xlsx results/st-ui
 import importlib.util
 import json
@@ -153,7 +153,8 @@ SECURITY = [
     ("Public routes are readable without signing in", "Guest", "AVAILABLE listing of BF-02",
      "GET a public listing and the reference price through the gateway", "HTTP 200 with public data, no identity",
      "High", combine(st("BF02-070"), ut("api-gateway/GatewayBoundaryTest#public")), "",
-     "The reference price returns 500 on the Compose stack, which has no pricing-service (DEF-20, see Performance)"),
+     "The reference price returned 500 on the Compose stack without pricing-service (DEF-20, fixed by #715, "
+     "see Performance)"),
     ("Only the Operator reads the KYC queue", "BUYER, SELLER, INSPECTOR, OPERATOR, ARBITRATOR, ADMIN",
      "6 seeded accounts, one token per role", "GET /api/v1/admin/users?verificationStatus=PENDING with each token",
      "OPERATOR 200; the other 5 roles 403 (no fallback, ADMIN 403 too)", "Critical",
@@ -315,8 +316,9 @@ PERFORMANCE = [
     (*page_row("/", "home page"), "", "vite build pointing at the gateway localhost:8080, vite preview; measured "
                                       "during the load test"),
     (*page_row("/listing", "listing marketplace"), "", f"{PERF['listings']} listings in product_db"),
-    (*page_row("/prices", "reference prices")[:4], "Fail", "DEF-20",
-     "The price API returns 500 after ~3.9 s: the Compose stack has no pricing-service"),
+    (*page_row("/prices", "reference prices"), "DEF-20",
+     "Re-test after #715 (pricing-service added to the Compose stack, one Operator price for COFFEE / Dak Lak). "
+     "First run on 28/11 failed: the price API returned 500 after ~3.9 s"),
     ("Form submission (without uploads and waits on external services)", "Bruno CLI 3.4.2 (responseTime)",
      "≤ 2 seconds",
      f"{form['count']} write requests of Bruno Round 3 (e2e + IT): p95 {form['p95']} ms, max {form['max']} ms",
@@ -335,9 +337,9 @@ PERFORMANCE = [
      "0 errors; no target exceeded by more than 50%",
      f"{c['requests']} requests in {c['seconds']} s ({c['throughput']} req/s); errors: "
      + (", ".join(f"{k}: {v}" for k, v in c["errors"].items()) or "0") + f" ({c['error_rate']}%)",
-     "Pass" if not c["errors"] else "Fail", "DEF-20" if c["errors"] else "",
-     "Each user loops: browse, filter, reference price, own profile, own contracts. Errors only on the reference "
-     "price; the other 4 kinds 0 errors"),
+     "Pass" if not c["errors"] else "Fail", "DEF-20",
+     "Each user loops: browse, filter, reference price, own profile, own contracts. Re-test after #715; the first "
+     "run on 28/11 had 1389 errors (20%), all 500 on the reference price (DEF-20)"),
     ("Signing OTP e-mail reaches the mail provider", "MailHog", "≤ 10 seconds after the request; the code lives 300 "
      "seconds", "", "Not Run", "",
      "Not measured on its own; Bruno Round 3 (Saturday) stopped at the second signature, DEF-19"),
