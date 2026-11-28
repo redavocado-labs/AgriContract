@@ -155,3 +155,50 @@ def append_row(tbl, values: list[str]):
     for tc, v in zip(tr.findall(qn("w:tc")), values):
         set_cell_text(tc, v)
     last.addnext(tr)
+
+
+def emphasize(p, phrases: list[str]):
+    """Bolds the given phrases of a one-run paragraph (as set_par_text leaves it); the rest is not bold.
+    Restores a bold label such as 'Purpose' after set_par_text copied the label's bold onto the whole text."""
+    runs = p.findall(qn("w:r"))
+    if len(runs) != 1:
+        raise ValueError("expected a paragraph rewritten by set_par_text (one run)")
+    run = runs[0]
+    text = "".join(t.text or "" for t in run.iter(qn("w:t")))
+    base = copy.deepcopy(run)
+    rpr = base.find(qn("w:rPr"))
+    if rpr is not None:
+        for b in rpr.findall(qn("w:b")) + rpr.findall(qn("w:bCs")):
+            rpr.remove(b)
+    for child in list(base):
+        if child is not rpr:
+            base.remove(child)
+    cuts = []
+    for ph in phrases:
+        i = text.find(ph)
+        if i < 0:
+            raise ValueError(ph)
+        cuts.append((i, i + len(ph)))
+    cuts.sort()
+    segs, pos = [], 0
+    for a, b in cuts:
+        segs += [(text[pos:a], False), (text[a:b], True)]
+        pos = b
+    segs.append((text[pos:], False))
+    for seg, bold in segs:
+        if not seg:
+            continue
+        r = copy.deepcopy(base)
+        if bold:
+            rp = r.find(qn("w:rPr"))
+            if rp is None:
+                rp = r.makeelement(qn("w:rPr"), {})
+                r.insert(0, rp)
+            rp.insert(0, rp.makeelement(qn("w:b"), {}))
+            rp.insert(1, rp.makeelement(qn("w:bCs"), {}))
+        t = r.makeelement(qn("w:t"), {})
+        t.text = seg
+        t.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+        r.append(t)
+        run.addprevious(r)
+    p.remove(run)

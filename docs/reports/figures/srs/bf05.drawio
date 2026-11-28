@@ -74,7 +74,7 @@
         <mxCell id="m2" parent="1" style="rhombus;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" value="" vertex="1">
           <mxGeometry height="30" width="30" x="880" y="1675.0" as="geometry"/>
         </mxCell>
-        <mxCell id="a10" parent="1" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" value="10. Finalize the decision;&lt;br&gt;apply penalty and reputation" vertex="1">
+        <mxCell id="a10" parent="1" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" value="10. Finalize the decision;&lt;br&gt;apply its money and reputation effects" vertex="1">
           <mxGeometry height="64" width="230" x="780" y="1735.0" as="geometry"/>
         </mxCell>
         <mxCell id="d3" parent="1" style="rhombus;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" value="Termination&lt;br&gt;conditions met?" vertex="1">
