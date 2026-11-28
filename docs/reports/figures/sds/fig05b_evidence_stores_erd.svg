@@ -112,5 +112,12 @@
 <text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="589.396484375" y="409.5">anchored_hash : CHAR(64)</tspan></text>
 <text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="589.396484375" y="424.5">anchor_type : VARCHAR(20)</tspan></text>
 <text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="589.396484375" y="439.5">proof : TEXT</tspan></text>
+<rect x="580.451171875" y="480.0" width="179.09765625" height="71" fill="white" stroke="black" stroke-width="1.2"/>
+<text text-anchor="middle" dominant-baseline="central" font-size="12"><tspan x="670" y="492.5">audit_chain_lock</tspan></text>
+<line x1="580.451171875" y1="505.0" x2="759.548828125" y2="505.0" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="12" font-weight="bold"><tspan x="588.451171875" y="516.5">lock_id : TINYINT</tspan></text>
+<line x1="588.451171875" y1="523.0" x2="687.158203125" y2="523.0" stroke="black" stroke-width="0.9"/>
+<line x1="580.451171875" y1="528.0" x2="759.548828125" y2="528.0" stroke="black"/>
+<text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="588.451171875" y="539.5">one row (CHECK lock_id = 1)</tspan></text>
 <text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="7.0" y="591.875">Bold underlined: primary key · italic: foreign key · (UQ) unique · dashed «planned»: in the design, not created by Flyway yet</tspan></text>
 </svg>

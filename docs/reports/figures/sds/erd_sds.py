@@ -184,6 +184,7 @@ T = {
         "record_hash : CHAR(64)", "prev_hash_global : CHAR(64)", "prev_hash_subject : CHAR(64)"]),
     "audit_anchor": dict(planned=True, pk=["anchor_id : CHAR(36)"], fk=["record_id : CHAR(36) (FK)"], cols=[
         "anchored_hash : CHAR(64)", "anchor_type : VARCHAR(20)", "proof : TEXT"]),
+    "audit_chain_lock": dict(pk=["lock_id : TINYINT"], cols=["one row (CHECK lock_id = 1)"]),
 }
 
 
@@ -323,6 +324,7 @@ def fig05b():
     d.package("audit_db", 545, 30, 250, 540, "audit_db")
     tab(d, "audit_record", 670, 45)
     tab(d, "audit_anchor", 670, 320)
+    tab(d, "audit_chain_lock", 670, 480)
     d.er("level1_5_inspection_assignment", "b", "inspection_report", "t", d="zero_one", label="authorizes")
     d.er("inspection_report", "r", "inspector_signature", "l", d="zero_one", label="signed by", side="t")
     d.er("audit_record", "b", "audit_anchor", "t", label="is anchored by")
