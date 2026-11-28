@@ -1,0 +1,402 @@
+[
+  {
+    "iterationIndex": 0,
+    "results": [
+      {
+        "test": {
+          "filename": "e2e/bf01-onboarding-kyc/010-register-buyer.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/users/register",
+          "headers": {}
+        },
+        "response": {
+          "status": 201,
+          "statusText": "Created",
+          "headers": {},
+          "data": {
+            "userId": "6aac54fa-cb28-4b30-8227-b9bde4d85743",
+            "organizationName": "Bruno Test Farm",
+            "role": "BUYER",
+            "email": "bruno-buyer-mwzghvo4-v1jmzgj@example.test",
+            "emailVerified": false,
+            "phone": "0901234567",
+            "address": "Ha Noi",
+            "verificationStatus": "PENDING",
+            "authorizationExpiresAt": null,
+            "verificationEmailSent": true,
+            "verificationCodeExpiresAt": "2026-11-27T21:01:10.712477092Z"
+          },
+          "url": "http://localhost/api/v1/users/register",
+          "responseTime": 895,
+          "duration": 895,
+          "size": 366
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "cmDBlSGVTog5OMWoUVi1q"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 1.778141029,
+        "name": "BF01-010 Register buyer profile",
+        "path": "e2e/bf01-onboarding-kyc/010-register-buyer",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e/bf01-onboarding-kyc/020-verify-email-buyer.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/users/me/email-verification/confirm",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "userId": "6aac54fa-cb28-4b30-8227-b9bde4d85743",
+            "organizationName": "Bruno Test Farm",
+            "role": "BUYER",
+            "email": "bruno-buyer-mwzghvo4-v1jmzgj@example.test",
+            "emailVerified": true,
+            "phone": "0901234567",
+            "address": "Ha Noi",
+            "verificationStatus": "PENDING",
+            "authorizationExpiresAt": null
+          },
+          "url": "http://localhost/api/v1/users/me/email-verification/confirm",
+          "responseTime": 155,
+          "duration": 155,
+          "size": 275
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "OqI2tBiWfFukj3-6rzL-i"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.163992285,
+        "name": "BF01-020 Confirm buyer email",
+        "path": "e2e/bf01-onboarding-kyc/020-verify-email-buyer",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e/bf01-onboarding-kyc/030-review-buyer.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/users/6aac54fa-cb28-4b30-8227-b9bde4d85743",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "userId": "6aac54fa-cb28-4b30-8227-b9bde4d85743",
+            "organizationName": "Bruno Test Farm",
+            "role": "BUYER",
+            "email": "bruno-buyer-mwzghvo4-v1jmzgj@example.test",
+            "phone": "0901234567",
+            "verificationStatus": "PENDING",
+            "authorizationExpiresAt": null,
+            "verifiedByActorId": null,
+            "verifiedAt": null,
+            "rejectionReason": null
+          },
+          "url": "http://localhost/api/v1/admin/users/6aac54fa-cb28-4b30-8227-b9bde4d85743",
+          "responseTime": 36,
+          "duration": 36,
+          "size": 301
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "NHVLomY78b-u-GOUY0fk5"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.270398903,
+        "name": "BF01-030 Operator opens buyer KYC profile",
+        "path": "e2e/bf01-onboarding-kyc/030-review-buyer",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e/bf01-onboarding-kyc/040-verify-buyer.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/admin/users/6aac54fa-cb28-4b30-8227-b9bde4d85743/verify",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "userId": "6aac54fa-cb28-4b30-8227-b9bde4d85743",
+            "verificationStatus": "VERIFIED",
+            "authorizationExpiresAt": null,
+            "verifiedByActorId": "33eeb16a-f9e0-43ad-97fb-b350b1dfa942",
+            "verifiedAt": "2026-11-27T20:51:11.314597Z",
+            "rejectionReason": null
+          },
+          "url": "http://localhost/api/v1/admin/users/6aac54fa-cb28-4b30-8227-b9bde4d85743/verify",
+          "responseTime": 53,
+          "duration": 53,
+          "size": 236
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "K6rgoukl7MtHgo3FnnVPi"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.057159423,
+        "name": "BF01-040 Operator marks buyer KYC VERIFIED",
+        "path": "e2e/bf01-onboarding-kyc/040-verify-buyer",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e/bf01-onboarding-kyc/060-register-seller.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/users/register",
+          "headers": {}
+        },
+        "response": {
+          "status": 201,
+          "statusText": "Created",
+          "headers": {},
+          "data": {
+            "userId": "232c8f46-c6fc-419e-ae99-605931f3e111",
+            "organizationName": "Bruno Test Farm",
+            "role": "SELLER",
+            "email": "bruno-seller-mwzghxex-y2oasf2@example.test",
+            "emailVerified": false,
+            "phone": "0901234567",
+            "address": "Ha Noi",
+            "verificationStatus": "PENDING",
+            "authorizationExpiresAt": null,
+            "verificationEmailSent": true,
+            "verificationCodeExpiresAt": "2026-11-27T21:01:11.725743079Z"
+          },
+          "url": "http://localhost/api/v1/users/register",
+          "responseTime": 68,
+          "duration": 68,
+          "size": 368
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "5yJWomIu-cLyCEBbvUi3R"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.423167556,
+        "name": "BF01-060 Register seller profile",
+        "path": "e2e/bf01-onboarding-kyc/060-register-seller",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e/bf01-onboarding-kyc/070-verify-email-seller.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/users/me/email-verification/confirm",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "userId": "232c8f46-c6fc-419e-ae99-605931f3e111",
+            "organizationName": "Bruno Test Farm",
+            "role": "SELLER",
+            "email": "bruno-seller-mwzghxex-y2oasf2@example.test",
+            "emailVerified": true,
+            "phone": "0901234567",
+            "address": "Ha Noi",
+            "verificationStatus": "PENDING",
+            "authorizationExpiresAt": null
+          },
+          "url": "http://localhost/api/v1/users/me/email-verification/confirm",
+          "responseTime": 60,
+          "duration": 60,
+          "size": 277
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "6tYTV876CDddGykQW5pDt"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.071453433,
+        "name": "BF01-070 Confirm seller email",
+        "path": "e2e/bf01-onboarding-kyc/070-verify-email-seller",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e/bf01-onboarding-kyc/080-review-seller.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "http://localhost:8080/api/v1/admin/users/232c8f46-c6fc-419e-ae99-605931f3e111",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "userId": "232c8f46-c6fc-419e-ae99-605931f3e111",
+            "organizationName": "Bruno Test Farm",
+            "role": "SELLER",
+            "email": "bruno-seller-mwzghxex-y2oasf2@example.test",
+            "phone": "0901234567",
+            "verificationStatus": "PENDING",
+            "authorizationExpiresAt": null,
+            "verifiedByActorId": null,
+            "verifiedAt": null,
+            "rejectionReason": null
+          },
+          "url": "http://localhost/api/v1/admin/users/232c8f46-c6fc-419e-ae99-605931f3e111",
+          "responseTime": 32,
+          "duration": 32,
+          "size": 303
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "75Ehrb5Z-W35Frp14T1Zk"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.279458069,
+        "name": "BF01-080 Operator opens seller KYC profile",
+        "path": "e2e/bf01-onboarding-kyc/080-review-seller",
+        "iterationIndex": 0
+      },
+      {
+        "test": {
+          "filename": "e2e/bf01-onboarding-kyc/090-reject-seller.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:8080/api/v1/admin/users/232c8f46-c6fc-419e-ae99-605931f3e111/reject",
+          "headers": {}
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "headers": {},
+          "data": {
+            "userId": "232c8f46-c6fc-419e-ae99-605931f3e111",
+            "verificationStatus": "REJECTED",
+            "authorizationExpiresAt": null,
+            "verifiedByActorId": "33eeb16a-f9e0-43ad-97fb-b350b1dfa942",
+            "verifiedAt": "2026-11-27T20:51:12.133412Z",
+            "rejectionReason": "Missing authorization document in test fixture"
+          },
+          "url": "http://localhost/api/v1/admin/users/232c8f46-c6fc-419e-ae99-605931f3e111/reject",
+          "responseTime": 32,
+          "duration": 32,
+          "size": 280
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "status and response contract",
+            "status": "pass",
+            "uid": "gJYCz3sUBNDL59aYPWlNg"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.036990607,
+        "name": "BF01-090 Operator marks seller KYC REJECTED",
+        "path": "e2e/bf01-onboarding-kyc/090-reject-seller",
+        "iterationIndex": 0
+      }
+    ],
+    "summary": {
+      "totalRequests": 8,
+      "passedRequests": 8,
+      "failedRequests": 0,
+      "errorRequests": 0,
+      "skippedRequests": 0,
+      "totalAssertions": 0,
+      "passedAssertions": 0,
+      "failedAssertions": 0,
+      "totalTests": 8,
+      "passedTests": 8,
+      "failedTests": 0,
+      "totalPreRequestTests": 0,
+      "passedPreRequestTests": 0,
+      "failedPreRequestTests": 0,
+      "totalPostResponseTests": 0,
+      "passedPostResponseTests": 0,
+      "failedPostResponseTests": 0
+    }
+  }
+]

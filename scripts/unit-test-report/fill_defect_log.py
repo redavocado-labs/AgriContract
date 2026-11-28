@@ -66,16 +66,28 @@ cv["B2"] = "DEFECT LOG"
 cv["B4"], cv["B5"] = "AgriContract", "AGC"
 cv["F4"], cv["F5"], cv["F6"] = CREATOR, ISSUE_DATE, "v1.0"
 cv["B6"] = '=B5&"_DefectLog_v1.0"'
-cv["A11"], cv["B11"], cv["C11"], cv["D11"] = ISSUE_DATE, "v1.0", "Toàn bộ tài liệu", "A"
-cv["E11"] = ("Bản đầu: 16 defect thật từ CI (GitHub Actions), Report 5.2 Round 1 và các vòng E2E; Tester là người "
-             "kích hoạt lần chạy; mỗi defect có commit, log, bản sửa và lần chạy lại")
+cv["A11"], cv["B11"], cv["C11"], cv["D11"] = ISSUE_DATE, "v1.0", "Whole document", "A"
+cv["E11"] = ("First version: 16 real defects from CI (GitHub Actions), Report 5.2 Round 1 and the E2E rounds; the tester "
+             "is whoever started the run; every defect has its commit, log, fix and re-run")
 cv["F11"] = "Report 5.0, 5.1, 5.2; #670"
 # Later changes: one row each under the first, same version (date, item, A/D/M, description, reference)
 CHANGES = [
-    ("27/11/2026", "Defect List", "A", "Thêm DEF-17: image Java thiếu module luật kiến trúc, stack không build từ main",
-     "#288, PR #678"),
-    ("27/11/2026", "Defect List", "A", "Thêm DEF-18: helper lùi thời gian của BF04-250 không chạy trên Windows "
-     "(Report 5.3 Round 1), sửa và chạy lại ở Round 2", "#685, PR #686, #676"),
+    ("27/11/2026", "Defect List", "A", "Added DEF-17: the Java images lack the architecture rules module, the stack "
+     "does not build from main", "#288, PR #678"),
+    ("27/11/2026", "Defect List", "A", "Added DEF-18: the time-travel helper of BF04-250 does not run on Windows "
+     "(Report 5.3 Round 1), fixed and re-run in Round 2", "#685, PR #686, #676"),
+    ("28/11/2026", "Defect List", "A", "Added DEF-19: the Bruno BF-03/BF-04 suite does not skip on non-business days, "
+     "the second signature is refused (Report 5.3 Round 3, run on a Saturday)", "Report 5.3 Round 3"),
+    ("28/11/2026", "Defect List", "A", "Added DEF-20: the Docker Compose stack has no pricing-service, the reference "
+     "price returns 500 (Report 5.4 load test)", "Report 5.4 Performance"),
+    ("28/11/2026", "Defect List", "A", "Added DEF-21 (Keycloak webOrigins with an extra /, the web client loses its "
+     "session), DEF-22 (GreenMail spins the CPU after healthchecks), DEF-23 (money without two decimals, #717) from the "
+     "system tests through the web client; DEF-18 and DEF-19 point at the Bruno e2e sheets of Report 5.2",
+     "Report 5.3, Report 5.4"),
+    ("28/11/2026", "Whole document", "M", "Translated into English", ""),
+    ("28/11/2026", "Defect List", "M", "DEF-20 closed: pricing-service and analytics-service run in the Compose stack "
+     "(#715); the load test re-run has 0 errors and the reference price screen loads in about 1.1 s",
+     "#714, PR #715, Report 5.4"),
 ]
 for row, (date, item, kind, text, ref) in enumerate(CHANGES, start=12):
     for col, value in zip("ABCDEF", (date, "v1.0", item, kind, text, ref)):
@@ -134,10 +146,11 @@ st.title = "Defect Statistics"
 st["A2"] = "DEFECT STATISTICS"
 st["F4"], st["F6"] = CREATOR, ISSUE_DATE
 st["B6"] = '=Cover!B6'
-st["B7"] = ("Defect tìm thấy khi chạy test từ 15/11 đến 26/11/2026: CI GitHub Actions (UT, IT, Playwright, golden flow), "
-            "Report 5.2 Round 1 (Bruno) và các vòng E2E ~/agricontract-e2e/. Chỉ tính lỗi do code, config, contract "
-            "hoặc dữ liệu seed; không tính lần CI không chạy (khoá billing), lỗi tải Maven và lỗi đỏ lúc đang code. "
-            "Tester = người kích hoạt lần chạy. Re-test = lần CI/vòng test xanh đầu tiên sau commit sửa.")
+st["B7"] = ("Defects found by running the tests from 15/11 to 28/11/2026: CI GitHub Actions (UT, IT, Playwright, golden "
+            "flow), Report 5.2 (Bruno, including the e2e rounds moved from Report 5.3), the system tests through the web "
+            "client (Report 5.3) and Report 5.4. Only failures caused by code, configuration, contracts or seed data count; "
+            "CI runs that never started (billing lock), Maven download errors and red builds while coding do not. "
+            "Tester = whoever started the run. Re-test = the first green CI run / test round after the fixing commit.")
 col_of = {name: openpyxl.utils.get_column_letter(i) for i, (name, _, _) in enumerate(COLUMNS, start=1)}
 tbl_head, tbl_body = copy(st["B11"]._style), copy(st["C12"]._style)
 st._charts, st._images = [], []  # template charts count test rounds, not defects

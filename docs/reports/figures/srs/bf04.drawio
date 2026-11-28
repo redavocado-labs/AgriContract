@@ -628,7 +628,7 @@
             <Array as="points"/>
           </mxGeometry>
         </mxCell>
-        <mxCell id="n_contest" parent="1" style="shape=note;size=10;align=left;spacingLeft=8;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" value="Only contestStatus OPEN permits contest.&lt;br&gt;After a contest result, no further contest.&lt;br&gt;Inspection-based decisions follow D85/D91." vertex="1">
+        <mxCell id="n_contest" parent="1" style="shape=note;size=10;align=left;spacingLeft=8;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" value="A decision can be contested once, while&lt;br&gt;its contest window is open. The contest&lt;br&gt;goes to a second Level 1.5 inspection,&lt;br&gt;whose result is final." vertex="1">
           <mxGeometry height="76" width="235" x="1030" y="2102.0" as="geometry"/>
         </mxCell>
         <mxCell id="mandatory_request" parent="1" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=12;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" value="Request mandatory inspection&lt;br&gt;when receipt is recorded" vertex="1">

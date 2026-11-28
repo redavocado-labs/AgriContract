@@ -41,7 +41,7 @@
         <mxCell id="a7" value="8. Seller signs:&lt;br&gt;consent, step-up&lt;br&gt;login, e-mail OTP" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=14;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
           <mxGeometry x="275.5" y="745.18" width="232.0" height="93.24" as="geometry"/>
         </mxCell>
-        <mxCell id="a8" value="9. Recheck both parties'&lt;br&gt;eligibility, the same terms&lt;br&gt;fingerprint and the funding&lt;br&gt;schedule (D67)" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=14;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+        <mxCell id="a8" value="9. Recheck both parties'&lt;br&gt;eligibility, the same terms&lt;br&gt;fingerprint and the funding&lt;br&gt;schedule" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=14;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
           <mxGeometry x="572.75" y="919.08" width="362.5" height="115.44" as="geometry"/>
         </mxCell>
         <mxCell id="r1" value="Reject the&lt;br&gt;signature; retry&lt;br&gt;or withdraw" style="rounded=1;arcSize=20;fontFamily=Arial;fontSize=14;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
@@ -113,7 +113,7 @@
         <mxCell id="bf03_join" value="" style="shape=line;strokeWidth=6;strokeColor=#000000;html=1;" vertex="1" parent="1">
           <mxGeometry x="43.5" y="883.56" width="435.0" height="8.88" as="geometry"/>
         </mxCell>
-        <mxCell id="n1" value="Either party may sign first;&lt;br&gt;eligibility is rechecked at&lt;br&gt;initiate and at verify (D37)" style="shape=note;size=12;align=left;spacingLeft=8;fontFamily=Arial;fontSize=14;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+        <mxCell id="n1" value="Either party may sign first;&lt;br&gt;eligibility is rechecked when&lt;br&gt;the code is requested and&lt;br&gt;when it is entered" style="shape=note;size=12;align=left;spacingLeft=8;fontFamily=Arial;fontSize=14;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">
           <mxGeometry x="598.12" y="746.66" width="311.75" height="90.28" as="geometry"/>
         </mxCell>
         <mxCell id="n2" value="Retrying does not reset&lt;br&gt;the 5-business-day&lt;br&gt;window; a late lock&lt;br&gt;success still gives&lt;br&gt;ACTIVE" style="shape=note;size=12;align=left;spacingLeft=8;fontFamily=Arial;fontSize=14;strokeColor=#000000;fillColor=#FFFFFF;html=1;whiteSpace=wrap;" vertex="1" parent="1">

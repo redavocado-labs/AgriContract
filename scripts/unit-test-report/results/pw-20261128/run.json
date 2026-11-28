@@ -1,0 +1,7 @@
+{
+  "date": "28/11/2026",
+  "tester": "Nguyen Minh Cuong",
+  "commit": "42a48dd5",
+  "source": "cd frontend && npm ci && PLAYWRIGHT_JSON_OUTPUT_NAME=... npx playwright test --config tests/qa/playwright.config.ts --reporter=list,json; Chromium headless shell, Node v24.16.0, Fedora Linux 44",
+  "evidence": "playwright.json"
+}

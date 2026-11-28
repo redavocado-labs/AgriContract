@@ -166,24 +166,25 @@ T = {
         "initiated_by_actor_id : CHAR(36)", "active_slot : TINYINT (generated)",
         "report_due_business_days : INT", "report_due_at : TIMESTAMP(6)"]),
     "level1_5_assignment_lock": dict(pk=["contract_id : CHAR(36)", "milestone_id : CHAR(36)"], cols=[]),
-    "inspection_report": dict(planned=True, pk=["report_id : CHAR(36)"],
+    "inspection_report": dict(pk=["report_id : CHAR(36)"],
         fk=["l15_commission_id : CHAR(36) (FK, UQ)"], cols=[
         "tier : VARCHAR(10)", "contract_id : CHAR(36)", "milestone_id : CHAR(36)", "content : JSON",
-        "normalized_result : JSON", "result_hash : CHAR(64)", "report_hash : CHAR(64)",
+        "normalized_result : JSON", "result_hash : VARCHAR(64)", "report_hash : VARCHAR(64)",
         "inspector_id : CHAR(36)", "external_org : VARCHAR(255)", "status : VARCHAR(20)"]),
-    "inspector_signature": dict(planned=True, pk=["signature_id : CHAR(36)"], fk=["report_id : CHAR(36) (FK, UQ)"],
-        cols=["signer_user_id : CHAR(36)", "auth_time : TIMESTAMP", "signed_at : TIMESTAMP",
-              "report_hash : CHAR(64)"]),
+    "inspector_signature": dict(pk=["signature_id : CHAR(36)"], fk=["report_id : CHAR(36) (FK, UQ)"],
+        cols=["contract_id : CHAR(36)", "signer_user_id : CHAR(36)", "auth_time : TIMESTAMP(6)",
+              "signed_at : TIMESTAMP(6)", "report_hash : VARCHAR(64)"]),
     "level2_inspection_commission": dict(planned=True, pk=["commission_id : CHAR(36)"], cols=[
         "contract_id : CHAR(36)", "org : VARCHAR(255)", "intake_case_id : VARCHAR(255)", "status : VARCHAR(20)",
         "requested_at : TIMESTAMP"]),
-    # ---- audit_db (planned service) ----
-    "audit_record": dict(planned=True, pk=["record_id : CHAR(36)"], cols=[
+    # ---- audit_db ----
+    "audit_record": dict(pk=["record_id : CHAR(36)"], cols=[
         "subject_type : VARCHAR(20)", "subject_id : VARCHAR(100)", "source_event_type : VARCHAR(100)",
         "source_event_id : CHAR(36) (UQ)", "source_hash : CHAR(64)", "content : JSON",
         "record_hash : CHAR(64)", "prev_hash_global : CHAR(64)", "prev_hash_subject : CHAR(64)"]),
     "audit_anchor": dict(planned=True, pk=["anchor_id : CHAR(36)"], fk=["record_id : CHAR(36) (FK)"], cols=[
         "anchored_hash : CHAR(64)", "anchor_type : VARCHAR(20)", "proof : TEXT"]),
+    "audit_chain_lock": dict(pk=["lock_id : TINYINT"], cols=["one row (CHECK lock_id = 1)"]),
 }
 
 
@@ -239,7 +240,7 @@ def fig04b_1():
     d.er("milestone", "b", "milestone_sync_outbox", "t", (200, 430), (470, 430), s_off=60, label="settles into",
          side="t", seg=1)
     d.legend("legend", 5, 655, LEGEND + "\nfile_scan_outcome is keyed by the file id (no foreign key); "
-             "«earlier design»: superseded by D94, never created")
+             "«earlier design»: superseded, never created")
     return d
 
 
@@ -323,6 +324,7 @@ def fig05b():
     d.package("audit_db", 545, 30, 250, 540, "audit_db")
     tab(d, "audit_record", 670, 45)
     tab(d, "audit_anchor", 670, 320)
+    tab(d, "audit_chain_lock", 670, 480)
     d.er("level1_5_inspection_assignment", "b", "inspection_report", "t", d="zero_one", label="authorizes")
     d.er("inspection_report", "r", "inspector_signature", "l", d="zero_one", label="signed by", side="t")
     d.er("audit_record", "b", "audit_anchor", "t", label="is anchored by")

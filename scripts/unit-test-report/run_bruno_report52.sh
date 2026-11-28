@@ -36,7 +36,7 @@ REPORTS=()
 bru_run() {  # <folder> <report name>
   # bru exits non-zero when an assertion fails: that is a result to record, so the exit status is not checked here;
   # a run that wrote no report is caught by check_reports
-  (cd "$REPO/backend/bruno" && npx -y "@usebruno/cli@$BRU_VERSION" run "$1" --env local --sandbox developer \
+  (cd "$REPO/tests/api" && npx -y "@usebruno/cli@$BRU_VERSION" run "$1" --env local --sandbox developer \
     --env-var "gateway_secret=$GATEWAY_INTERNAL_SECRET" --reporter-json "$OUT/$2.json") || true
   REPORTS+=("$2")
 }

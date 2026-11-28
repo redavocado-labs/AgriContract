@@ -7,7 +7,7 @@ RUN mvn -q -B dependency:go-offline
 COPY role-spi/src src
 RUN mvn -q -B package
 
-# The Keycloakify theme (frontend-keycloak-theme/, compose build context "theme"). keycloakify packs the jar with Maven.
+# The Keycloakify theme (frontend/keycloak-theme/, compose build context "theme"). keycloakify packs the jar with Maven.
 FROM node:22-bookworm AS theme
 RUN apt-get update && apt-get install -y --no-install-recommends maven \
     && rm -rf /var/lib/apt/lists/*

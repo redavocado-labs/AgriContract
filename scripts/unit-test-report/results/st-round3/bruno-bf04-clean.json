@@ -1,0 +1,57 @@
+[
+  {
+    "iterationIndex": 0,
+    "results": [
+      {
+        "test": {
+          "filename": "e2e/bf04-milestone-delivery-settlement/clean/010-funded.bru"
+        },
+        "request": {
+          "method": "GET",
+          "url": "{{base_url}}/api/v1/contracts/{{contract_id}}/milestones/{{milestone_id}}",
+          "headers": {}
+        },
+        "response": {
+          "status": "error",
+          "statusText": null,
+          "headers": {},
+          "data": null,
+          "url": null,
+          "responseTime": 0,
+          "duration": 0,
+          "size": 0
+        },
+        "error": "Fixture 070-sign-seller returned 409 DELIVERY_SCHEDULE_TOO_SOON",
+        "status": "error",
+        "assertionResults": [],
+        "testResults": [],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 1.283032055,
+        "name": "BF04-010 Wait for a locked milestone",
+        "path": "e2e/bf04-milestone-delivery-settlement/clean/010-funded",
+        "iterationIndex": 0
+      }
+    ],
+    "summary": {
+      "totalRequests": 1,
+      "passedRequests": 0,
+      "failedRequests": 0,
+      "errorRequests": 1,
+      "skippedRequests": 0,
+      "totalAssertions": 0,
+      "passedAssertions": 0,
+      "failedAssertions": 0,
+      "totalTests": 0,
+      "passedTests": 0,
+      "failedTests": 0,
+      "totalPreRequestTests": 0,
+      "passedPreRequestTests": 0,
+      "failedPreRequestTests": 0,
+      "totalPostResponseTests": 0,
+      "passedPostResponseTests": 0,
+      "failedPostResponseTests": 0
+    }
+  }
+]

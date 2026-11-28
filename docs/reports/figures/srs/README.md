@@ -14,7 +14,7 @@ Edit the `.drawio` source in Draw.io Desktop, then regenerate both PNG and SVG f
 
 The former `context.py`, `context.dot` and `bf01.py` through `bf07.py` generators have been retired to avoid overwriting the maintained Draw.io diagrams. Their history remains available in Git.
 
-The ERD, Use Case Diagram and SDS generation workflows are unchanged.
+The Conceptual Data Model (`erd_conceptual.drawio`) is generated from the tables in the code by `docs/reports/tools/srs_conceptual_erd.py` and exported with Draw.io; it replaces the former three-part `erd_a/b/c`. The Use Case Diagram and SDS generation workflows are unchanged. The Screen Flow (`screenflow.svg`, `screenflow.png`) is drawn by `docs/reports/tools/srs_screenflow.py` (replaces `screenflow.dot`); render the SVG to PNG at 2x.
 
 ## Related issue
 

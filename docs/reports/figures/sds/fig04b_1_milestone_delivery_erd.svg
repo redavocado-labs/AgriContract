@@ -117,5 +117,5 @@
 <text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="387.29296875" y="559.5">processed : BOOLEAN</tspan></text>
 <text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="387.29296875" y="574.5">retry_count : INT</tspan></text>
 <text text-anchor="start" dominant-baseline="central" font-size="12"><tspan x="387.29296875" y="589.5">processed_at : TIMESTAMP</tspan></text>
-<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="7.0" y="661.875">Bold underlined: primary key · italic: foreign key · (UQ) unique · dashed «planned»: in the design, not created by Flyway yet</tspan><tspan x="7.0" y="675.625">file_scan_outcome is keyed by the file id (no foreign key); «earlier design»: superseded by D94, never created</tspan></text>
+<text text-anchor="start" dominant-baseline="central" font-size="11"><tspan x="7.0" y="661.875">Bold underlined: primary key · italic: foreign key · (UQ) unique · dashed «planned»: in the design, not created by Flyway yet</tspan><tspan x="7.0" y="675.625">file_scan_outcome is keyed by the file id (no foreign key); «earlier design»: superseded, never created</tspan></text>
 </svg>

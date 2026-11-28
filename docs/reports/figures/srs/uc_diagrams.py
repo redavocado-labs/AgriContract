@@ -78,7 +78,7 @@ def seller():
 
 
 def parties():
-    d = UseCaseDiagram("uc_parties", 790, 830, (165, 15, 650, 815))
+    d = UseCaseDiagram("uc_parties", 790, 890, (165, 15, 650, 875))
     d.actor("party", 60, 420, "Contract\nParty")
     d.actor("buyer", 60, 225, "Buyer")
     d.actor("seller", 60, 620, "Seller")
@@ -92,13 +92,14 @@ def parties():
     d.stack(a1, max(d.els["uc25"].cy + 18.5, d.els["uc27"].cy) + 14, [
         ("uc29", "UC29 Handle\nActivation Failure"), ("uc31", "UC31 Adjust\nMilestone Price"),
         ("uc40", "UC40 Report Breach"), ("uc56", "UC56 Concede\nMilestone Dispute"),
-        ("uc57", "UC57 Propose or Accept\nDispute Settlement"), ("uc58", "UC58 Withdraw or Refuse\nSettlement Proposal")])
+        ("uc57", "UC57 Propose or Accept\nDispute Settlement"), ("uc58", "UC58 Withdraw or Refuse\nSettlement Proposal"),
+        ("uc54", "UC54 Terminate\nContract")])
     d.stack(a2, cy(d, "uc40") - 26, [("uc38", "UC38 Upload\nEvidence File")])
     d.system("email", 718, cy(d, "uc22") - 30, "Email\nService")
     d.system("bank", 718, cy(d, "uc23") + 10, "Custodian\nBank")
     d.generalize("buyer", "party")
     d.generalize("seller", "party")
-    for u in ("uc21", "uc22", "uc25", "uc29", "uc31", "uc40", "uc56", "uc57", "uc58"):
+    for u in ("uc21", "uc22", "uc25", "uc29", "uc31", "uc40", "uc56", "uc57", "uc58", "uc54"):
         d.assoc("party", u)
     d.extend("uc23", "uc22")
     for u in ("uc24", "uc26", "uc27", "uc28"):

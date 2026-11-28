@@ -65,8 +65,8 @@ screen(5, "organization_onboarding", shell="app", role="BUYER", active="Profile"
                ("text", "Account type *", "s"),
                ("radio", ["Buyer", "Seller"], 0),
                ("banner", "The account type must match the role assigned to your account."),
-               ("fields", [("!Organization name *", ""), ("Tax ID *", ""), ("Contact email *", "buyer1@test.com"),
-                           ("Phone", ""), ("Representative", ""), ("!Address", "ta:")]),
+               ("fields", [("!Organization name *", ""), ("Contact email *", "buyer1@test.com"), ("Phone", ""),
+                           ("!Address", "ta:")]),
            ]),
            ("card", "Organization documents", [
                ("text", "Business registration and authorization letter (PDF, up to 10 MB)."),
@@ -93,7 +93,7 @@ screen(6, "my_profile", shell="app", role="SELLER", active="Profile", crumb="Acc
     ("banner", "Trading restriction: actions that need eligibility are blocked until KYC is VERIFIED."),
 ])
 
-screen(7, "public_user_profile", shell="public", active="Marketplace", crumb="Marketplace / Seller profile",
+screen(7, "public_user_profile", shell="public", user="Mekong Export JSC", active="Marketplace", crumb="Marketplace / Seller profile",
        blocks=[
            ("title", "Ea Kar Coffee Coop", "SELLER  ·  VERIFIED"),
            ("text", "Public profile. Contact details are not shown."),
@@ -110,20 +110,19 @@ screen(7, "public_user_profile", shell="public", active="Marketplace", crumb="Ma
 
 # ======================================================== 2. Account Administration
 KYC_LIST = [("title", "KYC review queue"),
-            ("filters", ["Search organization or tax ID", "Status: PENDING  v", "Role: All  v"], "Search"),
-            ("table", ["Organization", "Tax ID", "Role", "Email", "Submitted", "Status", ""],
-             [["Ea Kar Coffee Coop", "6001234567", "SELLER", "Verified", "25/11/2026", "[PENDING]", "<Open>"],
-              ["Mekong Export JSC", "0312345678", "BUYER", "Verified", "24/11/2026", "[PENDING]", "<Open>"],
-              ["Tay Nguyen Coffee Co.", "6009876543", "SELLER", "Verified", "22/11/2026", "[PENDING]", "<Open>"]])]
+            ("filters", ["Search organization or email", "Status: PENDING  v", "Role: All  v"], "Search"),
+            ("table", ["Organization", "Role", "Email", "Submitted", "Status", ""],
+             [["Ea Kar Coffee Coop", "SELLER", "Verified", "25/11/2026", "[PENDING]", "<Open>"],
+              ["Mekong Export JSC", "BUYER", "Verified", "24/11/2026", "[PENDING]", "<Open>"],
+              ["Tay Nguyen Coffee Co.", "SELLER", "Verified", "22/11/2026", "[PENDING]", "<Open>"]])]
 screen(8, "kyc_review_queue", shell="app", role="OPERATOR", active="KYC Review", crumb="Users & KYC / Review queue",
        blocks=KYC_LIST)
 
 KYC_DETAIL = [
     ("title", "Ea Kar Coffee Coop", "PENDING", ["Reject", "*Verify"]),
     ("cols", [
-        [("card", "Organization", ["Tax ID: 6001234567", "Role: SELLER", "Address: Ea Kar, Dak Lak"]),
-         ("card", "Contact & representative", ["Contact email: seller1@test.com  (verified)", "Phone: 0907654321",
-                                               "Representative: Nguyen Van A", "Position: Director"])],
+        [("card", "Organization", ["Role: SELLER", "Address: Ea Kar, Dak Lak"]),
+         ("card", "Contact", ["Contact email: seller1@test.com  (verified)", "Phone: 0907654321"])],
         [("card", "Uploaded documents", [("table", ["File", "Type", ""],
                                           [["business_reg.pdf", "Registration", "<View>"],
                                            ["authorization.pdf", "Authorization", "<View>"]])]),
@@ -147,21 +146,29 @@ screen(11, "reject_kyc_dialog", shell="app", role="OPERATOR", active="KYC Review
            ("fields", [("!Rejection reason *", "ta:")], 1),
        ], buttons=["Cancel", "*Reject profile"]))
 
-REP_LIST = [("title", "Reputation action requests", None, ["*Propose action"]),
+def rep_list(arbitrator):
+    act = (lambda *a: list(a)) if arbitrator else (lambda *a: [""])
+    return [("title", "Reputation action requests", None, [] if arbitrator else ["*Propose action"]),
             ("filters", ["Status: PROPOSED  v", "Action: All  v"]),
-            ("table", ["Target", "Action", "Reason", "Proposed by", "Status", ""],
-             [["Tay Nguyen Coffee Co.", "LOCK 14 days", "Repeated late delivery", "operator1", "[PROPOSED]",
-               "<Approve>"],
-              ["Mekong Export JSC", "UNLOCK", "Funding cured", "operator1", "[PROPOSED]", "<Reject>"],
-              ["Ea Kar Coffee Coop", "LOCK 7 days", "Funding breach", "operator1", "[APPROVED]", ""]]),
-            ("banner", "The proposer cannot approve or reject their own request (MSG16).")]
+            ("table", ["Target", "Action", "Reason", "Proposed by", "Status"] + (["", ""] if arbitrator else [""]),
+             [["Tay Nguyen Coffee Co.", "UNLOCK_EARLY", "Breach cured", "operator1", "[PROPOSED]",
+               *act("<Approve>", "<Reject>")],
+              ["Mekong / Ea Kar", "CLEAR_ELEVATED_RISK", "Pair reviewed", "operator1",
+               "[PROPOSED]", *act("<Approve>", "<Reject>")],
+              ["Ea Kar Coffee Coop", "UNLOCK_EARLY", "Lock decision reversed", "operator1", "[APPROVED]",
+               *act("", "")]]),
+            ("banner", "The proposer cannot approve or reject their own request (MSG16)." if arbitrator else
+             "Only an Arbitrator approves or rejects a proposal; staff cannot lock a user by hand.")]
+
+
 screen(12, "reputation_action_requests", shell="app", role="ARBITRATOR", active="Reputation Requests",
-       crumb="Reputation / Action requests", blocks=REP_LIST)
+       crumb="Reputation / Action requests", blocks=rep_list(True))
 
 screen(13, "propose_reputation_action_dialog", shell="app", role="OPERATOR", active="Reputation Requests",
-       crumb="Reputation / Action requests", base=REP_LIST, dialog=dict(title="Propose reputation action", blocks=[
-           ("fields", [("!Target user *", "v:Tay Nguyen Coffee Co."), ("Action *", "v:LOCK"),
-                       ("Duration (days)", "14"), ("!Reason *", "ta:")]),
+       crumb="Reputation / Action requests", base=rep_list(False), dialog=dict(title="Propose reputation action", blocks=[
+           ("text", "Action type *", "s"),
+           ("radio", ["UNLOCK_EARLY", "CLEAR_ELEVATED_RISK"], 0),
+           ("fields", [("!Target user *", "v:Tay Nguyen Coffee Co."), ("!Reason *", "ta:")]),
            ("banner", "An Arbitrator must approve this proposal (MSG17)."),
        ], buttons=["Cancel", "*Submit proposal"]))
 
@@ -180,7 +187,7 @@ screen(14, "my_plots", shell="app", role="SELLER", active="My Plots", crumb="Plo
 screen(15, "import_kml_dialog", shell="app", role="SELLER", active="My Plots", crumb="Plots / My plots", base=PLOTS,
        dialog=dict(title="Import KML", w=640, blocks=[
            ("fields", [("!Province for all placemarks *", "v:Dak Lak")], 1),
-           ("upload", "Select KML file", ".kml, up to 5 MB"),
+           ("upload", "Select KML file", ".kml, up to 10 MB"),
            ("table", ["Placemark", "Type", "Area (ha)", "Result"],
             [["EK-05", "Polygon", "1.9", "[VALID]"], ["EK-06", "Point", "[enter area]", "[NEED AREA]"],
              ["EK-01", "Polygon", "2.1", "[EXISTS - UPDATE]"], ["X-1", "Line", "-", "[INVALID - SKIP]"]]),
@@ -192,7 +199,7 @@ screen(16, "add_plot_by_gps_pin_dialog", shell="app", role="SELLER", active="My 
            "Latitude / Longitude: 12.8102, 108.4521",
            "Accuracy: 25 m",
            ("banner", "Accuracy is worse than 20 m (MSG22). You can still save the point."),
-           ("fields", [("Household label *", "Nguyen Van A"), ("Area (ha) *", "1.2")]),
+           ("fields", [("Household label *", "Nguyen Van A"), ("Declared province *", "v:Dak Lak"), ("Area (ha) *", "1.2")]),
        ], buttons=["Cancel", "*Save point plot"]))
 
 screen(17, "upload_cadastral_extract_dialog", shell="app", role="SELLER", active="My Plots", crumb="Plots / My plots",
@@ -222,7 +229,7 @@ screen(19, "plot_risk_review_queue", shell="app", role="OPERATOR", active="Plot 
                [("card", "Case EK-03", [("placeholder", 140, "Map: both sellers' plots"),
                                         "Overlap ratio: 64%", "Verification: SELF_DECLARED / CADASTRAL",
                                         ("fields", [("!Decision note", "ta:")], 1),
-                                        ("buttons", ["Request evidence", "Accept plot", "*Reject plot"])])],
+                                        ("buttons", ["Request evidence", "Accept as legitimate", "*Confirm risk"])])],
            ], [3, 2]),
        ])
 
@@ -241,7 +248,7 @@ screen(20, "my_products", shell="app", role="SELLER", active="My Products", crum
 LISTINGS = [("title", "My listings", None, ["*Create listing"]),
             ("filters", ["Status: All  v", "Product: All  v"]),
             ("table", ["Listing", "Offered", "Available", "Min order", "Status", "", ""],
-             [["Robusta Ea Kar grade 1", "120,000 kg", "90,000 kg", "5,000 kg", "[PUBLISHED]", "<Edit>", "<Pause>"],
+             [["Robusta Ea Kar grade 1", "120,000 kg", "90,000 kg", "5,000 kg", "[AVAILABLE]", "<Edit>", "<Pause>"],
               ["Arabica Cau Dat", "30,000 kg", "30,000 kg", "2,000 kg", "[DRAFT]", "<Edit>", "<Publish>"],
               ["Robusta honey", "20,000 kg", "0 kg", "2,000 kg", "[PAUSED]", "<Republish>", "<Close>"]])]
 screen(21, "my_listings", shell="app", role="SELLER", active="My Listings", crumb="Listings / My listings",
@@ -253,11 +260,12 @@ screen(22, "listing_form", shell="app", role="SELLER", active="My Listings", cru
         [("card", "Listing details", [("fields", [("!Product *", "v:Robusta Ea Kar grade 1"),
                                                   ("Offered quantity (kg) *", "120000"),
                                                   ("Minimum order (kg) *", "5000"),
-                                                  ("Moisture max (%)", "12.5"), ("Defects max (%)", "5"),
-                                                  ("Screen size", "16"), ("Crop year", "2026")])]),
+                                                  ("Type *", "v:ROBUSTA"), ("Moisture (%) *", "12.5"),
+                                                  ("Foreign matter (%) *", "0.5"),
+                                                  ("Black & broken beans (%) *", "5")])]),
          ("card", "Linked plots (at least one)", [("check", "EK-01  ·  2.1 ha  ·  LOW", True),
                                                   ("check", "EK-02  ·  1.4 ha  ·  LOW", True),
-                                                  ("check", "EK-03  ·  HIGH_RISK (cannot be linked)")])],
+                                                  ("check", "EK-04  ·  geo check PENDING (cannot be linked)")])],
         [("card", "Reference price", ["Dak Lak · Robusta: 95,000 VND/kg", "Source: VNSAT · 26/11/2026",
                                       ("text", "Advisory only - not a contract price.", "s")])],
     ], [3, 2]),
@@ -266,11 +274,11 @@ screen(22, "listing_form", shell="app", role="SELLER", active="My Listings", cru
 
 LISTING_CARDS = [
     ("cols", [[("card", "Robusta Ea Kar", ["95,000 VND/kg", "Available: 90,000 kg", "Min order: 5,000 kg",
-                                           "Seller reputation: 82"], "Open")],
+                                           "Seller reputation: 82"], "AVAILABLE")],
               [("card", "Arabica Cau Dat", ["120,000 VND/kg", "Available: 30,000 kg", "Min order: 2,000 kg",
-                                            "Seller reputation: 77"], "Open")],
+                                            "Seller reputation: 77"], "AVAILABLE")],
               [("card", "Robusta Krong Bong", ["93,000 VND/kg", "Available: 15,000 kg", "Min order: 1,000 kg",
-                                               "Seller reputation: 69"], "Open")]]),
+                                               "Seller reputation: 69"], "AVAILABLE")]]),
 ]
 screen(23, "browse_listings", shell="public", active="Marketplace", blocks=[
     ("title", "Marketplace"),
@@ -284,11 +292,12 @@ screen(23, "browse_listings", shell="public", active="Marketplace", blocks=[
 ])
 
 screen(24, "listing_detail", shell="public", active="Marketplace", crumb="Marketplace / Listing detail", blocks=[
-    ("title", "Robusta Ea Kar grade 1", "OPEN", ["*Create offer"]),
+    ("title", "Robusta Ea Kar grade 1", "AVAILABLE", ["*Create offer"]),
     ("cols", [
         [("card", "Quantity & quality", [("kv", [("Offered", "120,000 kg"), ("Available", "90,000 kg"),
-                                                 ("Minimum order", "5,000 kg"), ("Moisture max", "12.5 %"),
-                                                 ("Defects max", "5 %"), ("Screen size", "16")], 2)]),
+                                                 ("Minimum order", "5,000 kg"), ("Type", "ROBUSTA"),
+                                                 ("Moisture", "12.5 %"), ("Foreign matter", "0.5 %"),
+                                                 ("Black & broken beans", "5 %")], 2)]),
          ("card", "Linked plots", [("table", ["Plot", "Province", "Area", "Verification"],
                                     [["EK-01", "Dak Lak", "2.1 ha", "[CADASTRAL]"],
                                      ["EK-02", "Dak Lak", "1.4 ha", "[SELF_DECLARED]"]])])],
@@ -359,7 +368,7 @@ screen(28, "create_offer", shell="app", role="BUYER", active="My Contracts", cru
 ])
 
 screen(29, "my_contracts", shell="app", role="SELLER", active="My Contracts", crumb="Contracts", blocks=[
-    ("title", "My contracts", None, ["*Create offer"]),
+    ("title", "My contracts"),
     ("text", "Track offers, terms and activation status of the contracts you take part in."),
     ("filters", ["Your role: Seller  v", "Status: All  v"]),
     ("table", ["Contract ID", "Counterparty", "Total value", "Status", ""],
@@ -376,7 +385,7 @@ CONTRACT_DETAIL = [
     ("card", "Signed content hash (SHA-256)", ["3f9a1c2e...e2d4b6f8   ·   template VN_COFFEE_B2B v1.0"]),
     ("cols", [
         [("card", "Terms", [("kv", [("Buyer", "Mekong Export JSC"), ("Seller", "Ea Kar Coffee Coop"),
-                                    ("Unit price", "95,000 VND/kg"), ("Reserved", "110,000 kg"),
+                                    ("Unit price", "95,000 VND/kg"), ("Reserved", "80,000 kg"),
                                     ("Total value", "7,600,000,000")])])],
         [("card", "Signing & deposits", [("kv", [("Buyer signature", "[SIGNED]"), ("Seller signature", "[SIGNED]"),
                                                  ("Buyer deposit", "[LOCKED]"), ("Seller deposit", "[LOCKED]")])])],
@@ -395,7 +404,7 @@ screen(31, "edit_contract_terms", shell="app", role="BUYER", active="My Contract
        crumb="Contracts / Contract detail / Edit terms", blocks=[
            ("title", "Edit contract terms", "NEGOTIATING"),
            ("banner", "Saving moves the contract to NEGOTIATING and notifies the other party (MSG52). "
-                      "Any earlier signature is cleared."),
+                      "Terms can be edited only before the first signature (MSG53)."),
            ("cols", [
                [("card", "Price & quantity", [("fields", [("Unit price (VND/kg)", "96000"),
                                                           ("Price band (+/- %)", "5"),
@@ -425,7 +434,7 @@ screen(32, "sign_contract", shell="app", role="BUYER", active="My Contracts", cr
 
 screen(33, "otp_verification", shell="app", role="BUYER", active="My Contracts",
        crumb="Contracts / Contract detail / Sign", base=SIGN, dialog=dict(title="OTP verification", blocks=[
-           ("text", "Enter the 6-digit code sent to buyer1@test.com. The code expires in 10 minutes."),
+           ("text", "Enter the 6-digit code sent to buyer1@test.com. The code expires in 5 minutes."),
            ("otp",),
            ("text", "Didn't get it?  Resend OTP (the previous code becomes invalid)."),
        ], buttons=["Cancel", "*Verify and sign"]))
@@ -482,7 +491,7 @@ ms(36, "milestone_detail", "BUYER", "Milestone 7", "IN_PROGRESS", [
     ("card", "Status", [("kv", [("Milestone status", "[IN_PROGRESS]"), ("Funding status", "[LOCKED]"),
                                 ("Seller delivery deadline", "03/12/2026"), ("Buyer confirm window", "3 days")])]),
     ("card", "Delivery evidence", [("table", ["File", "By", "Uploaded"], [["-", "-", "No evidence yet"]])]),
-    ("card", "Actions", [("buttons", ["~Record receipt", "Price adjustment", "~Claim force majeure"]),
+    ("card", "Actions", [("buttons", ["~Record receipt", "Price adjustment"]),
                          ("text", "Actions are enabled by milestone status and your role.", "s")]),
     ("card", "Provisional release rate (Level 2 buffer)", [("radio", ["Higher release rate", "Wait for report"], 1)]),
 ], 1)
@@ -515,25 +524,47 @@ ms(38, "record_receipt", "BUYER", "Milestone 6", "SELLER_WEIGHED", [
 ms(39, "respond_to_flag", "SELLER", "Milestone 4", "AWAITING_SELLER_RESPONSE", [
     ("card", "Respond to Buyer's issue", [
         ("kv", [("Issue type", "QUANTITY"), ("Response deadline", "29/11/2026 (1 day left)")]),
-        ("banner", "No response within 2 business days = the Buyer's figures (9,610 kg) are accepted."),
+        ("banner", "No response within 2 business days: a QUANTITY flag settles on the Buyer's received weight "
+                   "(9,610 kg) without penalty; a QUALITY flag is contested automatically and goes to a Level 1.5 "
+                   "inspection."),
         ("kv", [("Committed vs received", "10,000 -> 10,020 kg"), ("Transport loss", "10,020 -> 9,610 kg")]),
         ("placeholder", 90, "Buyer scale photo"),
         ("check", "I disagree and request a Level 1.5 inspection. If the result is against me, I bear the cost."),
-        ("buttons", ["Accept flag", "*Contest flag"]),
+        ("buttons", ["Concede (OTP)", "*Contest flag"]),
     ]),
 ], 4)
 
 ms(40, "claim_force_majeure", "SELLER", "Milestone 7", "IN_PROGRESS", [
     ("card", "Claim force majeure", [
-        ("fields", [("Event type *", "v:Flood"), ("Event date *", "25/11/2026"),
-                    ("Affected quantity (kg)", "4000"), ("!Description *", "ta:")]),
+        ("fields", [("Date became aware *", "25/11/2026"), ("!Event description *", "ta:")]),
         ("upload", "Evidence files * (at least one)"),
-        ("banner", "Report window: 5 days from the event. A late claim is recorded with a warning (MSG77)."),
+        ("banner", "Report window: 3 days from the date you became aware. A late claim is recorded with a warning (MSG77)."),
         ("buttons", ["Cancel", "*Submit claim"]),
     ]),
 ], 1)
 
-ms(41, "milestone_price_adjustment", "BUYER", "Milestone 8", "CREATED", [
+ms(41, "dispute_exit", "SELLER", "Milestone 4", "CONTESTED", [
+    ("card", "End the dispute", [
+        ("kv", [("Seller receives at Buyer's position", "912,950,000"),
+                ("Seller receives at Seller's position", "950,000,000")]),
+        ("text", "Calculated by the system; a settlement must lie between the two amounts.", "s"),
+    ]),
+    ("card", "Buyer's proposal", [
+        ("kv", [("Seller receives", "930,000,000"), ("Buyer refund", "20,000,000"),
+                ("Proposed at", "28/11/2026 09:15")]),
+        ("buttons", ["Refuse proposal"]),
+    ]),
+    ("buttons", ["Concede", "*Accept proposal"]),
+    ("card", "Confirm with OTP", [
+        ("check", "I agree the Seller receives 930,000,000 VND for this batch; the rest is refunded to the Buyer. "
+                  "No party is at fault.", True),
+        ("buttons", ["Send OTP"]),
+        ("otp",),
+        ("buttons", ["*Confirm OTP"]),
+    ]),
+], 4)
+
+ms(42, "milestone_price_adjustment", "BUYER", "Milestone 8", "CREATED", [
     ("card", "Milestone price adjustment", [
         ("kv", [("Signed unit price", "95,000 VND/kg"), ("Allowed band", "90,250 - 99,750")]),
         ("fields", [("!Proposed unit price (VND/kg) *", "93000")], 1),
@@ -547,28 +578,27 @@ ms(41, "milestone_price_adjustment", "BUYER", "Milestone 8", "CREATED", [
 
 # ======================================================== 7. Dispute & Inspection
 REPORT_BASE = CONTRACT_DETAIL
-screen(42, "report_breach_dialog", shell="app", role="BUYER", active="My Contracts",
+screen(43, "report_breach_dialog", shell="app", role="BUYER", active="My Contracts",
        crumb="Contracts / Contract detail", base=REPORT_BASE, dialog=dict(title="Report breach", w=600, blocks=[
-           ("fields", [("Scope *", "v:Milestone 4"), ("Reason *", "v:QUALITY"), ("Severity *", "v:MATERIAL"),
+           ("fields", [("Scope *", "v:Milestone 4"), ("Reason *", "v:QUALITY_BELOW_COMMITTED"), ("Severity *", "v:MATERIAL"),
                        ("Alleged party", "SELLER"), ("!Description *", "ta:")]),
            ("upload", "Attach evidence"),
            ("table", ["File", "Scan", ""], [["photo_lot4.jpg", "[CLEAN]", "<Remove>"]]),
            ("text", "The counterparty and the Arbitrator are notified.", "s"),
        ], buttons=["Cancel", "*Submit report"]))
 
-screen(43, "breach_case_detail_party", shell="app", role="SELLER", active="My Contracts",
+screen(44, "breach_case_detail_party", shell="app", role="SELLER", active="My Contracts",
        crumb="Contracts / c0ffee00 / Breach case", blocks=[
            ("title", "Breach case BC-0091", "RESOLVED", ["Contest decision", "~Request termination"]),
            ("cols", [
-               [("card", "Case", [("kv", [("Reason", "QUALITY"), ("Severity", "MATERIAL"),
+               [("card", "Case", [("kv", [("Reason", "LATE_DELIVERY"), ("Severity", "MATERIAL"),
                                           ("Reported by", "BUYER"), ("Alleged party", "SELLER"),
                                           ("Scope", "Milestone 4")])]),
                 ("card", "Evidence", [("table", ["File", "By", ""], [["photo_lot4.jpg", "BUYER", "<Download>"],
-                                                                     ["l15_report.pdf", "INSPECTOR", "<Download>"]])])],
+                                                                     ["delivery_note.pdf", "SELLER", "<Download>"]])])],
                [("card", "Outcome", [("kv", [("Final breaching party", "SELLER"),
-                                             ("Decision source", "INSPECTOR_L1_5"),
-                                             ("Inspection status", "[CONFIRMED]"),
-                                             ("Contest status", "[NOT CONTESTED]"),
+                                             ("Decision source", "ARBITRATOR"),
+                                             ("Contest status", "[OPEN]"),
                                              ("Contest deadline", "01/12/2026")])]),
                 ("card", "Level 2 report", [("buttons", ["Acknowledge receipt"])])],
            ]),
@@ -580,7 +610,7 @@ BREACH_Q = [("title", "Breach case queue"),
              [["BC-0091", "c0ffee00", "QUALITY", "MATERIAL", "BUYER", "27/11", "[REPORTED]", "<Open>"],
               ["BC-0092", "c0ffee38", "QUANTITY", "MINOR", "BUYER", "26/11", "[UNDER_REVIEW]", "<Open>"],
               ["BC-0093", "c0ffee00", "LATE", "MATERIAL", "SELLER", "24/11", "[UNDER_REVIEW]", "<Open>"]])]
-screen(44, "breach_case_queue", shell="app", role="ARBITRATOR", active="Breach Cases", crumb="Disputes / Queue",
+screen(45, "breach_case_queue", shell="app", role="ARBITRATOR", active="Breach Cases", crumb="Disputes / Queue",
        blocks=BREACH_Q)
 
 BREACH_ARB = [
@@ -598,10 +628,10 @@ BREACH_ARB = [
                     "effect after the contest window.")],
     ]),
 ]
-screen(45, "breach_case_detail_arbitrator", shell="app", role="ARBITRATOR", active="Breach Cases",
+screen(46, "breach_case_detail_arbitrator", shell="app", role="ARBITRATOR", active="Breach Cases",
        crumb="Disputes / Breach case", blocks=BREACH_ARB)
 
-screen(46, "request_inspection_dialog", shell="app", role="ARBITRATOR", active="Breach Cases",
+screen(47, "request_inspection_dialog", shell="app", role="ARBITRATOR", active="Breach Cases",
        crumb="Disputes / Breach case", base=BREACH_ARB, dialog=dict(title="Request inspection", blocks=[
            ("radio", ["Level 1.5 inspection", "Level 2 commission"], 0),
            "Inspector: assigned by the system",
@@ -609,7 +639,7 @@ screen(46, "request_inspection_dialog", shell="app", role="ARBITRATOR", active="
            ("fields", [("!Note to inspector", "ta:")], 1),
        ], buttons=["Cancel", "*Request"]))
 
-screen(47, "resolve_breach_case_dialog", shell="app", role="ARBITRATOR", active="Breach Cases",
+screen(48, "resolve_breach_case_dialog", shell="app", role="ARBITRATOR", active="Breach Cases",
        crumb="Disputes / Breach case", base=BREACH_ARB, dialog=dict(title="Resolve breach case", blocks=[
            ("text", "Final breaching party *", "s"),
            ("radio", ["BUYER", "SELLER", "No fault"], 1),
@@ -618,7 +648,7 @@ screen(47, "resolve_breach_case_dialog", shell="app", role="ARBITRATOR", active=
            ("text", "Recorded in the audit chain; both parties are notified.", "s"),
        ], buttons=["Cancel", "*Resolve case"]))
 
-screen(48, "terminate_contract_dialog", shell="app", role="BUYER", active="My Contracts",
+screen(49, "terminate_contract_dialog", shell="app", role="BUYER", active="My Contracts",
        crumb="Contracts / Contract detail", base=CONTRACT_DETAIL, dialog=dict(title="Terminate contract", blocks=[
            "Basis: BC-0091 resolved - MATERIAL breach by SELLER",
            ("kv", [("Settled milestones", "unchanged (2)"), ("Unsettled milestones", "end (9)"),
@@ -630,10 +660,10 @@ FM_Q = [("title", "Force majeure review queue"),
         ("table", ["Contract", "Milestone", "Seller", "Event", "Filed", "Window", ""],
          [["c0ffee00", "7", "Ea Kar Coffee Coop", "Flood", "25/11/2026", "[IN WINDOW]", "<Open>"],
           ["c0ffee38", "3", "Tay Nguyen Coffee", "Drought", "10/11/2026", "[LATE]", "<Open>"]])]
-screen(49, "force_majeure_review_queue", shell="app", role="ARBITRATOR", active="Force Majeure",
+screen(50, "force_majeure_review_queue", shell="app", role="ARBITRATOR", active="Force Majeure",
        crumb="Force majeure / Queue", blocks=FM_Q)
 
-screen(50, "force_majeure_claim_detail", shell="app", role="ARBITRATOR", active="Force Majeure",
+screen(51, "force_majeure_claim_detail", shell="app", role="ARBITRATOR", active="Force Majeure",
        crumb="Force majeure / Claim", blocks=[
            ("title", "Force majeure claim - c0ffee00 / M7", "PENDING", ["Reject", "*Approve"]),
            ("cols", [
@@ -646,7 +676,7 @@ screen(50, "force_majeure_claim_detail", shell="app", role="ARBITRATOR", active=
            ("banner", "The losing party may contest; the claim then goes to a Level 1.5 inspection."),
        ])
 
-screen(51, "activation_failures", shell="app", role="OPERATOR", active="Activation Failures",
+screen(52, "activation_failures", shell="app", role="OPERATOR", active="Activation Failures",
        crumb="Operations / Activation failures", blocks=[
            ("title", "Activation failures"),
            ("table", ["Contract", "Missing leg", "Last error", "Cancel request", "Status", ""],
@@ -656,7 +686,7 @@ screen(51, "activation_failures", shell="app", role="OPERATOR", active="Activati
            ("text", "The Operator cannot cancel the contract or change amounts (MSG92).", "s"),
        ])
 
-screen(52, "milestone_funding_failures", shell="app", role="OPERATOR", active="Funding Failures",
+screen(53, "milestone_funding_failures", shell="app", role="OPERATOR", active="Funding Failures",
        crumb="Operations / Funding failures", blocks=[
            ("title", "Milestone funding failures"),
            ("table", ["Contract", "Milestone", "Amount", "Last error", "Cure deadline", ""],
@@ -671,10 +701,10 @@ ASSIGNED = [("title", "Assigned cases"),
               ["BC-0088", "c0ffee12", "COFFEE", "3", "29/11/2026", "[IN_PROGRESS]", "<Open>"]]),
             ("card", "What to measure - BC-0092", ["Moisture max: 12.5 %", "Defects max: 5 %", "Screen size: 16",
                                                    "Deviation policy: price discount"])]
-screen(53, "assigned_cases", shell="app", role="INSPECTOR", active="Assigned Cases", crumb="Inspection / Assigned",
+screen(54, "assigned_cases", shell="app", role="INSPECTOR", active="Assigned Cases", crumb="Inspection / Assigned",
        blocks=ASSIGNED)
 
-screen(54, "submit_inspection_result", shell="app", role="INSPECTOR", active="Assigned Cases",
+screen(55, "submit_inspection_result", shell="app", role="INSPECTOR", active="Assigned Cases",
        crumb="Inspection / BC-0092 / Submit result", blocks=[
            ("title", "Submit inspection result", "IN_PROGRESS"),
            ("cols", [
@@ -691,7 +721,7 @@ screen(54, "submit_inspection_result", shell="app", role="INSPECTOR", active="As
            ("buttons", ["Cancel", "*Submit result"]),
        ])
 
-screen(55, "level2_commissions", shell="app", role="ARBITRATOR", active="Level 2 Commissions",
+screen(56, "level2_commissions", shell="app", role="OPERATOR", active="Level 2 Commissions",
        crumb="Inspection / Level 2 commissions", blocks=[
            ("title", "Level 2 commissions"),
            ("table", ["Commission", "Case", "Organization", "Sent", "Org case ID", "Suggestion", ""],
@@ -700,7 +730,7 @@ screen(55, "level2_commissions", shell="app", role="ARBITRATOR", active="Level 2
            ("text", "Suggestions come from acknowledgement emails from the organization's domain.", "s"),
        ])
 
-screen(56, "pending_external_report_review", shell="app", role="OPERATOR", active="Level 2 Reports",
+screen(57, "pending_external_report_review", shell="app", role="OPERATOR", active="Level 2 Reports",
        crumb="Inspection / Level 2 reports", blocks=[
            ("title", "Pending external report review"),
            ("cols", [
@@ -714,18 +744,18 @@ screen(56, "pending_external_report_review", shell="app", role="OPERATOR", activ
            ], [1, 1]),
        ])
 
-screen(57, "manual_external_report_upload", shell="app", role="OPERATOR", active="Level 2 Reports",
+screen(58, "manual_external_report_upload", shell="app", role="OPERATOR", active="Level 2 Reports",
        crumb="Inspection / Manual upload", blocks=[
            ("title", "Manual external report upload"),
            ("card", "Report", [("fields", [("Commission *", "v:L2-014"), ("Received via *", "v:Courier")]),
-                               ("upload", "Level 2 report file *", "PDF, up to 20 MB - hash fixed at upload")]),
+                               ("upload", "Level 2 report file *", "PDF, up to 10 MB - hash fixed at upload")]),
            ("card", "Normalised result", [("fields", [("Accepted qty (kg)", ""), ("Moisture (%)", ""),
                                                       ("Defects (%)", ""), ("Screen size", "")])]),
            ("buttons", ["Cancel", "*Upload and confirm"]),
            ("text", "Confirmed under your Operator identity (MSG101).", "s"),
        ])
 
-screen(58, "email_intake_failures", shell="app", role="OPERATOR", active="Email Intake",
+screen(59, "email_intake_failures", shell="app", role="OPERATOR", active="Email Intake",
        crumb="Inspection / Email intake failures", blocks=[
            ("title", "Email intake failures"),
            ("table", ["Received", "Sender", "Subject", "Failure", "Status", ""],
@@ -734,7 +764,7 @@ screen(58, "email_intake_failures", shell="app", role="OPERATOR", active="Email 
        ])
 
 # ======================================================== 8. Audit & Security
-screen(59, "audit_chain_verification_status", shell="app", role="ADMIN", active="Audit Chain",
+screen(60, "audit_chain_verification_status", shell="app", role="ADMIN", active="Audit Chain",
        crumb="Audit / Chain verification", blocks=[
            ("title", "Audit chain verification status"),
            ("cols", [
@@ -749,7 +779,7 @@ screen(59, "audit_chain_verification_status", shell="app", role="ADMIN", active=
                                                [["c0ffee12", "3", "950,000,000", "948,100,000"]])]),
        ])
 
-screen(60, "contract_evidence_export", shell="app", role="ADMIN", active="Evidence Export",
+screen(61, "contract_evidence_export", shell="app", role="ADMIN", active="Evidence Export",
        crumb="Audit / Evidence export", blocks=[
            ("title", "Contract evidence export"),
            ("filters", ["Contract ID: c0ffee00-2026-4142-8000-000000000142"], "Verify chain"),
@@ -763,9 +793,9 @@ screen(60, "contract_evidence_export", shell="app", role="ADMIN", active="Eviden
                                         ["7", "12:00", "Milestone settled 948,100,000", "7f3a...7777"]])]),
        ])
 
-screen(61, "security_lock_status", shell="app", role="ADMIN", active="Security Lock",
+screen(62, "security_lock_status", shell="app", role="ADMIN", active="Security Lock",
        crumb="Security / Lock status", blocks=[
-           ("title", "Security lock status", "INACTIVE"),
+           ("title", "Security lock status", "RELEASED"),
            ("banner", "Only the External Verifier can unlock, by a signed request. The Admin has no unlock action."),
            ("card", "Lock history", [("table", ["Time", "Action", "By", "Reason"],
                                       [["20/11/2026 03:10", "UNLOCK", "External Verifier", "Investigation closed"],
@@ -776,7 +806,7 @@ screen(61, "security_lock_status", shell="app", role="ADMIN", active="Security L
        ])
 
 # ======================================================== 9. Analytics
-screen(62, "termination_report_by_commodity", shell="app", role="ADMIN", active="Analytics",
+screen(63, "termination_report_by_commodity", shell="app", role="ADMIN", active="Analytics",
        crumb="Analytics / Terminations", blocks=[
            ("title", "Termination report by commodity"),
            ("filters", ["Year: 2026  v", "", ""]),
@@ -785,7 +815,7 @@ screen(62, "termination_report_by_commodity", shell="app", role="ADMIN", active=
             [["COFFEE", "4", "7", "3", "2"]]),
        ])
 
-screen(63, "escrow_effectiveness_report", shell="app", role="ADMIN", active="Analytics",
+screen(64, "escrow_effectiveness_report", shell="app", role="ADMIN", active="Analytics",
        crumb="Analytics / Escrow effectiveness", blocks=[
            ("title", "Escrow effectiveness report"),
            ("filters", ["Month: 11/2026  v", "", ""]),
@@ -795,7 +825,7 @@ screen(63, "escrow_effectiveness_report", shell="app", role="ADMIN", active="Ana
            ("bars", 200, ["W1", "W2", "W3", "W4"], [6, 8, 5, 9], "Locked vs disbursed by week"),
        ])
 
-screen(64, "force_majeure_trends", shell="app", role="ADMIN", active="Analytics",
+screen(65, "force_majeure_trends", shell="app", role="ADMIN", active="Analytics",
        crumb="Analytics / Force majeure trends", blocks=[
            ("title", "Force majeure trends"),
            ("filters", ["Year: 2026  v", "", ""]),

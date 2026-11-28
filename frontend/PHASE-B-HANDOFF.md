@@ -84,7 +84,7 @@ Kiểm tra tự động: `npm test` — **22 test pass, 3 file** — kiểm tra 
 1. Cung cấp realm `agricontract` tại 8180 và Gateway tại 8080; cấu hình issuer/audience và CORS cho origin `http://localhost:5173`.
 2. Client public `agricontract-frontend`: Standard Flow bật, PKCE S256; redirect `http://localhost:5173/*` gồm `silent-check-sso.html`, Web Origins `http://localhost:5173`, post-logout redirect `http://localhost:5173`. Không cần client secret trong frontend.
 3. Đảm bảo access token có `sub`, `email`, `realm_access.roles`, `auth_time` trong code flow, kể cả sau refresh. Không biến `iat` thành auth_time. Xác nhận timeout phiên/refresh token phù hợp.
-4. Cài theme A và cấu hình registration/reset/SMTP/locale theo `frontend-keycloak-theme/README.md`. App dùng theme đang được realm chọn; không thể ép cài theme qua keycloak-js.
+4. Cài theme A và cấu hình registration/reset/SMTP/locale theo `frontend/keycloak-theme/README.md`. App dùng theme đang được realm chọn; không thể ép cài theme qua keycloak-js.
 5. Chuẩn bị tài khoản buyer1/seller1, role và hồ sơ thật cho `/api/v1/users/me`; sau đó chạy checklist đăng nhập → reload → refresh → tên tổ chức → step-up → đăng xuất. Tài khoản tự đăng ký chưa có role vẫn là phụ thuộc cần chốt trước C.
 
 ## Danh sách file

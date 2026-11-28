@@ -70,7 +70,7 @@ const rate = (value: number) => Number((value / 100).toFixed(4))
 /**
  * ContractTermsInput from the form. Signed defaults the form does not expose
  * (delivery allocation, deviation policy, legal profile) follow the reference
- * offer in backend/bruno/contract/06-create-contract.bru; both parties can still
+ * offer in tests/api/contract/06-create-contract.bru; both parties can still
  * review them on the detail page before signing.
  */
 export function offerTerms(v: OfferOutput): Fields {

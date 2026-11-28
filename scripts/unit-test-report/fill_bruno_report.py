@@ -87,7 +87,7 @@ cover.Range("F5").Value = "'" + ISSUE_DATE
 cover.Range("F6").Value = "v1.1"
 for ref, text in zip(["A11", "B11", "C11", "D11", "E11", "F11"],
                      ["'" + ISSUE_DATE, "v1.0", "Toàn bộ tài liệu", "A",
-                      "Bản đầu: test case tích hợp (ITC) từ Bruno collection (backend/bruno) của api-gateway, "
+                      "Bản đầu: test case tích hợp (ITC) từ Bruno collection (tests/api) của api-gateway, "
                       "user-service, product-service; Pre-conditions ghi gọi thẳng service hay qua gateway; "
                       "1 dòng = 1 kịch bản; Note ghi request Bruno, Note trống = chưa có request",
                       "SRS v1.7, Report 5.0"]):
@@ -202,7 +202,7 @@ no_bruno = sum(1 for m in MODULES for _, c in m["groups"] for row in c if not ro
 by_kind = {k: sum(len(c) for m in MODULES if m["kind"] == k for _, c in m["groups"]) for k in KIND_LABEL}
 st.Range("B7").Value = (
     f"Integration test (ITC) của 3 module: api-gateway, user-service, product-service, lấy từ Bruno collection "
-    f"backend/bruno. {cases} kịch bản: {by_kind[DIRECT]} gọi thẳng service, {by_kind[GATEWAY]} qua gateway; "
+    f"tests/api. {cases} kịch bản: {by_kind[DIRECT]} gọi thẳng service, {by_kind[GATEWAY]} qua gateway; "
     f"{cases - no_bruno} có request Bruno và {no_bruno} chưa có (Note trống). " + (
         f"Round 1 chạy ngày {ROUND1['date']} trên commit {ROUND1['commit']} (Bruno CLI {ROUND1['bruno_cli']}): "
         + ", ".join(f"{RESULTS[k]} {k}" for k in ("Passed", "Failed", "Pending") if RESULTS.get(k))

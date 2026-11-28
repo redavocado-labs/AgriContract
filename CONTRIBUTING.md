@@ -73,7 +73,7 @@ These hold in every service and are checked in CI by ArchUnit (Java) and depende
 - Domain rules: unit tests, no Spring context.
 - Persistence, messaging and anything that depends on MySQL behaviour (locks, unique keys, JSON columns): integration tests with Testcontainers.
 - Event and API boundaries: contract tests against `contracts/**`, from both the producer and the consumer side.
-- Business flows: a Bruno case under `backend/bruno/e2e/bf0x-*` for each new endpoint a flow uses.
+- Business flows: a Bruno case under `tests/api/e2e/bf0x-*` for each new endpoint a flow uses.
 - A change that touches money re-runs the BF-03 and BF-04 end-to-end flows before merge.
 
 Say in the pull request which commands you ran and what they showed.

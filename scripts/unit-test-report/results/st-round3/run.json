@@ -1,0 +1,9 @@
+{
+  "round": "st-round3",
+  "date": "28/11/2026",
+  "tester": "Nguyen Minh Cuong",
+  "commit": "42a48dd5",
+  "run": "run-20261128-0350",
+  "source": "backend/scripts/run-e2e-full.sh --fresh --keep (Bruno CLI 3.4.2, Docker Compose, Fedora Linux 44 + Docker Engine); service logs kept only on the test machine",
+  "note": "Saturday run: BF03-070 is refused by D67 (funding date before today), see DEF-19; the signing -> activation -> BF04 chain can only pass on a Vietnam business day"
+}
