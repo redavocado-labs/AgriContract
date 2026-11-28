@@ -5,6 +5,7 @@
 #   Partial      what ran passed, but some steps have no screen yet (done through the API) or did not run today
 #   Fail         a test of the script failed
 #   Not Executed the flow has no screen yet; Feedback names the API evidence of Report 5.2
+#   N/A (Out of scope) the feature is specified in Report 3 but not built in this version (Report 1, LI-15..LI-23)
 # The Exploratory sheet keeps only its header: no exploratory session with business users has been held. Pure openpyxl.
 #
 #   python fill_55_uat.py results/st-ui/results-chromium.json ../../docs/reports/Report-5.2_Test_Report.xlsx \
@@ -144,7 +145,17 @@ WEEKEND = ("28/11/2026 is a Saturday: no milestone funding date is valid (D63, D
            "activation → delivery skip themselves and run again on a business day")
 
 
-def result(tests, gap, it_sheet):
+OUT_OF_SCOPE = {  # script → Report 1 limitation: specified, not built in this version
+    "SC-09": "LI-15 Force Majeure Claims",
+    "SC-10": "LI-17 Termination for Breach, Mutual Termination and Contract Replacement",
+    "SC-11": "LI-19 Emergency System Lock",
+}
+
+
+def result(tests, gap, it_sheet, sid=None):
+    if sid in OUT_OF_SCOPE:
+        return "N/A (Out of scope)", (f"Out of scope of this version: specified in Report 3 but not built "
+                                      f"(Report 1, {OUT_OF_SCOPE[sid]}). Not counted in acceptance.")
     it = f"API side of the same flow (Report 5.2, {it_sheet}, Round 3): {IT[it_sheet]}."
     if not tests:
         return "Not Executed", f"Cannot run through the screens yet: {gap}. {it}"
@@ -168,13 +179,16 @@ def result(tests, gap, it_sheet):
 
 wb = openpyxl.load_workbook(BOOK)
 uat = wb["UAT"]
+for dv in uat.data_validations.dataValidation:  # the template's Result list has no out-of-scope value
+    if dv.formula1 == '"Not Executed,Pass,Fail,Partial"':
+        dv.formula1 = '"Not Executed,Pass,Fail,Partial,N/A (Out of scope)"'
 style = [copy(uat.cell(2, c)._style) for c in range(1, 10)]
 for row in uat.iter_rows(min_row=2, max_row=max(uat.max_row, 300)):
     for cell in row:
         cell.value = None
 verdicts = {}
 for i, (sid, bf, title, actor, steps, outcome, priority, tests, gap, it_sheet) in enumerate(SCRIPTS, start=2):
-    verdict, text = result(tests, gap, it_sheet)
+    verdict, text = result(tests, gap, it_sheet, sid)
     verdicts[verdict] = verdicts.get(verdict, 0) + 1
     for c, v in enumerate([sid, bf, title, actor, steps, outcome, priority, verdict, text], 1):
         uat.cell(i, c, v)._style = copy(style[c - 1])
