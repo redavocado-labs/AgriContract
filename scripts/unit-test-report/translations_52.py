@@ -379,7 +379,7 @@ TRANSLATIONS = {
 
     # ── Common across BF01..BF07 & SecurityApi ──
     "Chưa chạy được (backend/scripts/e2e/status.tsv)": "Not yet runnable (backend/scripts/e2e/status.tsv)",
-    "ST đọc thẳng service / broker / DB để kiểm kết quả": "Reads service / broker / DB directly to verify result",
+    "ST đọc thẳng service / broker / DB để kiểm kết quả": "IT reading the service / broker / DB directly to check the result",
     "Return: Mọi queue .dlq có mặt và rỗng": "Return: All .dlq queues exist and are empty",
     "Round 1-3: 84 queue .dlq, tất cả 0 message": "Round 1-3: 84 .dlq queues, all 0 messages",
     "Round 1-3: HTTP 204; body rỗng": "Round 1-3: HTTP 204; empty body",
